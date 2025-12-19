@@ -1,0 +1,484 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const title = 'About Us';
+const description = 'Learn about Singapore Handpan Studio - our story, mission, and passion for sharing the healing sounds of handpan music with the Singapore community.';
+---
+
+<BaseLayout title={title} description={description}>
+  <!-- Hero Section -->
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero__content">
+        <h1 class="page-hero__title">About Our Studio</h1>
+        <p class="page-hero__subtitle">
+          Sharing the healing power of handpan music through community, 
+          learning, and mindful expression.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Our Story Section -->
+  <section class="section">
+    <div class="container">
+      <div class="story-grid">
+        <div class="story__image">
+          <img 
+            src="/images/studio-founder.jpg" 
+            alt="Studio founder playing handpan"
+            class="story__img"
+            loading="lazy"
+            width="600"
+            height="400"
+          />
+        </div>
+        
+        <div class="story__content">
+          <h2 class="section__title">Our Story</h2>
+          <div class="story__text">
+            <p>
+              Singapore Handpan Studio was born from a deep love for the ethereal, 
+              meditative sounds of the handpan drum. Founded in Singapore, our studio 
+              has become a sanctuary for music lovers seeking peace, healing, and 
+              creative expression.
+            </p>
+            
+            <p>
+              What started as a personal journey of musical discovery has evolved 
+              into a thriving community of musicians, wellness enthusiasts, and 
+              anyone drawn to the transformative power of handpan music.
+            </p>
+            
+            <p>
+              We believe that music has the power to heal, connect, and inspire. 
+              Through our workshops, events, and community gatherings, we aim to 
+              share this beautiful instrument with others and create meaningful 
+              connections through sound.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mission & Values -->
+  <section class="section section--gray">
+    <div class="container">
+      <h2 class="section__title section__title--center">Our Mission & Values</h2>
+      
+      <div class="values-grid">
+        <div class="value-card">
+          <div class="value-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>
+            </svg>
+          </div>
+          <h3 class="value-card__title">Healing Through Sound</h3>
+          <p class="value-card__description">
+            We believe in the therapeutic power of handpan music to promote 
+            relaxation, reduce stress, and support emotional well-being.
+          </p>
+        </div>
+        
+        <div class="value-card">
+          <div class="value-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="m19 8 2 2-2 2"/>
+              <path d="m17 12h6"/>
+            </svg>
+          </div>
+          <h3 class="value-card__title">Inclusive Community</h3>
+          <p class="value-card__description">
+            Our studio welcomes everyone, regardless of musical experience or 
+            background. We foster a supportive, inclusive environment.
+          </p>
+        </div>
+        
+        <div class="value-card">
+          <div class="value-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <h3 class="value-card__title">Mindful Practice</h3>
+          <p class="value-card__description">
+            We approach handpan music as a form of moving meditation, 
+            encouraging presence, mindfulness, and authentic expression.
+          </p>
+        </div>
+        
+        <div class="value-card">
+          <div class="value-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <h3 class="value-card__title">Continuous Learning</h3>
+          <p class="value-card__description">
+            We're committed to ongoing education and sharing knowledge about 
+            handpan techniques, music theory, and cultural traditions.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team Section -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section__title section__title--center">Meet Our Instructors</h2>
+      
+      <div class="team-grid">
+        <div class="team-member">
+          <div class="team-member__image">
+            <img 
+              src="/images/instructor-1.jpg" 
+              alt="Lead Instructor"
+              class="team-member__img"
+              loading="lazy"
+              width="300"
+              height="300"
+            />
+          </div>
+          <div class="team-member__content">
+            <h3 class="team-member__name">Sarah Chen</h3>
+            <p class="team-member__role">Lead Instructor & Founder</p>
+            <p class="team-member__bio">
+              With over 8 years of handpan experience, Sarah combines traditional 
+              techniques with modern approaches to help students find their unique voice.
+            </p>
+          </div>
+        </div>
+        
+        <div class="team-member">
+          <div class="team-member__image">
+            <img 
+              src="/images/instructor-2.jpg" 
+              alt="Assistant Instructor"
+              class="team-member__img"
+              loading="lazy"
+              width="300"
+              height="300"
+            />
+          </div>
+          <div class="team-member__content">
+            <h3 class="team-member__name">David Lim</h3>
+            <p class="team-member__role">Workshop Facilitator</p>
+            <p class="team-member__bio">
+              A certified music therapist who specializes in using handpan music 
+              for wellness and therapeutic applications.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Location & Studio -->
+  <section class="section section--gray">
+    <div class="container">
+      <div class="location-grid">
+        <div class="location__content">
+          <h2 class="section__title">Our Studio Space</h2>
+          <p class="location__description">
+            Located in the heart of Singapore, our studio provides a tranquil 
+            environment for learning and practice. The space is designed to 
+            enhance the natural acoustic properties of handpan music.
+          </p>
+          
+          <div class="location__features">
+            <div class="feature">
+              <svg class="feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M9 11H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h4l5 4V7l-5 4Z"/>
+              </svg>
+              <span>Acoustic-optimized space</span>
+            </div>
+            
+            <div class="feature">
+              <svg class="feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+              </svg>
+              <span>Comfortable seating for groups</span>
+            </div>
+            
+            <div class="feature">
+              <svg class="feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M8 2v4l-3 3H2v4h3l3 3v4l8-8L8 2Z"/>
+              </svg>
+              <span>Quality handpan instruments</span>
+            </div>
+            
+            <div class="feature">
+              <svg class="feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
+              <span>Peaceful, mindful atmosphere</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="location__image">
+          <img 
+            src="/images/studio-interior.jpg" 
+            alt="Interior view of the handpan studio"
+            class="location__img"
+            loading="lazy"
+            width="600"
+            height="400"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style lang="scss">
+// Page Hero
+.page-hero {
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+  color: var(--color-white);
+  padding: var(--space-20) 0 var(--space-16);
+  text-align: center;
+  
+  @media (min-width: 768px) {
+    padding: var(--space-24) 0 var(--space-20);
+  }
+}
+
+.page-hero__title {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-6);
+  
+  @media (min-width: 768px) {
+    font-size: var(--font-size-5xl);
+  }
+}
+
+.page-hero__subtitle {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-relaxed);
+  max-width: 600px;
+  margin: 0 auto;
+  opacity: 0.9;
+  
+  @media (min-width: 768px) {
+    font-size: var(--font-size-xl);
+  }
+}
+
+// Story Section
+.story-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-12);
+  align-items: center;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+  }
+}
+
+.story__img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.story__text p {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-gray-600);
+  margin-bottom: var(--space-4);
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Values Section
+.section--gray {
+  background-color: var(--color-gray-50);
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.value-card {
+  background: var(--color-white);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.value-card__icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-4);
+  color: var(--color-primary);
+  
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.value-card__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-3);
+  color: var(--color-gray-900);
+}
+
+.value-card__description {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  line-height: var(--line-height-relaxed);
+}
+
+// Team Section
+.team-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-12);
+  margin-top: var(--space-12);
+  
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.team-member {
+  text-align: center;
+}
+
+.team-member__image {
+  margin-bottom: var(--space-6);
+}
+
+.team-member__img {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto;
+  box-shadow: var(--shadow-md);
+}
+
+.team-member__name {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-2);
+  color: var(--color-gray-900);
+}
+
+.team-member__role {
+  font-size: var(--font-size-base);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--space-4);
+}
+
+.team-member__bio {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  line-height: var(--line-height-relaxed);
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+// Location Section
+.location-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-12);
+  align-items: center;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+  }
+}
+
+.location__description {
+  font-size: var(--font-size-base);
+  color: var(--color-gray-600);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--space-8);
+}
+
+.location__features {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-base);
+  color: var(--color-gray-700);
+}
+
+.feature__icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary);
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
+.location__img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+// Section Utilities
+.section {
+  padding: var(--space-16) 0;
+  
+  @media (min-width: 768px) {
+    padding: var(--space-24) 0;
+  }
+}
+
+.section__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-8);
+  color: var(--color-gray-900);
+  
+  &--center {
+    text-align: center;
+  }
+}
+</style>

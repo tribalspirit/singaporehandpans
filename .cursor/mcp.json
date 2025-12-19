@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "awslabs.aws-serverless-mcp-server": {
+      "command": "uvx",
+      "args": [
+        "awslabs.aws-serverless-mcp-server@latest",
+        "--allow-write",
+        "--allow-sensitive-data-access"
+      ],
+      "env": {
+        "AWS_PROFILE": "default",
+        "AWS_REGION": "ap-southeast-1"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"]
+    },
+    "cursor10x-mcp": {
+      "command": "npx",
+      "args": ["cursor10x-mcp"],
+      "enabled": true,
+      "env": {
+        "TURSO_DATABASE_URL": "libsql://cursor10x-mcp-picklenick79.aws-ap-northeast-1.turso.io",
+        "TURSO_AUTH_TOKEN": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NTcxNDgwNDIsImlkIjoiOTc5Nzk1ZGQtY2NiOS00MTJkLTliY2QtMDU0MTE1N2YyNWMzIiwicmlkIjoiZTYyMzBjZmItZWI3OS00NGExLWE5ZWQtMjcwZWI3OWM2ZmNmIn0.Vpsf24BxmyogWtfCq7fdKkUKAtFt4cjPCUX1_F7bmHpI_eUrhLv8ZEkRMpRBqqhYz8EYt3kaktRB2VKIyI4TDw"
+      }
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    }
+  }
+}

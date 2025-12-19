@@ -1,0 +1,681 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const title = 'Workshops';
+const description = 'Join our handpan workshops in Singapore. Learn from beginner to advanced levels with experienced instructors in a supportive, inclusive environment.';
+---
+
+<BaseLayout title={title} description={description}>
+  <!-- Hero Section -->
+  <section class="page-hero">
+    <div class="container">
+      <div class="page-hero__content">
+        <h1 class="page-hero__title">Handpan Workshops</h1>
+        <p class="page-hero__subtitle">
+          Discover the art of handpan playing through structured learning 
+          experiences designed for every skill level.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Workshop Levels -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section__title section__title--center">Choose Your Level</h2>
+      
+      <div class="levels-grid">
+        <div class="level-card">
+          <div class="level-card__header">
+            <h3 class="level-card__title">Beginner</h3>
+            <p class="level-card__subtitle">Perfect for first-time players</p>
+          </div>
+          
+          <div class="level-card__content">
+            <ul class="level-card__features">
+              <li>Introduction to handpan basics</li>
+              <li>Proper hand positioning & technique</li>
+              <li>Simple rhythms and scales</li>
+              <li>Basic maintenance and care</li>
+              <li>Mindfulness and breathing exercises</li>
+            </ul>
+            
+            <div class="level-card__details">
+              <div class="detail">
+                <strong>Duration:</strong> 4 weeks (2 hours/week)
+              </div>
+              <div class="detail">
+                <strong>Class Size:</strong> Max 6 participants
+              </div>
+              <div class="detail">
+                <strong>Price:</strong> $280 SGD
+              </div>
+            </div>
+            
+            <a href="/contacts#booking" class="btn btn--primary btn--full">
+              Book Beginner Course
+            </a>
+          </div>
+        </div>
+        
+        <div class="level-card level-card--featured">
+          <div class="level-card__badge">Most Popular</div>
+          <div class="level-card__header">
+            <h3 class="level-card__title">Intermediate</h3>
+            <p class="level-card__subtitle">Build on your foundation</p>
+          </div>
+          
+          <div class="level-card__content">
+            <ul class="level-card__features">
+              <li>Advanced rhythm patterns</li>
+              <li>Melody composition techniques</li>
+              <li>Different scales and modes</li>
+              <li>Improvisation skills</li>
+              <li>Playing with others (ensemble)</li>
+            </ul>
+            
+            <div class="level-card__details">
+              <div class="detail">
+                <strong>Duration:</strong> 6 weeks (2 hours/week)
+              </div>
+              <div class="detail">
+                <strong>Class Size:</strong> Max 6 participants
+              </div>
+              <div class="detail">
+                <strong>Price:</strong> $380 SGD
+              </div>
+            </div>
+            
+            <a href="/contacts#booking" class="btn btn--primary btn--full">
+              Book Intermediate Course
+            </a>
+          </div>
+        </div>
+        
+        <div class="level-card">
+          <div class="level-card__header">
+            <h3 class="level-card__title">Advanced</h3>
+            <p class="level-card__subtitle">Master your craft</p>
+          </div>
+          
+          <div class="level-card__content">
+            <ul class="level-card__features">
+              <li>Complex polyrhythmic patterns</li>
+              <li>Performance techniques</li>
+              <li>Teaching methodology</li>
+              <li>Recording and sound design</li>
+              <li>Cultural history and traditions</li>
+            </ul>
+            
+            <div class="level-card__details">
+              <div class="detail">
+                <strong>Duration:</strong> 8 weeks (2.5 hours/week)
+              </div>
+              <div class="detail">
+                <strong>Class Size:</strong> Max 4 participants
+              </div>
+              <div class="detail">
+                <strong>Price:</strong> $520 SGD
+              </div>
+            </div>
+            
+            <a href="/contacts#booking" class="btn btn--primary btn--full">
+              Book Advanced Course
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Private Sessions -->
+  <section class="section section--gray">
+    <div class="container">
+      <div class="private-sessions">
+        <div class="private-sessions__content">
+          <h2 class="section__title">Private Sessions</h2>
+          <p class="private-sessions__description">
+            Get personalized instruction tailored to your specific goals and learning pace. 
+            Perfect for focused skill development or preparing for performances.
+          </p>
+          
+          <div class="private-options">
+            <div class="private-option">
+              <h4 class="private-option__title">Individual Session</h4>
+              <p class="private-option__price">$120 SGD / hour</p>
+              <p class="private-option__description">
+                One-on-one instruction customized to your needs
+              </p>
+            </div>
+            
+            <div class="private-option">
+              <h4 class="private-option__title">Duo Session</h4>
+              <p class="private-option__price">$80 SGD / person / hour</p>
+              <p class="private-option__description">
+                Learn with a friend or partner in a shared session
+              </p>
+            </div>
+          </div>
+          
+          <a href="/contacts#booking" class="btn btn--outline">
+            Book Private Session
+          </a>
+        </div>
+        
+        <div class="private-sessions__image">
+          <img 
+            src="/images/private-lesson.jpg" 
+            alt="One-on-one handpan instruction"
+            class="private-sessions__img"
+            loading="lazy"
+            width="600"
+            height="400"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- What's Included -->
+  <section class="section">
+    <div class="container">
+      <h2 class="section__title section__title--center">What's Included</h2>
+      
+      <div class="included-grid">
+        <div class="included-item">
+          <div class="included-item__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12,6 12,12 16,14"/>
+            </svg>
+          </div>
+          <h3 class="included-item__title">Instrument Use</h3>
+          <p class="included-item__description">
+            Professional handpan instruments provided during all sessions
+          </p>
+        </div>
+        
+        <div class="included-item">
+          <div class="included-item__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <line x1="16" x2="8" y1="13" y2="13"/>
+              <line x1="16" x2="8" y1="17" y2="17"/>
+            </svg>
+          </div>
+          <h3 class="included-item__title">Course Materials</h3>
+          <p class="included-item__description">
+            Digital course materials, sheet music, and practice tracks
+          </p>
+        </div>
+        
+        <div class="included-item">
+          <div class="included-item__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 2v4l-3 3H2v4h3l3 3v4l8-8L8 2Z"/>
+            </svg>
+          </div>
+          <h3 class="included-item__title">Recordings</h3>
+          <p class="included-item__description">
+            Audio recordings of your progress for practice and review
+          </p>
+        </div>
+        
+        <div class="included-item">
+          <div class="included-item__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="m19 8 2 2-2 2"/>
+              <path d="m17 12h6"/>
+            </svg>
+          </div>
+          <h3 class="included-item__title">Community Access</h3>
+          <p class="included-item__description">
+            Access to our practice sessions and community events
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Schedule & Location -->
+  <section class="section section--gray">
+    <div class="container">
+      <div class="schedule-location">
+        <div class="schedule">
+          <h2 class="section__title">Class Schedule</h2>
+          <div class="schedule-grid">
+            <div class="schedule-item">
+              <h4 class="schedule-item__title">Weekday Classes</h4>
+              <p class="schedule-item__times">
+                Tuesday & Thursday<br>
+                7:00 PM - 9:00 PM
+              </p>
+            </div>
+            
+            <div class="schedule-item">
+              <h4 class="schedule-item__title">Weekend Classes</h4>
+              <p class="schedule-item__times">
+                Saturday<br>
+                2:00 PM - 4:00 PM<br>
+                4:30 PM - 6:30 PM
+              </p>
+            </div>
+            
+            <div class="schedule-item">
+              <h4 class="schedule-item__title">Sunday Sessions</h4>
+              <p class="schedule-item__times">
+                Sunday<br>
+                10:00 AM - 12:00 PM<br>
+                (Community Practice)
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="location">
+          <h2 class="section__title">Location</h2>
+          <div class="location-details">
+            <div class="location-item">
+              <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <div>
+                <p><strong>Singapore Handpan Studio</strong></p>
+                <p>123 Music Street, Level 2<br>Singapore 123456</p>
+              </div>
+            </div>
+            
+            <div class="location-item">
+              <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+              </svg>
+              <div>
+                <p><strong>Getting Here</strong></p>
+                <p>2 minutes walk from Tanjong Pagar MRT<br>Public parking available</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style lang="scss">
+// Page Hero
+.page-hero {
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+  color: var(--color-white);
+  padding: var(--space-20) 0 var(--space-16);
+  text-align: center;
+  
+  @media (min-width: 768px) {
+    padding: var(--space-24) 0 var(--space-20);
+  }
+}
+
+.page-hero__title {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-6);
+  
+  @media (min-width: 768px) {
+    font-size: var(--font-size-5xl);
+  }
+}
+
+.page-hero__subtitle {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-relaxed);
+  max-width: 600px;
+  margin: 0 auto;
+  opacity: 0.9;
+  
+  @media (min-width: 768px) {
+    font-size: var(--font-size-xl);
+  }
+}
+
+// Levels Grid
+.levels-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.level-card {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  position: relative;
+  transition: all var(--transition-fast);
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  &--featured {
+    border: 2px solid var(--color-accent);
+    transform: scale(1.05);
+    
+    &:hover {
+      transform: scale(1.05) translateY(-4px);
+    }
+  }
+}
+
+.level-card__badge {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: var(--color-accent);
+  color: var(--color-white);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  z-index: 1;
+}
+
+.level-card__header {
+  background: var(--color-gray-50);
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.level-card__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-2);
+  color: var(--color-gray-900);
+}
+
+.level-card__subtitle {
+  color: var(--color-gray-600);
+  font-size: var(--font-size-base);
+}
+
+.level-card__content {
+  padding: var(--space-6);
+}
+
+.level-card__features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-6) 0;
+  
+  li {
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--color-gray-100);
+    font-size: var(--font-size-sm);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &::before {
+      content: '✓';
+      color: var(--color-success);
+      font-weight: var(--font-weight-bold);
+      margin-right: var(--space-2);
+    }
+  }
+}
+
+.level-card__details {
+  margin-bottom: var(--space-6);
+  
+  .detail {
+    padding: var(--space-2) 0;
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+    
+    strong {
+      color: var(--color-gray-900);
+    }
+  }
+}
+
+// Private Sessions
+.section--gray {
+  background-color: var(--color-gray-50);
+}
+
+.private-sessions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-12);
+  align-items: center;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+  }
+}
+
+.private-sessions__description {
+  font-size: var(--font-size-base);
+  color: var(--color-gray-600);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--space-8);
+}
+
+.private-options {
+  display: grid;
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.private-option {
+  background: var(--color-white);
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.private-option__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-2);
+  color: var(--color-gray-900);
+}
+
+.private-option__price {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin-bottom: var(--space-2);
+}
+
+.private-option__description {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+}
+
+.private-sessions__img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+// Included Items
+.included-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+  
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.included-item {
+  text-align: center;
+}
+
+.included-item__icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-4);
+  color: var(--color-primary);
+  
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.included-item__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-3);
+  color: var(--color-gray-900);
+}
+
+.included-item__description {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  line-height: var(--line-height-relaxed);
+}
+
+// Schedule & Location
+.schedule-location {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-12);
+  
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+  }
+}
+
+.schedule-grid {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.schedule-item {
+  background: var(--color-white);
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.schedule-item__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-3);
+  color: var(--color-gray-900);
+}
+
+.schedule-item__times {
+  font-size: var(--font-size-base);
+  color: var(--color-gray-600);
+  line-height: var(--line-height-relaxed);
+}
+
+.location-details {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.location-item {
+  display: flex;
+  gap: var(--space-4);
+  background: var(--color-white);
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.location-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+// Button Styles
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  border: none;
+  font-size: var(--font-size-base);
+  
+  &:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  
+  &--primary {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    
+    &:hover {
+      background-color: var(--color-primary-dark);
+    }
+  }
+  
+  &--outline {
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+    
+    &:hover {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+    }
+  }
+  
+  &--full {
+    width: 100%;
+  }
+}
+
+// Section Utilities
+.section {
+  padding: var(--space-16) 0;
+  
+  @media (min-width: 768px) {
+    padding: var(--space-24) 0;
+  }
+}
+
+.section__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-8);
+  color: var(--color-gray-900);
+  
+  &--center {
+    text-align: center;
+  }
+}
+</style>

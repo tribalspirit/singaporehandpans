@@ -1,0 +1,184 @@
+---
+// CMS Fallback component for when Storyblok is unreachable
+export interface CMSFallbackProps {
+  type: 'events' | 'gallery' | 'workshops' | 'general';
+  title?: string;
+}
+
+const { type, title } = Astro.props as CMSFallbackProps;
+
+const fallbackData = {
+  events: {
+    title: 'Upcoming Events',
+    message: 'Our events calendar is temporarily unavailable. Please check back soon or contact us directly for upcoming workshops and performances.',
+    cta: 'Contact Us'
+  },
+  gallery: {
+    title: 'Photo Gallery',
+    message: 'Our photo gallery is currently being updated. Follow us on social media for the latest photos and videos from our sessions.',
+    cta: 'Follow Us'
+  },
+  workshops: {
+    title: 'Workshop Information',
+    message: 'Workshop details are being refreshed. Please contact us directly to learn about our current offerings and schedule a session.',
+    cta: 'Book Session'
+  },
+  general: {
+    title: 'Content Loading',
+    message: 'This content is temporarily unavailable. We\'re working to restore it as quickly as possible.',
+    cta: 'Refresh Page'
+  }
+};
+
+const content = fallbackData[type];
+const displayTitle = title || content.title;
+---
+
+<div class="cms-fallback">
+  <div class="cms-fallback__container">
+    <div class="cms-fallback__icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+        <path d="M2 17l10 5 10-5"></path>
+        <path d="M2 12l10 5 10-5"></path>
+      </svg>
+    </div>
+    
+    <div class="cms-fallback__content">
+      <h3 class="cms-fallback__title">{displayTitle}</h3>
+      <p class="cms-fallback__message">{content.message}</p>
+      
+      <div class="cms-fallback__actions">
+        {type === 'events' && (
+          <a href="/contacts" class="cms-fallback__cta">
+            {content.cta}
+          </a>
+        )}
+        
+        {type === 'gallery' && (
+          <div class="cms-fallback__social">
+            <a href="https://instagram.com/sghandpan" target="_blank" rel="noopener" class="cms-fallback__cta">
+              Instagram
+            </a>
+            <a href="https://facebook.com/sghandpan" target="_blank" rel="noopener" class="cms-fallback__cta cms-fallback__cta--secondary">
+              Facebook
+            </a>
+          </div>
+        )}
+        
+        {type === 'workshops' && (
+          <a href="/contacts#booking" class="cms-fallback__cta">
+            {content.cta}
+          </a>
+        )}
+        
+        {type === 'general' && (
+          <button onclick="window.location.reload()" class="cms-fallback__cta">
+            {content.cta}
+          </button>
+        )}
+      </div>
+      
+      <!-- Fallback content slot -->
+      <div class="cms-fallback__slot">
+        <slot />
+      </div>
+    </div>
+  </div>
+</div>
+
+<style lang="scss">
+.cms-fallback {
+  background-color: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  text-align: center;
+  margin: var(--space-8) 0;
+}
+
+.cms-fallback__container {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.cms-fallback__icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-4);
+  color: var(--color-gray-400);
+  
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.cms-fallback__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-800);
+  margin-bottom: var(--space-3);
+}
+
+.cms-fallback__message {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--space-6);
+}
+
+.cms-fallback__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+  
+  @media (min-width: 480px) {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+.cms-fallback__social {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.cms-fallback__cta {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  text-decoration: none;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  
+  &:hover {
+    background-color: var(--color-primary-dark);
+  }
+  
+  &:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  
+  &--secondary {
+    background-color: var(--color-gray-600);
+    
+    &:hover {
+      background-color: var(--color-gray-700);
+    }
+  }
+}
+
+.cms-fallback__slot {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-gray-200);
+}
+</style>

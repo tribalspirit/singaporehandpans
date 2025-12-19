@@ -1,0 +1,263 @@
+{
+  "name": "handpan-studio-speckit-cursor-ruleset",
+  "version": "1.1.0",
+  "description": "Unified ruleset for GitHub Spec Kit (spec/plan/tasks-driven development) + Cursor (implementation assistant) for an Astro + React islands static site using Storyblok, SCSS modules, strict SEO, and mobile-first responsive design.",
+  "principles": [
+    "Spec-first development: always align code changes to Spec Kit artifacts (constitution/spec/plan/tasks).",
+    "Ship SEO-first static HTML with minimal client JavaScript (islands only).",
+    "Mobile-first, accessible, maintainable code with predictable builds."
+  ],
+  "diffRules": {
+    "noCommentsInDiffs": true,
+    "description": "Do not add comments of any kind in changed lines. Explanations must be expressed through naming, structure, or external documentation only when explicitly requested.",
+    "forbiddenCommentSyntax": [
+      "//",
+      "/*",
+      "*/",
+      "<!--",
+      "-->",
+      "/**",
+      "*/",
+      "TODO",
+      "FIXME",
+      "@ts-ignore",
+      "@ts-expect-error"
+    ],
+    "scope": "all",
+    "exceptions": {
+      "allowedWhenExplicitlyRequestedByUser": false,
+      "allowedInGeneratedFiles": true
+    }
+  },
+  "specKit": {
+    "mode": "spec-first",
+    "workflow": [
+      "speckit.constitution",
+      "speckit.specify",
+      "speckit.plan",
+      "speckit.tasks",
+      "speckit.implement"
+    ],
+    "authorityOrder": [
+      "spec/constitution.md",
+      "spec/spec.md",
+      "spec/plan.md",
+      "spec/tasks.md",
+      "code"
+    ],
+    "rules": [
+      "If implementation choices are ambiguous, prefer the plan; if the plan is missing detail, extend plan/spec before coding.",
+      "Do not implement features that are not present in spec/tasks unless explicitly instructed; instead propose updating spec/tasks.",
+      "Whenever code changes introduce new behavior, ensure the spec and tasks remain accurate and up to date.",
+      "Treat the constitution as non-negotiable; if a request conflicts, propose a spec change rather than silently violating principles."
+    ],
+    "artifactLocations": {
+      "constitution": "spec/constitution.md",
+      "spec": "spec/spec.md",
+      "plan": "spec/plan.md",
+      "tasks": "spec/tasks.md",
+      "decisionsLog": "spec/decisions.md",
+      "notes": "spec/notes.md"
+    },
+    "changeProtocol": {
+      "whenToUpdateSpec": [
+        "Any new page/route or content model change",
+        "Any new dependency that affects architecture/performance",
+        "Any new integration step (e.g., Storyblok, deployment, webhooks)",
+        "Any change that impacts SEO, accessibility, or responsiveness guarantees"
+      ],
+      "whenToUpdatePlan": [
+        "Folder structure changes",
+        "Data fetching strategy changes (build-time vs runtime)",
+        "Rendering strategy changes (SSG/SSR/partial hydration)",
+        "Testing strategy changes"
+      ],
+      "whenToUpdateTasks": [
+        "Task decomposition changes",
+        "Task ordering changes",
+        "New acceptance criteria added or removed"
+      ]
+    }
+  },
+  "cursor": {
+    "role": "implementer",
+    "behaviorRules": [
+      "Before coding, identify the relevant spec/tasks section(s) and implement only what is requested.",
+      "Prefer small, focused diffs. Do not reformat unrelated files.",
+      "Provide outputs as: changed files list, concise summary, and env var notes.",
+      "Never add comments in changed lines (strict)."
+    ],
+    "outputExpectations": {
+      "listChangedFiles": true,
+      "conciseSummary": true,
+      "documentNewEnvVars": true,
+      "avoidVerboseNarration": true
+    },
+    "safetyRails": {
+      "noBackgroundPromises": true,
+      "noAssumptionsAboutExternalSecrets": true,
+      "noNetworkCallsAtRuntimeForSSGContentUnlessInPlan": true
+    }
+  },
+  "stack": {
+    "framework": "astro",
+    "rendering": "static-ssg",
+    "ui": "react-islands",
+    "language": "typescript-strict",
+    "styling": "scss-css-modules",
+    "cms": "storyblok"
+  },
+  "architecture": {
+    "pages": "src/pages/*.astro",
+    "layouts": "src/layouts",
+    "astroComponents": "src/components",
+    "reactIslands": "src/components/islands",
+    "cmsClient": "src/lib/storyblok",
+    "styles": {
+      "tokens": "src/styles/tokens.scss",
+      "global": "src/styles/global.scss"
+    },
+    "contentPolicy": "All dynamic content must originate from Storyblok with safe fallbacks only. Avoid hardcoding production copy in components.",
+    "routingPolicy": {
+      "staticRoutes": [
+        "/",
+        "/about",
+        "/workshops",
+        "/events",
+        "/gallery",
+        "/contacts"
+      ],
+      "dynamicRoutes": [
+        "/events/[slug]"
+      ]
+    }
+  },
+  "seo": {
+    "htmlPreRendering": true,
+    "perPageMetaRequired": true,
+    "canonicalRequired": true,
+    "openGraphRequired": true,
+    "twitterCardRequired": true,
+    "sitemap": true,
+    "robotsTxt": true,
+    "jsonLd": [
+      "Organization",
+      "LocalBusiness",
+      "Event"
+    ],
+    "rules": [
+      "All routes must render meaningful HTML at build time (no blank shell).",
+      "Event detail pages must be indexable and pre-rendered.",
+      "Avoid duplicating titles/descriptions across pages."
+    ]
+  },
+  "performance": {
+    "avoidGlobalJS": true,
+    "islandsOnlyForInteractivity": true,
+    "preferCSSAnimations": true,
+    "imageOptimizationRequired": true,
+    "rules": [
+      "Do not hydrate React islands unless strictly necessary.",
+      "Keep third-party scripts scoped (e.g., Calendly only on relevant pages/islands)."
+    ]
+  },
+  "responsiveness": {
+    "mobileFirst": true,
+    "targetMinWidthPx": 360,
+    "touchFriendly": true,
+    "keyboardNavigable": true,
+    "acceptanceCriteria": [
+      "Navigation works on small screens with an accessible menu.",
+      "Layouts adapt cleanly across mobile/tablet/desktop without horizontal scrolling.",
+      "Tap targets are adequate and not cramped."
+    ]
+  },
+  "accessibility": {
+    "semanticHtml": true,
+    "ariaWhereNeeded": true,
+    "focusStylesRequired": true,
+    "sufficientContrast": true,
+    "rules": [
+      "Use buttons for actions and links for navigation.",
+      "Never remove focus outlines without providing an accessible alternative."
+    ]
+  },
+  "styling": {
+    "allowTailwind": false,
+    "allowCssInJs": false,
+    "designTokens": "css-variables",
+    "maxNestingDepth": 3,
+    "preferredTechniques": [
+      "clamp()",
+      "logical-properties"
+    ],
+    "globalCssLimit": "tokens-and-reset-only"
+  },
+  "typescript": {
+    "noImplicitAny": true,
+    "preferUnknownOverAny": true,
+    "explicitTypesForCmsModels": true,
+    "strictNullChecks": true,
+    "rules": [
+      "No untyped Storyblok payload usage; define model types and narrow safely.",
+      "Avoid suppressions; fix types instead."
+    ]
+  },
+  "cms": {
+    "provider": "storyblok",
+    "integration": "@storyblok/astro",
+    "fetchPhase": "build-time",
+    "typedModelsRequired": true,
+    "gracefulDegradation": true,
+    "contentModels": {
+      "eventItem": [
+        "title",
+        "startDateTime",
+        "endDateTime",
+        "location",
+        "descriptionRichText",
+        "coverImage",
+        "bookingUrl",
+        "status",
+        "slug"
+      ],
+      "galleryItem": [
+        "image",
+        "alt",
+        "caption",
+        "tags",
+        "sortOrder"
+      ]
+    },
+    "rules": [
+      "All Storyblok access goes through a single client module under src/lib/storyblok.",
+      "If CMS data is missing, show a clean empty state and keep SEO meta intact."
+    ]
+  },
+  "calendly": {
+    "encapsulatedIsland": true,
+    "fallbackLinkRequired": true,
+    "rules": [
+      "Calendly embed must be isolated to its component and only loaded where used.",
+      "Provide a visible link to open booking in a new tab."
+    ]
+  },
+  "testing": {
+    "buildMustPass": true,
+    "routeSmokeTests": true,
+    "rules": [
+      "At minimum, verify the build output includes expected routes in dist and pages render without runtime JS errors.",
+      "Keep tests lightweight and aligned with static output constraints."
+    ]
+  },
+  "documentation": {
+    "readmeRequired": true,
+    "mustDocument": [
+      "Local dev commands",
+      "Build/deploy commands",
+      "Required environment variables",
+      "Storyblok space setup and webhook rebuild notes"
+    ],
+    "noInlineCommentsInsteadOfDocs": true
+  }
+}
