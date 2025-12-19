@@ -4,7 +4,13 @@ import storyblok from '@storyblok/astro';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://sghandpan.com',
+  // Update this to your GitHub Pages URL when deploying
+  // Format: https://username.github.io/repository-name/
+  site: process.env.GITHUB_PAGES ? 'https://tribalspirit.github.io/singaporehandpans/' : 'https://singaporehandpans.com',
+  
+  // Uncomment if your repository is not at the root (has a path)
+  // base: process.env.GITHUB_PAGES ? '/singaporehandpans' : '/',
+  
   output: 'static',
   integrations: [
     react(),
@@ -29,7 +35,12 @@ export default defineConfig({
     }
   },
   build: {
-    inlineStylesheets: 'auto'
+    inlineStylesheets: 'auto',
+    // Ensure assets use relative paths for GitHub Pages compatibility
+    assetsPrefix: process.env.GITHUB_PAGES ? '/sghandpan' : undefined
   },
-  compressHTML: true
+  compressHTML: true,
+  
+  // Ensure trailing slashes for better GitHub Pages compatibility
+  trailingSlash: 'always'
 });
