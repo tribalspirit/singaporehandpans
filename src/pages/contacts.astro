@@ -1,8 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import CalendlyEmbed from '../components/CalendlyEmbed.astro';
 
 const title = 'Contact Us';
 const description = 'Get in touch with Singapore Handpan Studio. Book workshops, ask questions, or connect with our community in Singapore.';
+
+// Calendly URLs for different booking types
+const CALENDLY_WORKSHOP_URL = 'https://calendly.com/singaporehandpan/workshop';
+const CALENDLY_PRIVATE_URL = 'https://calendly.com/singaporehandpan/private-session';
 ---
 
 <BaseLayout title={title} description={description}>
@@ -202,29 +207,25 @@ const description = 'Get in touch with Singapore Handpan Studio. Book workshops,
           </div>
           
           <div class="booking-actions">
-            <button class="btn btn--white btn--large" onclick="openCalendly()">
+            <a href={CALENDLY_WORKSHOP_URL} class="btn btn--white btn--large" target="_blank" rel="noopener noreferrer">
               Book Workshop
-            </button>
-            <button class="btn btn--outline-white btn--large" onclick="openCalendly()">
+            </a>
+            <a href={CALENDLY_PRIVATE_URL} class="btn btn--outline-white btn--large" target="_blank" rel="noopener noreferrer">
               Book Private Session
-            </button>
+            </a>
           </div>
         </div>
         
-        <!-- Calendly Widget Placeholder -->
+        <!-- Calendly Widget -->
         <div class="calendly-container">
-          <div class="calendly-placeholder">
-            <div class="calendly-placeholder__content">
-              <svg class="calendly-placeholder__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-                <line x1="16" x2="16" y1="2" y2="6"/>
-                <line x1="8" x2="8" y1="2" y2="6"/>
-                <line x1="3" x2="21" y1="10" y2="10"/>
-              </svg>
-              <h3>Online Booking Calendar</h3>
-              <p>Click "Book Workshop" or "Book Private Session" to open our scheduling system</p>
-            </div>
-          </div>
+          <CalendlyEmbed 
+            url={CALENDLY_WORKSHOP_URL}
+            height="600px"
+            hideEventTypeDetails={false}
+            hideLandingPageDetails={true}
+            primaryColor="#D4A574"
+            textColor="#2C3E50"
+          />
         </div>
       </div>
     </div>
@@ -520,43 +521,13 @@ const description = 'Get in touch with Singapore Handpan Studio. Book workshops,
   }
 }
 
-// Calendly Placeholder
+// Calendly Container
 .calendly-container {
   background: var(--color-white);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
-}
-
-.calendly-placeholder {
-  padding: var(--space-12);
-  text-align: center;
-  background: var(--color-gray-50);
-}
-
-.calendly-placeholder__content {
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-.calendly-placeholder__icon {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto var(--space-4);
-  color: var(--color-gray-400);
-}
-
-.calendly-placeholder h3 {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  margin-bottom: var(--space-3);
-  color: var(--color-gray-700);
-}
-
-.calendly-placeholder p {
-  font-size: var(--font-size-sm);
-  color: var(--color-gray-600);
-  line-height: var(--line-height-relaxed);
+  min-height: 600px;
 }
 
 // FAQ Section
@@ -672,16 +643,9 @@ const description = 'Get in touch with Singapore Handpan Studio. Book workshops,
 </style>
 
 <script>
-// Calendly integration function
-function openCalendly() {
-  // This would integrate with actual Calendly widget
-  // For now, show an alert
-  alert('Calendly booking system would open here. Please call +65 9123 4567 to book your session.');
-}
-
 // Form submission handling
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('.contact-form');
+  const form = document.querySelector('.contact-form') as HTMLFormElement;
   
   if (form) {
     form.addEventListener('submit', (e) => {

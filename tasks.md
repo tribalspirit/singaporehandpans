@@ -87,18 +87,18 @@ description: "Task list for Singapore Handpan Studio Website"
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Create event content model in Storyblok CMS
-- [ ] T027 [P] [US2] Create events listing page in src/pages/events.astro
-- [ ] T028 [US2] Implement dynamic event detail pages in src/pages/events/[slug].astro
-- [ ] T029 [P] [US2] Create EventCard component in src/components/EventCard.astro
-- [ ] T030 [P] [US2] Create EventDetail component in src/components/EventDetail.astro
-- [ ] T031 [US2] Implement upcoming/past events separation logic
-- [ ] T032 [P] [US2] Add Calendly embed component in src/components/CalendlyEmbed.astro
-- [ ] T033 [US2] Integrate Calendly on events and contacts pages
-- [ ] T034 [P] [US2] Add Event schema JSON-LD for SEO
-- [ ] T035 [US2] Add proper meta tags for event detail pages
+- [X] T026 [US2] Create event content model in Storyblok CMS
+- [X] T027 [P] [US2] Create events listing page in src/pages/events.astro
+- [X] T028 [US2] Implement dynamic event detail pages in src/pages/events/[slug].astro
+- [X] T029 [P] [US2] Create EventCard component in src/components/EventCard.astro
+- [X] T030 [P] [US2] Create EventDetail component in src/components/EventDetail.astro
+- [X] T031 [US2] Implement upcoming/past events separation logic
+- [X] T032 [P] [US2] Add Calendly embed component in src/components/CalendlyEmbed.astro
+- [X] T033 [US2] Integrate Calendly on events and contacts pages
+- [X] T034 [P] [US2] Add Event schema JSON-LD for SEO
+- [X] T035 [US2] Add proper meta tags for event detail pages
 
-**Checkpoint**: At this point, events system should work independently with booking functionality
+**Checkpoint**: ✅ **COMPLETED** - Events system works independently with booking functionality
 
 ---
 

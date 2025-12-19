@@ -1,0 +1,383 @@
+---
+export interface Props {
+  event: {
+    id: string;
+    name: string;
+    slug: string;
+    content: {
+      title: string;
+      description: string;
+      date: string;
+      location: string;
+      price?: string;
+      booking_url?: string;
+      image?: {
+        filename: string;
+        alt?: string;
+      };
+      tags?: string[];
+      status?: string;
+      max_participants?: number;
+    };
+  };
+  isPast?: boolean;
+}
+
+const { event, isPast = false } = Astro.props;
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-SG', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString('en-SG', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+};
+
+const eventUrl = `/events/${event.slug}`;
+const eventDate = new Date(event.content.date);
+const isUpcoming = eventDate >= new Date();
+---
+
+<article class={`event-card ${isPast ? 'past-event' : ''}`}>
+  <div class="event-image">
+    {event.content.image ? (
+      <img 
+        src={event.content.image.filename} 
+        alt={event.content.image.alt || event.content.title}
+        loading="lazy"
+      />
+    ) : (
+      <div class="placeholder-image">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="m12 1 0 6m0 6 0 6"/>
+          <path d="m1 12 6 0m6 0 6 0"/>
+        </svg>
+      </div>
+    )}
+    
+    {!isPast && (
+      <div class="event-status">
+        {isUpcoming ? 'Upcoming' : 'Today'}
+      </div>
+    )}
+  </div>
+
+  <div class="event-content">
+    <header class="event-header">
+      <h3>
+        <a href={eventUrl}>{event.content.title}</a>
+      </h3>
+      
+      {event.content.tags && event.content.tags.length > 0 && (
+        <div class="event-tags">
+          {event.content.tags.map(tag => (
+            <span class="tag">{tag}</span>
+          ))}
+        </div>
+      )}
+    </header>
+
+    <div class="event-details">
+      <div class="event-datetime">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <div>
+          <div class="date">{formatDate(event.content.date)}</div>
+          <div class="time">{formatTime(event.content.date)}</div>
+        </div>
+      </div>
+
+      <div class="event-location">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+        <span>{event.content.location}</span>
+      </div>
+
+      {event.content.price && (
+        <div class="event-price">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          <span class={event.content.price.toLowerCase() === 'free' ? 'free-price' : ''}>
+            {event.content.price}
+          </span>
+        </div>
+      )}
+
+      {event.content.max_participants && (
+        <div class="event-capacity">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Max {event.content.max_participants} participants</span>
+        </div>
+      )}
+    </div>
+
+    <p class="event-description">
+      {event.content.description.length > 120 
+        ? event.content.description.substring(0, 120) + '...' 
+        : event.content.description
+      }
+    </p>
+
+    <div class="event-actions">
+      <a href={eventUrl} class="btn btn-outline">
+        Learn More
+      </a>
+      
+      {!isPast && event.content.booking_url && (
+        <a 
+          href={event.content.booking_url} 
+          class="btn btn-primary"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Book Now
+        </a>
+      )}
+    </div>
+  </div>
+</article>
+
+<style lang="scss">
+@import "src/styles/tokens.scss";
+
+.event-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border-color: var(--color-primary-light);
+  }
+
+  &.past-event {
+    opacity: 0.8;
+    
+    .event-image {
+      filter: grayscale(30%);
+    }
+    
+    .event-status {
+      background: var(--color-text-secondary);
+    }
+  }
+}
+
+.event-image {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  background: var(--color-background-secondary);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .placeholder-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--color-text-secondary);
+    background: linear-gradient(135deg, var(--color-primary-light), var(--color-accent-light));
+  }
+
+  .event-status {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background: var(--color-primary);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &:hover img {
+    transform: scale(1.05);
+  }
+}
+
+.event-content {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.event-header {
+  margin-bottom: var(--spacing-md);
+
+  h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    
+    a {
+      color: var(--color-text-primary);
+      text-decoration: none;
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-semibold);
+      line-height: 1.3;
+      
+      &:hover {
+        color: var(--color-primary);
+      }
+    }
+  }
+}
+
+.event-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+
+  .tag {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    text-transform: capitalize;
+  }
+}
+
+.event-details {
+  margin-bottom: var(--spacing-md);
+  
+  > div {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+
+    svg {
+      color: var(--color-primary);
+      flex-shrink: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.event-datetime {
+  .date {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+  
+  .time {
+    font-size: var(--font-size-xs);
+    margin-top: 2px;
+  }
+}
+
+.event-price {
+  .free-price {
+    color: var(--color-success);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+
+.event-description {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--spacing-lg);
+  flex: 1;
+}
+
+.event-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: auto;
+
+  .btn {
+    flex: 1;
+    text-align: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    text-decoration: none;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+
+    &.btn-outline {
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+      background: transparent;
+
+      &:hover {
+        background: var(--color-primary);
+        color: white;
+      }
+    }
+
+    &.btn-primary {
+      background: var(--color-primary);
+      color: white;
+
+      &:hover {
+        background: var(--color-primary-dark);
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .event-card {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .event-content {
+    padding: var(--spacing-md);
+  }
+
+  .event-actions {
+    flex-direction: column;
+    
+    .btn {
+      flex: none;
+    }
+  }
+}
+</style>
