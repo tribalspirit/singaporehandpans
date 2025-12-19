@@ -137,7 +137,41 @@ The site uses Storyblok as a headless CMS for:
 - Workshop information
 - Studio content and team info
 
+### 📚 Documentation
+- **[STORYBLOK-SETUP.md](./STORYBLOK-SETUP.md)** - Complete setup guide
+- **[STORYBLOK-AUTOMATION.md](./STORYBLOK-AUTOMATION.md)** - Automated content creation  
+- **[STORYBLOK-ENV-FIX.md](./STORYBLOK-ENV-FIX.md)** - Environment variable troubleshooting
+
+### ✅ Quick Verification
+Visit `/events` page and check browser console for:
+```
+✅ Successfully fetched X events from Storyblok
+```
+
 Content models are configured in `astro.config.mjs` and components are in `src/components/storyblok/`.
+
+## 📅 Booking Integration
+
+The site includes Calendly integration for workshop and session bookings:
+
+### Quick Setup (5 minutes)
+- **[CALENDLY-QUICKSTART.md](./CALENDLY-QUICKSTART.md)** - Fast setup guide
+- **[CALENDLY-SETUP.md](./CALENDLY-SETUP.md)** - Complete configuration guide
+
+### Features
+- ✅ Embedded booking widget on contacts page
+- ✅ Direct booking buttons on events
+- ✅ Multiple booking types (workshop, private, group)
+- ✅ Branded styling with studio colors
+- ✅ Mobile-responsive design
+- ✅ Environment variable configuration
+
+### Configuration
+Add to your `.env` file:
+```bash
+PUBLIC_CALENDLY_WORKSHOP_URL=https://calendly.com/your-username/workshop
+PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/your-username/private-session
+```
 
 ## 🎯 Pages
 
@@ -153,6 +187,26 @@ Content models are configured in `astro.config.mjs` and components are in `src/c
 - Meta tags: Title, description, Open Graph, Twitter Cards
 - JSON-LD: Organization and LocalBusiness schema
 - Ready for Google Analytics integration
+
+## 🐛 Development & Debugging
+
+The project includes comprehensive debugging support:
+
+### Source Maps Enabled
+- ✅ **TypeScript/JavaScript** source maps for debugging
+- ✅ **SCSS/CSS** source maps for style debugging  
+- ✅ **Astro component** debugging support
+- ✅ **Browser DevTools** integration
+
+### Quick Setup
+```bash
+npm run dev  # Source maps auto-enabled in development
+```
+
+### Documentation
+- **[DEBUGGING-SETUP.md](./DEBUGGING-SETUP.md)** - Complete debugging guide
+- Includes browser setup, VS Code integration, mobile debugging
+- Performance profiling and troubleshooting tips
 
 ## 🤝 Contributing
 

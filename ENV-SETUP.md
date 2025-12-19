@@ -60,7 +60,10 @@ PUBLIC_SITE_URL=http://localhost:4321
 | `PUBLIC_FACEBOOK_PIXEL_ID` | Facebook tracking | [Facebook Business](https://business.facebook.com/) |
 | `PUBLIC_HOTJAR_ID` | User behavior analytics | [Hotjar](https://www.hotjar.com/) |
 
-### 📅 Booking Integration (Optional)
+### 📅 Booking Integration (Calendly)
+
+**Quick Setup**: See [CALENDLY-QUICKSTART.md](./CALENDLY-QUICKSTART.md) for 5-minute setup guide.  
+**Complete Guide**: See [CALENDLY-SETUP.md](./CALENDLY-SETUP.md) for detailed configuration.
 
 | Variable | Purpose | Example Value |
 |----------|---------|---------------|

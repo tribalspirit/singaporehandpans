@@ -19,7 +19,7 @@ export async function getStaticPaths() {
             date: '2024-03-15T19:00:00Z',
             location: 'Singapore Handpan Studio',
             price: 'S$120',
-            booking_url: 'https://calendly.com/singaporehandpan/workshop',
+            booking_url: import.meta.env.PUBLIC_CALENDLY_WORKSHOP_URL || 'https://calendly.com/singaporehandpan/workshop',
             tags: ['workshop', 'beginner'],
             status: 'upcoming',
             max_participants: 6,
@@ -57,7 +57,9 @@ export async function getStaticPaths() {
 
   // Try to fetch from Storyblok first
   try {
-    if (!process.env.STORYBLOK_TOKEN) {
+    const storyblokToken = import.meta.env.STORYBLOK_TOKEN;
+    
+    if (!storyblokToken) {
       console.log('No Storyblok token configured - using fallback events for static paths');
       return FALLBACK_EVENTS;
     }
@@ -66,8 +68,8 @@ export async function getStaticPaths() {
     const storyblokApi = useStoryblokApi();
     const { data } = await storyblokApi.get('cdn/stories', {
       starts_with: 'events/',
-      is_startpage: false,
-      version: 'draft' // Use 'published' in production
+      content_type: 'event',
+      version: import.meta.env.NODE_ENV === 'production' ? 'published' : 'draft'
     });
 
     if (data?.stories && data.stories.length > 0) {

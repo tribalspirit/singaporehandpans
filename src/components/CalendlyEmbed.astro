@@ -11,10 +11,10 @@ export interface Props {
 const { 
   url, 
   height = '630px',
-  hideEventTypeDetails = false,
-  hideLandingPageDetails = false,
-  primaryColor = '#D4A574',
-  textColor = '#2C3E50'
+  hideEventTypeDetails = import.meta.env.PUBLIC_CALENDLY_HIDE_EVENT_TYPE_DETAILS === 'true' ? true : false,
+  hideLandingPageDetails = import.meta.env.PUBLIC_CALENDLY_HIDE_LANDING_PAGE_DETAILS === 'true' ? true : true,
+  primaryColor = import.meta.env.PUBLIC_CALENDLY_PRIMARY_COLOR || 'D4A574',
+  textColor = import.meta.env.PUBLIC_CALENDLY_TEXT_COLOR || '2C3E50'
 } = Astro.props;
 
 // Extract the Calendly username/event from the URL

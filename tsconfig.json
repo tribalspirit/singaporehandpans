@@ -7,6 +7,13 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "baseUrl": ".",
+    
+    // Enable source maps for debugging
+    "sourceMap": true,
+    "inlineSources": true,
+    "declaration": true,
+    "declarationMap": true,
+    
     "paths": {
       "@/*": ["src/*"],
       "@/components/*": ["src/components/*"],

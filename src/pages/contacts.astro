@@ -5,9 +5,9 @@ import CalendlyEmbed from '../components/CalendlyEmbed.astro';
 const title = 'Contact Us';
 const description = 'Get in touch with Singapore Handpan Studio. Book workshops, ask questions, or connect with our community in Singapore.';
 
-// Calendly URLs for different booking types
-const CALENDLY_WORKSHOP_URL = 'https://calendly.com/singaporehandpan/workshop';
-const CALENDLY_PRIVATE_URL = 'https://calendly.com/singaporehandpan/private-session';
+// Calendly URLs from environment variables with fallbacks
+const CALENDLY_WORKSHOP_URL = import.meta.env.PUBLIC_CALENDLY_WORKSHOP_URL || 'https://calendly.com/singaporehandpan/workshop';
+const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'https://calendly.com/singaporehandpan/private-session';
 ---
 
 <BaseLayout title={title} description={description}>

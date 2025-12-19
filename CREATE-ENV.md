@@ -52,8 +52,18 @@ PUBLIC_GTM_ID=your_gtm_id_here
 PUBLIC_FACEBOOK_HANDLE=singaporehandpan
 PUBLIC_INSTAGRAM_HANDLE=singaporehandpan
 
-# Optional - Booking Integration
+# Calendly Booking Integration (Required for booking functionality)
 PUBLIC_CALENDLY_USERNAME=singaporehandpan
+PUBLIC_CALENDLY_WORKSHOP_URL=https://calendly.com/singaporehandpan/workshop
+PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/singaporehandpan/private-session
+PUBLIC_CALENDLY_GROUP_SESSION_URL=https://calendly.com/singaporehandpan/group-session
+PUBLIC_CALENDLY_DEFAULT_URL=https://calendly.com/singaporehandpan
+
+# Calendly Customization
+PUBLIC_CALENDLY_PRIMARY_COLOR=D4A574
+PUBLIC_CALENDLY_TEXT_COLOR=2C3E50
+PUBLIC_CALENDLY_HIDE_EVENT_TYPE_DETAILS=false
+PUBLIC_CALENDLY_HIDE_LANDING_PAGE_DETAILS=true
 
 # Optional - Contact Info
 PUBLIC_CONTACT_EMAIL=hello@singaporehandpans.com

@@ -15,7 +15,7 @@ const FALLBACK_EVENTS = [
       date: '2024-03-15T19:00:00Z',
       location: 'Singapore Handpan Studio',
       price: 'S$120',
-      booking_url: 'https://calendly.com/singaporehandpan/workshop',
+      booking_url: import.meta.env.PUBLIC_CALENDLY_WORKSHOP_URL || 'https://calendly.com/singaporehandpan/workshop',
       tags: ['workshop', 'beginner'],
       status: 'upcoming',
       max_participants: 6,
@@ -47,19 +47,28 @@ let cmsError = false;
 
 // Try to fetch from Storyblok first
 try {
-  const storyblokApi = useStoryblokApi();
+  // Use import.meta.env for Astro environment variables
+  const storyblokToken = import.meta.env.STORYBLOK_TOKEN;
   
-  if (!process.env.STORYBLOK_TOKEN) {
-    console.log('No Storyblok token configured - using fallback events');
+  console.log('🔍 Storyblok Debug Info:');
+  console.log('- Token exists:', !!storyblokToken);
+  console.log('- Token length:', storyblokToken?.length || 0);
+  console.log('- Environment:', import.meta.env.NODE_ENV || 'development');
+  
+  if (!storyblokToken) {
+    console.warn('❌ No Storyblok token configured - using fallback events');
+    console.log('Available env vars:', Object.keys(import.meta.env).filter(key => key.includes('STORYBLOK')));
     cmsError = true;
     events = FALLBACK_EVENTS;
   } else {
-    console.log('Attempting to fetch events from Storyblok...');
+    console.log('✅ Attempting to fetch events from Storyblok...');
+    
+    const storyblokApi = useStoryblokApi();
     const { data } = await storyblokApi.get('cdn/stories', {
       starts_with: 'events/',
-      is_startpage: false,
+      content_type: 'event',
       sort_by: 'content.date:desc',
-      version: 'draft' // Use 'published' in production
+      version: import.meta.env.NODE_ENV === 'production' ? 'published' : 'draft'
     });
     
     if (data?.stories && data.stories.length > 0) {
@@ -67,14 +76,14 @@ try {
       events = data.stories;
       cmsError = false;
     } else {
-      console.log('No events found in Storyblok - using fallback events');
+      console.warn('⚠️ No events found in Storyblok - using fallback events');
       cmsError = true;
       events = FALLBACK_EVENTS;
     }
   }
 } catch (error) {
-  console.error('❌ Failed to fetch events from Storyblok:', error.message);
-  console.log('Using fallback events due to error');
+  console.error('❌ Failed to fetch events from Storyblok:', error);
+  console.error('Error details:', error.message);
   cmsError = true;
   events = FALLBACK_EVENTS;
 }
