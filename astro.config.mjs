@@ -5,6 +5,7 @@ import { loadEnv } from 'vite';
 
 // Load environment variables
 const env = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '');
+const storyblokToken = env.STORYBLOK_TOKEN || process.env.STORYBLOK_TOKEN || '';
 
 // https://astro.build/config
 export default defineConfig({
@@ -15,7 +16,7 @@ export default defineConfig({
   integrations: [
     react(),
     storyblok({
-      accessToken: env.STORYBLOK_TOKEN || process.env.STORYBLOK_TOKEN || '',
+      accessToken: storyblokToken,
       bridge: (env.NODE_ENV || process.env.NODE_ENV) === 'development',
       components: {
         event: 'src/components/storyblok/Event',

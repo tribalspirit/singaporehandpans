@@ -68,20 +68,27 @@ function makeRequest(method, endpoint, data = null) {
 /**
  * Sample content definitions
  */
+// Generate future dates for sample events
+const getNextMonth = (daysFromNow) => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString();
+};
+
 const sampleContent = {
   events: [
     {
-      name: 'Beginner Handpan Workshop - March 2024',
-      slug: 'beginner-handpan-workshop-march-2024',
+      name: 'Beginner Handpan Workshop',
+      slug: 'beginner-handpan-workshop',
       content: {
         component: 'event',
         title: 'Beginner Handpan Workshop',
         description: 'Join us for an introduction to the beautiful world of handpan music. Perfect for complete beginners who want to learn the basics in a supportive environment.',
-        date: '2024-03-15 19:00',
+        date: getNextMonth(14), // 2 weeks from now
         location: 'Singapore Handpan Studio',
         price: 'S$120',
         booking_url: 'https://calendly.com/singaporehandpan/workshop',
-        tags: ['workshop', 'beginner'],
+        tags: 'workshop,beginner', // Multi-option as comma-separated string
         status: 'upcoming',
         max_participants: 6,
         seo_title: 'Beginner Handpan Workshop Singapore - Learn Handpan Music',
@@ -95,14 +102,32 @@ const sampleContent = {
         component: 'event',
         title: 'Community Handpan Gathering',
         description: 'A relaxed gathering for handpan enthusiasts to play together, share music, and connect with fellow musicians in Singapore.',
-        date: '2024-03-22 15:00',
+        date: getNextMonth(21), // 3 weeks from now
         location: 'Singapore Handpan Studio',
         price: 'Free',
-        tags: ['community', 'gathering'],
+        tags: 'community', // Single tag
         status: 'upcoming',
         max_participants: 15,
         seo_title: 'Community Handpan Gathering Singapore - Free Event',
         seo_description: 'Join fellow handpan enthusiasts for a free community gathering. Share music and connect with other musicians in Singapore.'
+      }
+    },
+    {
+      name: 'Intermediate Rhythms Workshop',
+      slug: 'intermediate-rhythms-workshop',
+      content: {
+        component: 'event',
+        title: 'Intermediate Rhythms Workshop',
+        description: 'Take your handpan playing to the next level with advanced rhythm patterns, polyrhythms, and improvisational techniques.',
+        date: getNextMonth(28), // 4 weeks from now
+        location: 'Singapore Handpan Studio',
+        price: 'S$150',
+        booking_url: 'https://calendly.com/singaporehandpan/intermediate',
+        tags: 'workshop,intermediate',
+        status: 'upcoming',
+        max_participants: 4,
+        seo_title: 'Intermediate Handpan Workshop Singapore - Advanced Rhythms',
+        seo_description: 'Advance your handpan skills with our intermediate workshop. Learn polyrhythms, improvisation, and complex patterns.'
       }
     }
   ],
@@ -150,10 +175,11 @@ const sampleContent = {
         component: 'gallery_item',
         title: 'Our Beautiful Handpan Collection',
         description: 'A showcase of the various handpan instruments available at our studio, each with its unique scale and tonal character.',
-        tags: ['instruments', 'studio'],
+        tags: 'instruments,studio', // Comma-separated for multi-option
         featured: true,
         alt_text: 'Collection of handpan drums displayed in the Singapore Handpan Studio',
         sort_order: 1
+        // Note: media field requires uploading an image via Storyblok UI
       }
     },
     {
@@ -163,7 +189,7 @@ const sampleContent = {
         component: 'gallery_item',
         title: 'Workshop in Session',
         description: 'Students learning handpan techniques during one of our beginner workshops.',
-        tags: ['workshop', 'students'],
+        tags: 'workshop,students',
         featured: false,
         alt_text: 'Students playing handpan during a workshop session',
         sort_order: 2

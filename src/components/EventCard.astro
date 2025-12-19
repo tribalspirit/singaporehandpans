@@ -15,7 +15,7 @@ export interface Props {
         filename: string;
         alt?: string;
       };
-      tags?: string[];
+      tags?: string | string[];
       status?: string;
       max_participants?: number;
     };
@@ -24,6 +24,16 @@ export interface Props {
 }
 
 const { event, isPast = false } = Astro.props;
+
+// Normalize tags to always be an array (handles string from Storyblok or array from fallback)
+const normalizeTags = (tags: string | string[] | undefined): string[] => {
+  if (!tags) return [];
+  if (Array.isArray(tags)) return tags;
+  if (typeof tags === 'string') return tags.split(',').map(t => t.trim()).filter(Boolean);
+  return [];
+};
+
+const eventTags = normalizeTags(event.content.tags);
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -80,9 +90,9 @@ const isUpcoming = eventDate >= new Date();
         <a href={eventUrl}>{event.content.title}</a>
       </h3>
       
-      {event.content.tags && event.content.tags.length > 0 && (
+      {eventTags.length > 0 && (
         <div class="event-tags">
-          {event.content.tags.map(tag => (
+          {eventTags.map(tag => (
             <span class="tag">{tag}</span>
           ))}
         </div>

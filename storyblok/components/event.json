@@ -47,7 +47,7 @@
       "description": "Event featured image"
     },
     "tags": {
-      "type": "option",
+      "type": "options",
       "pos": 7,
       "required": false,
       "options": [
@@ -59,7 +59,7 @@
         {"name": "Advanced", "value": "advanced"},
         {"name": "Private", "value": "private"}
       ],
-      "description": "Event categories"
+      "description": "Event categories (multiple allowed)"
     },
     "status": {
       "type": "option",
@@ -96,9 +96,9 @@
   },
   "image": null,
   "preview_field": "title",
-  "is_root": false,
+  "is_root": true,
   "preview_tmpl": null,
-  "is_nestable": true,
+  "is_nestable": false,
   "all_presets": [],
   "preset_id": null,
   "real_name": "event",

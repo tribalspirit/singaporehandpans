@@ -50,33 +50,27 @@ try {
   // Use import.meta.env for Astro environment variables
   const storyblokToken = import.meta.env.STORYBLOK_TOKEN;
   
-  console.log('🔍 Storyblok Debug Info:');
-  console.log('- Token exists:', !!storyblokToken);
-  console.log('- Token length:', storyblokToken?.length || 0);
-  console.log('- Environment:', import.meta.env.NODE_ENV || 'development');
-  
   if (!storyblokToken) {
     console.warn('❌ No Storyblok token configured - using fallback events');
     console.log('Available env vars:', Object.keys(import.meta.env).filter(key => key.includes('STORYBLOK')));
     cmsError = true;
     events = FALLBACK_EVENTS;
   } else {
-    console.log('✅ Attempting to fetch events from Storyblok...');
-    
     const storyblokApi = useStoryblokApi();
+    const storyblokVersion = import.meta.env.NODE_ENV === 'production' ? 'published' : 'draft';
+    
     const { data } = await storyblokApi.get('cdn/stories', {
       starts_with: 'events/',
       content_type: 'event',
       sort_by: 'content.date:desc',
-      version: import.meta.env.NODE_ENV === 'production' ? 'published' : 'draft'
+      version: storyblokVersion
     });
     
     if (data?.stories && data.stories.length > 0) {
-      console.log(`✅ Successfully fetched ${data.stories.length} events from Storyblok`);
       events = data.stories;
       cmsError = false;
     } else {
-      console.warn('⚠️ No events found in Storyblok - using fallback events');
+      // No events in CMS - use fallback events
       cmsError = true;
       events = FALLBACK_EVENTS;
     }

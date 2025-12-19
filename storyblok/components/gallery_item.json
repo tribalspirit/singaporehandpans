@@ -22,7 +22,7 @@
       "description": "Media description"
     },
     "tags": {
-      "type": "option",
+      "type": "options",
       "pos": 3,
       "required": false,
       "options": [
@@ -34,7 +34,7 @@
         {"name": "Behind the Scenes", "value": "behind-scenes"},
         {"name": "Students", "value": "students"}
       ],
-      "description": "Media categories"
+      "description": "Media categories (multiple allowed)"
     },
     "date_taken": {
       "type": "datetime",
@@ -70,9 +70,9 @@
   },
   "image": null,
   "preview_field": "title",
-  "is_root": false,
+  "is_root": true,
   "preview_tmpl": null,
-  "is_nestable": true,
+  "is_nestable": false,
   "all_presets": [],
   "preset_id": null,
   "real_name": "gallery_item",
