@@ -1,0 +1,36 @@
+{
+  "name": "text_block",
+  "display_name": "Text Block",
+  "schema": {
+    "content": {
+      "type": "richtext",
+      "pos": 0,
+      "required": true,
+      "description": "Text content"
+    },
+    "style": {
+      "type": "option",
+      "pos": 1,
+      "required": false,
+      "source": "internal",
+      "default_value": "default",
+      "options": [
+        {"name": "Default", "value": "default"},
+        {"name": "Large Text", "value": "large"},
+        {"name": "Small Text", "value": "small"},
+        {"name": "Highlighted", "value": "highlighted"},
+        {"name": "Quote", "value": "quote"}
+      ],
+      "description": "Text styling"
+    }
+  },
+  "image": null,
+  "preview_field": "content",
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "text_block",
+  "component_group_uuid": null
+}

@@ -6,19 +6,21 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
-    "build:gh-pages": "cross-env GITHUB_PAGES=true astro build",
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.astro",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.astro --fix",
     "format": "prettier --write .",
-    "deploy": "npm run build:gh-pages"
+    "storyblok:setup": "node scripts/storyblok-setup.js",
+    "storyblok:components": "node scripts/create-components.js",
+    "storyblok:content": "node scripts/create-sample-content.js"
   },
   "dependencies": {
     "@astrojs/react": "^3.0.0",
     "@storyblok/astro": "^4.0.0",
     "@storyblok/js": "^3.0.0",
     "astro": "^4.0.0",
+    "dotenv": "^16.6.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },
@@ -28,13 +30,13 @@
     "@types/react-dom": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "cross-env": "^7.0.3",
     "eslint": "^8.0.0",
     "eslint-plugin-astro": "^0.29.0",
     "eslint-plugin-jsx-a11y": "^6.0.0",
     "prettier": "^3.0.0",
     "prettier-plugin-astro": "^0.12.0",
     "sass": "^1.69.0",
+    "storyblok": "^3.0.0",
     "typescript": "^5.0.0"
   }
 }

@@ -1,0 +1,301 @@
+/**
+ * Storyblok Sample Content Creator
+ * Creates sample content for Singapore Handpan Studio
+ */
+
+import https from 'https';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
+const MANAGEMENT_TOKEN = process.env.STORYBLOK_MANAGEMENT_TOKEN;
+const SPACE_ID = process.env.STORYBLOK_SPACE_ID;
+
+if (!MANAGEMENT_TOKEN || !SPACE_ID) {
+  console.error('❌ Missing STORYBLOK_MANAGEMENT_TOKEN or STORYBLOK_SPACE_ID in .env file');
+  process.exit(1);
+}
+
+/**
+ * Make API request to Storyblok Management API
+ */
+function makeRequest(method, endpoint, data = null) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'mapi.storyblok.com',
+      port: 443,
+      path: `/v1/spaces/${SPACE_ID}/${endpoint}`,
+      method: method,
+      headers: {
+        'Authorization': MANAGEMENT_TOKEN,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => {
+        body += chunk;
+      });
+
+      res.on('end', () => {
+        try {
+          const jsonBody = JSON.parse(body);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(jsonBody);
+          } else {
+            reject(new Error(`API Error: ${res.statusCode} - ${JSON.stringify(jsonBody)}`));
+          }
+        } catch (error) {
+          reject(new Error(`Parse Error: ${error.message}`));
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      reject(error);
+    });
+
+    if (data) {
+      req.write(JSON.stringify(data));
+    }
+
+    req.end();
+  });
+}
+
+/**
+ * Sample content definitions
+ */
+const sampleContent = {
+  events: [
+    {
+      name: 'Beginner Handpan Workshop - March 2024',
+      slug: 'beginner-handpan-workshop-march-2024',
+      content: {
+        component: 'event',
+        title: 'Beginner Handpan Workshop',
+        description: 'Join us for an introduction to the beautiful world of handpan music. Perfect for complete beginners who want to learn the basics in a supportive environment.',
+        date: '2024-03-15 19:00',
+        location: 'Singapore Handpan Studio',
+        price: 'S$120',
+        booking_url: 'https://calendly.com/singaporehandpan/workshop',
+        tags: ['workshop', 'beginner'],
+        status: 'upcoming',
+        max_participants: 6,
+        seo_title: 'Beginner Handpan Workshop Singapore - Learn Handpan Music',
+        seo_description: 'Join our beginner-friendly handpan workshop in Singapore. Learn the basics of this beautiful instrument with experienced instructors.'
+      }
+    },
+    {
+      name: 'Community Handpan Gathering',
+      slug: 'community-handpan-gathering',
+      content: {
+        component: 'event',
+        title: 'Community Handpan Gathering',
+        description: 'A relaxed gathering for handpan enthusiasts to play together, share music, and connect with fellow musicians in Singapore.',
+        date: '2024-03-22 15:00',
+        location: 'Singapore Handpan Studio',
+        price: 'Free',
+        tags: ['community', 'gathering'],
+        status: 'upcoming',
+        max_participants: 15,
+        seo_title: 'Community Handpan Gathering Singapore - Free Event',
+        seo_description: 'Join fellow handpan enthusiasts for a free community gathering. Share music and connect with other musicians in Singapore.'
+      }
+    }
+  ],
+  
+  workshops: [
+    {
+      name: 'Beginner Handpan Course',
+      slug: 'beginner-handpan-course',
+      content: {
+        component: 'workshop',
+        title: 'Beginner Handpan Course',
+        description: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Perfect for those new to handpan music. Learn fundamental techniques, basic rhythms, and simple melodies in a supportive group environment.'
+                }
+              ]
+            }
+          ]
+        },
+        duration: '4 weeks (2 hours per week)',
+        price: 'S$280',
+        skill_level: 'beginner',
+        max_participants: 6,
+        booking_link: 'https://calendly.com/singaporehandpan/beginner-course',
+        featured: true,
+        prerequisites: 'No musical experience required. All instruments provided during class.',
+        schedule: 'Tuesday & Thursday evenings, 7:00 PM - 9:00 PM',
+        seo_title: 'Beginner Handpan Course Singapore - 4 Week Program',
+        seo_description: 'Learn handpan from scratch with our comprehensive 4-week beginner course. Small class sizes, experienced instructors, instruments provided.'
+      }
+    }
+  ],
+  
+  gallery: [
+    {
+      name: 'Handpan Collection Display',
+      slug: 'handpan-collection-display',
+      content: {
+        component: 'gallery_item',
+        title: 'Our Beautiful Handpan Collection',
+        description: 'A showcase of the various handpan instruments available at our studio, each with its unique scale and tonal character.',
+        tags: ['instruments', 'studio'],
+        featured: true,
+        alt_text: 'Collection of handpan drums displayed in the Singapore Handpan Studio',
+        sort_order: 1
+      }
+    },
+    {
+      name: 'Workshop in Session',
+      slug: 'workshop-in-session',
+      content: {
+        component: 'gallery_item',
+        title: 'Workshop in Session',
+        description: 'Students learning handpan techniques during one of our beginner workshops.',
+        tags: ['workshop', 'students'],
+        featured: false,
+        alt_text: 'Students playing handpan during a workshop session',
+        sort_order: 2
+      }
+    }
+  ],
+  
+  pages: [
+    {
+      name: 'About Singapore Handpan Studio',
+      slug: 'about-singapore-handpan-studio',
+      content: {
+        component: 'page',
+        title: 'About Singapore Handpan Studio',
+        content: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Singapore Handpan Studio was born from a deep love for the ethereal, meditative sounds of the handpan drum. Founded in Singapore, our studio has become a sanctuary for music lovers seeking peace, healing, and creative expression.'
+                }
+              ]
+            }
+          ]
+        },
+        excerpt: 'Learn about our story, mission, and passion for sharing the healing sounds of handpan music with the Singapore community.',
+        published: true,
+        show_in_menu: false,
+        seo_title: 'About Singapore Handpan Studio - Our Story & Mission',
+        seo_description: 'Discover the story behind Singapore Handpan Studio. Learn about our mission to share the healing sounds of handpan music through workshops and community events.'
+      }
+    }
+  ]
+};
+
+/**
+ * Get folder ID by name
+ */
+async function getFolderId(folderName) {
+  try {
+    const stories = await makeRequest('GET', 'stories');
+    const folder = stories.stories.find(story => 
+      story.is_folder && story.name.toLowerCase() === folderName.toLowerCase()
+    );
+    return folder ? folder.id : 0;
+  } catch (error) {
+    console.warn(`⚠️  Could not find folder ${folderName}, using root`);
+    return 0;
+  }
+}
+
+/**
+ * Create a story/content item
+ */
+async function createStory(storyData, parentId = 0) {
+  try {
+    const payload = {
+      story: {
+        name: storyData.name,
+        slug: storyData.slug,
+        content: storyData.content,
+        parent_id: parentId,
+        is_folder: false
+      },
+      publish: 1
+    };
+
+    console.log(`📄 Creating content: ${storyData.name}`);
+    const result = await makeRequest('POST', 'stories', payload);
+    console.log(`✅ Created content: ${storyData.name} (ID: ${result.story.id})`);
+    return result.story;
+    
+  } catch (error) {
+    if (error.message.includes('already exists') || error.message.includes('422')) {
+      console.log(`⚠️  Content ${storyData.name} already exists, skipping...`);
+    } else {
+      console.error(`❌ Failed to create content ${storyData.name}:`, error.message);
+    }
+  }
+}
+
+/**
+ * Main execution
+ */
+async function createSampleContent() {
+  console.log('🎨 Creating sample content for Singapore Handpan Studio...\n');
+
+  try {
+    // Get folder IDs
+    const eventsFolder = await getFolderId('Events');
+    const workshopsFolder = await getFolderId('Workshops');
+    const galleryFolder = await getFolderId('Gallery');
+    const pagesFolder = await getFolderId('Pages');
+
+    // Create Events
+    console.log('🎪 Creating sample events...');
+    for (const event of sampleContent.events) {
+      await createStory(event, eventsFolder);
+    }
+
+    // Create Workshops
+    console.log('\n📚 Creating sample workshops...');
+    for (const workshop of sampleContent.workshops) {
+      await createStory(workshop, workshopsFolder);
+    }
+
+    // Create Gallery Items
+    console.log('\n🖼️  Creating sample gallery items...');
+    for (const galleryItem of sampleContent.gallery) {
+      await createStory(galleryItem, galleryFolder);
+    }
+
+    // Create Pages
+    console.log('\n📄 Creating sample pages...');
+    for (const page of sampleContent.pages) {
+      await createStory(page, pagesFolder);
+    }
+
+    console.log('\n🎉 Sample content creation completed!');
+    console.log('\nNext steps:');
+    console.log('1. Visit your Storyblok space to see the new content');
+    console.log('2. Add images to gallery items and events');
+    console.log('3. Customize the content to match your studio');
+    console.log('4. Publish content when ready');
+
+  } catch (error) {
+    console.error('❌ Sample content creation failed:', error.message);
+    process.exit(1);
+  }
+}
+
+createSampleContent();

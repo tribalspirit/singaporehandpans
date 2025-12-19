@@ -1,0 +1,89 @@
+{
+  "name": "page",
+  "display_name": "Page",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "required": true,
+      "description": "Page title"
+    },
+    "content": {
+      "type": "richtext",
+      "pos": 1,
+      "required": false,
+      "description": "Page content"
+    },
+    "sections": {
+      "type": "bloks",
+      "pos": 2,
+      "required": false,
+      "restrict_components": true,
+      "component_whitelist": ["hero_section", "text_block", "image_block", "cta_section"],
+      "description": "Page sections and content blocks"
+    },
+    "featured_image": {
+      "type": "asset",
+      "pos": 3,
+      "required": false,
+      "filetypes": ["images"],
+      "description": "Page hero or featured image"
+    },
+    "excerpt": {
+      "type": "textarea",
+      "pos": 4,
+      "required": false,
+      "max_length": 200,
+      "description": "Page excerpt or summary"
+    },
+    "published": {
+      "type": "boolean",
+      "pos": 5,
+      "required": false,
+      "default_value": true,
+      "description": "Page visibility"
+    },
+    "show_in_menu": {
+      "type": "boolean",
+      "pos": 6,
+      "required": false,
+      "default_value": false,
+      "description": "Show in navigation menu"
+    },
+    "menu_order": {
+      "type": "number",
+      "pos": 7,
+      "required": false,
+      "description": "Menu display order"
+    },
+    "seo_title": {
+      "type": "text",
+      "pos": 8,
+      "required": false,
+      "description": "SEO title override"
+    },
+    "seo_description": {
+      "type": "textarea",
+      "pos": 9,
+      "required": false,
+      "max_length": 160,
+      "description": "SEO meta description"
+    },
+    "og_image": {
+      "type": "asset",
+      "pos": 10,
+      "required": false,
+      "filetypes": ["images"],
+      "description": "Open Graph image for social sharing"
+    }
+  },
+  "image": null,
+  "preview_field": "title",
+  "is_root": true,
+  "preview_tmpl": null,
+  "is_nestable": false,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "page",
+  "component_group_uuid": null
+}

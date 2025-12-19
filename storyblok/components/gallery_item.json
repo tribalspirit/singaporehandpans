@@ -1,0 +1,80 @@
+{
+  "name": "gallery_item",
+  "display_name": "Gallery Item",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "required": true,
+      "description": "Image or video title"
+    },
+    "media": {
+      "type": "asset",
+      "pos": 1,
+      "required": true,
+      "filetypes": ["images", "videos"],
+      "description": "Image or video file"
+    },
+    "description": {
+      "type": "textarea",
+      "pos": 2,
+      "required": false,
+      "description": "Media description"
+    },
+    "tags": {
+      "type": "option",
+      "pos": 3,
+      "required": false,
+      "options": [
+        {"name": "Workshop", "value": "workshop"},
+        {"name": "Instruments", "value": "instruments"},
+        {"name": "Studio", "value": "studio"},
+        {"name": "Performance", "value": "performance"},
+        {"name": "Community", "value": "community"},
+        {"name": "Behind the Scenes", "value": "behind-scenes"},
+        {"name": "Students", "value": "students"}
+      ],
+      "description": "Media categories"
+    },
+    "date_taken": {
+      "type": "datetime",
+      "pos": 4,
+      "required": false,
+      "description": "When photo/video was taken"
+    },
+    "featured": {
+      "type": "boolean",
+      "pos": 5,
+      "required": false,
+      "default_value": false,
+      "description": "Show prominently on homepage"
+    },
+    "photographer": {
+      "type": "text",
+      "pos": 6,
+      "required": false,
+      "description": "Photographer or videographer credit"
+    },
+    "alt_text": {
+      "type": "text",
+      "pos": 7,
+      "required": false,
+      "description": "Alternative text for accessibility"
+    },
+    "sort_order": {
+      "type": "number",
+      "pos": 8,
+      "required": false,
+      "description": "Display order in gallery"
+    }
+  },
+  "image": null,
+  "preview_field": "title",
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "gallery_item",
+  "component_group_uuid": null
+}

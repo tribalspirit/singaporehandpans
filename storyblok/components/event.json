@@ -1,0 +1,106 @@
+{
+  "name": "event",
+  "display_name": "Event",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "required": true,
+      "description": "Event title"
+    },
+    "description": {
+      "type": "textarea",
+      "pos": 1,
+      "required": true,
+      "description": "Event description"
+    },
+    "date": {
+      "type": "datetime",
+      "pos": 2,
+      "required": true,
+      "description": "Event date and time"
+    },
+    "location": {
+      "type": "text",
+      "pos": 3,
+      "required": true,
+      "default_value": "Singapore Handpan Studio",
+      "description": "Event location"
+    },
+    "price": {
+      "type": "text",
+      "pos": 4,
+      "required": false,
+      "description": "Event price (e.g., S$120, Free)"
+    },
+    "booking_url": {
+      "type": "text",
+      "pos": 5,
+      "required": false,
+      "description": "Calendly or booking link URL"
+    },
+    "image": {
+      "type": "asset",
+      "pos": 6,
+      "required": false,
+      "filetypes": ["images"],
+      "description": "Event featured image"
+    },
+    "tags": {
+      "type": "option",
+      "pos": 7,
+      "required": false,
+      "options": [
+        {"name": "Workshop", "value": "workshop"},
+        {"name": "Performance", "value": "performance"},
+        {"name": "Community", "value": "community"},
+        {"name": "Beginner", "value": "beginner"},
+        {"name": "Intermediate", "value": "intermediate"},
+        {"name": "Advanced", "value": "advanced"},
+        {"name": "Private", "value": "private"}
+      ],
+      "description": "Event categories"
+    },
+    "status": {
+      "type": "option",
+      "pos": 8,
+      "required": true,
+      "source": "internal",
+      "default_value": "upcoming",
+      "options": [
+        {"name": "Upcoming", "value": "upcoming"},
+        {"name": "Past", "value": "past"},
+        {"name": "Cancelled", "value": "cancelled"}
+      ],
+      "description": "Event status"
+    },
+    "max_participants": {
+      "type": "number",
+      "pos": 9,
+      "required": false,
+      "description": "Maximum number of participants"
+    },
+    "seo_title": {
+      "type": "text",
+      "pos": 10,
+      "required": false,
+      "description": "SEO title override"
+    },
+    "seo_description": {
+      "type": "textarea",
+      "pos": 11,
+      "required": false,
+      "max_length": 160,
+      "description": "SEO meta description"
+    }
+  },
+  "image": null,
+  "preview_field": "title",
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "event",
+  "component_group_uuid": null
+}

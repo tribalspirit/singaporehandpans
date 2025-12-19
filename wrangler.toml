@@ -1,0 +1,12 @@
+# Cloudflare Pages configuration
+name = "singaporehandpans"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "dist"
+
+[env.production]
+# Production environment variables
+# Add your Storyblok token in Cloudflare Pages dashboard
+
+[env.preview]
+# Preview environment variables  
+# Add your Storyblok preview token in Cloudflare Pages dashboard

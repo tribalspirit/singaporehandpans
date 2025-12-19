@@ -30,14 +30,14 @@ npm run build
 npm run preview
 ```
 
-### GitHub Pages Deployment
+### Cloudflare Pages Deployment
 
 ```bash
-# Build optimized for GitHub Pages
-npm run build:gh-pages
+# Standard build (Cloudflare Pages uses this automatically)
+npm run build
 
-# Or use the deploy alias
-npm run deploy
+# Preview locally
+npm run preview
 ```
 
 ## 🛠️ Tech Stack
@@ -47,7 +47,7 @@ npm run deploy
 - **Styling**: SCSS + CSS Modules with design tokens
 - **CMS**: [Storyblok](https://www.storyblok.com/) (headless CMS)
 - **Language**: TypeScript (strict mode)
-- **Deployment**: GitHub Pages with GitHub Actions
+- **Deployment**: Cloudflare Pages with Git integration
 - **Code Quality**: ESLint + Prettier
 
 ## 📁 Project Structure
@@ -84,14 +84,14 @@ src/
 
 ## 🚀 Deployment
 
-This site is configured for automatic deployment to GitHub Pages. See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed setup instructions.
+This site is configured for automatic deployment to Cloudflare Pages. See [CLOUDFLARE-DEPLOYMENT.md](./CLOUDFLARE-DEPLOYMENT.md) for detailed setup instructions.
 
 ### Automated CI/CD
 
-- **Trigger**: Push to `main` branch
-- **Build**: Astro static site generation
-- **Deploy**: GitHub Pages
-- **Live**: Available at your GitHub Pages URL
+- **Trigger**: Push to any branch (main = production, others = preview)
+- **Build**: Astro static site generation on Cloudflare's network
+- **Deploy**: Cloudflare Pages with global CDN
+- **Live**: Available at https://singaporehandpans.com
 
 ## 🔧 Scripts
 
@@ -108,18 +108,26 @@ npm run deploy       # Build for GitHub Pages deployment
 
 ## 🌐 Environment Variables
 
-Create a `.env` file for local development:
+### Quick Setup
 
 ```bash
-# Storyblok CMS
-STORYBLOK_TOKEN=your_preview_token_here
+# 1. Copy the example file
+cp .env.example .env
 
-# Build Environment
+# 2. Edit .env with your Storyblok token
+# Get token from: Storyblok Space Settings > Access Tokens > Preview Token
+```
+
+### Required Variables
+
+```bash
+# Essential for Storyblok integration
+STORYBLOK_TOKEN=your_storyblok_preview_token_here
 NODE_ENV=development
-
-# Site Configuration
 PUBLIC_SITE_URL=http://localhost:4321
 ```
+
+See [ENV-SETUP.md](./ENV-SETUP.md) for complete environment configuration guide.
 
 ## 📋 Content Management
 

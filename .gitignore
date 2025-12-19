@@ -7,11 +7,18 @@ dist/
 .output/
 .astro/
 
-# Environment variables
+# Environment variables (keep .env.example)
 .env
 .env.local
+.env.production
 .env.production.local
+.env.staging
 .env.staging.local
+.env.test
+.env.test.local
+
+# Allow example file to be committed
+!.env.example
 
 # TypeScript build info
 .tsbuildinfo
