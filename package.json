@@ -23,6 +23,7 @@
     "dotenv": "^16.6.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "sass": "^1.80.0",
     "yet-another-react-lightbox": "^3.27.0"
   },
   "devDependencies": {
@@ -36,8 +37,6 @@
     "eslint-plugin-jsx-a11y": "^6.0.0",
     "prettier": "^3.0.0",
     "prettier-plugin-astro": "^0.12.0",
-    "sass": "^1.80.0",
-    "sass-embedded": "^1.80.0",
     "storyblok": "^3.0.0",
     "typescript": "^5.0.0"
   }

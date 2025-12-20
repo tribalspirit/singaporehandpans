@@ -33,11 +33,9 @@ export default defineConfig({
     },
     
     css: {
-      // Enable CSS source maps for SCSS debugging
       devSourcemap: true,
       preprocessorOptions: {
         scss: {
-          api: 'modern-compiler',
           additionalData: `@use "src/styles/tokens.scss" as *;`
         }
       }
