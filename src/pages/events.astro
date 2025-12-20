@@ -55,12 +55,20 @@ try {
     starts_with: 'events/',
     content_type: 'event',
     sort_by: 'content.date:desc',
-    version: storyblokVersion
+    version: storyblokVersion,
+    resolve_assets: 1,  // Resolve asset fields (images) properly
+    cv: Date.now()  // Cache-busting parameter to ensure fresh data
   });
   
   if (data?.stories && data.stories.length > 0) {
     events = data.stories;
     cmsError = false;
+    // Temporary debug
+    const eventsWithImages = data.stories.filter(e => e.content.image);
+    console.log(`✅ Events: ${data.stories.length}, with images: ${eventsWithImages.length}`);
+    if (eventsWithImages.length > 0) {
+      console.log('📸 Image data:', eventsWithImages[0].content.image);
+    }
   } else {
     // No events in CMS - use fallback events
     cmsError = true;

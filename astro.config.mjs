@@ -21,7 +21,6 @@ export default defineConfig({
       components: {
         event: 'src/components/storyblok/Event',
         gallery_item: 'src/components/storyblok/GalleryItem', 
-        workshop: 'src/components/storyblok/Workshop',
         page: 'src/components/storyblok/Page',
       }
     })

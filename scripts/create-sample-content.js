@@ -132,41 +132,6 @@ const sampleContent = {
     }
   ],
   
-  workshops: [
-    {
-      name: 'Beginner Handpan Course',
-      slug: 'beginner-handpan-course',
-      content: {
-        component: 'workshop',
-        title: 'Beginner Handpan Course',
-        description: {
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Perfect for those new to handpan music. Learn fundamental techniques, basic rhythms, and simple melodies in a supportive group environment.'
-                }
-              ]
-            }
-          ]
-        },
-        duration: '4 weeks (2 hours per week)',
-        price: 'S$280',
-        skill_level: 'beginner',
-        max_participants: 6,
-        booking_link: 'https://calendly.com/singaporehandpan/beginner-course',
-        featured: true,
-        prerequisites: 'No musical experience required. All instruments provided during class.',
-        schedule: 'Tuesday & Thursday evenings, 7:00 PM - 9:00 PM',
-        seo_title: 'Beginner Handpan Course Singapore - 4 Week Program',
-        seo_description: 'Learn handpan from scratch with our comprehensive 4-week beginner course. Small class sizes, experienced instructors, instruments provided.'
-      }
-    }
-  ],
-  
   gallery: [
     {
       name: 'Handpan Collection Display',
@@ -183,15 +148,15 @@ const sampleContent = {
       }
     },
     {
-      name: 'Workshop in Session',
-      slug: 'workshop-in-session',
+      name: 'Event in Session',
+      slug: 'event-in-session',
       content: {
         component: 'gallery_item',
-        title: 'Workshop in Session',
-        description: 'Students learning handpan techniques during one of our beginner workshops.',
-        tags: 'workshop,students',
+        title: 'Event in Session',
+        description: 'Students learning handpan techniques during one of our community events.',
+        tags: 'event,students',
         featured: false,
-        alt_text: 'Students playing handpan during a workshop session',
+        alt_text: 'Students playing handpan during an event session',
         sort_order: 2
       }
     }
@@ -222,7 +187,7 @@ const sampleContent = {
         published: true,
         show_in_menu: false,
         seo_title: 'About Singapore Handpan Studio - Our Story & Mission',
-        seo_description: 'Discover the story behind Singapore Handpan Studio. Learn about our mission to share the healing sounds of handpan music through workshops and community events.'
+        seo_description: 'Discover the story behind Singapore Handpan Studio. Learn about our mission to share the healing sounds of handpan music through events, academy, and community.'
       }
     }
   ]
@@ -283,7 +248,6 @@ async function createSampleContent() {
   try {
     // Get folder IDs
     const eventsFolder = await getFolderId('Events');
-    const workshopsFolder = await getFolderId('Workshops');
     const galleryFolder = await getFolderId('Gallery');
     const pagesFolder = await getFolderId('Pages');
 
@@ -291,12 +255,6 @@ async function createSampleContent() {
     console.log('🎪 Creating sample events...');
     for (const event of sampleContent.events) {
       await createStory(event, eventsFolder);
-    }
-
-    // Create Workshops
-    console.log('\n📚 Creating sample workshops...');
-    for (const workshop of sampleContent.workshops) {
-      await createStory(workshop, workshopsFolder);
     }
 
     // Create Gallery Items
@@ -315,8 +273,9 @@ async function createSampleContent() {
     console.log('\nNext steps:');
     console.log('1. Visit your Storyblok space to see the new content');
     console.log('2. Add images to gallery items and events');
-    console.log('3. Customize the content to match your studio');
-    console.log('4. Publish content when ready');
+    console.log('3. Ensure all events have status="upcoming" and Save');
+    console.log('4. Customize the content to match your studio');
+    console.log('5. Publish content when ready');
 
   } catch (error) {
     console.error('❌ Sample content creation failed:', error.message);

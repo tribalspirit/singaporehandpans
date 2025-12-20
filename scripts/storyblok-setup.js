@@ -159,7 +159,7 @@ async function setupStoryblok() {
 
     // Create components
     console.log('📦 Creating components...');
-    const components = ['text_block', 'page', 'event', 'gallery_item', 'workshop'];
+    const components = ['text_block', 'page', 'event', 'gallery_item'];
     
     for (const componentName of components) {
       await createComponent(componentName);
@@ -168,7 +168,6 @@ async function setupStoryblok() {
     console.log('\n📁 Creating content folders...');
     const folders = [
       { name: 'Events', slug: 'events' },
-      { name: 'Workshops', slug: 'workshops' },
       { name: 'Gallery', slug: 'gallery' },
       { name: 'Pages', slug: 'pages' }
     ];
@@ -181,7 +180,9 @@ async function setupStoryblok() {
     console.log('\nNext steps:');
     console.log('1. Visit your Storyblok space to see the new components');
     console.log('2. Run "npm run storyblok:content" to create sample content');
-    console.log('3. Start adding your content through the Storyblok interface');
+    console.log('3. Add images to events through the Storyblok interface');
+    console.log('4. Ensure all events have status set to "upcoming" and click Save');
+    console.log('5. Publish content when ready');
     
   } catch (error) {
     console.error('❌ Setup failed:', error.message);

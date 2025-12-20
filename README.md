@@ -4,7 +4,7 @@ A modern, responsive website for Singapore Handpan Studio built with Astro, Type
 
 ## 🎵 About
 
-Singapore Handpan Studio is dedicated to sharing the healing sounds of handpan music through workshops, events, and community gatherings in Singapore. This website showcases our offerings and provides easy booking for workshops and private sessions.
+Singapore Handpan Studio is dedicated to sharing the healing sounds of handpan music through our academy, events, and community gatherings in Singapore. This website showcases our offerings and provides easy booking for events and private sessions.
 
 ## 🚀 Quick Start
 
@@ -64,7 +64,8 @@ src/
 ├── pages/              # Route pages
 │   ├── index.astro     # Home page
 │   ├── about.astro     # About page
-│   ├── workshops.astro # Workshops page
+│   ├── academy.astro   # Academy (Coming Soon)
+│   ├── events.astro    # Events page
 │   └── contacts.astro  # Contact page
 ├── styles/             # Global styles
 │   ├── tokens.scss     # Design tokens
@@ -134,8 +135,8 @@ See [ENV-SETUP.md](./ENV-SETUP.md) for complete environment configuration guide.
 The site uses Storyblok as a headless CMS for:
 - Event listings and details
 - Gallery images with tags
-- Workshop information
-- Studio content and team info
+- Page content
+- Studio information
 
 ### 📚 Documentation
 - **[STORYBLOK-SETUP.md](./STORYBLOK-SETUP.md)** - Complete setup guide
@@ -161,7 +162,7 @@ The site includes Calendly integration for workshop and session bookings:
 ### Features
 - ✅ Embedded booking widget on contacts page
 - ✅ Direct booking buttons on events
-- ✅ Multiple booking types (workshop, private, group)
+- ✅ Multiple booking types (event, private, group)
 - ✅ Branded styling with studio colors
 - ✅ Mobile-responsive design
 - ✅ Environment variable configuration
@@ -169,7 +170,7 @@ The site includes Calendly integration for workshop and session bookings:
 ### Configuration
 Add to your `.env` file:
 ```bash
-PUBLIC_CALENDLY_WORKSHOP_URL=https://calendly.com/your-username/workshop
+PUBLIC_CALENDLY_EVENT_URL=https://calendly.com/your-username/event
 PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/your-username/private-session
 ```
 
@@ -177,7 +178,8 @@ PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/your-username/private-session
 
 - **Home** (`/`) - Hero, about preview, services overview
 - **About** (`/about`) - Studio story, mission, team, location
-- **Workshops** (`/workshops`) - Course levels, pricing, scheduling
+- **Academy** (`/academy`) - Learning resources (Coming Soon)
+- **Events** (`/events`) - Upcoming events and workshops
 - **Contacts** (`/contacts`) - Contact info, booking, FAQ
 
 ## 🔍 SEO & Analytics

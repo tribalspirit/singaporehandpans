@@ -65,7 +65,6 @@
       "type": "option",
       "pos": 8,
       "required": true,
-      "source": "internal",
       "default_value": "upcoming",
       "options": [
         {"name": "Upcoming", "value": "upcoming"},

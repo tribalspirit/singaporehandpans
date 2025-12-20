@@ -57,7 +57,6 @@ Creates all components and content folders automatically.
 ```bash
 # Create a specific component
 npm run storyblok:components event
-npm run storyblok:components workshop
 npm run storyblok:components gallery_item
 npm run storyblok:components page
 
@@ -69,29 +68,20 @@ npm run storyblok:components all
 ```bash
 npm run storyblok:content
 ```
-Creates sample events, workshops, gallery items, and pages.
+Creates sample events, gallery items, and pages.
 
 ## 📦 Components Created
 
 ### 1. Event Component
-**Perfect for**: Workshop listings, performances, community gatherings
+**Perfect for**: Event listings, workshops, performances, community gatherings
 
 **Fields**:
 - Title, description, date, location, price
 - Booking URL (Calendly integration)
-- Featured image, tags, status
+- Featured image, tags, status (upcoming/past/cancelled)
 - Max participants, SEO fields
 
-### 2. Workshop Component  
-**Perfect for**: Course descriptions, pricing, schedules
-
-**Fields**:
-- Title, rich text description, duration, price
-- Skill level (beginner/intermediate/advanced)
-- Max participants, booking link
-- Prerequisites, schedule, SEO fields
-
-### 3. Gallery Item Component
+### 2. Gallery Item Component
 **Perfect for**: Photos, videos, media management
 
 **Fields**:
@@ -100,7 +90,7 @@ Creates sample events, workshops, gallery items, and pages.
 - Featured flag, sort order
 - Photographer credit, alt text
 
-### 4. Page Component
+### 3. Page Component
 **Perfect for**: About pages, policies, general content
 
 **Fields**:
@@ -109,7 +99,7 @@ Creates sample events, workshops, gallery items, and pages.
 - SEO optimization fields
 - Menu integration, publishing controls
 
-### 5. Text Block Component
+### 4. Text Block Component
 **Perfect for**: Reusable content sections
 
 **Fields**:
@@ -121,13 +111,12 @@ Creates sample events, workshops, gallery items, and pages.
 ```
 Content/
 ├── Events/
-│   ├── Beginner Handpan Workshop - March 2024
-│   └── Community Handpan Gathering
-├── Workshops/
-│   └── Beginner Handpan Course
+│   ├── Beginner Handpan Workshop
+│   ├── Community Handpan Gathering
+│   └── Intermediate Rhythms Workshop
 ├── Gallery/
 │   ├── Handpan Collection Display
-│   └── Workshop in Session
+│   └── Event in Session
 └── Pages/
     └── About Singapore Handpan Studio
 ```
@@ -139,7 +128,6 @@ Content/
 Located in `storyblok/components/`:
 
 - `event.json` - Event component schema
-- `workshop.json` - Workshop component schema  
 - `gallery_item.json` - Gallery item component schema
 - `page.json` - Page component schema
 - `text_block.json` - Text block component schema
@@ -168,15 +156,13 @@ Then run: `npm run storyblok:components event`
 ## 🎯 Sample Content Details
 
 ### Events Created
-- **Beginner Handpan Workshop** - March 2024 workshop with booking
+- **Beginner Handpan Workshop** - Introductory workshop with booking
 - **Community Gathering** - Free community event
-
-### Workshops Created  
-- **Beginner Course** - 4-week structured program
+- **Intermediate Rhythms Workshop** - Advanced workshop
 
 ### Gallery Items Created
 - **Handpan Collection** - Studio instrument showcase
-- **Workshop Session** - Students learning
+- **Event Session** - Students learning
 
 ### Pages Created
 - **About Page** - Studio story and mission
@@ -244,8 +230,10 @@ npm run storyblok:content
 
 ### 2. Content Creation
 - Use Storyblok visual editor
-- Create new events, workshops, gallery items
+- Create new events, gallery items, pages
 - Organize in folders
+- **Important**: Upload images to events via Storyblok UI
+- Set event status to "upcoming" and click Save
 
 ### 3. Schema Updates
 - Edit JSON files in `storyblok/components/`  
@@ -288,8 +276,8 @@ Add new components by:
 
 After running the automation:
 
-- ✅ **5 Components** created and configured
-- ✅ **4 Content folders** organized
+- ✅ **4 Components** created and configured
+- ✅ **3 Content folders** organized
 - ✅ **6+ Sample content** items ready
 - ✅ **SEO optimized** with meta fields
 - ✅ **Production ready** for deployment
