@@ -1,53 +1,64 @@
 # Singapore Handpan Studio
 
-A modern, responsive website for Singapore Handpan Studio built with Astro, TypeScript, and SCSS.
+A modern, responsive website for Singapore Handpan Studio built with Astro, React, TypeScript, and SCSS.
 
 ## 🎵 About
 
-Singapore Handpan Studio is dedicated to sharing the healing sounds of handpan music through our academy, events, and community gatherings in Singapore. This website showcases our offerings and provides easy booking for events and private sessions.
+Singapore Handpan Studio is dedicated to sharing the healing sounds of handpan music through our academy, events, and community gatherings in Singapore.
+
+## ✨ Features
+
+- 🎨 **Modern Design** - Clean, responsive UI with smooth animations
+- 📱 **Mobile-First** - Optimized for all devices
+- 🎭 **Event Management** - Upcoming/past events with Calendly booking
+- 🖼️ **Photo Gallery** - Tag-based filtering with lightbox viewer
+- 📝 **CMS Integration** - Content management via Storyblok
+- ⚡ **Performance** - Static site generation, lazy loading, CDN
+- ♿ **Accessibility** - WCAG compliant, keyboard navigation
+- 🔍 **SEO Optimized** - Meta tags, JSON-LD, sitemap
 
 ## 🚀 Quick Start
-
-### Development
 
 ```bash
 # Install dependencies
 npm install
 
+# Setup environment
+cp .env.example .env
+# Edit .env with your tokens
+
 # Start development server
 npm run dev
 
-# Open http://localhost:4321
-```
-
-### Production Build
-
-```bash
 # Build for production
 npm run build
-
-# Preview production build
-npm run preview
 ```
 
-### Cloudflare Pages Deployment
+Visit `http://localhost:4321` to see your site.
 
-```bash
-# Standard build (Cloudflare Pages uses this automatically)
-npm run build
+## 📚 Documentation
 
-# Preview locally
-npm run preview
-```
+Complete documentation is available in the [`/docs`](./docs) folder:
+
+- **[Setup Guide](docs/setup/ENVIRONMENT.md)** - Environment, Storyblok, Calendly setup
+- **[Gallery Feature](docs/features/GALLERY.md)** - Using the gallery feature
+- **[Deployment](docs/deployment/CLOUDFLARE.md)** - Deploy to Cloudflare Pages
+
+### Quick Links
+
+- [Environment Setup](docs/setup/ENVIRONMENT.md)
+- [Storyblok CMS Setup](docs/setup/STORYBLOK.md)
+- [Calendly Integration](docs/setup/CALENDLY.md)
+- [Cloudflare Deployment](docs/deployment/CLOUDFLARE.md)
 
 ## 🛠️ Tech Stack
 
 - **Framework**: [Astro](https://astro.build/) - Static Site Generator
 - **Frontend**: React (for interactive components)
 - **Styling**: SCSS + CSS Modules with design tokens
-- **CMS**: [Storyblok](https://www.storyblok.com/) (headless CMS)
+- **CMS**: [Storyblok](https://www.storyblok.com/) headless CMS
 - **Language**: TypeScript (strict mode)
-- **Deployment**: Cloudflare Pages with Git integration
+- **Deployment**: Cloudflare Pages
 - **Code Quality**: ESLint + Prettier
 
 ## 📁 Project Structure
@@ -55,168 +66,86 @@ npm run preview
 ```
 src/
 ├── components/          # Reusable UI components
-│   ├── storyblok/      # Storyblok CMS components
-│   ├── Header.astro    # Site navigation
-│   ├── Footer.astro    # Site footer
-│   └── SEO.astro       # SEO meta tags
+│   ├── storyblok/      # CMS components
+│   ├── GalleryGrid.tsx # Gallery with filtering
+│   └── ...
 ├── layouts/            # Page layouts
-│   └── BaseLayout.astro
 ├── pages/              # Route pages
 │   ├── index.astro     # Home page
-│   ├── about.astro     # About page
-│   ├── academy.astro   # Academy (Coming Soon)
-│   ├── events.astro    # Events page
-│   └── contacts.astro  # Contact page
-├── styles/             # Global styles
-│   ├── tokens.scss     # Design tokens
-│   └── global.scss     # Base styles
+│   ├── events.astro    # Events listing
+│   ├── gallery.astro   # Photo gallery
+│   └── ...
+├── styles/             # Global styles & tokens
 └── utils/              # Utility functions
+
+docs/                   # Documentation
+storyblok/             # CMS schemas
+scripts/               # Automation scripts
 ```
 
-## 🎨 Features
-
-- **Responsive Design**: Mobile-first approach with fluid typography
-- **SEO Optimized**: Meta tags, Open Graph, JSON-LD structured data
-- **Accessibility**: WCAG compliant with keyboard navigation
-- **Performance**: Static site generation for fast loading
-- **CMS Integration**: Content management via Storyblok
-- **Modern CSS**: CSS variables, container queries, logical properties
-- **Type Safety**: Full TypeScript integration
-
-## 🚀 Deployment
-
-This site is configured for automatic deployment to Cloudflare Pages. See [CLOUDFLARE-DEPLOYMENT.md](./CLOUDFLARE-DEPLOYMENT.md) for detailed setup instructions.
-
-### Automated CI/CD
-
-- **Trigger**: Push to any branch (main = production, others = preview)
-- **Build**: Astro static site generation on Cloudflare's network
-- **Deploy**: Cloudflare Pages with global CDN
-- **Live**: Available at https://singaporehandpans.com
-
-## 🔧 Scripts
+## 🔧 Available Scripts
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run build:gh-pages # Build for GitHub Pages
-npm run preview      # Preview production build
-npm run lint         # Run ESLint
-npm run lint:fix     # Fix ESLint errors
-npm run format       # Format code with Prettier
-npm run deploy       # Build for GitHub Pages deployment
+# Development
+npm run dev              # Start dev server (http://localhost:4321)
+npm run build            # Build for production
+npm run preview          # Preview production build
+
+# Code Quality
+npm run lint             # Run ESLint
+npm run lint:fix         # Fix ESLint errors
+npm run format           # Format with Prettier
+
+# Storyblok Automation
+npm run storyblok:setup      # Setup CMS components & folders
+npm run storyblok:components # Create/update individual components
+npm run storyblok:content    # Create sample content
 ```
 
 ## 🌐 Environment Variables
 
-### Quick Setup
+Create a `.env` file:
 
 ```bash
-# 1. Copy the example file
-cp .env.example .env
+# Storyblok CMS (Required)
+STORYBLOK_TOKEN=your_preview_token_here
 
-# 2. Edit .env with your Storyblok token
-# Get token from: Storyblok Space Settings > Access Tokens > Preview Token
-```
-
-### Required Variables
-
-```bash
-# Essential for Storyblok integration
-STORYBLOK_TOKEN=your_storyblok_preview_token_here
+# Site Configuration
 NODE_ENV=development
 PUBLIC_SITE_URL=http://localhost:4321
-```
 
-See [ENV-SETUP.md](./ENV-SETUP.md) for complete environment configuration guide.
-
-## 📋 Content Management
-
-The site uses Storyblok as a headless CMS for:
-- Event listings and details
-- Gallery images with tags
-- Page content
-- Studio information
-
-### 📚 Documentation
-- **[STORYBLOK-SETUP.md](./STORYBLOK-SETUP.md)** - Complete setup guide
-- **[STORYBLOK-AUTOMATION.md](./STORYBLOK-AUTOMATION.md)** - Automated content creation  
-- **[STORYBLOK-ENV-FIX.md](./STORYBLOK-ENV-FIX.md)** - Environment variable troubleshooting
-
-### ✅ Quick Verification
-Visit `/events` page and check browser console for:
-```
-✅ Successfully fetched X events from Storyblok
-```
-
-Content models are configured in `astro.config.mjs` and components are in `src/components/storyblok/`.
-
-## 📅 Booking Integration
-
-The site includes Calendly integration for workshop and session bookings:
-
-### Quick Setup (5 minutes)
-- **[CALENDLY-QUICKSTART.md](./CALENDLY-QUICKSTART.md)** - Fast setup guide
-- **[CALENDLY-SETUP.md](./CALENDLY-SETUP.md)** - Complete configuration guide
-
-### Features
-- ✅ Embedded booking widget on contacts page
-- ✅ Direct booking buttons on events
-- ✅ Multiple booking types (event, private, group)
-- ✅ Branded styling with studio colors
-- ✅ Mobile-responsive design
-- ✅ Environment variable configuration
-
-### Configuration
-Add to your `.env` file:
-```bash
+# Calendly Integration (Optional)
 PUBLIC_CALENDLY_EVENT_URL=https://calendly.com/your-username/event
 PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/your-username/private-session
 ```
 
-## 🎯 Pages
+See [Environment Setup Guide](docs/setup/ENVIRONMENT.md) for detailed instructions.
 
-- **Home** (`/`) - Hero, about preview, services overview
-- **About** (`/about`) - Studio story, mission, team, location
-- **Academy** (`/academy`) - Learning resources (Coming Soon)
-- **Events** (`/events`) - Upcoming events and workshops
-- **Contacts** (`/contacts`) - Contact info, booking, FAQ
+## 📦 Key Dependencies
 
-## 🔍 SEO & Analytics
+- `astro` - Static site generator
+- `react` / `react-dom` - UI library
+- `@storyblok/astro` - CMS integration
+- `yet-another-react-lightbox` - Gallery lightbox
+- `typescript` - Type safety
+- `sass` - CSS preprocessing
 
-- Sitemap: `/sitemap.xml`
-- Robots: `/robots.txt`
-- Meta tags: Title, description, Open Graph, Twitter Cards
-- JSON-LD: Organization and LocalBusiness schema
-- Ready for Google Analytics integration
+## 🚀 Deployment
 
-## 🐛 Development & Debugging
+Deploy to Cloudflare Pages:
 
-The project includes comprehensive debugging support:
-
-### Source Maps Enabled
-- ✅ **TypeScript/JavaScript** source maps for debugging
-- ✅ **SCSS/CSS** source maps for style debugging  
-- ✅ **Astro component** debugging support
-- ✅ **Browser DevTools** integration
-
-### Quick Setup
-```bash
-npm run dev  # Source maps auto-enabled in development
-```
-
-### Documentation
-- **[DEBUGGING-SETUP.md](./DEBUGGING-SETUP.md)** - Complete debugging guide
-- Includes browser setup, VS Code integration, mobile debugging
-- Performance profiling and troubleshooting tips
+1. Push code to GitHub
+2. Connect repository to Cloudflare Pages
+3. Configure build settings (see [Deployment Guide](docs/deployment/CLOUDFLARE.md))
+4. Deploy automatically on push
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests and linting
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
@@ -224,6 +153,15 @@ This project is proprietary to Singapore Handpan Studio.
 
 ## 📞 Support
 
-For technical issues or questions about the website, please contact the development team.
+For technical issues or questions:
+- Check the [Documentation](docs/README.md)
+- Review setup guides for specific features
+- Check browser console for errors
 
-For studio inquiries, visit [/contacts](/contacts) or email hello@sghandpan.com.
+For studio inquiries:
+- Visit `/contacts` page
+- Email: hello@sghandpan.com
+
+---
+
+Built with ❤️ using Astro, React, and TypeScript
