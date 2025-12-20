@@ -45,39 +45,29 @@ const FALLBACK_EVENTS = [
 let events = [];
 let cmsError = false;
 
-// Try to fetch from Storyblok first
+// Fetch from Storyblok - token is configured in astro.config.mjs integration
 try {
-  // Use import.meta.env for Astro environment variables
-  const storyblokToken = import.meta.env.STORYBLOK_TOKEN;
+  const storyblokApi = useStoryblokApi();
+  // Use 'published' for production builds, 'draft' for development preview
+  const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
   
-  if (!storyblokToken) {
-    console.warn('❌ No Storyblok token configured - using fallback events');
-    console.log('Available env vars:', Object.keys(import.meta.env).filter(key => key.includes('STORYBLOK')));
+  const { data } = await storyblokApi.get('cdn/stories', {
+    starts_with: 'events/',
+    content_type: 'event',
+    sort_by: 'content.date:desc',
+    version: storyblokVersion
+  });
+  
+  if (data?.stories && data.stories.length > 0) {
+    events = data.stories;
+    cmsError = false;
+  } else {
+    // No events in CMS - use fallback events
     cmsError = true;
     events = FALLBACK_EVENTS;
-  } else {
-    const storyblokApi = useStoryblokApi();
-    const storyblokVersion = import.meta.env.NODE_ENV === 'production' ? 'published' : 'draft';
-    
-    const { data } = await storyblokApi.get('cdn/stories', {
-      starts_with: 'events/',
-      content_type: 'event',
-      sort_by: 'content.date:desc',
-      version: storyblokVersion
-    });
-    
-    if (data?.stories && data.stories.length > 0) {
-      events = data.stories;
-      cmsError = false;
-    } else {
-      // No events in CMS - use fallback events
-      cmsError = true;
-      events = FALLBACK_EVENTS;
-    }
   }
 } catch (error) {
-  console.error('❌ Failed to fetch events from Storyblok:', error);
-  console.error('Error details:', error.message);
+  console.error('❌ Failed to fetch events from Storyblok:', error instanceof Error ? error.message : error);
   cmsError = true;
   events = FALLBACK_EVENTS;
 }

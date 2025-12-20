@@ -55,25 +55,19 @@ export async function getStaticPaths() {
     }
   ];
 
-  // Try to fetch from Storyblok first
+  // Fetch from Storyblok - token is configured in astro.config.mjs integration
   try {
-    const storyblokToken = import.meta.env.STORYBLOK_TOKEN;
-    
-    if (!storyblokToken) {
-      console.log('No Storyblok token configured - using fallback events for static paths');
-      return FALLBACK_EVENTS;
-    }
-
-    console.log('Attempting to fetch events from Storyblok for static paths...');
     const storyblokApi = useStoryblokApi();
+    // Use 'published' for production builds, 'draft' for development preview
+    const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
+    
     const { data } = await storyblokApi.get('cdn/stories', {
       starts_with: 'events/',
       content_type: 'event',
-      version: import.meta.env.NODE_ENV === 'production' ? 'published' : 'draft'
+      version: storyblokVersion
     });
 
     if (data?.stories && data.stories.length > 0) {
-      console.log(`✅ Successfully fetched ${data.stories.length} events from Storyblok for static paths`);
       return data.stories.map((story: any) => ({
         params: { slug: story.slug },
         props: { 
@@ -82,12 +76,11 @@ export async function getStaticPaths() {
         }
       }));
     } else {
-      console.log('No events found in Storyblok - using fallback events for static paths');
+      // No events in CMS - use fallback events
       return FALLBACK_EVENTS;
     }
   } catch (error) {
-    console.error('❌ Failed to fetch events from Storyblok for static paths:', error.message);
-    console.log('Using fallback events due to error');
+    console.error('❌ Failed to fetch events from Storyblok:', error instanceof Error ? error.message : error);
     return FALLBACK_EVENTS;
   }
 }

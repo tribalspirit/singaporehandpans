@@ -143,3 +143,4 @@ The development server is now running at: **http://localhost:4324/**
 ---
 
 **🎵 Your Storyblok integration should now be working correctly!**
+

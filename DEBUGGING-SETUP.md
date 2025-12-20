@@ -381,3 +381,4 @@ With source maps enabled, you can now:
 ---
 
 *For more advanced debugging techniques, check the [Astro Debugging Guide](https://docs.astro.build/en/guides/troubleshooting/) and [Vite Debugging Docs](https://vitejs.dev/guide/debugging.html).*
+

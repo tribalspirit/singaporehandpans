@@ -377,3 +377,4 @@ Your handpan studio is now ready to accept bookings seamlessly! 🎵✨
 ---
 
 *Last updated: December 2024 | For technical support, contact the development team*
+

@@ -100,3 +100,4 @@ After running automation, check your Storyblok space:
 - 🚀 **Scalable** - easy to add more components
 
 **Total time saved**: 2-3 hours of manual Storyblok configuration! 🎉
+

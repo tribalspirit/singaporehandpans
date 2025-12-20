@@ -226,3 +226,4 @@ Once complete, your Singapore Handpan Studio website will be:
 **Total setup time**: 5-10 minutes + DNS propagation
 
 Welcome to the modern web! 🚀
+

@@ -117,3 +117,4 @@ For Cloudflare Pages, add these environment variables:
 ---
 
 **Ready in 5 minutes!** 🎵✨
+

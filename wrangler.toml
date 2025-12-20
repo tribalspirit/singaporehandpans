@@ -10,3 +10,4 @@ pages_build_output_dir = "dist"
 [env.preview]
 # Preview environment variables  
 # Add your Storyblok preview token in Cloudflare Pages dashboard
+
