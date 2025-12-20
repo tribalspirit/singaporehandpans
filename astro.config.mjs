@@ -3,9 +3,29 @@ import react from '@astrojs/react';
 import storyblok from '@storyblok/astro';
 import { loadEnv } from 'vite';
 
-// Load environment variables
+// Load environment variables - try multiple sources for Cloudflare compatibility
 const env = loadEnv(process.env.NODE_ENV || 'development', process.cwd(), '');
-const storyblokToken = env.STORYBLOK_TOKEN || process.env.STORYBLOK_TOKEN || '';
+
+// Debug: Log ALL environment variable sources
+console.log('========================================');
+console.log('🔧 STORYBLOK DEBUG - BUILD TIME');
+console.log('========================================');
+console.log('process.env keys containing STORYBLOK:', Object.keys(process.env).filter(k => k.includes('STORYBLOK')));
+console.log('process.env.STORYBLOK_TOKEN:', process.env.STORYBLOK_TOKEN ? `[${process.env.STORYBLOK_TOKEN.length} chars]` : 'UNDEFINED');
+console.log('loadEnv result keys:', Object.keys(env).filter(k => k.includes('STORYBLOK')));
+console.log('env.STORYBLOK_TOKEN:', env.STORYBLOK_TOKEN ? `[${env.STORYBLOK_TOKEN.length} chars]` : 'UNDEFINED');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('========================================');
+
+// Try to get token from multiple sources
+const storyblokToken = process.env.STORYBLOK_TOKEN || env.STORYBLOK_TOKEN || '';
+
+if (!storyblokToken) {
+  console.error('❌ WARNING: No Storyblok token found! API calls will fail.');
+  console.error('   Set STORYBLOK_TOKEN in Cloudflare Pages Environment Variables');
+} else {
+  console.log('✅ Storyblok token loaded successfully');
+}
 
 // https://astro.build/config
 export default defineConfig({
@@ -28,6 +48,11 @@ export default defineConfig({
   ],
   
   vite: {
+    // Inject environment variables so they're available in import.meta.env
+    define: {
+      'import.meta.env.STORYBLOK_TOKEN': JSON.stringify(storyblokToken),
+    },
+    
     css: {
       // Enable CSS source maps for SCSS debugging
       devSourcemap: true,
