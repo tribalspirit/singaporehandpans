@@ -13,7 +13,7 @@ export interface Props {
       filename: string;
       alt?: string;
     };
-    tags?: string[];
+    tags?: string | string[];
     status?: string;
     max_participants?: number;
     seo_title?: string;
@@ -22,6 +22,16 @@ export interface Props {
 }
 
 const { blok } = Astro.props;
+
+// Normalize tags to always be an array (handles string from Storyblok or array)
+const normalizeTags = (tags: string | string[] | undefined): string[] => {
+  if (!tags) return [];
+  if (Array.isArray(tags)) return tags;
+  if (typeof tags === 'string') return tags.split(',').map(t => t.trim()).filter(Boolean);
+  return [];
+};
+
+const eventTags = normalizeTags(blok.tags);
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -50,9 +60,9 @@ const isPast = eventDate < new Date();
 <article class="storyblok-event" {...storyblokEditable(blok)}>
   <header class="event-header">
     <div class="event-meta">
-      {blok.tags && blok.tags.length > 0 && (
+      {eventTags.length > 0 && (
         <div class="event-tags">
-          {blok.tags.map(tag => (
+          {eventTags.map(tag => (
             <span class="tag">{tag}</span>
           ))}
         </div>

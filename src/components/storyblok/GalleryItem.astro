@@ -9,7 +9,7 @@ export interface Props {
       filename: string;
       alt?: string;
     };
-    tags?: string[];
+    tags?: string | string[];
     featured?: boolean;
     alt_text?: string;
     sort_order?: number;
@@ -17,6 +17,16 @@ export interface Props {
 }
 
 const { blok } = Astro.props;
+
+// Normalize tags to always be an array (handles string from Storyblok or array)
+const normalizeTags = (tags: string | string[] | undefined): string[] => {
+  if (!tags) return [];
+  if (Array.isArray(tags)) return tags;
+  if (typeof tags === 'string') return tags.split(',').map(t => t.trim()).filter(Boolean);
+  return [];
+};
+
+const itemTags = normalizeTags(blok.tags);
 ---
 
 <div class="storyblok-gallery-item" {...storyblokEditable(blok)}>
@@ -37,9 +47,9 @@ const { blok } = Astro.props;
       <p class="gallery-item-description">{blok.description}</p>
     )}
     
-    {blok.tags && blok.tags.length > 0 && (
+    {itemTags.length > 0 && (
       <div class="gallery-item-tags">
-        {blok.tags.map(tag => (
+        {itemTags.map(tag => (
           <span class="tag">{tag}</span>
         ))}
       </div>
