@@ -130,4 +130,42 @@
   --z-index-modal: 1050;
   --z-index-popover: 1060;
   --z-index-tooltip: 1070;
+
+  // ========================================
+  // Component Token Aliases
+  // ========================================
+  
+  // Layout Heights
+  --header-height: 70px;
+  --footer-height: 200px;
+  
+  // Max Width
+  --max-width: var(--width-container);
+  
+  // Spacing Aliases (mapping space-X to spacing-X for component compatibility)
+  --spacing-xs: var(--space-2);      // 8px
+  --spacing-sm: var(--space-3);      // 12px
+  --spacing-md: var(--space-4);      // 16px
+  --spacing-lg: var(--space-6);      // 24px
+  --spacing-xl: var(--space-8);      // 32px
+  --spacing-xxl: var(--space-12);    // 48px
+  
+  // Border Radius Aliases (mapping radius-X to border-radius-X)
+  --border-radius-sm: var(--radius-sm);    // 2px
+  --border-radius-md: var(--radius-md);    // 6px
+  --border-radius-lg: var(--radius-lg);    // 8px
+  --border-radius-xl: var(--radius-xl);    // 12px
+  
+  // Font Size Aliases (adding missing xxl)
+  --font-size-md: var(--font-size-base);   // 16-18px
+  --font-size-xxl: var(--font-size-2xl);   // 24-32px
+  
+  // Text Colors
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-600);
+  
+  // Surface & Border Colors
+  --color-surface: var(--color-white);
+  --color-border: var(--color-gray-300);
+  --color-background-secondary: var(--color-gray-100);
 }

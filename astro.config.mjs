@@ -38,7 +38,8 @@ export default defineConfig({
       devSourcemap: true,
       preprocessorOptions: {
         scss: {
-          additionalData: `@import "src/styles/tokens.scss";`
+          api: 'modern-compiler',
+          additionalData: `@use "src/styles/tokens.scss" as *;`
         }
       }
     },
