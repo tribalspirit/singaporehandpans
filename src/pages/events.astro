@@ -63,19 +63,12 @@ try {
   if (data?.stories && data.stories.length > 0) {
     events = data.stories;
     cmsError = false;
-    // Temporary debug
-    const eventsWithImages = data.stories.filter(e => e.content.image);
-    console.log(`✅ Events: ${data.stories.length}, with images: ${eventsWithImages.length}`);
-    if (eventsWithImages.length > 0) {
-      console.log('📸 Image data:', eventsWithImages[0].content.image);
-    }
   } else {
     // No events in CMS - use fallback events
     cmsError = true;
     events = FALLBACK_EVENTS;
   }
 } catch (error) {
-  console.error('❌ Failed to fetch events from Storyblok:', error instanceof Error ? error.message : error);
   cmsError = true;
   events = FALLBACK_EVENTS;
 }
