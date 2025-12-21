@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getAllHandpanConfigs, getHandpanConfig } from '../config/handpans';
-import type { HandpanConfig } from '../config/types';
+import HandpanRenderer from './HandpanRenderer';
+import type { HandpanPad } from '../config/types';
 
 export default function HandpanWidget() {
   const configs = getAllHandpanConfigs();
@@ -9,6 +10,10 @@ export default function HandpanWidget() {
   );
 
   const selectedHandpan = getHandpanConfig(selectedHandpanId);
+
+  const handlePadClick = (pad: HandpanPad) => {
+    console.log('Pad clicked:', pad.note);
+  };
 
   if (!selectedHandpan) {
     return <div>No handpan configuration available</div>;
@@ -37,9 +42,7 @@ export default function HandpanWidget() {
         </div>
       </div>
       <div className="handpan-widget__content">
-        <div className="handpan-widget__placeholder">
-          Handpan visualization will be rendered here
-        </div>
+        <HandpanRenderer config={selectedHandpan} onPadClick={handlePadClick} />
       </div>
     </div>
   );
