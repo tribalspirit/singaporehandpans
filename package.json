@@ -32,6 +32,7 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "sass": "^1.80.0",
+    "tone": "^15.1.22",
     "yet-another-react-lightbox": "^3.27.0"
   },
   "devDependencies": {
