@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { getAllHandpanConfigs, getHandpanConfig } from '../config/handpans';
 import HandpanRenderer from './HandpanRenderer';
 import type { HandpanPad } from '../config/types';
+import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
 import styles from '../styles/HandpanWidget.module.scss';
 
 export default function HandpanWidget() {
@@ -9,12 +10,35 @@ export default function HandpanWidget() {
   const [selectedHandpanId, setSelectedHandpanId] = useState<string>(
     configs[0]?.id || ''
   );
+  const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
 
   const selectedHandpan = getHandpanConfig(selectedHandpanId);
 
-  const handlePadClick = (pad: HandpanPad) => {
-    console.log('Pad clicked:', pad.note);
-  };
+  const handlePadClick = useCallback(async (pad: HandpanPad) => {
+    try {
+      if (!isAudioInitialized()) {
+        await initializeAudio();
+      }
+
+      playNote(pad.note, 500);
+
+      setActiveNotes((prev) => {
+        const next = new Set(prev);
+        next.add(pad.note);
+        return next;
+      });
+
+      setTimeout(() => {
+        setActiveNotes((prev) => {
+          const next = new Set(prev);
+          next.delete(pad.note);
+          return next;
+        });
+      }, 300);
+    } catch (error) {
+      console.error('Error playing note:', error);
+    }
+  }, []);
 
   if (!selectedHandpan) {
     return <div>No handpan configuration available</div>;
@@ -43,7 +67,11 @@ export default function HandpanWidget() {
         </div>
       </div>
       <div className={styles.content}>
-        <HandpanRenderer config={selectedHandpan} onPadClick={handlePadClick} />
+        <HandpanRenderer
+          config={selectedHandpan}
+          activeNotes={activeNotes}
+          onPadClick={handlePadClick}
+        />
       </div>
     </div>
   );
