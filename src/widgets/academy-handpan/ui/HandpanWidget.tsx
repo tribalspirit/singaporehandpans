@@ -32,22 +32,25 @@ export default function HandpanWidget() {
       if (!isAudioInitialized()) {
         await initializeAudio();
       }
+      
+      // Ensure audio is ready before playing
+      if (isAudioInitialized()) {
+        playNote(pad.note, 500);
 
-      playNote(pad.note, 500);
-
-      setActiveNotes((prev) => {
-        const next = new Set(prev);
-        next.add(pad.note);
-        return next;
-      });
-
-      setTimeout(() => {
         setActiveNotes((prev) => {
           const next = new Set(prev);
-          next.delete(pad.note);
+          next.add(pad.note);
           return next;
         });
-      }, 300);
+
+        setTimeout(() => {
+          setActiveNotes((prev) => {
+            const next = new Set(prev);
+            next.delete(pad.note);
+            return next;
+          });
+        }, 300);
+      }
     } catch (error) {
       console.error('Error playing note:', error);
     }
@@ -78,8 +81,10 @@ export default function HandpanWidget() {
             id="handpan-select"
             value={selectedHandpanId}
             onChange={(e) => {
-              setSelectedHandpanId(e.target.value);
+              const newHandpanId = e.target.value;
+              setSelectedHandpanId(newHandpanId);
               setSelectedScale(null);
+              setActiveNotes(new Set());
             }}
             className={styles.select}
           >
