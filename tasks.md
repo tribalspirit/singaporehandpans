@@ -299,16 +299,16 @@ With multiple developers:
 
 ### Milestone B: Audio Engine
 
-- [ ] T074 [Academy] Install and configure Tone.js dependency in package.json
+- [X] T074 [Academy] Install and configure Tone.js dependency in package.json
   - **Acceptance Criteria**: Tone.js added to dependencies; TypeScript types available; build passes
 
-- [ ] T075 [P] [Academy] Create audio engine module in `src/widgets/academy-handpan/audio/engine.ts` with Tone.js initialization and playback primitives (playNote, playChord, playArpeggio)
+- [X] T075 [P] [Academy] Create audio engine module in `src/widgets/academy-handpan/audio/engine.ts` with Tone.js initialization and playback primitives (playNote, playChord, playArpeggio)
   - **Acceptance Criteria**: Audio initializes only after first user interaction (mobile-safe); playNote(note, durationMs) works; playChord(notes, durationMs) plays simultaneous notes; supports scheduling-friendly API (accepts Tone time where needed)
 
-- [ ] T076 [P] [Academy] Create audio scheduler module in `src/widgets/academy-handpan/audio/scheduler.ts` using `Tone.Transport` (and optionally `Tone.Pattern`) for arpeggio scheduling with "current note" events for UI highlight sync
+- [X] T076 [P] [Academy] Create audio scheduler module in `src/widgets/academy-handpan/audio/scheduler.ts` using `Tone.Transport` (and optionally `Tone.Pattern`) for arpeggio scheduling with "current note" events for UI highlight sync
   - **Acceptance Criteria**: Scheduler emits events for currently playing note during arpeggio; UI can subscribe to highlight active notes; supports up/down patterns; handles cleanup on stop/cancel; no drift across devices
 
-- [ ] T077 [Academy] Integrate audio engine into HandpanRenderer: clicking a pad plays the note via Tone.js
+- [X] T077 [Academy] Integrate audio engine into HandpanRenderer: clicking a pad plays the note via Tone.js
   - **Acceptance Criteria**: Clicking a note pad plays the note; audio works on mobile after user interaction; no console errors; visual feedback on click (brief active state)
 
 **Checkpoint**: Audio engine functional - note playback works on click with mobile-safe initialization; arpeggio scheduling emits current-note events
