@@ -19,7 +19,6 @@ export default function HandpanWidget() {
 
   const selectedHandpan = getHandpanConfig(selectedHandpanId);
 
-  // Reset scale selection when handpan changes
   useEffect(() => {
     setSelectedScale(null);
     setActiveNotes(new Set());
@@ -34,21 +33,13 @@ export default function HandpanWidget() {
   }, [selectedScale]);
 
   const handlePadClick = useCallback(async (pad: HandpanPad) => {
-    console.log('Pad clicked:', pad.note);
     try {
-      // Always try to initialize audio on click (browser requires user gesture)
       if (!isAudioInitialized()) {
-        console.log('Initializing audio...');
         await initializeAudio();
-        console.log('Audio initialized');
       }
       
-      // Play the note
-      console.log('Playing note:', pad.note);
       playNote(pad.note, 500);
-      console.log('Note played');
 
-      // Visual feedback
       setActiveNotes((prev) => {
         const next = new Set(prev);
         next.add(pad.note);
@@ -63,14 +54,11 @@ export default function HandpanWidget() {
         });
       }, 300);
     } catch (error) {
-      console.error('Error playing note:', error);
-      // Try to reinitialize audio if it failed
       try {
-        console.log('Retrying audio initialization...');
         await initializeAudio();
         playNote(pad.note, 500);
       } catch (retryError) {
-        console.error('Failed to initialize audio:', retryError);
+        // Audio initialization failed
       }
     }
   }, []);
@@ -80,11 +68,8 @@ export default function HandpanWidget() {
   }, []);
 
   if (!selectedHandpan) {
-    console.error('No handpan found for ID:', selectedHandpanId);
-    return <div>No handpan configuration available for: {selectedHandpanId}</div>;
+    return <div>No handpan configuration available</div>;
   }
-  
-  console.log('Rendering handpan:', selectedHandpan.name, 'with', selectedHandpan.notes.length, 'notes');
 
   const tabs = [
     { id: 'scales', label: 'Scales & Modes' },
@@ -103,10 +88,7 @@ export default function HandpanWidget() {
             id="handpan-select"
             value={selectedHandpanId}
             onChange={(e) => {
-              const newHandpanId = e.target.value;
-              console.log('Handpan changed to:', newHandpanId);
-              setSelectedHandpanId(newHandpanId);
-              // useEffect will handle resetting scale and active notes
+              setSelectedHandpanId(e.target.value);
             }}
             className={styles.select}
           >

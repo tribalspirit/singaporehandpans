@@ -57,7 +57,6 @@ export default function ScalesPanel({
         },
       });
     } catch (error) {
-      console.error('Error playing scale:', error);
       setIsPlaying(false);
       onActiveNotesChange(new Set());
     }

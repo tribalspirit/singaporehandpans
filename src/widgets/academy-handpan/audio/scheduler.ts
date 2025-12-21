@@ -50,7 +50,7 @@ export function playArpeggio(options: ArpeggioOptions): void {
       try {
         playNote(note, noteDuration * 1000);
       } catch (error) {
-        console.error('Error playing note in arpeggio:', error);
+        // Error playing note in arpeggio
       }
       if (onStep) {
         onStep(note, index);
