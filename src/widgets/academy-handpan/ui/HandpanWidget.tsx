@@ -1,7 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { getAllHandpanConfigs, getHandpanConfig } from '../config/handpans';
 import HandpanRenderer from './HandpanRenderer';
+import Tabs from './Tabs';
+import ScalesPanel from './ScalesPanel';
 import type { HandpanPad } from '../config/types';
+import type { PlayableScale } from '../theory/scales';
 import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
 import styles from '../styles/HandpanWidget.module.scss';
 
@@ -10,9 +13,19 @@ export default function HandpanWidget() {
   const [selectedHandpanId, setSelectedHandpanId] = useState<string>(
     configs[0]?.id || ''
   );
+  const [activeTab, setActiveTab] = useState<'scales' | 'chords'>('scales');
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
+  const [selectedScale, setSelectedScale] = useState<PlayableScale | null>(null);
 
   const selectedHandpan = getHandpanConfig(selectedHandpanId);
+
+  const selectedNotes = useMemo(() => {
+    const notes = new Set<string>();
+    if (selectedScale) {
+      selectedScale.notes.forEach((note) => notes.add(note));
+    }
+    return notes;
+  }, [selectedScale]);
 
   const handlePadClick = useCallback(async (pad: HandpanPad) => {
     try {
@@ -40,9 +53,18 @@ export default function HandpanWidget() {
     }
   }, []);
 
+  const handleScaleSelect = useCallback((scale: PlayableScale | null) => {
+    setSelectedScale(scale);
+  }, []);
+
   if (!selectedHandpan) {
     return <div>No handpan configuration available</div>;
   }
+
+  const tabs = [
+    { id: 'scales', label: 'Scales & Modes' },
+    { id: 'chords', label: 'Chords' },
+  ];
 
   return (
     <div className={styles.handpanWidget}>
@@ -55,7 +77,10 @@ export default function HandpanWidget() {
           <select
             id="handpan-select"
             value={selectedHandpanId}
-            onChange={(e) => setSelectedHandpanId(e.target.value)}
+            onChange={(e) => {
+              setSelectedHandpanId(e.target.value);
+              setSelectedScale(null);
+            }}
             className={styles.select}
           >
             {configs.map((config) => (
@@ -67,11 +92,34 @@ export default function HandpanWidget() {
         </div>
       </div>
       <div className={styles.content}>
-        <HandpanRenderer
-          config={selectedHandpan}
-          activeNotes={activeNotes}
-          onPadClick={handlePadClick}
-        />
+        <div className={styles.handpanSection}>
+          <HandpanRenderer
+            config={selectedHandpan}
+            selectedNotes={selectedNotes}
+            activeNotes={activeNotes}
+            onPadClick={handlePadClick}
+          />
+        </div>
+        <div className={styles.panelsSection}>
+          <Tabs
+            tabs={tabs}
+            activeTab={activeTab}
+            onTabChange={(tabId) => setActiveTab(tabId as 'scales' | 'chords')}
+          />
+          {activeTab === 'scales' && (
+            <ScalesPanel
+              availableNotes={selectedHandpan.notes}
+              selectedScale={selectedScale}
+              onScaleSelect={handleScaleSelect}
+              onActiveNotesChange={setActiveNotes}
+            />
+          )}
+          {activeTab === 'chords' && (
+            <div className={styles.placeholder}>
+              Chords panel coming soon
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

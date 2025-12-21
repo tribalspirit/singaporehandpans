@@ -1,4 +1,4 @@
-import { Pcset } from '@tonaljs/pcset';
+import * as Pcset from '@tonaljs/pcset';
 import { normalizeToPitchClass } from './normalize';
 
 export function toPcSet(notes: string[]): string {
