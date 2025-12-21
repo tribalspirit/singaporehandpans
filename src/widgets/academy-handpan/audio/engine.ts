@@ -4,11 +4,25 @@ let isInitialized = false;
 let synth: Tone.PolySynth | null = null;
 
 export async function initializeAudio(): Promise<void> {
-  if (isInitialized) {
-    return;
+  if (isInitialized && synth) {
+    // Check if context is actually running
+    if (Tone.context.state === 'running') {
+      return;
+    }
   }
 
+  // Start the audio context
   await Tone.start();
+  
+  // Verify the context started
+  if (Tone.context.state !== 'running') {
+    throw new Error('Audio context failed to start. User interaction may be required.');
+  }
+  
+  // Create or recreate synth
+  if (synth) {
+    synth.dispose();
+  }
   
   synth = new Tone.PolySynth(Tone.Synth, {
     oscillator: {

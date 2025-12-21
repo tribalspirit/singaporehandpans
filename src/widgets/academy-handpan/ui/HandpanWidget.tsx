@@ -29,30 +29,37 @@ export default function HandpanWidget() {
 
   const handlePadClick = useCallback(async (pad: HandpanPad) => {
     try {
+      // Initialize audio if needed
       if (!isAudioInitialized()) {
         await initializeAudio();
       }
       
-      // Ensure audio is ready before playing
-      if (isAudioInitialized()) {
-        playNote(pad.note, 500);
+      // Play the note
+      playNote(pad.note, 500);
 
+      // Visual feedback
+      setActiveNotes((prev) => {
+        const next = new Set(prev);
+        next.add(pad.note);
+        return next;
+      });
+
+      setTimeout(() => {
         setActiveNotes((prev) => {
           const next = new Set(prev);
-          next.add(pad.note);
+          next.delete(pad.note);
           return next;
         });
-
-        setTimeout(() => {
-          setActiveNotes((prev) => {
-            const next = new Set(prev);
-            next.delete(pad.note);
-            return next;
-          });
-        }, 300);
-      }
+      }, 300);
     } catch (error) {
       console.error('Error playing note:', error);
+      // Try to reinitialize audio if it failed
+      try {
+        await initializeAudio();
+        playNote(pad.note, 500);
+      } catch (retryError) {
+        console.error('Failed to initialize audio:', retryError);
+      }
     }
   }, []);
 
@@ -99,6 +106,7 @@ export default function HandpanWidget() {
       <div className={styles.content}>
         <div className={styles.handpanSection}>
           <HandpanRenderer
+            key={selectedHandpanId}
             config={selectedHandpan}
             selectedNotes={selectedNotes}
             activeNotes={activeNotes}
@@ -113,6 +121,7 @@ export default function HandpanWidget() {
           />
           {activeTab === 'scales' && (
             <ScalesPanel
+              key={selectedHandpanId}
               availableNotes={selectedHandpan.notes}
               selectedScale={selectedScale}
               onScaleSelect={handleScaleSelect}
