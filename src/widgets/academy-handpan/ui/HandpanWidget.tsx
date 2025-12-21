@@ -28,14 +28,19 @@ export default function HandpanWidget() {
   }, [selectedScale]);
 
   const handlePadClick = useCallback(async (pad: HandpanPad) => {
+    console.log('Pad clicked:', pad.note);
     try {
-      // Initialize audio if needed
+      // Always try to initialize audio on click (browser requires user gesture)
       if (!isAudioInitialized()) {
+        console.log('Initializing audio...');
         await initializeAudio();
+        console.log('Audio initialized');
       }
       
       // Play the note
+      console.log('Playing note:', pad.note);
       playNote(pad.note, 500);
+      console.log('Note played');
 
       // Visual feedback
       setActiveNotes((prev) => {
@@ -55,6 +60,7 @@ export default function HandpanWidget() {
       console.error('Error playing note:', error);
       // Try to reinitialize audio if it failed
       try {
+        console.log('Retrying audio initialization...');
         await initializeAudio();
         playNote(pad.note, 500);
       } catch (retryError) {
@@ -68,8 +74,11 @@ export default function HandpanWidget() {
   }, []);
 
   if (!selectedHandpan) {
-    return <div>No handpan configuration available</div>;
+    console.error('No handpan found for ID:', selectedHandpanId);
+    return <div>No handpan configuration available for: {selectedHandpanId}</div>;
   }
+  
+  console.log('Rendering handpan:', selectedHandpan.name, 'with', selectedHandpan.notes.length, 'notes');
 
   const tabs = [
     { id: 'scales', label: 'Scales & Modes' },
@@ -89,6 +98,7 @@ export default function HandpanWidget() {
             value={selectedHandpanId}
             onChange={(e) => {
               const newHandpanId = e.target.value;
+              console.log('Handpan changed to:', newHandpanId);
               setSelectedHandpanId(newHandpanId);
               setSelectedScale(null);
               setActiveNotes(new Set());
