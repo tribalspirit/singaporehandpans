@@ -1,0 +1,116 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HandpanWidget from '../../widgets/academy-handpan/ui/HandpanWidget';
+
+const seoTitle = 'Handpan Memorization Tool - Academy | Singapore Handpan Studio';
+const seoDescription = 'Interactive handpan memorization widget. Learn note positions, explore chord patterns, and discover scales for different handpan tunings.';
+---
+
+<BaseLayout 
+  title={seoTitle}
+  description={seoDescription}
+  canonical={`${Astro.site}academy/memorization/`}
+>
+  <main class="memorization-page">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/academy">Academy</a>
+        <span class="separator">/</span>
+        <span>Memorization Tool</span>
+      </nav>
+
+      <section class="memorization-hero">
+        <h1 class="memorization-hero__title">Handpan Memorization Tool</h1>
+        <p class="memorization-hero__description">
+          Master handpan fundamentals with our interactive widget. Learn note positions, 
+          explore chord patterns, and discover scales for different handpan tunings.
+        </p>
+      </section>
+
+      <section class="memorization-widget-section">
+        <HandpanWidget client:load />
+      </section>
+    </div>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+@use "src/styles/tokens.scss";
+
+.memorization-page {
+  min-height: calc(100vh - var(--header-height) - var(--footer-height));
+  padding: var(--spacing-2xl) 0;
+  background: linear-gradient(135deg, var(--color-gray-50) 0%, var(--color-white) 100%);
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+  }
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xl);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-base);
+
+    &:hover {
+      color: var(--color-primary-dark);
+      text-decoration: underline;
+    }
+  }
+
+  .separator {
+    color: var(--color-gray-400);
+  }
+}
+
+.memorization-hero {
+  text-align: center;
+  padding: var(--spacing-xl) 0;
+  margin-bottom: var(--spacing-xl);
+}
+
+.memorization-hero__title {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-lg);
+  font-family: var(--font-family-heading);
+}
+
+.memorization-hero__description {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-secondary);
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: var(--line-height-relaxed);
+}
+
+.memorization-widget-section {
+  padding: var(--spacing-xl) 0;
+  background: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-base);
+  margin-bottom: var(--spacing-2xl);
+}
+
+@media (max-width: 768px) {
+  .memorization-hero__title {
+    font-size: var(--font-size-3xl);
+  }
+  
+  .memorization-hero__description {
+    font-size: var(--font-size-lg);
+  }
+}
+</style>
+

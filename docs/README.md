@@ -125,3 +125,4 @@ See individual setup guides for troubleshooting:
 
 This project is proprietary to Singapore Handpan Studio.
 
+
