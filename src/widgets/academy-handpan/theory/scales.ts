@@ -10,22 +10,15 @@ export interface PlayableScale {
   pitchClasses: string[];
 }
 
-const COMMON_SCALE_TYPES = [
-  'major',
-  'minor',
+// Only the 7 main modes (Ionian/major, Dorian, Phrygian, Lydian, Mixolydian, Aeolian/minor, Locrian)
+const MAIN_SCALE_TYPES = [
+  'major',      // Ionian
   'dorian',
   'phrygian',
   'lydian',
   'mixolydian',
+  'minor',      // Aeolian
   'locrian',
-  'pentatonic',
-  'major pentatonic',
-  'minor pentatonic',
-  'blues',
-  'harmonic minor',
-  'melodic minor',
-  'whole tone',
-  'diminished',
 ];
 
 const TONICS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -34,7 +27,7 @@ function generateScaleCandidates(): Array<{ tonic: string; type: string }> {
   const candidates: Array<{ tonic: string; type: string }> = [];
   
   for (const tonic of TONICS) {
-    for (const type of COMMON_SCALE_TYPES) {
+    for (const type of MAIN_SCALE_TYPES) {
       candidates.push({ tonic, type });
     }
   }
@@ -62,6 +55,7 @@ export function findPlayableScales(availableNotes: string[]): PlayableScale[] {
       continue;
     }
 
+    // Only include scales where ALL pitch classes are available (exact subset match)
     if (isSubset(scalePitchClasses, availablePitchClasses)) {
       const mappedNotes = assignOctavesToPitchClasses(scalePitchClasses, availableNotes);
       const orderedNotes = sortNotesByPitch(mappedNotes);
@@ -78,6 +72,16 @@ export function findPlayableScales(availableNotes: string[]): PlayableScale[] {
 
   const deduplicated = deduplicateBy(playable, (scale) => scale.pitchClasses.join(','));
   
-  return stableSort(deduplicated, (scale) => scale.displayName);
+  // Sort: prioritize D minor, then by tonic, then by mode order
+  const sorted = stableSort(deduplicated, (scale) => {
+    const isDMinor = scale.name === 'D minor';
+    const parts = scale.name.split(' ');
+    const tonic = parts[0] || '';
+    const mode = parts.slice(1).join(' ') || '';
+    const modeOrder = MAIN_SCALE_TYPES.indexOf(mode);
+    return `${isDMinor ? '0' : '1'}_${tonic}_${modeOrder.toString().padStart(2, '0')}`;
+  });
+  
+  return sorted;
 }
 

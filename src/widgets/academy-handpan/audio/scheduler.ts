@@ -47,7 +47,11 @@ export function playArpeggio(options: ArpeggioOptions): void {
 
   orderedNotes.forEach((note, index) => {
     const event = new Tone.ToneEvent((time) => {
-      playNote(note, noteDuration * 1000);
+      try {
+        playNote(note, noteDuration * 1000);
+      } catch (error) {
+        console.error('Error playing note in arpeggio:', error);
+      }
       if (onStep) {
         onStep(note, index);
       }
