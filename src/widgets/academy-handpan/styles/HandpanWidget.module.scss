@@ -2,7 +2,7 @@
 
 .handpanWidget {
   width: 100%;
-  max-width: 800px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: var(--spacing-xl);
 }
@@ -62,9 +62,33 @@
 }
 
 .content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-xl);
+  align-items: start;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.handpanSection {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 400px;
+}
+
+.panelsSection {
+  width: 100%;
+}
+
+.placeholder {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  background: var(--color-gray-50);
+  border-radius: var(--border-radius-md);
 }
 
