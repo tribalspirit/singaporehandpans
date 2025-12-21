@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { getAllHandpanConfigs, getHandpanConfig } from '../config/handpans';
 import HandpanRenderer from './HandpanRenderer';
 import Tabs from './Tabs';
@@ -18,6 +18,12 @@ export default function HandpanWidget() {
   const [selectedScale, setSelectedScale] = useState<PlayableScale | null>(null);
 
   const selectedHandpan = getHandpanConfig(selectedHandpanId);
+
+  // Reset scale selection when handpan changes
+  useEffect(() => {
+    setSelectedScale(null);
+    setActiveNotes(new Set());
+  }, [selectedHandpanId]);
 
   const selectedNotes = useMemo(() => {
     const notes = new Set<string>();
@@ -100,8 +106,7 @@ export default function HandpanWidget() {
               const newHandpanId = e.target.value;
               console.log('Handpan changed to:', newHandpanId);
               setSelectedHandpanId(newHandpanId);
-              setSelectedScale(null);
-              setActiveNotes(new Set());
+              // useEffect will handle resetting scale and active notes
             }}
             className={styles.select}
           >
