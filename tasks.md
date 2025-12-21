@@ -317,19 +317,19 @@ With multiple developers:
 
 ### Milestone C: Scales/Modes Generation (Tonal-based)
 
-- [ ] T078 [P] [Academy] Create scales theory module in `src/widgets/academy-handpan/theory/scales.ts` using `@tonaljs/scale` + `@tonaljs/scale-type` and pcset subset filtering to derive playable scales/modes from available notes
+- [X] T078 [P] [Academy] Create scales theory module in `src/widgets/academy-handpan/theory/scales.ts` using `@tonaljs/scale` + `@tonaljs/scale-type` and pcset subset filtering to derive playable scales/modes from available notes
   - **Acceptance Criteria**: Module enumerates scale types and tonics, generates candidate pitch-class sets, filters by subset of available handpan pitch classes using `@tonaljs/pcset`; output includes display name + ordered note list for playback; deterministic (same handpan yields same scales in same order)
 
-- [ ] T079 [P] [Academy] Create theory utilities module in `src/widgets/academy-handpan/theory/utils.ts` for stable sorting, deduplication, and octave assignment strategy for playback (no custom theory dictionaries)
+- [X] T079 [P] [Academy] Create theory utilities module in `src/widgets/academy-handpan/theory/utils.ts` for stable sorting, deduplication, and octave assignment strategy for playback (no custom theory dictionaries)
   - **Acceptance Criteria**: Utility functions support deterministic ordering and converting pitch classes to playback notes (with octave handling); does not duplicate chord/scale dictionaries or set math already covered by Tonal/pcset
 
-- [ ] T080 [Academy] Create ScalesPanel component in `src/widgets/academy-handpan/ui/ScalesPanel.tsx` to display generated scales/modes with selection and play button
+- [X] T080 [Academy] Create ScalesPanel component in `src/widgets/academy-handpan/ui/ScalesPanel.tsx` to display generated scales/modes with selection and play button
   - **Acceptance Criteria**: Panel displays all playable scales/modes for selected handpan; selecting a scale highlights its notes on handpan; play button plays notes as arpeggio/sequence via scheduler; UI highlights currently playing note during playback
 
-- [ ] T081 [Academy] Create Tabs component in `src/widgets/academy-handpan/ui/Tabs.tsx` for Chords/Scales panel switching
+- [X] T081 [Academy] Create Tabs component in `src/widgets/academy-handpan/ui/Tabs.tsx` for Chords/Scales panel switching
   - **Acceptance Criteria**: Tabs component switches between Chords and Scales panels; accessible keyboard navigation; active tab is clearly indicated
 
-- [ ] T082 [Academy] Integrate ScalesPanel into HandpanWidget with tab navigation
+- [X] T082 [Academy] Integrate ScalesPanel into HandpanWidget with tab navigation
   - **Acceptance Criteria**: Scales tab displays and functions; scale selection highlights notes; play button works; visual sync with audio playback; no prerecorded sequences
 
 **Checkpoint**: Scales/modes generation complete - users can view and play scales derived from handpan notes via Tonal + pcset filtering
