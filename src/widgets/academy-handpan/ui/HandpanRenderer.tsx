@@ -1,4 +1,5 @@
 import type { HandpanConfig, HandpanPad } from '../config/types';
+import { parseNote } from '../theory/normalize';
 import styles from '../styles/HandpanRenderer.module.scss';
 
 interface HandpanRendererProps {
@@ -6,6 +7,19 @@ interface HandpanRendererProps {
   selectedNotes?: Set<string>;
   activeNotes?: Set<string>;
   onPadClick?: (pad: HandpanPad) => void;
+}
+
+function getPadSizeMultiplier(note: string): number {
+  try {
+    const { octave } = parseNote(note);
+    if (octave === null) return 1;
+    
+    const baseOctave = 4;
+    const octaveDiff = octave - baseOctave;
+    return 1 - octaveDiff * 0.15;
+  } catch {
+    return 1;
+  }
 }
 
 export default function HandpanRenderer({
@@ -26,6 +40,9 @@ export default function HandpanRenderer({
         {config.layout.map((pad) => {
           const isSelected = selectedNotes.has(pad.note);
           const isActive = activeNotes.has(pad.note);
+          const sizeMultiplier = getPadSizeMultiplier(pad.note);
+          const adjustedRadius = pad.r * sizeMultiplier;
+          
           const padClass = [
             styles.pad,
             isSelected && styles.padSelected,
@@ -42,8 +59,8 @@ export default function HandpanRenderer({
               style={{
                 left: `${pad.x * 100}%`,
                 top: `${pad.y * 100}%`,
-                width: `${pad.r * 100}%`,
-                height: `${pad.r * 100}%`,
+                width: `${adjustedRadius * 100}%`,
+                height: `${adjustedRadius * 100}%`,
               }}
               onClick={() => handlePadClick(pad)}
               aria-label={`Note ${pad.note}`}
