@@ -1,4 +1,5 @@
 import type { HandpanConfig, HandpanPad } from '../config/types';
+import styles from '../styles/HandpanRenderer.module.scss';
 
 interface HandpanRendererProps {
   config: HandpanConfig;
@@ -20,15 +21,15 @@ export default function HandpanRenderer({
   };
 
   return (
-    <div className="handpan-renderer">
-      <div className="handpan-renderer__body">
+    <div className={styles.handpanRenderer}>
+      <div className={styles.body}>
         {config.layout.map((pad) => {
           const isSelected = selectedNotes.has(pad.note);
           const isActive = activeNotes.has(pad.note);
           const padClass = [
-            'handpan-renderer__pad',
-            isSelected && 'handpan-renderer__pad--selected',
-            isActive && 'handpan-renderer__pad--active',
+            styles.pad,
+            isSelected && styles.padSelected,
+            isActive && styles.padActive,
           ]
             .filter(Boolean)
             .join(' ');
@@ -43,12 +44,11 @@ export default function HandpanRenderer({
                 top: `${pad.y * 100}%`,
                 width: `${pad.r * 100}%`,
                 height: `${pad.r * 100}%`,
-                transform: 'translate(-50%, -50%)',
               }}
               onClick={() => handlePadClick(pad)}
               aria-label={`Note ${pad.note}`}
             >
-              <span className="handpan-renderer__pad-label">{pad.note}</span>
+              <span className={styles.padLabel}>{pad.note}</span>
             </button>
           );
         })}

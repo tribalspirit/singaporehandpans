@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { getAllHandpanConfigs, getHandpanConfig } from '../config/handpans';
 import HandpanRenderer from './HandpanRenderer';
 import type { HandpanPad } from '../config/types';
+import styles from '../styles/HandpanWidget.module.scss';
 
 export default function HandpanWidget() {
   const configs = getAllHandpanConfigs();
@@ -20,18 +21,18 @@ export default function HandpanWidget() {
   }
 
   return (
-    <div className="handpan-widget">
-      <div className="handpan-widget__header">
-        <h2 className="handpan-widget__title">Handpan Memorization</h2>
-        <div className="handpan-widget__selector">
-          <label htmlFor="handpan-select" className="handpan-widget__label">
+    <div className={styles.handpanWidget}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Handpan Memorization</h2>
+        <div className={styles.selector}>
+          <label htmlFor="handpan-select" className={styles.label}>
             Select Handpan:
           </label>
           <select
             id="handpan-select"
             value={selectedHandpanId}
             onChange={(e) => setSelectedHandpanId(e.target.value)}
-            className="handpan-widget__select"
+            className={styles.select}
           >
             {configs.map((config) => (
               <option key={config.id} value={config.id}>
@@ -41,7 +42,7 @@ export default function HandpanWidget() {
           </select>
         </div>
       </div>
-      <div className="handpan-widget__content">
+      <div className={styles.content}>
         <HandpanRenderer config={selectedHandpan} onPadClick={handlePadClick} />
       </div>
     </div>
