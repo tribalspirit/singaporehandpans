@@ -16,7 +16,7 @@ function getPadSizeMultiplier(note: string): number {
     
     const baseOctave = 4;
     const octaveDiff = octave - baseOctave;
-    return 1 - octaveDiff * 0.15;
+    return 1 - octaveDiff * 0.2;
   } catch {
     return 1;
   }

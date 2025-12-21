@@ -249,3 +249,138 @@ With multiple developers:
 - **TypeScript**: Strict mode enabled
 - **SEO**: Full meta tags, JSON-LD, sitemap, robots.txt
 - **Quality**: ESLint + Prettier, accessibility standards
+
+---
+
+## Phase 8: Academy – Handpan Memorization Widget
+
+**Goal**: Interactive widget for handpan beginners to memorize note positions, chord patterns, and scales/modes for different handpan tunings
+
+**Independent Test**: Widget renders on memorization page, handpan visualization works with proper sizing and positioning, note playback functions, chord/scale generation is accurate, UI is responsive and accessible
+
+### Milestone A: Foundations
+
+- [ ] T064 [Academy] Create widget directory structure in `src/widgets/academy-handpan/` with config/, theory/, audio/, ui/, and styles/ subdirectories
+  - **Acceptance Criteria**: Directory structure exists with proper organization; TypeScript paths resolve correctly
+
+- [ ] T065 [P] [Academy] Create handpan config schema in `src/widgets/academy-handpan/config/types.ts` with TypeScript types for handpan definitions, notes, and layout coordinates
+  - **Acceptance Criteria**: Types defined for HandpanConfig, HandpanPad, Note with validation helpers; exports are properly typed
+
+- [ ] T066 [P] [Academy] Create handpan definitions config in `src/widgets/academy-handpan/config/handpans.ts` with at least D-Kurd 9/10/13 and Celtic tunings
+  - **Acceptance Criteria**: Config object contains multiple handpan types with notes (Latin notation: A B C D E F G with #/b and optional octave) and normalized layout coordinates (x, y, r in 0..1 range); adding a new handpan type updates UI automatically
+
+- [ ] T067 [P] [Academy] Create theory engine normalization module in `src/widgets/academy-handpan/theory/normalize.ts` for note parsing and pitch-class normalization
+  - **Acceptance Criteria**: Functions parse notes (e.g., "A#4", "Bb", "C") and normalize to pitch-classes; handles octave digits and accidentals correctly
+
+- [ ] T068 [Academy] Create root React widget component `src/widgets/academy-handpan/ui/HandpanWidget.tsx` with handpan type selector (dropdown/button group)
+  - **Acceptance Criteria**: Component renders; handpan type selector displays all config handpans; selection updates widget state; component is properly exported for Astro island
+
+- [ ] T069 [P] [Academy] Create HandpanRenderer component in `src/widgets/academy-handpan/ui/HandpanRenderer.tsx` with CSS-rendered handpan body and absolutely positioned note pads
+  - **Acceptance Criteria**: Handpan body rendered via CSS (radial gradients + shadows, no static image); note pads positioned using normalized coordinates; pads are clickable; visual matches handpan shape
+
+- [ ] T070 [P] [Academy] Create widget styles in `src/widgets/academy-handpan/styles/` using CSS Modules + SCSS for handpan visualization, pads, and highlight states
+  - **Acceptance Criteria**: Styles use CSS Modules; handpan background is pure CSS; note pads have hover/focus states; highlight states (selected, active, playing) are visually distinct; responsive on mobile
+
+- [ ] T071 [Academy] Create memorization tool page at `src/pages/academy/memorization.astro` with HandpanWidget React island, and update main Academy page at `src/pages/academy.astro` with tool cards and links
+  - **Acceptance Criteria**: Memorization page renders widget; Academy page shows tool cards with descriptions; links work correctly; both pages remain SSG; widget hydrates without errors; SEO meta tags intact
+
+**Checkpoint**: Foundation complete - handpan visualization renders with clickable pads and type selection
+
+---
+
+### Milestone B: Audio Engine
+
+- [ ] T072 [Academy] Install and configure Tone.js dependency in package.json
+  - **Acceptance Criteria**: Tone.js added to dependencies; TypeScript types available
+
+- [ ] T073 [P] [Academy] Create audio engine module in `src/widgets/academy-handpan/audio/engine.ts` with Tone.js initialization and playback primitives (playNote, playChord, playArpeggio)
+  - **Acceptance Criteria**: Audio initializes only after first user interaction (mobile-safe); playNote(note, durationMs) works; playChord(notes, durationMs) plays simultaneous notes; playArpeggio(notes, bpm, direction, onStep) schedules sequence with callbacks
+
+- [ ] T074 [P] [Academy] Create audio scheduler module in `src/widgets/academy-handpan/audio/scheduler.ts` for arpeggio scheduling with "current note" events for UI highlight sync
+  - **Acceptance Criteria**: Scheduler emits events for currently playing note during arpeggio; UI can subscribe to highlight active notes; handles cleanup on stop/cancel
+
+- [ ] T075 [Academy] Integrate audio engine into HandpanRenderer: clicking a pad plays the note via Tone.js
+  - **Acceptance Criteria**: Clicking a note pad plays the note; audio works on mobile after user interaction; no console errors; visual feedback on click
+
+**Checkpoint**: Audio engine functional - note playback works on click with mobile-safe initialization
+
+---
+
+### Milestone C: Scales/Modes Generation
+
+- [ ] T076 [P] [Academy] Create scales theory module in `src/widgets/academy-handpan/theory/scales.ts` to derive playable scales/modes from available notes
+  - **Acceptance Criteria**: Module generates list of playable scales/modes based on selected handpan note set; output includes display name and ordered note list; deterministic (same handpan yields same scales)
+
+- [ ] T077 [P] [Academy] Create theory utilities module in `src/widgets/academy-handpan/theory/utils.ts` with set operations and naming helpers
+  - **Acceptance Criteria**: Utility functions for note set operations (union, intersection, subset checks); naming helpers for scale/mode display names
+
+- [ ] T078 [Academy] Create ScalesPanel component in `src/widgets/academy-handpan/ui/ScalesPanel.tsx` to display generated scales/modes with selection and play button
+  - **Acceptance Criteria**: Panel displays all playable scales/modes for selected handpan; selecting a scale highlights its notes on handpan; play button plays notes as arpeggio/sequence; UI highlights currently playing note during playback
+
+- [ ] T079 [Academy] Create Tabs component in `src/widgets/academy-handpan/ui/Tabs.tsx` for Chords/Scales panel switching
+  - **Acceptance Criteria**: Tabs component switches between Chords and Scales panels; accessible keyboard navigation; active tab is clearly indicated
+
+- [ ] T080 [Academy] Integrate ScalesPanel into HandpanWidget with tab navigation
+  - **Acceptance Criteria**: Scales tab displays and functions; scale selection highlights notes; play button works; visual sync with audio playback
+
+**Checkpoint**: Scales/modes generation complete - users can view and play scales for selected handpan
+
+---
+
+### Milestone D: Chords Generation
+
+- [ ] T081 [P] [Academy] Create chords theory module in `src/widgets/academy-handpan/theory/chords.ts` to derive basic triads (maj/min/dim/aug) and advanced chords (up to 4 notes: 7th types, sus, add9 variants)
+  - **Acceptance Criteria**: Module generates basic (3-note) and advanced (up to 4-note) chord lists from available notes; output includes display name and ordered notes; deterministic generation
+
+- [ ] T082 [Academy] Create ChordsPanel component in `src/widgets/academy-handpan/ui/ChordsPanel.tsx` with basic/advanced categories, selection, and play controls
+  - **Acceptance Criteria**: Panel displays chords in Basic and Advanced categories; selecting a chord highlights its notes on handpan; play button supports simultaneous and arpeggio modes; arpeggio speed controlled by slider
+
+- [ ] T083 [Academy] Create Controls component in `src/widgets/academy-handpan/ui/Controls.tsx` for mode toggle (simultaneous/arpeggio), speed slider, and play buttons
+  - **Acceptance Criteria**: Mode toggle switches between simultaneous and arpeggio playback; speed slider controls arpeggio BPM; controls are accessible and responsive
+
+- [ ] T084 [Academy] Integrate ChordsPanel into HandpanWidget with full playback functionality
+  - **Acceptance Criteria**: Chords tab displays and functions; chord selection highlights notes; simultaneous and arpeggio playback work; speed slider adjusts arpeggio; UI highlights active notes during playback
+
+**Checkpoint**: Chords generation complete - users can view and play chords (simultaneous/arpeggio) for selected handpan
+
+---
+
+### Milestone E: Polish
+
+- [ ] T085 [P] [Academy] Ensure widget responsiveness across mobile, tablet, and desktop viewports
+  - **Acceptance Criteria**: Widget layout adapts to screen size; handpan visualization scales appropriately; controls remain accessible; no horizontal scrolling
+
+- [ ] T086 [P] [Academy] Add accessibility features: keyboard navigation, ARIA labels, focus indicators, screen reader support
+  - **Acceptance Criteria**: All interactive elements keyboard-accessible; ARIA labels describe widget state; focus indicators visible; screen reader announces selections and playback
+
+- [ ] T087 [P] [Academy] Performance optimization: lazy load widget code, minimize bundle size, optimize audio initialization
+  - **Acceptance Criteria**: Widget code loads only on Academy page; bundle size is reasonable; audio initializes efficiently; no performance regressions
+
+- [ ] T088 [Academy] Add smoke tests: Academy page renders (SSG), widget hydrates without runtime errors, basic playback functions work
+  - **Acceptance Criteria**: Build succeeds; Academy page renders in dist; widget island hydrates; playback functions do not throw when audio initialized
+
+- [ ] T089 [P] [Academy] Update Academy page SEO meta tags and content to reflect widget functionality
+  - **Acceptance Criteria**: SEO title and description updated; page remains indexable; meta tags reflect interactive widget feature
+
+**Checkpoint**: ✅ **COMPLETED** - Academy widget fully functional, polished, and accessible
+
+---
+
+## Dependencies & Execution Order (Academy Widget)
+
+### Academy Widget Dependencies
+
+- **Milestone A (Foundations)**: Can start independently; requires React island setup knowledge
+- **Milestone B (Audio Engine)**: Depends on Milestone A completion (needs handpan config and renderer)
+- **Milestone C (Scales/Modes)**: Depends on Milestones A and B (needs config, renderer, and audio)
+- **Milestone D (Chords)**: Depends on Milestones A, B, and C (shares theory engine patterns)
+- **Milestone E (Polish)**: Depends on all previous milestones (polishes complete widget)
+
+### Parallel Opportunities (Academy Widget)
+
+- T065, T066, T067 can run in parallel (different config/theory files)
+- T069, T070 can run in parallel (renderer and styles)
+- T073, T074 can run in parallel (engine and scheduler modules)
+- T076, T077 can run in parallel (scales and utils modules)
+- T082, T083 can run in parallel (chords panel and controls)
+- T085, T086, T087 can run in parallel (different polish aspects)

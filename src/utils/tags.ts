@@ -16,3 +16,4 @@ const normalizeTags = (tags: string | string[] | undefined): string[] => {
 
 export { normalizeTags, TAG_SEPARATOR_REGEX, WHITESPACE_TRIM_REGEX, HYPHEN_TO_SPACE_REGEX };
 
+
