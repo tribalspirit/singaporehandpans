@@ -196,22 +196,22 @@ body {
 document.addEventListener('DOMContentLoaded', () => {
   const loadingIndicator = document.getElementById('loading-indicator');
   
-  // Hide loading indicator once page is fully loaded
+  // Hide loading indicator immediately for static pages
+  if (loadingIndicator) {
+    loadingIndicator.classList.remove('loading');
+  }
+  
+  // Hide loading indicator once page is fully loaded (fallback)
   window.addEventListener('load', () => {
     if (loadingIndicator) {
       loadingIndicator.classList.remove('loading');
     }
   });
 
-  // Show loading indicator for navigation
-  document.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    const link = target.closest('a[href]') as HTMLAnchorElement;
-    
-    if (link && link.hostname === window.location.hostname && !link.hash) {
-      if (loadingIndicator) {
-        loadingIndicator.classList.add('loading');
-      }
+  // Handle browser back/forward navigation (pageshow event)
+  window.addEventListener('pageshow', (e) => {
+    if (loadingIndicator) {
+      loadingIndicator.classList.remove('loading');
     }
   });
 

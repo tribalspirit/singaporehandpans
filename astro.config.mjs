@@ -43,7 +43,13 @@ export default defineConfig({
     
     // Optimize dependencies but keep source maps in development
     optimizeDeps: {
-      include: ['react', 'react-dom']
+      include: [
+        'react',
+        'react-dom',
+        'yet-another-react-lightbox',
+        'embla-carousel-react',
+        'embla-carousel-autoplay'
+      ]
     },
     
     // Enable source maps in development
