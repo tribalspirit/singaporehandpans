@@ -4,7 +4,11 @@
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-md);
+
+  @media (min-width: 768px) {
+    padding: var(--spacing-xl);
+  }
 }
 
 .header {
@@ -67,8 +71,12 @@
   gap: var(--spacing-xl);
   align-items: start;
 
-  @media (min-width: 1024px) {
+  @media (min-width: 768px) {
     grid-template-columns: 1fr 1fr;
+  }
+
+  @media (min-width: 1024px) {
+    gap: var(--spacing-2xl);
   }
 }
 
@@ -76,7 +84,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 400px;
+  min-height: 300px;
+
+  @media (min-width: 768px) {
+    min-height: 400px;
+  }
+
+  @media (min-width: 1024px) {
+    min-height: 500px;
+  }
 }
 
 .panelsSection {

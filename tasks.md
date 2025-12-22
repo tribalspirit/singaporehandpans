@@ -356,19 +356,19 @@ With multiple developers:
 
 ### Milestone E: Polish
 
-- [ ] T087 [P] [Academy] Ensure widget responsiveness across mobile, tablet, and desktop viewports
+- [X] T087 [P] [Academy] Ensure widget responsiveness across mobile, tablet, and desktop viewports
   - **Acceptance Criteria**: Widget layout adapts to screen size; handpan visualization scales appropriately; controls remain accessible; no horizontal scrolling
 
-- [ ] T088 [P] [Academy] Add accessibility features: keyboard navigation, ARIA labels, focus indicators, screen reader support
+- [X] T088 [P] [Academy] Add accessibility features: keyboard navigation, ARIA labels, focus indicators, screen reader support
   - **Acceptance Criteria**: All interactive elements keyboard-accessible; ARIA labels describe widget state; focus indicators visible; screen reader announces selections and playback where feasible
 
-- [ ] T089 [P] [Academy] Performance optimization: lazy load widget code, minimize bundle size, optimize audio initialization and scheduling
+- [X] T089 [P] [Academy] Performance optimization: lazy load widget code, minimize bundle size, optimize audio initialization and scheduling
   - **Acceptance Criteria**: Widget code loads only on Academy memorization page; bundle size is reasonable (prefer granular `@tonaljs/*` imports); audio initializes efficiently; no performance regressions
 
-- [ ] T090 [Academy] Add smoke tests: Academy memorization page renders (SSG), widget hydrates without runtime errors, basic playback functions work
+- [X] T090 [Academy] Add smoke tests: Academy memorization page renders (SSG), widget hydrates without runtime errors, basic playback functions work
   - **Acceptance Criteria**: Build succeeds; memorization page renders in dist; widget island hydrates; playback functions do not throw when audio initialized
 
-- [ ] T091 [P] [Academy] Update Academy memorization page SEO meta tags and content to reflect widget functionality
+- [X] T091 [P] [Academy] Update Academy memorization page SEO meta tags and content to reflect widget functionality
   - **Acceptance Criteria**: SEO title and description updated; page remains indexable; meta tags reflect interactive widget feature
 
 **Checkpoint**: ✅ **COMPLETED** - Academy widget fully functional, polished, accessible, and derived via Tonal + pcset filtering
