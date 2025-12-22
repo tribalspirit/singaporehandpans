@@ -1,0 +1,107 @@
+---
+import { GOOGLE_MAPS_EMBED_URL, GOOGLE_MAPS_URL, STUDIO_ADDRESS } from '../constants/contacts';
+---
+
+<div class="map-embed">
+  <div class="map-embed__container">
+    <iframe
+      class="map-embed__iframe"
+      src={GOOGLE_MAPS_EMBED_URL}
+      width="100%"
+      height="100%"
+      style="border:0;"
+      allowfullscreen=""
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+      title={`Map showing location of ${STUDIO_ADDRESS}`}
+      aria-label={`Interactive map showing location of ${STUDIO_ADDRESS}`}
+    ></iframe>
+  </div>
+  <div class="map-embed__actions">
+    <a
+      href={GOOGLE_MAPS_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="map-embed__link"
+    >
+      <svg class="map-embed__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      Open in Google Maps
+    </a>
+  </div>
+</div>
+
+<style lang="scss">
+.map-embed {
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  background: var(--color-gray-100);
+}
+
+.map-embed__container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 75%;
+  height: 0;
+  overflow: hidden;
+  
+  @media (min-width: 768px) {
+    padding-bottom: 60%;
+  }
+  
+  @media (min-width: 1024px) {
+    padding-bottom: 50%;
+  }
+}
+
+.map-embed__iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+.map-embed__actions {
+  padding: var(--space-4);
+  background: var(--color-white);
+  border-top: 1px solid var(--color-gray-200);
+  display: flex;
+  justify-content: center;
+}
+
+.map-embed__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  
+  &:hover {
+    background: var(--color-gray-50);
+    text-decoration: underline;
+  }
+  
+  &:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+.map-embed__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+</style>
+
