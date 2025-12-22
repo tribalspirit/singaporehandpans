@@ -64,3 +64,4 @@ export function validateHandpanConfig(config: HandpanConfig): boolean {
   return true;
 }
 
+
