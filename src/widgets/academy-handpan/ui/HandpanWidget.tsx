@@ -106,6 +106,7 @@ export default function HandpanWidget() {
               setSelectedHandpanId(e.target.value);
             }}
             className={styles.select}
+            aria-label="Select handpan type"
           >
             {configs.map((config) => (
               <option key={config.id} value={config.id}>
