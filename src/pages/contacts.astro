@@ -1,17 +1,29 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CalendlyEmbed from '../components/CalendlyEmbed.astro';
+import MapEmbed from '../components/MapEmbed.astro';
+import {
+  STUDIO_PHONE_PRIMARY,
+  STUDIO_PHONE_PRIMARY_TEL,
+  STUDIO_PHONE_HOURS,
+  STUDIO_PHONE_NOTE,
+  STUDIO_EMAIL,
+  STUDIO_EMAIL_MAILTO,
+  STUDIO_EMAIL_RESPONSE_TIME,
+  STUDIO_ADDRESS_LINES,
+  SOCIAL_LINKS,
+  WHATSAPP_LINK,
+  WHATSAPP_LABEL
+} from '../constants/contacts';
 
 const title = 'Contact Us';
 const description = 'Get in touch with Singapore Handpan Studio. Book workshops, ask questions, or connect with our community in Singapore.';
 
-// Calendly URLs from environment variables with fallbacks
 const CALENDLY_WORKSHOP_URL = import.meta.env.PUBLIC_CALENDLY_WORKSHOP_URL || 'https://calendly.com/singaporehandpan/workshop';
 const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'https://calendly.com/singaporehandpan/private-session';
 ---
 
 <BaseLayout title={title} description={description}>
-  <!-- Hero Section -->
   <section class="page-hero">
     <div class="container">
       <div class="page-hero__content">
@@ -23,12 +35,10 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
     </div>
   </section>
 
-  <!-- Contact Options -->
   <section class="section">
     <div class="container">
-      <div class="contact-grid">
-        <!-- Contact Information -->
-        <div class="contact-info">
+      <div class="contact-layout">
+        <div class="contact-card">
           <h2 class="section__title">Contact Information</h2>
           
           <div class="contact-methods">
@@ -41,9 +51,13 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
               <div class="contact-method__content">
                 <h3 class="contact-method__title">Phone</h3>
                 <p class="contact-method__details">
-                  <a href="tel:+6591234567">+65 9123 4567</a>
+                  <a href={STUDIO_PHONE_PRIMARY_TEL}>{STUDIO_PHONE_PRIMARY}</a>
                 </p>
-                <p class="contact-method__note">Daily 10:00 AM - 8:00 PM</p>
+                <p class="contact-method__note">{STUDIO_PHONE_HOURS}</p>
+                <p class="contact-method__note">{STUDIO_PHONE_NOTE}</p>
+                <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" class="contact-method__whatsapp">
+                  {WHATSAPP_LABEL}
+                </a>
               </div>
             </div>
             
@@ -57,9 +71,9 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
               <div class="contact-method__content">
                 <h3 class="contact-method__title">Email</h3>
                 <p class="contact-method__details">
-                  <a href="mailto:hello@sghandpan.com">hello@sghandpan.com</a>
+                  <a href={STUDIO_EMAIL_MAILTO}>{STUDIO_EMAIL}</a>
                 </p>
-                <p class="contact-method__note">We reply within 24 hours</p>
+                <p class="contact-method__note">{STUDIO_EMAIL_RESPONSE_TIME}</p>
               </div>
             </div>
             
@@ -73,10 +87,13 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
               <div class="contact-method__content">
                 <h3 class="contact-method__title">Visit Us</h3>
                 <p class="contact-method__details">
-                  123 Music Street, Level 2<br>
-                  Singapore 123456
+                  {STUDIO_ADDRESS_LINES.map((line) => (
+                    <>
+                      {line}
+                      <br />
+                    </>
+                  ))}
                 </p>
-                <p class="contact-method__note">2 min walk from Tanjong Pagar MRT</p>
               </div>
             </div>
             
@@ -89,9 +106,16 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
               <div class="contact-method__content">
                 <h3 class="contact-method__title">Social Media</h3>
                 <div class="social-links">
-                  <a href="https://www.facebook.com/sghandpan" target="_blank" rel="noopener">Facebook</a>
-                  <a href="https://www.instagram.com/sghandpan" target="_blank" rel="noopener">Instagram</a>
-                  <a href="https://www.youtube.com/sghandpan" target="_blank" rel="noopener">YouTube</a>
+                  {SOCIAL_LINKS.map((social) => (
+                    <a 
+                      href={social.href} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      aria-label={social.ariaLabel}
+                    >
+                      {social.label}
+                    </a>
+                  ))}
                 </div>
                 <p class="contact-method__note">Follow for updates and events</p>
               </div>
@@ -99,80 +123,14 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
           </div>
         </div>
 
-        <!-- Contact Form -->
-        <div class="contact-form-container">
-          <h2 class="section__title">Send Us a Message</h2>
-          
-          <form class="contact-form" action="#" method="post">
-            <div class="form-group">
-              <label for="name" class="form-label">Full Name *</label>
-              <input 
-                type="text" 
-                id="name" 
-                name="name" 
-                class="form-input" 
-                required 
-                placeholder="Enter your full name"
-              />
-            </div>
-            
-            <div class="form-group">
-              <label for="email" class="form-label">Email Address *</label>
-              <input 
-                type="email" 
-                id="email" 
-                name="email" 
-                class="form-input" 
-                required 
-                placeholder="Enter your email"
-              />
-            </div>
-            
-            <div class="form-group">
-              <label for="phone" class="form-label">Phone Number</label>
-              <input 
-                type="tel" 
-                id="phone" 
-                name="phone" 
-                class="form-input" 
-                placeholder="Optional - for faster response"
-              />
-            </div>
-            
-            <div class="form-group">
-              <label for="subject" class="form-label">Subject *</label>
-              <select id="subject" name="subject" class="form-select" required>
-                <option value="">Select a topic...</option>
-                <option value="workshops">Workshop Inquiry</option>
-                <option value="private">Private Session Booking</option>
-                <option value="events">Events Information</option>
-                <option value="general">General Question</option>
-                <option value="partnership">Partnership Opportunity</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label for="message" class="form-label">Message *</label>
-              <textarea 
-                id="message" 
-                name="message" 
-                class="form-textarea" 
-                rows="5" 
-                required 
-                placeholder="Tell us about your interest in handpan music or any questions you have..."
-              ></textarea>
-            </div>
-            
-            <button type="submit" class="btn btn--primary btn--full">
-              Send Message
-            </button>
-          </form>
+        <div class="map-section">
+          <h2 class="section__title">Find Us</h2>
+          <MapEmbed />
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Booking Section -->
   <section id="booking" class="section section--accent">
     <div class="container">
       <div class="booking-section">
@@ -216,7 +174,6 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
           </div>
         </div>
         
-        <!-- Calendly Widget -->
         <div class="calendly-container">
           <CalendlyEmbed 
             url={CALENDLY_WORKSHOP_URL}
@@ -231,7 +188,6 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
     </div>
   </section>
 
-  <!-- FAQ Section -->
   <section class="section">
     <div class="container">
       <h2 class="section__title section__title--center">Frequently Asked Questions</h2>
@@ -290,7 +246,6 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
 </BaseLayout>
 
 <style lang="scss">
-// Page Hero
 .page-hero {
   background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
   color: var(--color-white);
@@ -324,35 +279,51 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
   }
 }
 
-// Contact Grid
-.contact-grid {
+.contact-layout {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-16);
   
   @media (min-width: 1024px) {
     grid-template-columns: 1fr 1fr;
+    gap: var(--space-20);
   }
 }
 
-// Contact Methods
+.contact-card {
+  background: var(--color-white);
+  padding: var(--space-8);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  
+  @media (min-width: 768px) {
+    padding: var(--space-10);
+  }
+}
+
+.map-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
 .contact-methods {
   display: grid;
-  gap: var(--space-8);
+  gap: var(--space-6);
+  margin-top: var(--space-8);
 }
 
 .contact-method {
   display: flex;
   gap: var(--space-4);
   padding: var(--space-6);
-  background: var(--color-white);
+  background: var(--color-gray-50);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
   transition: all var(--transition-fast);
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
   }
 }
 
@@ -386,9 +357,16 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
   a {
     color: var(--color-primary);
     text-decoration: none;
+    font-weight: var(--font-weight-medium);
     
     &:hover {
       text-decoration: underline;
+    }
+    
+    &:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
     }
   }
 }
@@ -396,10 +374,31 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
 .contact-method__note {
   font-size: var(--font-size-sm);
   color: var(--color-gray-600);
+  margin-top: var(--space-1);
+}
+
+.contact-method__whatsapp {
+  display: inline-block;
+  margin-top: var(--space-2);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  
+  &:hover {
+    text-decoration: underline;
+  }
+  
+  &:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
 }
 
 .social-links {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-4);
   margin-bottom: var(--space-2);
   
@@ -407,63 +406,20 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
     color: var(--color-primary);
     text-decoration: none;
     font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
     
     &:hover {
       text-decoration: underline;
     }
+    
+    &:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
   }
 }
 
-// Contact Form
-.contact-form-container {
-  background: var(--color-gray-50);
-  padding: var(--space-8);
-  border-radius: var(--radius-lg);
-}
-
-.contact-form {
-  display: grid;
-  gap: var(--space-6);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-label {
-  font-weight: var(--font-weight-medium);
-  margin-bottom: var(--space-2);
-  color: var(--color-gray-700);
-  font-size: var(--font-size-sm);
-}
-
-.form-input,
-.form-select,
-.form-textarea {
-  padding: var(--space-3);
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-base);
-  transition: border-color var(--transition-fast);
-  
-  &:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
-  }
-  
-  &::placeholder {
-    color: var(--color-gray-500);
-  }
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 120px;
-}
-
-// Booking Section
 .section--accent {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   color: var(--color-white);
@@ -521,7 +477,6 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
   }
 }
 
-// Calendly Container
 .calendly-container {
   background: var(--color-white);
   border-radius: var(--radius-lg);
@@ -530,7 +485,6 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
   min-height: 600px;
 }
 
-// FAQ Section
 .faq-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -562,7 +516,6 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
   line-height: var(--line-height-relaxed);
 }
 
-// Button Styles
 .btn {
   display: inline-flex;
   align-items: center;
@@ -621,7 +574,6 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
   }
 }
 
-// Section Utilities
 .section {
   padding: var(--space-16) 0;
   
@@ -641,21 +593,3 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
   }
 }
 </style>
-
-<script>
-// Form submission handling
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.querySelector('.contact-form') as HTMLFormElement;
-  
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      // Here you would integrate with your form handling service
-      // For now, show a success message
-      alert('Thank you for your message! We will get back to you within 24 hours.');
-      form.reset();
-    });
-  }
-});
-</script>

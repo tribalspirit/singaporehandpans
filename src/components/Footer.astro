@@ -1,29 +1,18 @@
 ---
-// Footer component with links and social media
+import { SOCIAL_LINKS, STUDIO_EMAIL_MAILTO } from '../constants/contacts';
+
 const currentYear = new Date().getFullYear();
 
 const socialLinks = [
-  {
-    name: 'Facebook',
-    href: 'https://www.facebook.com/sghandpan',
-    icon: 'facebook',
-    ariaLabel: 'Follow us on Facebook'
-  },
-  {
-    name: 'Instagram', 
-    href: 'https://www.instagram.com/sghandpan',
-    icon: 'instagram',
-    ariaLabel: 'Follow us on Instagram'
-  },
-  {
-    name: 'YouTube',
-    href: 'https://www.youtube.com/sghandpan', 
-    icon: 'youtube',
-    ariaLabel: 'Subscribe to our YouTube channel'
-  },
+  ...SOCIAL_LINKS.map(social => ({
+    name: social.label,
+    href: social.href,
+    icon: social.icon || social.id,
+    ariaLabel: social.ariaLabel
+  })),
   {
     name: 'Email',
-    href: 'mailto:hello@sghandpan.com',
+    href: STUDIO_EMAIL_MAILTO,
     icon: 'email',
     ariaLabel: 'Send us an email'
   }
@@ -60,8 +49,8 @@ const footerLinks = [
           src="/images/logo.svg" 
           alt="Singapore Handpan Studio" 
           class="footer__logo"
-          width="120"
-          height="40"
+          width="60"
+          height="60"
         />
         <p class="footer__description">
           Discover the healing sounds of handpan music through our events, academy, and community in Singapore.
@@ -154,10 +143,16 @@ const footerLinks = [
 }
 
 .footer__logo {
-  height: 80px;
-  width: auto;
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
   margin-bottom: var(--space-4);
   filter: brightness(0) invert(1);
+  
+  @media (min-width: 768px) {
+    width: 60px;
+    height: 60px;
+  }
 }
 
 .footer__description {
