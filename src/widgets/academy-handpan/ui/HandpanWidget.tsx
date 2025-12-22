@@ -3,8 +3,10 @@ import { getAllHandpanConfigs, getHandpanConfig } from '../config/handpans';
 import HandpanRenderer from './HandpanRenderer';
 import Tabs from './Tabs';
 import ScalesPanel from './ScalesPanel';
+import ChordsPanel, { type PlaybackMode } from './ChordsPanel';
 import type { HandpanPad } from '../config/types';
 import type { PlayableScale } from '../theory/scales';
+import type { PlayableChord } from '../theory/chords';
 import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
 import styles from '../styles/HandpanWidget.module.scss';
 
@@ -16,11 +18,15 @@ export default function HandpanWidget() {
   const [activeTab, setActiveTab] = useState<'scales' | 'chords'>('scales');
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const [selectedScale, setSelectedScale] = useState<PlayableScale | null>(null);
+  const [selectedChord, setSelectedChord] = useState<PlayableChord | null>(null);
+  const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('simultaneous');
+  const [arpeggioBpm, setArpeggioBpm] = useState<number>(120);
 
   const selectedHandpan = getHandpanConfig(selectedHandpanId);
 
   useEffect(() => {
     setSelectedScale(null);
+    setSelectedChord(null);
     setActiveNotes(new Set());
   }, [selectedHandpanId]);
 
@@ -29,8 +35,11 @@ export default function HandpanWidget() {
     if (selectedScale) {
       selectedScale.notes.forEach((note) => notes.add(note));
     }
+    if (selectedChord) {
+      selectedChord.notes.forEach((note) => notes.add(note));
+    }
     return notes;
-  }, [selectedScale]);
+  }, [selectedScale, selectedChord]);
 
   const handlePadClick = useCallback(async (pad: HandpanPad) => {
     try {
@@ -65,6 +74,12 @@ export default function HandpanWidget() {
 
   const handleScaleSelect = useCallback((scale: PlayableScale | null) => {
     setSelectedScale(scale);
+    setSelectedChord(null);
+  }, []);
+
+  const handleChordSelect = useCallback((chord: PlayableChord | null) => {
+    setSelectedChord(chord);
+    setSelectedScale(null);
   }, []);
 
   if (!selectedHandpan) {
@@ -126,9 +141,17 @@ export default function HandpanWidget() {
             />
           )}
           {activeTab === 'chords' && (
-            <div className={styles.placeholder}>
-              Chords panel coming soon
-            </div>
+            <ChordsPanel
+              key={selectedHandpanId}
+              availableNotes={selectedHandpan.notes}
+              selectedChord={selectedChord}
+              onChordSelect={handleChordSelect}
+              onActiveNotesChange={setActiveNotes}
+              playbackMode={playbackMode}
+              onPlaybackModeChange={setPlaybackMode}
+              arpeggioBpm={arpeggioBpm}
+              onArpeggioBpmChange={setArpeggioBpm}
+            />
           )}
         </div>
       </div>

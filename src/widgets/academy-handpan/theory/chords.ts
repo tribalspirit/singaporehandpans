@@ -1,5 +1,5 @@
 import * as ChordType from '@tonaljs/chord-type';
-import { chord } from '@tonaljs/core';
+import * as Chord from '@tonaljs/chord';
 import { isSubset, stableSort, deduplicateBy } from './pcset';
 import { normalizeToPitchClass } from './normalize';
 import { assignOctavesToPitchClasses, sortNotesByPitch } from './utils';
@@ -19,7 +19,7 @@ function getAllChordTypes(): string[] {
 }
 
 function getChordPitchClasses(tonic: string, type: string): string[] {
-  const chordData = chord(`${tonic}${type}`);
+  const chordData = Chord.get(`${tonic}${type}`);
   if (!chordData.notes || chordData.notes.length === 0) {
     return [];
   }
@@ -27,7 +27,7 @@ function getChordPitchClasses(tonic: string, type: string): string[] {
 }
 
 function getChordNotes(tonic: string, type: string): string[] {
-  const chordData = chord(`${tonic}${type}`);
+  const chordData = Chord.get(`${tonic}${type}`);
   return chordData.notes || [];
 }
 
@@ -51,7 +51,7 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
       if (isSubset(chordPitchClasses, availablePitchClasses)) {
         const mappedNotes = assignOctavesToPitchClasses(chordPitchClasses, availableNotes);
         const orderedNotes = sortNotesByPitch(mappedNotes);
-        const chordData = chord(`${tonic}${type}`);
+        const chordData = Chord.get(`${tonic}${type}`);
         const displayName = chordData.name || `${tonic}${type}`;
         const category = categorizeChord(chordPitchClasses.length);
         
