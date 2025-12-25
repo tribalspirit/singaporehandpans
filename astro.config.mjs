@@ -36,9 +36,14 @@ export default defineConfig({
       devSourcemap: true,
       preprocessorOptions: {
         scss: {
+          silenceDeprecations: ['legacy-js-api'],
           additionalData: `@use "src/styles/tokens.scss" as *;`
         }
       }
+    },
+    
+    esbuild: {
+      logOverride: { 'bigint': 'silent' }
     },
     
     // Optimize dependencies but keep source maps in development
