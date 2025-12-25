@@ -15,6 +15,11 @@ export interface HandpanConfig {
   family?: string;
   notes: Note[];
   layout: HandpanPad[];
+  scaleName: string;
+  scaleAliases?: string[];
+  scaleDescription: string;
+  scaleMoodTags: string[];
+  scaleTypicalKeys?: string[];
 }
 
 export const NOTE_PATTERN = /^[A-G](?:#|b)?\d*$/;

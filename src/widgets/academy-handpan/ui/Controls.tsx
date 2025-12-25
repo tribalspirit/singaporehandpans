@@ -1,5 +1,5 @@
 import React from 'react';
-import type { PlaybackMode } from './ChordsPanel';
+import type { PlaybackMode } from './ChordsSection';
 import styles from '../styles/Controls.module.scss';
 
 interface ControlsProps {
@@ -89,8 +89,15 @@ export default function Controls({
             onClick={onPlay}
             aria-label="Play chord"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polygon points="5 3 19 12 5 21 5 3"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polygon points="5 3 19 12 5 21 5 3" />
             </svg>
             Play
           </button>
@@ -101,8 +108,15 @@ export default function Controls({
             onClick={onStop}
             aria-label="Stop playback"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="6" y="6" width="12" height="12"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="6" y="6" width="12" height="12" />
             </svg>
             Stop
           </button>
@@ -111,4 +125,3 @@ export default function Controls({
     </div>
   );
 }
-

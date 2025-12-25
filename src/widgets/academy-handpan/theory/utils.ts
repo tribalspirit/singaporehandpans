@@ -1,5 +1,6 @@
 import { normalizeToPitchClass, parseNote } from './normalize';
 import { stableSort } from './pcset';
+import { note } from '@tonaljs/core';
 
 export function assignOctavesToPitchClasses(
   pitchClasses: string[],
@@ -43,13 +44,17 @@ export function assignOctavesToPitchClasses(
 }
 
 export function sortNotesByPitch(notes: string[]): string[] {
-  return stableSort(notes, (note) => {
+  return stableSort(notes, (noteStr) => {
     try {
-      const parsed = parseNote(note);
+      const tonalNote = note(noteStr);
+      if (tonalNote.midi !== null && tonalNote.midi !== undefined) {
+        return tonalNote.midi.toString().padStart(4, '0');
+      }
+      const parsed = parseNote(noteStr);
       const octave = parsed.octave !== null ? parsed.octave : 999;
       return `${octave.toString().padStart(3, '0')}_${parsed.pitchClass}`;
     } catch {
-      return note;
+      return noteStr;
     }
   });
 }
