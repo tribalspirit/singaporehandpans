@@ -35,6 +35,96 @@ function categorizeChord(pitchClassCount: number): 'basic' | 'advanced' {
   return pitchClassCount === 3 ? 'basic' : 'advanced';
 }
 
+function formatChordDisplayName(chordData: ReturnType<typeof Chord.get>, tonic: string, type: string): string {
+  const name = chordData.name || '';
+  const intervals = chordData.intervals || [];
+  const noteCount = intervals.length;
+  const lowerName = name.toLowerCase();
+
+  if (noteCount === 3) {
+    if (lowerName.includes('diminished')) {
+      return `${tonic}°`;
+    }
+    if (lowerName.includes('augmented')) {
+      return `${tonic}+`;
+    }
+    if (lowerName.includes('minor')) {
+      return `${tonic}m`;
+    }
+    return tonic;
+  }
+
+  if (noteCount === 4) {
+    let quality = '';
+    let extension = '';
+
+    if (lowerName.includes('sixth') || lowerName.includes('6')) {
+      if (lowerName.includes('minor')) {
+        quality = 'm';
+        extension = '6';
+      } else {
+        quality = '';
+        extension = '6';
+      }
+    } else if (lowerName.includes('diminished seventh') || lowerName.includes('dim7')) {
+      quality = '°';
+      extension = '7';
+    } else if (lowerName.includes('half diminished') || lowerName.includes('m7b5') || lowerName.includes('ø7')) {
+      quality = 'ø';
+      extension = '7';
+    } else if (lowerName.includes('major seventh') || lowerName.includes('maj7')) {
+      if (lowerName.includes('minor')) {
+        quality = 'm';
+        extension = 'M7';
+      } else {
+        quality = '';
+        extension = 'maj7';
+      }
+    } else if (lowerName.includes('minor seventh') || lowerName.includes('m7')) {
+      quality = 'm';
+      extension = '7';
+    } else if (lowerName.includes('dominant seventh') || lowerName.includes('seventh') || lowerName.includes('7')) {
+      if (lowerName.includes('minor')) {
+        quality = 'm';
+        extension = '7';
+      } else {
+        quality = '';
+        extension = '7';
+      }
+    } else if (lowerName.includes('augmented')) {
+      quality = '+';
+      if (lowerName.includes('seventh') || lowerName.includes('7')) {
+        extension = '7';
+      }
+    } else if (lowerName.includes('diminished')) {
+      quality = '°';
+    } else if (lowerName.includes('minor')) {
+      quality = 'm';
+    }
+
+    if (lowerName.includes('suspended') || lowerName.includes('sus')) {
+      if (lowerName.includes('sus2')) {
+        return `${tonic}sus2`;
+      } else if (lowerName.includes('sus4')) {
+        return `${tonic}sus4`;
+      } else {
+        return `${tonic}sus`;
+      }
+    }
+
+    if (lowerName.includes('add')) {
+      const addMatch = lowerName.match(/add(\d+)/);
+      if (addMatch) {
+        return `${tonic}add${addMatch[1]}`;
+      }
+    }
+
+    return `${tonic}${quality}${extension}`;
+  }
+
+  return name || `${tonic}${type}`;
+}
+
 export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
   const availablePitchClasses = availableNotes.map(normalizeToPitchClass);
   const chordTypes = getAllChordTypes();
@@ -69,7 +159,7 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
         }
         
         const chordData = Chord.get(`${tonic}${type}`);
-        const displayName = chordData.name || `${tonic}${type}`;
+        const displayName = formatChordDisplayName(chordData, tonic, type);
         const category = categorizeChord(chordPitchClasses.length);
         
         playable.push({

@@ -18,8 +18,7 @@ export default function HandpanWidget() {
   const [selectedChord, setSelectedChord] = useState<PlayableChord | null>(
     null
   );
-  const [playbackMode, setPlaybackMode] =
-    useState<PlaybackMode>('simultaneous');
+  const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('arpeggio');
   const [arpeggioBpm, setArpeggioBpm] = useState<number>(120);
 
   const selectedHandpan = getHandpanConfig(selectedHandpanId);
@@ -110,7 +109,7 @@ export default function HandpanWidget() {
           </select>
         </div>
       </div>
-      <div className={styles.content}>
+      <div className={styles.topRow}>
         <div className={styles.handpanSection}>
           <HandpanRenderer
             key={selectedHandpanId}
@@ -120,25 +119,27 @@ export default function HandpanWidget() {
             onPadClick={handlePadClick}
           />
         </div>
-        <div className={styles.panelsSection}>
+        <div className={styles.scaleInfoSection}>
           <ScaleInfoPanel
             key={`${selectedHandpanId}-${selectedHandpan.scaleName}-${selectedHandpan.scaleDescription}`}
             scaleInfo={selectedScaleInfo}
             scaleNotes={selectedHandpan.notes}
             onActiveNotesChange={setActiveNotes}
           />
-          <ChordsSection
-            key={selectedHandpanId}
-            availableNotes={selectedHandpan.notes}
-            selectedChord={selectedChord}
-            onChordSelect={handleChordSelect}
-            onActiveNotesChange={setActiveNotes}
-            playbackMode={playbackMode}
-            onPlaybackModeChange={setPlaybackMode}
-            arpeggioBpm={arpeggioBpm}
-            onArpeggioBpmChange={setArpeggioBpm}
-          />
         </div>
+      </div>
+      <div className={styles.chordsSectionWrapper}>
+        <ChordsSection
+          key={selectedHandpanId}
+          availableNotes={selectedHandpan.notes}
+          selectedChord={selectedChord}
+          onChordSelect={handleChordSelect}
+          onActiveNotesChange={setActiveNotes}
+          playbackMode={playbackMode}
+          onPlaybackModeChange={setPlaybackMode}
+          arpeggioBpm={arpeggioBpm}
+          onArpeggioBpmChange={setArpeggioBpm}
+        />
       </div>
     </div>
   );

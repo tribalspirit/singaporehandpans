@@ -1,7 +1,11 @@
 import { useState, useMemo, useCallback } from 'react';
 import { findPlayableChords, type PlayableChord } from '../theory/chords';
 import { getDiatonicTriads } from '../theory/diatonicTriads';
-import { initializeAudio, isAudioInitialized, playChord } from '../audio/engine';
+import {
+  initializeAudio,
+  isAudioInitialized,
+  playChord,
+} from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
 import Controls from './Controls';
 import styles from '../styles/ChordsSection.module.scss';
@@ -44,7 +48,7 @@ export default function ChordsSection({
         chord.notes.every((note) => availableNotes.includes(note))
       );
     });
-    
+
     // Group by root note (first pitch class)
     const grouped = new Map<string, PlayableChord[]>();
     for (const chord of filtered) {
@@ -54,20 +58,23 @@ export default function ChordsSection({
       }
       grouped.get(root)!.push(chord);
     }
-    
+
     // Convert to array of groups, sorted by root
     return Array.from(grouped.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([root, chords]) => ({ root, chords }));
   }, [availableNotes]);
 
-  const handleChordClick = useCallback((chord: PlayableChord) => {
-    if (selectedChord?.name === chord.name) {
-      onChordSelect(null);
-    } else {
-      onChordSelect(chord);
-    }
-  }, [selectedChord, onChordSelect]);
+  const handleChordClick = useCallback(
+    (chord: PlayableChord) => {
+      if (selectedChord?.name === chord.name) {
+        onChordSelect(null);
+      } else {
+        onChordSelect(chord);
+      }
+    },
+    [selectedChord, onChordSelect]
+  );
 
   const handlePlay = useCallback(async () => {
     if (!selectedChord || isPlaying) {
@@ -106,7 +113,13 @@ export default function ChordsSection({
       setIsPlaying(false);
       onActiveNotesChange(new Set());
     }
-  }, [selectedChord, isPlaying, playbackMode, arpeggioBpm, onActiveNotesChange]);
+  }, [
+    selectedChord,
+    isPlaying,
+    playbackMode,
+    arpeggioBpm,
+    onActiveNotesChange,
+  ]);
 
   const handleStop = useCallback(() => {
     if (playbackMode === 'arpeggio') {
@@ -121,6 +134,7 @@ export default function ChordsSection({
       {selectedChord && (
         <div className={styles.chordControls}>
           <Controls
+            selectedChord={selectedChord}
             playbackMode={playbackMode}
             onPlaybackModeChange={onPlaybackModeChange}
             arpeggioBpm={arpeggioBpm}
@@ -134,7 +148,9 @@ export default function ChordsSection({
 
       {diatonicTriads.length > 0 && (
         <div className={styles.triadsSection}>
-          <h3 className={styles.sectionTitle}>Main Triads (Circle of Fifths)</h3>
+          <h3 className={styles.sectionTitle}>
+            Main Triads (Circle of Fifths)
+          </h3>
           <div className={styles.triadsRow}>
             {diatonicTriads.map((triad) => {
               const isSelected = selectedChord?.name === triad.chord.name;
@@ -146,7 +162,9 @@ export default function ChordsSection({
                   onClick={() => handleChordClick(triad.chord)}
                   aria-pressed={isSelected}
                 >
-                  <span className={styles.triadName}>{triad.chord.displayName}</span>
+                  <span className={styles.triadName}>
+                    {triad.chord.displayName}
+                  </span>
                   <span className={styles.triadNotes}>
                     {triad.chord.notes.join(' ')}
                   </span>
@@ -175,7 +193,9 @@ export default function ChordsSection({
                         onClick={() => handleChordClick(chord)}
                         aria-pressed={isSelected}
                       >
-                        <span className={styles.chordName}>{chord.displayName}</span>
+                        <span className={styles.chordName}>
+                          {chord.displayName}
+                        </span>
                         <span className={styles.chordNotes}>
                           {chord.notes.join(' ')}
                         </span>
@@ -190,9 +210,10 @@ export default function ChordsSection({
       )}
 
       {diatonicTriads.length === 0 && fourNoteChords.length === 0 && (
-        <p className={styles.emptyMessage}>No playable chords found for this handpan.</p>
+        <p className={styles.emptyMessage}>
+          No playable chords found for this handpan.
+        </p>
       )}
     </div>
   );
 }
-
