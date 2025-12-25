@@ -8,10 +8,18 @@ export function toPcSet(notes: string[]): string {
 }
 
 export function isSubset(candidateNotes: string[], availableNotes: string[]): boolean {
+  if (candidateNotes.length === 0) {
+    return true;
+  }
+  if (availableNotes.length === 0) {
+    return false;
+  }
+  
   const candidateChroma = toPcSet(candidateNotes);
   const availableChroma = toPcSet(availableNotes);
   
-  return Pcset.isSubsetOf(candidateChroma, availableChroma);
+  const isSubsetFn = Pcset.isSubsetOf(candidateChroma);
+  return isSubsetFn(availableChroma);
 }
 
 export function isSuperset(availableNotes: string[], candidateNotes: string[]): boolean {
