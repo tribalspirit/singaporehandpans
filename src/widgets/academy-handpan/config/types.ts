@@ -6,6 +6,7 @@ export interface HandpanPad {
   x: number;
   y: number;
   r: number;
+  role?: 'ding' | 'ring' | 'bottom';
 }
 
 export interface HandpanConfig {

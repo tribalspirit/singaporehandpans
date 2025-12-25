@@ -4,6 +4,110 @@
   width: 100%;
 }
 
+.catalogSection {
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background: var(--color-gray-50);
+}
+
+.catalogToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-align: left;
+
+  &:hover {
+    background: var(--color-gray-100);
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+}
+
+.catalogToggleText {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.catalogToggleIcon {
+  flex-shrink: 0;
+  transition: transform var(--transition-base);
+  color: var(--color-text-secondary);
+}
+
+.catalogToggleIconExpanded {
+  transform: rotate(180deg);
+}
+
+.catalogList {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0 var(--spacing-md) var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.catalogItem {
+  padding: var(--spacing-sm);
+  background: var(--color-white);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.catalogItemHeader {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.catalogItemName {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+.catalogItemAliases {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.catalogItemDescription {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-relaxed);
+  margin: 0 0 var(--spacing-xs);
+}
+
+.catalogItemTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+}
+
+.catalogItemTag {
+  font-size: var(--font-size-xs);
+  padding: 2px var(--spacing-xs);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  border-radius: var(--border-radius-sm);
+  font-weight: var(--font-weight-medium);
+}
+
 .header {
   display: flex;
   justify-content: space-between;
