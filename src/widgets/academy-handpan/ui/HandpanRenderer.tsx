@@ -79,7 +79,10 @@ export default function HandpanRenderer({
             >
               <span className={styles.padLabel}>{pad.note}</span>
               {showDebugGrid && (
-                <span className={styles.debugPadId}>{pad.id}</span>
+                <>
+                  <span className={styles.debugPadId}>{pad.id}</span>
+                  <span className={styles.debugPadNote}>{pad.note}</span>
+                </>
               )}
             </button>
           );

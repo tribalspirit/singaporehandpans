@@ -2,6 +2,9 @@
 
 .scaleInfoPanel {
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  width: 100%;
   padding: var(--spacing-lg);
   background: var(--color-white);
   border-radius: var(--border-radius-md);

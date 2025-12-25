@@ -2,12 +2,16 @@
 
 .chordsSection {
   width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
+  overflow: hidden;
 }
 
 .chordControls {
+  width: 100%;
+  min-width: 0;
   margin-bottom: var(--spacing-md);
 }
 
@@ -20,15 +24,20 @@
 
 .triadsSection {
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .triadsRow {
   display: flex;
   gap: var(--spacing-sm);
   overflow-x: auto;
+  overflow-y: hidden;
   padding: var(--spacing-xs) 0;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
+  min-width: 0;
 
   &::-webkit-scrollbar {
     height: 6px;
@@ -157,6 +166,8 @@
 
 .fourNoteSection {
   width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .chordGroups {
@@ -165,7 +176,10 @@
   gap: var(--spacing-lg);
   max-height: 500px;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: var(--spacing-sm);
+  width: 100%;
+  min-width: 0;
 }
 
 .chordGroup {
