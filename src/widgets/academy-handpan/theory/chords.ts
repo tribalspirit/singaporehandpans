@@ -51,6 +51,23 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
       if (isSubset(chordPitchClasses, availablePitchClasses)) {
         const mappedNotes = assignOctavesToPitchClasses(chordPitchClasses, availableNotes);
         const orderedNotes = sortNotesByPitch(mappedNotes);
+        
+        const expectedLength = chordPitchClasses.length;
+        const actualLength = orderedNotes.length;
+        
+        if (actualLength !== expectedLength) {
+          continue;
+        }
+        
+        const allNotesAvailable = orderedNotes.every((note) => {
+          const notePitchClass = normalizeToPitchClass(note);
+          return availablePitchClasses.includes(notePitchClass);
+        });
+        
+        if (!allNotesAvailable) {
+          continue;
+        }
+        
         const chordData = Chord.get(`${tonic}${type}`);
         const displayName = chordData.name || `${tonic}${type}`;
         const category = categorizeChord(chordPitchClasses.length);

@@ -84,14 +84,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 300px;
+  min-height: 400px;
+  width: 100%;
 
   @media (min-width: 768px) {
-    min-height: 400px;
+    min-height: 500px;
   }
 
   @media (min-width: 1024px) {
-    min-height: 500px;
+    min-height: 600px;
   }
 }
 
