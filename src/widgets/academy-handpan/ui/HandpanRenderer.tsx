@@ -7,6 +7,7 @@ interface HandpanRendererProps {
   selectedNotes?: Set<string>;
   activeNotes?: Set<string>;
   onPadClick?: (pad: HandpanPad) => void;
+  showDebugGrid?: boolean;
 }
 
 function getPadSizeMultiplier(note: string): number {
@@ -27,6 +28,7 @@ export default function HandpanRenderer({
   selectedNotes = new Set(),
   activeNotes = new Set(),
   onPadClick,
+  showDebugGrid = false,
 }: HandpanRendererProps) {
   const handlePadClick = (pad: HandpanPad) => {
     if (onPadClick) {
@@ -37,6 +39,16 @@ export default function HandpanRenderer({
   return (
     <div className={styles.handpanRenderer}>
       <div className={styles.body}>
+        {showDebugGrid && (
+          <>
+            <div className={styles.debugCenter} />
+            <div className={styles.debugCircle1} />
+            <div className={styles.debugCircle2} />
+            <div className={styles.debugCircle3} />
+            <div className={styles.debugCrosshairH} />
+            <div className={styles.debugCrosshairV} />
+          </>
+        )}
         {config.layout.map((pad) => {
           const isSelected = selectedNotes.has(pad.note);
           const isActive = activeNotes.has(pad.note);
@@ -66,6 +78,9 @@ export default function HandpanRenderer({
               aria-label={`Note ${pad.note}`}
             >
               <span className={styles.padLabel}>{pad.note}</span>
+              {showDebugGrid && (
+                <span className={styles.debugPadId}>{pad.id}</span>
+              )}
             </button>
           );
         })}

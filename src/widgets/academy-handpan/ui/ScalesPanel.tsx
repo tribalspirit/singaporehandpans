@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { findPlayableScales, type PlayableScale } from '../theory/scales';
 import { initializeAudio, isAudioInitialized } from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
+import { HANDPAN_SCALE_CATALOG } from '../config/scaleCatalog';
 import styles from '../styles/ScalesPanel.module.scss';
 
 interface ScalesPanelProps {
@@ -18,6 +19,7 @@ export default function ScalesPanel({
   onActiveNotesChange,
 }: ScalesPanelProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isCatalogExpanded, setIsCatalogExpanded] = useState(false);
 
   const playableScales = useMemo(() => {
     return findPlayableScales(availableNotes);
@@ -78,6 +80,53 @@ export default function ScalesPanel({
 
   return (
     <div className={styles.scalesPanel}>
+      <div className={styles.catalogSection}>
+        <button
+          type="button"
+          className={styles.catalogToggle}
+          onClick={() => setIsCatalogExpanded(!isCatalogExpanded)}
+          aria-expanded={isCatalogExpanded}
+          aria-controls="scale-catalog"
+        >
+          <span className={styles.catalogToggleText}>Handpan Scale Catalog</span>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className={`${styles.catalogToggleIcon} ${isCatalogExpanded ? styles.catalogToggleIconExpanded : ''}`}
+          >
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        {isCatalogExpanded && (
+          <div id="scale-catalog" className={styles.catalogList}>
+            {HANDPAN_SCALE_CATALOG.map((entry) => (
+              <div key={entry.id} className={styles.catalogItem}>
+                <div className={styles.catalogItemHeader}>
+                  <span className={styles.catalogItemName}>{entry.name}</span>
+                  {entry.aliases && entry.aliases.length > 0 && (
+                    <span className={styles.catalogItemAliases}>
+                      ({entry.aliases.join(', ')})
+                    </span>
+                  )}
+                </div>
+                <p className={styles.catalogItemDescription}>{entry.description}</p>
+                <div className={styles.catalogItemTags}>
+                  {entry.moodTags.map((tag) => (
+                    <span key={tag} className={styles.catalogItemTag}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className={styles.header}>
         <h3 className={styles.title}>Playable Scales & Modes</h3>
         {selectedScale && (

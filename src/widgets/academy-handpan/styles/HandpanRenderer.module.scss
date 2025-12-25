@@ -130,6 +130,83 @@
   }
 }
 
+.debugCenter {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  background: red;
+  border-radius: 50%;
+  z-index: 1000;
+}
+
+.debugCircle1,
+.debugCircle2,
+.debugCircle3 {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px dashed rgba(255, 0, 0, 0.3);
+  border-radius: 50%;
+  z-index: 999;
+}
+
+.debugCircle1 {
+  width: 30%;
+  height: 30%;
+}
+
+.debugCircle2 {
+  width: 50%;
+  height: 50%;
+}
+
+.debugCircle3 {
+  width: 70%;
+  height: 70%;
+}
+
+.debugCrosshairH,
+.debugCrosshairV {
+  position: absolute;
+  background: rgba(255, 0, 0, 0.2);
+  z-index: 999;
+}
+
+.debugCrosshairH {
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
+.debugCrosshairV {
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+
+.debugPadId {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: red;
+  background: white;
+  padding: 2px 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+  z-index: 1001;
+  pointer-events: none;
+}
+
 @media (max-width: 768px) {
   .handpanRenderer {
     padding: var(--spacing-md);
