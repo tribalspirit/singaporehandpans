@@ -45,14 +45,16 @@ describe('chords', () => {
     });
 
     it('should categorize chords correctly', () => {
-      const availableNotes = ['C4', 'E4', 'G4', 'B4'];
+      const availableNotes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'];
       const chords = findPlayableChords(availableNotes);
       
       for (const chord of chords) {
-        if (chord.notes.length === 3) {
-          expect(chord.category).toBe('basic');
-        } else if (chord.notes.length === 4) {
-          expect(chord.category).toBe('advanced');
+        if (chord.category === 'basic') {
+          expect(chord.pitchClasses.length).toBe(3);
+          expect(chord.notes.length).toBeGreaterThanOrEqual(3);
+        } else if (chord.category === 'advanced') {
+          expect(chord.pitchClasses.length).toBeGreaterThanOrEqual(3);
+          expect(chord.pitchClasses.length).toBeLessThanOrEqual(5);
         }
       }
     });
@@ -71,12 +73,12 @@ describe('chords', () => {
       expect(findPlayableChords([])).toEqual([]);
     });
 
-    it('should not return chords with more than 4 notes', () => {
+    it('should not return chords with more than 5 pitch classes', () => {
       const availableNotes = ['C4', 'E4', 'G4', 'B4', 'D5'];
       const chords = findPlayableChords(availableNotes);
       
       for (const chord of chords) {
-        expect(chord.notes.length).toBeLessThanOrEqual(4);
+        expect(chord.pitchClasses.length).toBeLessThanOrEqual(5);
       }
     });
 

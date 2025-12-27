@@ -51,10 +51,10 @@ export default function ChordsSection({
       );
     });
 
-    // Group by root note (first pitch class)
+    // Group by root note (from canonical detection)
     const grouped = new Map<string, PlayableChord[]>();
     for (const chord of filtered) {
-      const root = chord.pitchClasses[0] || '';
+      const root = chord.rootPc || chord.pitchClasses[0] || '';
       if (!grouped.has(root)) {
         grouped.set(root, []);
       }
@@ -188,7 +188,8 @@ export default function ChordsSection({
         <div className={styles.fourNoteSection}>
           <h3 className={styles.sectionTitle}>Added Note Chords</h3>
           <p className={styles.sectionDescription}>
-            Includes 7ths, 9ths, sus chords, add chords, and common handpan-friendly voicings.
+            Includes 7ths, 9ths, sus chords, add chords, and common
+            handpan-friendly voicings.
           </p>
           <div className={styles.chordGroups}>
             {addedNoteChords.map(({ root, chords }) => (
