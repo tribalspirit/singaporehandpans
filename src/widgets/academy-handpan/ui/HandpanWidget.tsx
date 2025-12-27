@@ -132,6 +132,8 @@ export default function HandpanWidget() {
             scaleInfo={selectedScaleInfo}
             scaleNotes={selectedHandpan.notes}
             onActiveNotesChange={setActiveNotes}
+            onChordSelect={() => setSelectedChord(null)}
+            availableNotes={selectedHandpan.notes}
           />
         </div>
       </div>
