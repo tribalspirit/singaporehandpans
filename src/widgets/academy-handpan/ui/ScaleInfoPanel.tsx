@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
 import { sortNotesByPitch } from '../theory/utils';
@@ -29,6 +29,14 @@ export default function ScaleInfoPanel({
 }: ScaleInfoPanelProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeNote, setActiveNote] = useState<string | null>(null);
+  const availableNotesRef = useRef(availableNotes);
+  const onActiveNotesChangeRef = useRef(onActiveNotesChange);
+
+  // Keep refs up to date
+  useEffect(() => {
+    availableNotesRef.current = availableNotes;
+    onActiveNotesChangeRef.current = onActiveNotesChange;
+  }, [availableNotes, onActiveNotesChange]);
 
   useEffect(() => {
     if (scaleInfo) {
@@ -37,7 +45,7 @@ export default function ScaleInfoPanel({
       setActiveNote(null);
       onActiveNotesChange(new Set());
     }
-  }, [scaleInfo?.name, scaleInfo?.description]);
+  }, [scaleInfo?.name, scaleInfo?.description, onActiveNotesChange]);
 
   const sortedNotes = useMemo(() => {
     return sortNotesByPitch([...scaleNotes]);
@@ -67,21 +75,27 @@ export default function ScaleInfoPanel({
         bpm: 120,
         direction: 'up',
         onStep: (note) => {
+          // Update active note in Scale Notes section
           setActiveNote(note);
+          
           // Find all notes with the same pitch class to highlight on handpan
+          // Use refs to get latest values from Tone.js callback context
+          const currentAvailableNotes = availableNotesRef.current;
           const activePitchClass = normalizeToPitchClass(note);
           const matchingNotes = new Set<string>();
-          availableNotes.forEach((availableNote) => {
+          currentAvailableNotes.forEach((availableNote) => {
             if (normalizeToPitchClass(availableNote) === activePitchClass) {
               matchingNotes.add(availableNote);
             }
           });
-          onActiveNotesChange(matchingNotes);
+          
+          // Update active notes on handpan widget
+          onActiveNotesChangeRef.current(matchingNotes);
         },
         onComplete: () => {
           setIsPlaying(false);
           setActiveNote(null);
-          onActiveNotesChange(new Set());
+          onActiveNotesChangeRef.current(new Set());
         },
       });
     } catch (error) {
@@ -123,6 +137,8 @@ export default function ScaleInfoPanel({
           matchingNotes.add(availableNote);
         }
       });
+      
+      // Update active notes immediately
       onActiveNotesChange(matchingNotes);
 
       // Clear highlight after note duration
