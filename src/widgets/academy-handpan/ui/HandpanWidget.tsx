@@ -12,13 +12,8 @@ import { note } from '@tonaljs/core';
 import type { PlaybackState } from './types';
 import styles from '../styles/HandpanWidget.module.scss';
 
-function pickBestPadNoteForPc(
-  layout: HandpanPad[],
-  pc: string
-): string | null {
-  const matches = layout.filter(
-    (p) => normalizeToPitchClass(p.note) === pc
-  );
+function pickBestPadNoteForPc(layout: HandpanPad[], pc: string): string | null {
+  const matches = layout.filter((p) => normalizeToPitchClass(p.note) === pc);
   if (matches.length === 0) return null;
 
   const bottom = matches.find((m) => m.role === 'bottom');
@@ -72,10 +67,11 @@ export default function HandpanWidget() {
     const notes = new Set<string>();
     if (selectedChord && selectedHandpan) {
       const highlightPitchClasses = new Set(selectedChord.pitchClasses);
-      selectedHandpan.notes.forEach((note) => {
-        const pc = normalizeToPitchClass(note);
+      // Use layout pads (not scale notes) to ensure correct highlighting
+      selectedHandpan.layout.forEach((pad) => {
+        const pc = normalizeToPitchClass(pad.note);
         if (highlightPitchClasses.has(pc)) {
-          notes.add(note);
+          notes.add(pad.note);
         }
       });
     }
@@ -148,39 +144,36 @@ export default function HandpanWidget() {
         });
       }, 500);
     } catch (error) {
-        try {
-          await initializeAudio();
-          playNote(pad.note, 500);
+      try {
+        await initializeAudio();
+        playNote(pad.note, 500);
+        setPlaybackState({
+          activePadNote: pad.note,
+          activePitchClasses: null,
+          isPlaying: false,
+        });
+        setTimeout(() => {
           setPlaybackState({
-            activePadNote: pad.note,
+            activePadNote: null,
             activePitchClasses: null,
             isPlaying: false,
           });
-          setTimeout(() => {
-            setPlaybackState({
-              activePadNote: null,
-              activePitchClasses: null,
-              isPlaying: false,
-            });
-          }, 500);
+        }, 500);
       } catch (retryError) {
         // Audio initialization failed
       }
     }
   }, []);
 
-  const handleChordSelect = useCallback(
-    (chord: PlayableChord | null) => {
-      setSelectedChord(chord);
-      // Reset playback state when chord changes
-      setPlaybackState({
-        activePadNote: null,
-        activePitchClasses: chord ? chord.pitchClasses : null,
-        isPlaying: false,
-      });
-    },
-    []
-  );
+  const handleChordSelect = useCallback((chord: PlayableChord | null) => {
+    setSelectedChord(chord);
+    // Reset playback state when chord changes
+    setPlaybackState({
+      activePadNote: null,
+      activePitchClasses: chord ? chord.pitchClasses : null,
+      isPlaying: false,
+    });
+  }, []);
 
   if (!selectedHandpan) {
     return <div>No handpan configuration available</div>;

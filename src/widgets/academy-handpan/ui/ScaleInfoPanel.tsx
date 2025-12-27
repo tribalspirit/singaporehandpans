@@ -169,18 +169,12 @@ export default function ScaleInfoPanel({
     [onChordSelect, onPlaybackStateChange]
   );
 
-  // Update scale note highlight logic to match new state structure
+  // Scale note highlight logic - ONLY for playback/clicks, NOT for chord selection
   const getNoteHighlightState = useCallback(
     (note: string) => {
-      // Priority 1: Exact pad note match (for single-note interactions)
+      // Only highlight during playback/clicks (activePadNote), not for chord selection
       if (playbackState.activePadNote) {
         return playbackState.activePadNote === note;
-      }
-      // Priority 2: Pitch-class set match (for conceptual highlights)
-      if (playbackState.activePitchClasses) {
-        return playbackState.activePitchClasses.includes(
-          normalizeToPitchClass(note)
-        );
       }
       return false;
     },
