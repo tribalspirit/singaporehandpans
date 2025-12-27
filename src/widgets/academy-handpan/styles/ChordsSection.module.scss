@@ -19,7 +19,14 @@
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm);
+}
+
+.sectionDescription {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
   margin: 0 0 var(--spacing-md);
+  font-style: italic;
 }
 
 .triadsSection {
