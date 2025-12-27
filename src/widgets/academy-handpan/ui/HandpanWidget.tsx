@@ -65,15 +65,15 @@ export default function HandpanWidget() {
     const notes = new Set<string>();
     if (!selectedHandpan) return notes;
     
-    // For manual clicks (not playing), use exact note match
-    if (playbackState.activeNote && !playbackState.isPlaying) {
+    // If activeNote is set, always use exact note match (for manual clicks and scale playback)
+    if (playbackState.activeNote) {
       // Check if there's a pad with this exact note in the layout
       const hasPad = selectedHandpan.layout.some(pad => pad.note === playbackState.activeNote);
       if (hasPad) {
         notes.add(playbackState.activeNote);
       }
     }
-    // For playback (arpeggio), use pitch-class match (all octaves)
+    // For chord arpeggio playback (when only pitchClass is set, no activeNote), use pitch-class match (all octaves)
     else if (playbackState.activePitchClass && playbackState.isPlaying) {
       selectedHandpan.layout.forEach((pad) => {
         if (normalizeToPitchClass(pad.note) === playbackState.activePitchClass) {

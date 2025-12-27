@@ -78,10 +78,10 @@ export default function ScaleInfoPanel({
         bpm: 120,
         direction: 'up',
         onStep: (step) => {
-          // Update unified playback state with pitch class
+          // Update unified playback state with exact note (not pitch class) for scale playback
           onPlaybackStateChangeRef.current({
-            activePitchClass: step.pitchClass,
-            activeNote: step.note,
+            activePitchClass: null, // Don't use pitch class for scale playback
+            activeNote: step.note,   // Use exact note match
             isPlaying: true,
           });
         },
