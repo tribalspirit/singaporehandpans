@@ -1,5 +1,6 @@
 import * as ChordType from '@tonaljs/chord-type';
 import * as Chord from '@tonaljs/chord';
+import { note } from '@tonaljs/core';
 import { isSubset, stableSort, deduplicateBy } from './pcset';
 import { normalizeToPitchClass } from './normalize';
 import { assignOctavesToPitchClasses, sortNotesByPitch } from './utils';
@@ -31,8 +32,63 @@ function getChordNotes(tonic: string, type: string): string[] {
   return chordData.notes || [];
 }
 
-function categorizeChord(pitchClassCount: number): 'basic' | 'advanced' {
-  return pitchClassCount === 3 ? 'basic' : 'advanced';
+function categorizeChord(pitchClassCount: number, isTriad: boolean = false): 'basic' | 'advanced' {
+  if (pitchClassCount === 3 && isTriad) {
+    return 'basic';
+  }
+  return 'advanced';
+}
+
+function generateVoicingChords(availableNotes: string[]): PlayableChord[] {
+  const availablePitchClasses = new Set(availableNotes.map(normalizeToPitchClass));
+  const voicings: PlayableChord[] = [];
+  const seenKeys = new Set<string>();
+
+  const voicingTypes = ['sus2', 'sus4', 'add9'];
+
+  for (const tonic of TONICS) {
+    for (const voicingType of voicingTypes) {
+      try {
+        const chordData = Chord.get(`${tonic}${voicingType}`);
+        if (!chordData.notes || chordData.notes.length === 0) {
+          continue;
+        }
+
+        const pitchClasses = chordData.notes.map(normalizeToPitchClass);
+        const uniquePcs = Array.from(new Set(pitchClasses));
+        
+        if (uniquePcs.length < 3) continue;
+
+        if (isSubset(uniquePcs, Array.from(availablePitchClasses))) {
+          const mappedNotes = assignOctavesToPitchClasses(uniquePcs, availableNotes);
+          const orderedNotes = sortNotesByPitch(mappedNotes);
+
+          if (orderedNotes.length >= 3) {
+            const key = `${uniquePcs.join(',')}:${voicingType}`;
+            if (seenKeys.has(key)) continue;
+            seenKeys.add(key);
+
+            const rootPc = uniquePcs[0];
+            const displayName = voicingType === 'sus2' ? `${rootPc}sus2` : 
+                               voicingType === 'sus4' ? `${rootPc}sus4` : 
+                               `${rootPc}add9`;
+            
+            voicings.push({
+              name: `${tonic}${voicingType}`,
+              displayName,
+              notes: orderedNotes,
+              pitchClasses: uniquePcs,
+              category: 'advanced',
+            });
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  return voicings;
 }
 
 function formatChordDisplayName(chordData: ReturnType<typeof Chord.get>, tonic: string, type: string): string {
@@ -54,7 +110,7 @@ function formatChordDisplayName(chordData: ReturnType<typeof Chord.get>, tonic: 
     return tonic;
   }
 
-  if (noteCount === 4) {
+  if (noteCount === 4 || noteCount === 5) {
     let quality = '';
     let extension = '';
 
@@ -122,6 +178,21 @@ function formatChordDisplayName(chordData: ReturnType<typeof Chord.get>, tonic: 
     return `${tonic}${quality}${extension}`;
   }
 
+  if (noteCount === 5) {
+    if (lowerName.includes('ninth') || lowerName.includes('9')) {
+      if (lowerName.includes('minor')) {
+        if (lowerName.includes('major seventh') || lowerName.includes('maj7')) {
+          return `${tonic}mM9`;
+        }
+        return `${tonic}m9`;
+      } else if (lowerName.includes('major seventh') || lowerName.includes('maj7')) {
+        return `${tonic}maj9`;
+      } else {
+        return `${tonic}9`;
+      }
+    }
+  }
+
   return name || `${tonic}${type}`;
 }
 
@@ -134,7 +205,7 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
     for (const type of chordTypes) {
       const chordPitchClasses = getChordPitchClasses(tonic, type);
       
-      if (chordPitchClasses.length === 0 || chordPitchClasses.length > 4) {
+      if (chordPitchClasses.length === 0 || chordPitchClasses.length > 5) {
         continue;
       }
 
@@ -160,7 +231,8 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
         
         const chordData = Chord.get(`${tonic}${type}`);
         const displayName = formatChordDisplayName(chordData, tonic, type);
-        const category = categorizeChord(chordPitchClasses.length);
+        const isTriad = chordPitchClasses.length === 3 && !type.includes('sus') && !type.includes('add');
+        const category = categorizeChord(chordPitchClasses.length, isTriad);
         
         playable.push({
           name: `${tonic}${type}`,
@@ -173,7 +245,15 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
     }
   }
 
-  const deduplicated = deduplicateBy(playable, (chord) => chord.pitchClasses.join(','));
+  const voicingChords = generateVoicingChords(availableNotes);
+  const allChords = [...playable, ...voicingChords];
+
+  const deduplicated = deduplicateBy(allChords, (chord) => {
+    const rootPc = chord.pitchClasses[0] || '';
+    const sortedPcs = [...chord.pitchClasses].sort().join(',');
+    const kind = chord.category === 'basic' ? 'triad' : 'added';
+    return `${rootPc}:${kind}:${sortedPcs}`;
+  });
   
   const sorted = stableSort(deduplicated, (chord) => {
     const categoryOrder = chord.category === 'basic' ? '0' : '1';

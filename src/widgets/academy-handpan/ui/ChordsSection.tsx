@@ -7,6 +7,7 @@ import {
   playChord,
 } from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
+import { normalizeToPitchClass } from '../theory/normalize';
 import Controls from './Controls';
 import styles from '../styles/ChordsSection.module.scss';
 
@@ -39,12 +40,13 @@ export default function ChordsSection({
     return getDiatonicTriads(availableNotes, availableNotes);
   }, [availableNotes]);
 
-  const fourNoteChords = useMemo(() => {
+  const addedNoteChords = useMemo(() => {
     const allChords = findPlayableChords(availableNotes);
     const filtered = allChords.filter((chord) => {
       return (
         chord.category === 'advanced' &&
-        chord.notes.length === 4 &&
+        chord.notes.length >= 3 &&
+        chord.notes.length <= 5 &&
         chord.notes.every((note) => availableNotes.includes(note))
       );
     });
@@ -101,7 +103,14 @@ export default function ChordsSection({
           bpm: arpeggioBpm,
           direction: 'up',
           onStep: (note) => {
-            onActiveNotesChange(new Set([note]));
+            const activePitchClass = normalizeToPitchClass(note);
+            const activeNotes = new Set<string>();
+            availableNotes.forEach((availableNote) => {
+              if (normalizeToPitchClass(availableNote) === activePitchClass) {
+                activeNotes.add(availableNote);
+              }
+            });
+            onActiveNotesChange(activeNotes);
           },
           onComplete: () => {
             setIsPlaying(false);
@@ -175,11 +184,14 @@ export default function ChordsSection({
         </div>
       )}
 
-      {fourNoteChords.length > 0 && (
+      {addedNoteChords.length > 0 && (
         <div className={styles.fourNoteSection}>
-          <h3 className={styles.sectionTitle}>4-Note Chords</h3>
+          <h3 className={styles.sectionTitle}>Added Note Chords</h3>
+          <p className={styles.sectionDescription}>
+            Includes 7ths, 9ths, sus chords, add chords, and common handpan-friendly voicings.
+          </p>
           <div className={styles.chordGroups}>
-            {fourNoteChords.map(({ root, chords }) => (
+            {addedNoteChords.map(({ root, chords }) => (
               <div key={root} className={styles.chordGroup}>
                 <h4 className={styles.groupTitle}>{root}</h4>
                 <div className={styles.chordGrid}>
@@ -209,7 +221,7 @@ export default function ChordsSection({
         </div>
       )}
 
-      {diatonicTriads.length === 0 && fourNoteChords.length === 0 && (
+      {diatonicTriads.length === 0 && addedNoteChords.length === 0 && (
         <p className={styles.emptyMessage}>
           No playable chords found for this handpan.
         </p>

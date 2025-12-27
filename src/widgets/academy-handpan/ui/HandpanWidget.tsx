@@ -7,6 +7,7 @@ import type { HandpanPad } from '../config/types';
 import type { PlayableChord } from '../theory/chords';
 import type { PlaybackMode } from './ChordsSection';
 import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
+import { normalizeToPitchClass } from '../theory/normalize';
 import styles from '../styles/HandpanWidget.module.scss';
 
 export default function HandpanWidget() {
@@ -39,11 +40,17 @@ export default function HandpanWidget() {
 
   const selectedNotes = useMemo(() => {
     const notes = new Set<string>();
-    if (selectedChord) {
-      selectedChord.notes.forEach((note) => notes.add(note));
+    if (selectedChord && selectedHandpan) {
+      const highlightPitchClasses = new Set(selectedChord.pitchClasses);
+      selectedHandpan.notes.forEach((note) => {
+        const pc = normalizeToPitchClass(note);
+        if (highlightPitchClasses.has(pc)) {
+          notes.add(note);
+        }
+      });
     }
     return notes;
-  }, [selectedChord]);
+  }, [selectedChord, selectedHandpan]);
 
   const handlePadClick = useCallback(async (pad: HandpanPad) => {
     try {
