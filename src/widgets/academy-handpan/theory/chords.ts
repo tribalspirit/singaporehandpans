@@ -376,7 +376,7 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
     const existing = chordsByPcset.get(candidate.pcsetKey);
     if (!existing || existing.category === 'advanced' && analyzed.category === 'basic') {
       chordsByPcset.set(candidate.pcsetKey, {
-        name: `${analyzed.rootPc}${candidate.typeAttempt || candidate.voicingTag || ''}`,
+        name: analyzed.displayName,
         displayName: analyzed.displayName,
         notes: orderedNotes,
         pitchClasses: candidate.pitchClasses,
