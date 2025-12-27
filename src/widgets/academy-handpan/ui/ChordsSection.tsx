@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+  useEffect,
+} from 'react';
 import { findPlayableChords, type PlayableChord } from '../theory/chords';
 import { getDiatonicTriads } from '../theory/diatonicTriads';
 import {

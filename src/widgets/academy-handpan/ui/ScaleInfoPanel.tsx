@@ -122,13 +122,12 @@ export default function ScaleInfoPanel({
         onChordSelect();
       }
 
-      const pitchClass = normalizeToPitchClass(note);
       playNote(note, 500);
 
-      // Update unified playback state
+      // Update unified playback state - use exact note match for manual clicks
       onPlaybackStateChange({
-        activePitchClass: pitchClass,
-        activeNote: note,
+        activePitchClass: null, // Don't use pitch class for manual clicks
+        activeNote: note,       // Use exact note match
         isPlaying: false,
       });
 
@@ -143,10 +142,9 @@ export default function ScaleInfoPanel({
     } catch (error) {
       try {
         await initializeAudio();
-        const pitchClass = normalizeToPitchClass(note);
         playNote(note, 500);
         onPlaybackStateChange({
-          activePitchClass: pitchClass,
+          activePitchClass: null,
           activeNote: note,
           isPlaying: false,
         });
@@ -162,6 +160,19 @@ export default function ScaleInfoPanel({
       }
     }
   }, [onChordSelect, onPlaybackStateChange]);
+
+  // Update scale note highlight logic to use exact note match for manual clicks
+  const getNoteHighlightState = useCallback((note: string) => {
+    // For manual clicks (not playing), check exact note match
+    if (!playbackState.isPlaying && playbackState.activeNote) {
+      return playbackState.activeNote === note;
+    }
+    // For playback, check pitch class match
+    if (playbackState.isPlaying && playbackState.activePitchClass) {
+      return normalizeToPitchClass(note) === playbackState.activePitchClass;
+    }
+    return false;
+  }, [playbackState]);
 
   if (!scaleInfo) {
     return (
@@ -240,7 +251,7 @@ export default function ScaleInfoPanel({
           <h4 className={styles.notesTitle}>Scale Notes</h4>
           <div className={styles.notesList}>
             {sortedNotes.map((note) => {
-              const isActive = playbackState.activePitchClass === normalizeToPitchClass(note);
+              const isActive = getNoteHighlightState(note);
               return (
                 <button
                   key={note}
