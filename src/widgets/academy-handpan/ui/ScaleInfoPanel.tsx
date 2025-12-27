@@ -78,10 +78,10 @@ export default function ScaleInfoPanel({
         bpm: 120,
         direction: 'up',
         onStep: (step) => {
-          // Update unified playback state with exact note (not pitch class) for scale playback
+          // Update unified playback state - set both activeNote and activePitchClass for full sync
           onPlaybackStateChangeRef.current({
-            activePitchClass: null, // Don't use pitch class for scale playback
-            activeNote: step.note,   // Use exact note match
+            activePitchClass: normalizeToPitchClass(step.note), // Enable pitch-class highlighting for handpan
+            activeNote: step.note, // Use exact note match for scale notes
             isPlaying: true,
           });
         },
@@ -100,7 +100,12 @@ export default function ScaleInfoPanel({
         isPlaying: false,
       });
     }
-  }, [sortedNotes, playbackState.isPlaying, onPlaybackStateChange, onChordSelect]);
+  }, [
+    sortedNotes,
+    playbackState.isPlaying,
+    onPlaybackStateChange,
+    onChordSelect,
+  ]);
 
   const handleStop = useCallback(() => {
     stopArpeggio();
@@ -111,43 +116,28 @@ export default function ScaleInfoPanel({
     });
   }, [onPlaybackStateChange]);
 
-  const handleNoteClick = useCallback(async (note: string) => {
-    try {
-      if (!isAudioInitialized()) {
-        await initializeAudio();
-      }
-
-      // Reset selected chord if any was selected
-      if (onChordSelect) {
-        onChordSelect();
-      }
-
-      playNote(note, 500);
-
-      // Update unified playback state - use exact note match for manual clicks
-      onPlaybackStateChange({
-        activePitchClass: null, // Don't use pitch class for manual clicks
-        activeNote: note,       // Use exact note match
-        isPlaying: false,
-      });
-
-      // Clear highlight after note duration
-      setTimeout(() => {
-        onPlaybackStateChange({
-          activePitchClass: null,
-          activeNote: null,
-          isPlaying: false,
-        });
-      }, 500);
-    } catch (error) {
+  const handleNoteClick = useCallback(
+    async (note: string) => {
       try {
-        await initializeAudio();
+        if (!isAudioInitialized()) {
+          await initializeAudio();
+        }
+
+        // Reset selected chord if any was selected
+        if (onChordSelect) {
+          onChordSelect();
+        }
+
         playNote(note, 500);
+
+        // Update unified playback state - set both activeNote and activePitchClass for full sync
         onPlaybackStateChange({
-          activePitchClass: null,
-          activeNote: note,
+          activePitchClass: normalizeToPitchClass(note), // Enable pitch-class highlighting for handpan
+          activeNote: note, // Use exact note match for scale notes
           isPlaying: false,
         });
+
+        // Clear highlight after note duration
         setTimeout(() => {
           onPlaybackStateChange({
             activePitchClass: null,
@@ -155,24 +145,45 @@ export default function ScaleInfoPanel({
             isPlaying: false,
           });
         }, 500);
-      } catch (retryError) {
-        // Audio initialization failed
+      } catch (error) {
+        try {
+          await initializeAudio();
+          playNote(note, 500);
+          onPlaybackStateChange({
+            activePitchClass: normalizeToPitchClass(note),
+            activeNote: note,
+            isPlaying: false,
+          });
+          setTimeout(() => {
+            onPlaybackStateChange({
+              activePitchClass: null,
+              activeNote: null,
+              isPlaying: false,
+            });
+          }, 500);
+        } catch (retryError) {
+          // Audio initialization failed
+        }
       }
-    }
-  }, [onChordSelect, onPlaybackStateChange]);
+    },
+    [onChordSelect, onPlaybackStateChange]
+  );
 
-  // Update scale note highlight logic to use exact note match
-  const getNoteHighlightState = useCallback((note: string) => {
-    // If activeNote is set, always use exact note match (for manual clicks and scale playback)
-    if (playbackState.activeNote) {
-      return playbackState.activeNote === note;
-    }
-    // For chord arpeggio playback (when only pitchClass is set), check pitch class match
-    if (playbackState.isPlaying && playbackState.activePitchClass) {
-      return normalizeToPitchClass(note) === playbackState.activePitchClass;
-    }
-    return false;
-  }, [playbackState]);
+  // Update scale note highlight logic to use pitch-class match for robustness
+  const getNoteHighlightState = useCallback(
+    (note: string) => {
+      // Prefer pitch-class match (works across octaves)
+      if (playbackState.activePitchClass) {
+        return normalizeToPitchClass(note) === playbackState.activePitchClass;
+      }
+      // Fallback to exact note match
+      if (playbackState.activeNote) {
+        return playbackState.activeNote === note;
+      }
+      return false;
+    },
+    [playbackState]
+  );
 
   if (!scaleInfo) {
     return (
