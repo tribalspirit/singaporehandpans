@@ -8,6 +8,7 @@ import type { PlayableChord } from '../theory/chords';
 import type { PlaybackMode } from './ChordsSection';
 import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
 import { normalizeToPitchClass } from '../theory/normalize';
+import type { PlaybackState } from './types';
 import styles from '../styles/HandpanWidget.module.scss';
 
 export default function HandpanWidget() {
@@ -15,7 +16,11 @@ export default function HandpanWidget() {
   const [selectedHandpanId, setSelectedHandpanId] = useState<string>(
     configs[0]?.id || ''
   );
-  const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
+  const [playbackState, setPlaybackState] = useState<PlaybackState>({
+    activePitchClass: null,
+    activeNote: null,
+    isPlaying: false,
+  });
   const [selectedChord, setSelectedChord] = useState<PlayableChord | null>(
     null
   );
@@ -35,7 +40,11 @@ export default function HandpanWidget() {
 
   useEffect(() => {
     setSelectedChord(null);
-    setActiveNotes(new Set());
+    setPlaybackState({
+      activePitchClass: null,
+      activeNote: null,
+      isPlaying: false,
+    });
   }, [selectedHandpanId]);
 
   const selectedNotes = useMemo(() => {
@@ -52,31 +61,57 @@ export default function HandpanWidget() {
     return notes;
   }, [selectedChord, selectedHandpan]);
 
+  const activeNotes = useMemo(() => {
+    const notes = new Set<string>();
+    if (playbackState.activePitchClass && selectedHandpan) {
+      selectedHandpan.notes.forEach((note) => {
+        if (normalizeToPitchClass(note) === playbackState.activePitchClass) {
+          notes.add(note);
+        }
+      });
+    }
+    return notes;
+  }, [playbackState.activePitchClass, selectedHandpan]);
+
   const handlePadClick = useCallback(async (pad: HandpanPad) => {
     try {
       if (!isAudioInitialized()) {
         await initializeAudio();
       }
 
+      const pitchClass = normalizeToPitchClass(pad.note);
       playNote(pad.note, 500);
 
-      setActiveNotes((prev) => {
-        const next = new Set(prev);
-        next.add(pad.note);
-        return next;
+      setPlaybackState({
+        activePitchClass: pitchClass,
+        activeNote: pad.note,
+        isPlaying: false,
       });
 
       setTimeout(() => {
-        setActiveNotes((prev) => {
-          const next = new Set(prev);
-          next.delete(pad.note);
-          return next;
+        setPlaybackState({
+          activePitchClass: null,
+          activeNote: null,
+          isPlaying: false,
         });
-      }, 300);
+      }, 500);
     } catch (error) {
       try {
         await initializeAudio();
+        const pitchClass = normalizeToPitchClass(pad.note);
         playNote(pad.note, 500);
+        setPlaybackState({
+          activePitchClass: pitchClass,
+          activeNote: pad.note,
+          isPlaying: false,
+        });
+        setTimeout(() => {
+          setPlaybackState({
+            activePitchClass: null,
+            activeNote: null,
+            isPlaying: false,
+          });
+        }, 500);
       } catch (retryError) {
         // Audio initialization failed
       }
@@ -131,7 +166,8 @@ export default function HandpanWidget() {
             key={`${selectedHandpanId}-${selectedHandpan.scaleName}-${selectedHandpan.scaleDescription}`}
             scaleInfo={selectedScaleInfo}
             scaleNotes={selectedHandpan.notes}
-            onActiveNotesChange={setActiveNotes}
+            playbackState={playbackState}
+            onPlaybackStateChange={setPlaybackState}
             onChordSelect={() => setSelectedChord(null)}
             availableNotes={selectedHandpan.notes}
           />
@@ -143,7 +179,8 @@ export default function HandpanWidget() {
           availableNotes={selectedHandpan.notes}
           selectedChord={selectedChord}
           onChordSelect={handleChordSelect}
-          onActiveNotesChange={setActiveNotes}
+          playbackState={playbackState}
+          onPlaybackStateChange={setPlaybackState}
           playbackMode={playbackMode}
           onPlaybackModeChange={setPlaybackMode}
           arpeggioBpm={arpeggioBpm}
