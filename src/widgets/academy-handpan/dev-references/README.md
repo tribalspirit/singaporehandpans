@@ -45,3 +45,4 @@ Enable debug grid in `HandpanRenderer` by passing `showDebugGrid={true}`:
 - Shows crosshairs for center alignment
 - Shows pad IDs for easy identification
 
+

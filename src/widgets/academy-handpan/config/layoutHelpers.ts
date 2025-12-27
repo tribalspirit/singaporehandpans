@@ -21,7 +21,7 @@ function getNotePitch(noteStr: string): number {
 }
 
 function polarToCartesian(centerX: number, centerY: number, radius: number, angleDeg: number): { x: number; y: number } {
-  const angleRad = (angleDeg * Math.PI) / 180;
+  const angleRad = (-angleDeg * Math.PI) / 180;
   return {
     x: centerX + radius * Math.cos(angleRad),
     y: centerY + radius * Math.sin(angleRad),
@@ -71,35 +71,36 @@ function buildRingSlots(ringNoteCount: number): Slot[] {
 function createZigZagSlotOrder(ringNoteCount: number): number[] {
   if (ringNoteCount === 0) return [];
   if (ringNoteCount === 1) return [0];
-  
+
+  const EPS = 1e-6;
   const slots = buildRingSlots(ringNoteCount);
-  const leftSlots = slots.filter(s => s.x < CENTER_X).sort((a, b) => b.y - a.y);
-  const rightSlots = slots.filter(s => s.x >= CENTER_X).sort((a, b) => b.y - a.y);
-  
+
+  const left = slots.filter(s => s.x < CENTER_X - EPS).sort((a, b) => b.y - a.y);
+  const right = slots.filter(s => s.x > CENTER_X + EPS).sort((a, b) => b.y - a.y);
+  const center = slots.filter(s => Math.abs(s.x - CENTER_X) <= EPS).sort((a, b) => b.y - a.y);
+
+  const bottomLeft = left[0];
+  const bottomRight = right[0];
+
+  let startWithLeft = true;
+  if (bottomLeft && bottomRight) startWithLeft = bottomLeft.y >= bottomRight.y;
+  else if (!bottomLeft && bottomRight) startWithLeft = false;
+
   const order: number[] = [];
-  let leftIndex = 0;
-  let rightIndex = 0;
-  
-  for (let sortedIndex = 0; sortedIndex < ringNoteCount; sortedIndex++) {
-    const isLeft = sortedIndex % 2 === 0;
-    
-    if (isLeft && leftIndex < leftSlots.length) {
-      order.push(leftSlots[leftIndex].index);
-      leftIndex++;
-    } else if (!isLeft && rightIndex < rightSlots.length) {
-      order.push(rightSlots[rightIndex].index);
-      rightIndex++;
+  const maxLen = Math.max(left.length, right.length);
+
+  for (let i = 0; i < maxLen; i++) {
+    if (startWithLeft) {
+      if (left[i]) order.push(left[i].index);
+      if (right[i]) order.push(right[i].index);
     } else {
-      if (leftIndex < leftSlots.length) {
-        order.push(leftSlots[leftIndex].index);
-        leftIndex++;
-      } else if (rightIndex < rightSlots.length) {
-        order.push(rightSlots[rightIndex].index);
-        rightIndex++;
-      }
+      if (right[i]) order.push(right[i].index);
+      if (left[i]) order.push(left[i].index);
     }
   }
-  
+
+  for (const s of center) order.push(s.index);
+
   return order;
 }
 
