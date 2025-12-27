@@ -44,3 +44,4 @@ When calibrating layouts:
 3. Adjust slot coordinates in `layoutHelpers.ts` if needed
 4. Use `slotOrderOverride` parameter for handpan-specific adjustments
 
+

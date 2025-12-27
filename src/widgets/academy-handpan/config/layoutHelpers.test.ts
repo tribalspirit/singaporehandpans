@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateHandpanLayout, sortPadsByPitch } from './layoutHelpers';
+import { normalizeToPitchClass } from '../theory/normalize';
 import type { HandpanPad } from './types';
 
 describe('layoutHelpers', () => {
@@ -129,6 +130,61 @@ describe('layoutHelpers', () => {
       
       expect(layout.length).toBe(1);
       expect(layout[0].role).toBe('ding');
+    });
+
+    it('should place Dm chord tones on left side and C chord tones on right side', () => {
+      const notes = ['D4', 'A4', 'Bb4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5'];
+      const dingNote = 'D4';
+      const layout = generateHandpanLayout(notes, dingNote);
+      
+      const CENTER_X = 0.5;
+      
+      const dmTones = ['D', 'F', 'A'];
+      const cTones = ['C', 'E', 'G'];
+      
+      const dmPads = layout.filter(p => {
+        const pc = normalizeToPitchClass(p.note);
+        return dmTones.includes(pc);
+      });
+      
+      const cPads = layout.filter(p => {
+        const pc = normalizeToPitchClass(p.note);
+        return cTones.includes(pc);
+      });
+      
+      expect(dmPads.length).toBeGreaterThan(0);
+      expect(cPads.length).toBeGreaterThan(0);
+      
+      const avgXDm = dmPads.reduce((sum, p) => sum + p.x, 0) / dmPads.length;
+      const avgXC = cPads.reduce((sum, p) => sum + p.x, 0) / cPads.length;
+      
+      expect(avgXDm).toBeLessThan(CENTER_X);
+      expect(avgXC).toBeGreaterThan(CENTER_X);
+    });
+
+    it('should maintain geometry requirements after mirroring', () => {
+      const notes = ['D4', 'A4', 'Bb4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5'];
+      const dingNote = 'D4';
+      const layout = generateHandpanLayout(notes, dingNote);
+      
+      const ringPads = layout.filter(p => p.role !== 'ding');
+      const centerX = 0.5;
+      const centerY = 0.5;
+      const expectedRadius = 0.32;
+      
+      for (const pad of ringPads) {
+        expect(pad.x).toBeGreaterThanOrEqual(0);
+        expect(pad.x).toBeLessThanOrEqual(1);
+        expect(pad.y).toBeGreaterThanOrEqual(0);
+        expect(pad.y).toBeLessThanOrEqual(1);
+        expect(Number.isNaN(pad.x)).toBe(false);
+        expect(Number.isNaN(pad.y)).toBe(false);
+        
+        const dx = pad.x - centerX;
+        const dy = pad.y - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        expect(Math.abs(distance - expectedRadius)).toBeLessThan(0.01);
+      }
     });
   });
 
