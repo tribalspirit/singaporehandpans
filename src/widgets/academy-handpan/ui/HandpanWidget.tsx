@@ -8,8 +8,29 @@ import type { PlayableChord } from '../theory/chords';
 import type { PlaybackMode } from './ChordsSection';
 import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
 import { normalizeToPitchClass } from '../theory/normalize';
+import { note } from '@tonaljs/core';
 import type { PlaybackState } from './types';
 import styles from '../styles/HandpanWidget.module.scss';
+
+function pickBestPadNoteForPc(
+  layout: HandpanPad[],
+  pc: string
+): string | null {
+  const matches = layout.filter(
+    (p) => normalizeToPitchClass(p.note) === pc
+  );
+  if (matches.length === 0) return null;
+
+  const bottom = matches.find((m) => m.role === 'bottom');
+  if (bottom) return bottom.note;
+
+  const sorted = matches.sort((a, b) => {
+    const midiA = note(a.note).midi ?? 999;
+    const midiB = note(b.note).midi ?? 999;
+    return midiA - midiB;
+  });
+  return sorted[0].note;
+}
 
 export default function HandpanWidget() {
   const configs = getAllHandpanConfigs();
@@ -17,8 +38,8 @@ export default function HandpanWidget() {
     configs[0]?.id || ''
   );
   const [playbackState, setPlaybackState] = useState<PlaybackState>({
-    activePitchClass: null,
-    activeNote: null,
+    activePadNote: null,
+    activePitchClasses: null,
     isPlaying: false,
   });
   const [selectedChord, setSelectedChord] = useState<PlayableChord | null>(
@@ -41,8 +62,8 @@ export default function HandpanWidget() {
   useEffect(() => {
     setSelectedChord(null);
     setPlaybackState({
-      activePitchClass: null,
-      activeNote: null,
+      activePadNote: null,
+      activePitchClasses: null,
       isPlaying: false,
     });
   }, [selectedHandpanId]);
@@ -65,32 +86,42 @@ export default function HandpanWidget() {
     const notes = new Set<string>();
     if (!selectedHandpan) return notes;
 
-    // Always prefer pitch-class highlight when available (works for all octaves)
-    if (playbackState.activePitchClass) {
-      selectedHandpan.layout.forEach((pad) => {
-        if (
-          normalizeToPitchClass(pad.note) === playbackState.activePitchClass
-        ) {
-          notes.add(pad.note);
-        }
-      });
+    // Priority 1: Exact pad note match (for single-note interactions)
+    if (playbackState.activePadNote) {
+      const hasExact = selectedHandpan.layout.some(
+        (p) => p.note === playbackState.activePadNote
+      );
+      if (hasExact) {
+        notes.add(playbackState.activePadNote);
+        return notes; // IMPORTANT: no pitch-class highlight when exact note is known
+      }
+
+      // If exact pad doesn't exist, map to closest pad of same pitch class
+      const pc = normalizeToPitchClass(playbackState.activePadNote);
+      const mapped = pickBestPadNoteForPc(selectedHandpan.layout, pc);
+      if (mapped) {
+        notes.add(mapped);
+      }
       return notes;
     }
 
-    // Fallback: exact note highlight (only if pad exists)
-    if (playbackState.activeNote) {
-      const hasPad = selectedHandpan.layout.some(
-        (pad) => pad.note === playbackState.activeNote
-      );
-      if (hasPad) {
-        notes.add(playbackState.activeNote);
-      }
+    // Priority 2: Conceptual pitch-class highlights (for chords)
+    if (
+      playbackState.activePitchClasses &&
+      playbackState.activePitchClasses.length > 0
+    ) {
+      const pitchClassSet = new Set(playbackState.activePitchClasses);
+      selectedHandpan.layout.forEach((pad) => {
+        if (pitchClassSet.has(normalizeToPitchClass(pad.note))) {
+          notes.add(pad.note);
+        }
+      });
     }
 
     return notes;
   }, [
-    playbackState.activePitchClass,
-    playbackState.activeNote,
+    playbackState.activePadNote,
+    playbackState.activePitchClasses,
     selectedHandpan,
   ]);
 
@@ -102,17 +133,17 @@ export default function HandpanWidget() {
 
       playNote(pad.note, 500);
 
-      // Set both activeNote and activePitchClass for full sync
+      // Set exact pad note only (no pitch-class highlight for single-note clicks)
       setPlaybackState({
-        activePitchClass: normalizeToPitchClass(pad.note), // Enable pitch-class highlighting for scale notes
-        activeNote: pad.note, // Use exact note match
+        activePadNote: pad.note,
+        activePitchClasses: null,
         isPlaying: false,
       });
 
       setTimeout(() => {
         setPlaybackState({
-          activePitchClass: null,
-          activeNote: null,
+          activePadNote: null,
+          activePitchClasses: null,
           isPlaying: false,
         });
       }, 500);
@@ -121,26 +152,35 @@ export default function HandpanWidget() {
           await initializeAudio();
           playNote(pad.note, 500);
           setPlaybackState({
-            activePitchClass: normalizeToPitchClass(pad.note),
-            activeNote: pad.note,
+            activePadNote: pad.note,
+            activePitchClasses: null,
             isPlaying: false,
           });
-        setTimeout(() => {
-          setPlaybackState({
-            activePitchClass: null,
-            activeNote: null,
-            isPlaying: false,
-          });
-        }, 500);
+          setTimeout(() => {
+            setPlaybackState({
+              activePadNote: null,
+              activePitchClasses: null,
+              isPlaying: false,
+            });
+          }, 500);
       } catch (retryError) {
         // Audio initialization failed
       }
     }
   }, []);
 
-  const handleChordSelect = useCallback((chord: PlayableChord | null) => {
-    setSelectedChord(chord);
-  }, []);
+  const handleChordSelect = useCallback(
+    (chord: PlayableChord | null) => {
+      setSelectedChord(chord);
+      // Reset playback state when chord changes
+      setPlaybackState({
+        activePadNote: null,
+        activePitchClasses: chord ? chord.pitchClasses : null,
+        isPlaying: false,
+      });
+    },
+    []
+  );
 
   if (!selectedHandpan) {
     return <div>No handpan configuration available</div>;

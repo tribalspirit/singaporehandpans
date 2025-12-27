@@ -41,8 +41,8 @@ export default function ScaleInfoPanel({
     if (scaleInfo) {
       stopArpeggio();
       onPlaybackStateChange({
-        activePitchClass: null,
-        activeNote: null,
+        activePadNote: null,
+        activePitchClasses: null,
         isPlaying: false,
       });
     }
@@ -68,8 +68,8 @@ export default function ScaleInfoPanel({
       }
 
       onPlaybackStateChange({
-        activePitchClass: null,
-        activeNote: null,
+        activePadNote: null,
+        activePitchClasses: null,
         isPlaying: true,
       });
 
@@ -78,25 +78,25 @@ export default function ScaleInfoPanel({
         bpm: 120,
         direction: 'up',
         onStep: (step) => {
-          // Update unified playback state - set both activeNote and activePitchClass for full sync
+          // Update unified playback state - use exact note for scale playback
           onPlaybackStateChangeRef.current({
-            activePitchClass: normalizeToPitchClass(step.note), // Enable pitch-class highlighting for handpan
-            activeNote: step.note, // Use exact note match for scale notes
+            activePadNote: step.note,
+            activePitchClasses: null,
             isPlaying: true,
           });
         },
         onComplete: () => {
           onPlaybackStateChangeRef.current({
-            activePitchClass: null,
-            activeNote: null,
+            activePadNote: null,
+            activePitchClasses: null,
             isPlaying: false,
           });
         },
       });
     } catch (error) {
       onPlaybackStateChange({
-        activePitchClass: null,
-        activeNote: null,
+        activePadNote: null,
+        activePitchClasses: null,
         isPlaying: false,
       });
     }
@@ -110,8 +110,8 @@ export default function ScaleInfoPanel({
   const handleStop = useCallback(() => {
     stopArpeggio();
     onPlaybackStateChange({
-      activePitchClass: null,
-      activeNote: null,
+      activePadNote: null,
+      activePitchClasses: null,
       isPlaying: false,
     });
   }, [onPlaybackStateChange]);
@@ -130,18 +130,18 @@ export default function ScaleInfoPanel({
 
         playNote(note, 500);
 
-        // Update unified playback state - set both activeNote and activePitchClass for full sync
+        // Update unified playback state - use exact note (will map to best pad if needed)
         onPlaybackStateChange({
-          activePitchClass: normalizeToPitchClass(note), // Enable pitch-class highlighting for handpan
-          activeNote: note, // Use exact note match for scale notes
+          activePadNote: note,
+          activePitchClasses: null,
           isPlaying: false,
         });
 
         // Clear highlight after note duration
         setTimeout(() => {
           onPlaybackStateChange({
-            activePitchClass: null,
-            activeNote: null,
+            activePadNote: null,
+            activePitchClasses: null,
             isPlaying: false,
           });
         }, 500);
@@ -150,14 +150,14 @@ export default function ScaleInfoPanel({
           await initializeAudio();
           playNote(note, 500);
           onPlaybackStateChange({
-            activePitchClass: normalizeToPitchClass(note),
-            activeNote: note,
+            activePadNote: note,
+            activePitchClasses: null,
             isPlaying: false,
           });
           setTimeout(() => {
             onPlaybackStateChange({
-              activePitchClass: null,
-              activeNote: null,
+              activePadNote: null,
+              activePitchClasses: null,
               isPlaying: false,
             });
           }, 500);
@@ -169,16 +169,18 @@ export default function ScaleInfoPanel({
     [onChordSelect, onPlaybackStateChange]
   );
 
-  // Update scale note highlight logic to use pitch-class match for robustness
+  // Update scale note highlight logic to match new state structure
   const getNoteHighlightState = useCallback(
     (note: string) => {
-      // Prefer pitch-class match (works across octaves)
-      if (playbackState.activePitchClass) {
-        return normalizeToPitchClass(note) === playbackState.activePitchClass;
+      // Priority 1: Exact pad note match (for single-note interactions)
+      if (playbackState.activePadNote) {
+        return playbackState.activePadNote === note;
       }
-      // Fallback to exact note match
-      if (playbackState.activeNote) {
-        return playbackState.activeNote === note;
+      // Priority 2: Pitch-class set match (for conceptual highlights)
+      if (playbackState.activePitchClasses) {
+        return playbackState.activePitchClasses.includes(
+          normalizeToPitchClass(note)
+        );
       }
       return false;
     },
