@@ -41,7 +41,11 @@ describe('normalize', () => {
 
     it('should normalize note without octave', () => {
       expect(normalizeToPitchClass('C')).toBe('C');
-      expect(normalizeToPitchClass('D#')).toBe('D#');
+      expect(normalizeToPitchClass('D#')).toBe('Eb');
+      expect(normalizeToPitchClass('A#')).toBe('Bb');
+      expect(normalizeToPitchClass('G#')).toBe('Ab');
+      expect(normalizeToPitchClass('C#')).toBe('C#');
+      expect(normalizeToPitchClass('F#')).toBe('F#');
     });
 
     it('should handle enharmonic equivalents', () => {

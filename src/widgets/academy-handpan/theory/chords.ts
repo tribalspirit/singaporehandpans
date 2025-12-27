@@ -24,7 +24,10 @@ interface ChordCandidate {
   voicingTag?: string;
 }
 
-const TONICS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+function getAvailableTonics(availableNotes: string[]): string[] {
+  const pcs = new Set(availableNotes.map(normalizeToPitchClass));
+  return Array.from(pcs).sort();
+}
 
 function getAllChordTypes(): string[] {
   return ChordType.names();
@@ -80,152 +83,116 @@ function categorizeChord(pitchClasses: string[], rootPc: string): 'basic' | 'adv
   return 'advanced';
 }
 
-function extractRootFromChordName(chordName: string): string {
-  const withoutSlash = chordName.split('/')[0];
-  const match = withoutSlash.match(/^([A-G]#?b?)/);
-  if (match) {
-    return normalizeToPitchClass(match[1]);
+function getPitchClassSemitone(pc: string): number {
+  const n = note(`${pc}4`);
+  if (n.midi !== null && n.midi !== undefined) {
+    return n.midi % 12;
   }
-  return normalizeToPitchClass(withoutSlash);
+  return 0;
 }
 
-function detectCanonicalChord(pitchClasses: string[], scaleTonic?: string): { rootPc: string; displayName: string } | null {
-  if (pitchClasses.length === 0) return null;
+function getIntervalsFromRoot(pitchClasses: string[], rootPc: string): number[] {
+  const rootSemitone = getPitchClassSemitone(rootPc);
+  const intervals: number[] = [];
   
-  const notesForDetect = pitchClasses.map(pc => `${pc}4`);
-  const detected = ChordDetect.detect(notesForDetect);
+  for (const pc of pitchClasses) {
+    if (pc === rootPc) {
+      intervals.push(0);
+    } else {
+      const pcSemitone = getPitchClassSemitone(pc);
+      const interval = (pcSemitone - rootSemitone + 12) % 12;
+      intervals.push(interval);
+    }
+  }
   
-  if (!detected || detected.length === 0) {
+  return intervals.sort((a, b) => a - b);
+}
+
+interface ChordTemplate {
+  intervals: number[];
+  displayName: (root: string) => string;
+  category: 'basic' | 'advanced';
+  priority: number;
+}
+
+const CHORD_TEMPLATES: ChordTemplate[] = [
+  { intervals: [0, 4, 7], displayName: (r) => r, category: 'basic', priority: 10 },
+  { intervals: [0, 3, 7], displayName: (r) => `${r}m`, category: 'basic', priority: 10 },
+  { intervals: [0, 3, 6], displayName: (r) => `${r}°`, category: 'basic', priority: 10 },
+  { intervals: [0, 4, 8], displayName: (r) => `${r}+`, category: 'basic', priority: 10 },
+  { intervals: [0, 2, 7], displayName: (r) => `${r}sus2`, category: 'advanced', priority: 9 },
+  { intervals: [0, 5, 7], displayName: (r) => `${r}sus4`, category: 'advanced', priority: 9 },
+  { intervals: [0, 4, 7, 10], displayName: (r) => `${r}7`, category: 'advanced', priority: 8 },
+  { intervals: [0, 4, 7, 11], displayName: (r) => `${r}maj7`, category: 'advanced', priority: 8 },
+  { intervals: [0, 3, 7, 10], displayName: (r) => `${r}m7`, category: 'advanced', priority: 9 },
+  { intervals: [0, 3, 6, 10], displayName: (r) => `${r}ø7`, category: 'advanced', priority: 8 },
+  { intervals: [0, 3, 6, 9], displayName: (r) => `${r}°7`, category: 'advanced', priority: 7 },
+  { intervals: [0, 4, 7, 9], displayName: (r) => `${r}6`, category: 'advanced', priority: 7 },
+  { intervals: [0, 3, 7, 9], displayName: (r) => `${r}m6`, category: 'advanced', priority: 7 },
+  { intervals: [0, 5, 7, 10], displayName: (r) => `${r}7sus4`, category: 'advanced', priority: 7 },
+  { intervals: [0, 4, 7, 9, 2], displayName: (r) => `${r}6add9`, category: 'advanced', priority: 6 },
+  { intervals: [0, 4, 7, 11, 2], displayName: (r) => `${r}maj9`, category: 'advanced', priority: 7 },
+  { intervals: [0, 3, 7, 10, 2], displayName: (r) => `${r}m9`, category: 'advanced', priority: 7 },
+  { intervals: [0, 4, 7, 10, 2], displayName: (r) => `${r}9`, category: 'advanced', priority: 7 },
+  { intervals: [0, 5, 7, 10, 2], displayName: (r) => `${r}9sus4`, category: 'advanced', priority: 6 },
+  { intervals: [0, 4, 7, 2], displayName: (r) => `${r}add9`, category: 'advanced', priority: 7 },
+];
+
+function arraysEqual(a: number[], b: number[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((val, idx) => val === b[idx]);
+}
+
+function analyzeChordPcset(pitchClasses: string[], scaleTonic?: string): { rootPc: string; displayName: string; category: 'basic' | 'advanced' } | null {
+  if (pitchClasses.length < 3 || pitchClasses.length > 5) {
     return null;
   }
   
-  let bestMatch = detected[0];
-  let bestScore = 0;
+  let bestMatch: { rootPc: string; displayName: string; category: 'basic' | 'advanced'; priority: number } | null = null;
   
-  for (const candidate of detected) {
-    let score = 0;
+  for (const candidateRoot of pitchClasses) {
+    const intervals = getIntervalsFromRoot(pitchClasses, candidateRoot);
     
-    const candidateChord = Chord.get(candidate);
-    if (!candidateChord.notes || candidateChord.notes.length === 0) continue;
-    
-    const candidatePcs = candidateChord.notes.map(normalizeToPitchClass);
-    const candidatePcSet = new Set(candidatePcs);
-    const inputPcSet = new Set(pitchClasses);
-    
-    if (candidatePcSet.size !== inputPcSet.size) continue;
-    if (![...candidatePcSet].every(pc => inputPcSet.has(pc))) continue;
-    
-    const rootPc = extractRootFromChordName(candidate);
-    
-    if (!pitchClasses.includes(rootPc)) {
-      continue;
-    }
-    
-    score += 10;
-    
-    const lowerName = candidate.toLowerCase();
-    if (lowerName.includes('m7') || lowerName.includes('maj7') || lowerName.includes('7') || 
-        lowerName.includes('9') || lowerName.includes('add9') || lowerName.includes('sus')) {
-      score += 5;
-    }
-    
-    if (lowerName.includes('dim') || lowerName.includes('aug') || lowerName.includes('unknown')) {
-      score -= 5;
-    }
-    
-    if (scaleTonic && rootPc === scaleTonic) {
-      score += 3;
-    }
-    
-    if (lowerName.includes('m7') && !lowerName.includes('maj7')) {
-      score += 2;
-    }
-    
-    if (score > bestScore) {
-      bestScore = score;
-      bestMatch = candidate;
-    }
-  }
-  
-  if (bestScore === 0) return null;
-  
-  const bestChord = Chord.get(bestMatch);
-  const rootPc = extractRootFromChordName(bestMatch);
-  
-  if (!pitchClasses.includes(rootPc)) {
-    return null;
-  }
-  
-  const matchWithoutSlash = bestMatch.split('/')[0];
-  const lowerMatch = matchWithoutSlash.toLowerCase();
-  let displayName = '';
-  
-  if (lowerMatch.includes('sus2')) {
-    displayName = `${rootPc}sus2`;
-  } else if (lowerMatch.includes('sus4') || lowerMatch.includes('suspended fourth')) {
-    displayName = `${rootPc}sus4`;
-  } else if (lowerMatch.includes('sus') || lowerMatch.includes('suspended')) {
-    displayName = `${rootPc}sus`;
-  } else if (lowerMatch.includes('maj9') || lowerMatch.includes('major ninth')) {
-    displayName = `${rootPc}maj9`;
-  } else if (lowerMatch.includes('m9') || (lowerMatch.includes('minor') && lowerMatch.includes('9'))) {
-    displayName = `${rootPc}m9`;
-  } else if (lowerMatch.includes('9') && !lowerMatch.includes('add')) {
-    displayName = `${rootPc}9`;
-  } else if (lowerMatch.includes('add9')) {
-    displayName = `${rootPc}add9`;
-  } else if (lowerMatch.includes('add')) {
-    const addMatch = lowerMatch.match(/add(\d+)/);
-    if (addMatch) {
-      displayName = `${rootPc}add${addMatch[1]}`;
-    } else {
-      displayName = formatChordDisplayName(bestChord, rootPc, '');
-    }
-  } else {
-    displayName = formatChordDisplayName(bestChord, rootPc, '');
-  }
-  
-  if (!displayName || displayName === rootPc) {
-    const intervals = bestChord.intervals || [];
-    if (intervals.length === 3) {
-      if (lowerMatch.includes('minor')) {
-        displayName = `${rootPc}m`;
-      } else if (lowerMatch.includes('diminished')) {
-        displayName = `${rootPc}°`;
-      } else if (lowerMatch.includes('augmented')) {
-        displayName = `${rootPc}+`;
-      } else {
-        displayName = rootPc;
+    for (const template of CHORD_TEMPLATES) {
+      if (arraysEqual(intervals, template.intervals)) {
+        const priority = template.priority + (scaleTonic && candidateRoot === scaleTonic ? 2 : 0);
+        
+        if (!bestMatch || priority > bestMatch.priority || 
+            (priority === bestMatch.priority && candidateRoot === scaleTonic)) {
+          bestMatch = {
+            rootPc: candidateRoot,
+            displayName: template.displayName(candidateRoot),
+            category: template.category,
+            priority,
+          };
+        }
       }
-    } else if (intervals.length === 5) {
-      if (lowerMatch.includes('maj9') || lowerMatch.includes('major ninth')) {
-        displayName = `${rootPc}maj9`;
-      } else if (lowerMatch.includes('m9') || (lowerMatch.includes('minor') && lowerMatch.includes('9'))) {
-        displayName = `${rootPc}m9`;
-      } else if (lowerMatch.includes('9')) {
-        displayName = `${rootPc}9`;
-      } else {
-        displayName = formatChordDisplayName(bestChord, rootPc, '');
-      }
-    } else {
-      displayName = formatChordDisplayName(bestChord, rootPc, '');
     }
   }
   
-  return { rootPc, displayName };
+  if (bestMatch) {
+    return {
+      rootPc: bestMatch.rootPc,
+      displayName: bestMatch.displayName,
+      category: bestMatch.category,
+    };
+  }
+  
+  return null;
 }
 
-function generateVoicingCandidates(availableNotes: string[]): ChordCandidate[] {
+function generateCuratedCandidates(availableNotes: string[]): ChordCandidate[] {
   const availablePitchClasses = new Set(availableNotes.map(normalizeToPitchClass));
+  const tonics = getAvailableTonics(availableNotes);
   const candidates: ChordCandidate[] = [];
   const seenKeys = new Set<string>();
 
-  const voicingTypes = ['sus2', 'sus4', 'add9'];
+  const curatedTypes = ['7', 'maj7', 'm7', 'm7b5', 'dim7', '6', 'm6', 'sus2', 'sus4', 'add9', '9', 'maj9', 'm9', '7sus4', '9sus4'];
 
-  for (const tonic of TONICS) {
-    for (const voicingType of voicingTypes) {
+  for (const tonic of tonics) {
+    for (const type of curatedTypes) {
       try {
-        const chordData = Chord.get(`${tonic}${voicingType}`);
+        const chordData = Chord.get(`${tonic}${type}`);
         if (!chordData.notes || chordData.notes.length === 0) {
           continue;
         }
@@ -233,7 +200,7 @@ function generateVoicingCandidates(availableNotes: string[]): ChordCandidate[] {
         const pitchClasses = chordData.notes.map(normalizeToPitchClass);
         const uniquePcs = Array.from(new Set(pitchClasses));
         
-        if (uniquePcs.length < 3) continue;
+        if (uniquePcs.length < 3 || uniquePcs.length > 5) continue;
 
         if (isSubset(uniquePcs, Array.from(availablePitchClasses))) {
           const pcsetKey = getPcsetKey(uniquePcs);
@@ -243,9 +210,9 @@ function generateVoicingCandidates(availableNotes: string[]): ChordCandidate[] {
           candidates.push({
             pcsetKey,
             pitchClasses: uniquePcs,
-            source: 'voicing',
+            source: 'tonal',
             tonicAttempt: tonic,
-            voicingTag: voicingType,
+            typeAttempt: type,
           });
         }
       } catch {
@@ -363,41 +330,11 @@ function formatChordDisplayName(chordData: ReturnType<typeof Chord.get>, tonic: 
 }
 
 function buildChordCandidates(availableNotes: string[]): ChordCandidate[] {
-  const availablePitchClasses = availableNotes.map(normalizeToPitchClass);
-  const availablePitchClassSet = new Set(availablePitchClasses);
-  const chordTypes = getAllChordTypes();
   const candidates: ChordCandidate[] = [];
   const seenKeys = new Set<string>();
 
-  for (const tonic of TONICS) {
-    for (const type of chordTypes) {
-      const chordPitchClasses = getChordPitchClasses(tonic, type);
-      
-      if (chordPitchClasses.length === 0 || chordPitchClasses.length > 5) {
-        continue;
-      }
-
-      const uniquePcs = Array.from(new Set(chordPitchClasses));
-      if (uniquePcs.length !== chordPitchClasses.length) continue;
-
-      if (isSubset(uniquePcs, availablePitchClasses)) {
-        const pcsetKey = getPcsetKey(uniquePcs);
-        if (seenKeys.has(pcsetKey)) continue;
-        seenKeys.add(pcsetKey);
-
-        candidates.push({
-          pcsetKey,
-          pitchClasses: uniquePcs,
-          source: 'tonal',
-          tonicAttempt: tonic,
-          typeAttempt: type,
-        });
-      }
-    }
-  }
-
-  const voicingCandidates = generateVoicingCandidates(availableNotes);
-  for (const candidate of voicingCandidates) {
+  const curatedCandidates = generateCuratedCandidates(availableNotes);
+  for (const candidate of curatedCandidates) {
     if (!seenKeys.has(candidate.pcsetKey)) {
       seenKeys.add(candidate.pcsetKey);
       candidates.push(candidate);
@@ -423,9 +360,9 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
       continue;
     }
     
-    const canonical = detectCanonicalChord(candidate.pitchClasses, scaleTonic);
+    const analyzed = analyzeChordPcset(candidate.pitchClasses, scaleTonic);
     
-    if (!canonical) {
+    if (!analyzed) {
       continue;
     }
     
@@ -436,17 +373,15 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
       continue;
     }
     
-    const category = categorizeChord(candidate.pitchClasses, canonical.rootPc);
-    
     const existing = chordsByPcset.get(candidate.pcsetKey);
-    if (!existing || existing.category === 'advanced' && category === 'basic') {
+    if (!existing || existing.category === 'advanced' && analyzed.category === 'basic') {
       chordsByPcset.set(candidate.pcsetKey, {
-        name: `${canonical.rootPc}${candidate.typeAttempt || candidate.voicingTag || ''}`,
-        displayName: canonical.displayName,
+        name: `${analyzed.rootPc}${candidate.typeAttempt || candidate.voicingTag || ''}`,
+        displayName: analyzed.displayName,
         notes: orderedNotes,
         pitchClasses: candidate.pitchClasses,
-        category,
-        rootPc: canonical.rootPc,
+        category: analyzed.category,
+        rootPc: analyzed.rootPc,
       });
     }
   }
