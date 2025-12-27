@@ -20,9 +20,23 @@ export function parseNote(noteStr: string): ParsedNote {
   };
 }
 
+const ENHARMONIC_MAP: Record<string, string> = {
+  'A#': 'Bb',
+  'C#': 'C#',
+  'D#': 'Eb',
+  'F#': 'F#',
+  'G#': 'Ab',
+};
+
 export function normalizeToPitchClass(noteStr: string): PitchClass {
   const parsed = note(noteStr);
-  return parsed.pc || parsed.name || noteStr;
+  const pc = parsed.pc || parsed.name || noteStr;
+  
+  if (ENHARMONIC_MAP[pc]) {
+    return ENHARMONIC_MAP[pc];
+  }
+  
+  return pc;
 }
 
 export function getPitchClassSet(notes: string[]): Set<PitchClass> {
