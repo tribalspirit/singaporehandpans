@@ -1,7 +1,8 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { initializeAudio, isAudioInitialized } from '../audio/engine';
+import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
 import { sortNotesByPitch } from '../theory/utils';
+import { normalizeToPitchClass } from '../theory/normalize';
 import styles from '../styles/ScaleInfoPanel.module.scss';
 
 interface ScaleInfo {
@@ -15,19 +16,25 @@ interface ScaleInfoPanelProps {
   scaleInfo: ScaleInfo | null;
   scaleNotes: string[];
   onActiveNotesChange: (notes: Set<string>) => void;
+  onChordSelect?: () => void;
+  availableNotes?: string[];
 }
 
 export default function ScaleInfoPanel({
   scaleInfo,
   scaleNotes,
   onActiveNotesChange,
+  onChordSelect,
+  availableNotes = [],
 }: ScaleInfoPanelProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [activeNote, setActiveNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (scaleInfo) {
       stopArpeggio();
       setIsPlaying(false);
+      setActiveNote(null);
       onActiveNotesChange(new Set());
     }
   }, [scaleInfo?.name, scaleInfo?.description]);
@@ -46,7 +53,13 @@ export default function ScaleInfoPanel({
         await initializeAudio();
       }
 
+      // Reset selected chord if any was selected
+      if (onChordSelect) {
+        onChordSelect();
+      }
+
       setIsPlaying(true);
+      setActiveNote(null);
       onActiveNotesChange(new Set());
 
       playArpeggio({
@@ -54,24 +67,91 @@ export default function ScaleInfoPanel({
         bpm: 120,
         direction: 'up',
         onStep: (note) => {
-          onActiveNotesChange(new Set([note]));
+          setActiveNote(note);
+          // Find all notes with the same pitch class to highlight on handpan
+          const activePitchClass = normalizeToPitchClass(note);
+          const matchingNotes = new Set<string>();
+          availableNotes.forEach((availableNote) => {
+            if (normalizeToPitchClass(availableNote) === activePitchClass) {
+              matchingNotes.add(availableNote);
+            }
+          });
+          onActiveNotesChange(matchingNotes);
         },
         onComplete: () => {
           setIsPlaying(false);
+          setActiveNote(null);
           onActiveNotesChange(new Set());
         },
       });
     } catch (error) {
       setIsPlaying(false);
+      setActiveNote(null);
       onActiveNotesChange(new Set());
     }
-  }, [sortedNotes, isPlaying, onActiveNotesChange]);
+  }, [sortedNotes, isPlaying, onActiveNotesChange, onChordSelect, availableNotes]);
 
   const handleStop = useCallback(() => {
     stopArpeggio();
     setIsPlaying(false);
+    setActiveNote(null);
     onActiveNotesChange(new Set());
   }, [onActiveNotesChange]);
+
+  const handleNoteClick = useCallback(async (note: string) => {
+    try {
+      if (!isAudioInitialized()) {
+        await initializeAudio();
+      }
+
+      // Reset selected chord if any was selected
+      if (onChordSelect) {
+        onChordSelect();
+      }
+
+      // Play the note
+      playNote(note, 500);
+
+      // Highlight the note in Scale Notes section
+      setActiveNote(note);
+
+      // Find all notes with the same pitch class to highlight on handpan
+      const activePitchClass = normalizeToPitchClass(note);
+      const matchingNotes = new Set<string>();
+      availableNotes.forEach((availableNote) => {
+        if (normalizeToPitchClass(availableNote) === activePitchClass) {
+          matchingNotes.add(availableNote);
+        }
+      });
+      onActiveNotesChange(matchingNotes);
+
+      // Clear highlight after note duration
+      setTimeout(() => {
+        setActiveNote(null);
+        onActiveNotesChange(new Set());
+      }, 500);
+    } catch (error) {
+      try {
+        await initializeAudio();
+        playNote(note, 500);
+        setActiveNote(note);
+        const activePitchClass = normalizeToPitchClass(note);
+        const matchingNotes = new Set<string>();
+        availableNotes.forEach((availableNote) => {
+          if (normalizeToPitchClass(availableNote) === activePitchClass) {
+            matchingNotes.add(availableNote);
+          }
+        });
+        onActiveNotesChange(matchingNotes);
+        setTimeout(() => {
+          setActiveNote(null);
+          onActiveNotesChange(new Set());
+        }, 500);
+      } catch (retryError) {
+        // Audio initialization failed
+      }
+    }
+  }, [onChordSelect, availableNotes, onActiveNotesChange]);
 
   if (!scaleInfo) {
     return (
@@ -149,11 +229,20 @@ export default function ScaleInfoPanel({
         <div className={styles.scaleNotesSection}>
           <h4 className={styles.notesTitle}>Scale Notes</h4>
           <div className={styles.notesList}>
-            {sortedNotes.map((note) => (
-              <span key={note} className={styles.noteBadge}>
-                {note}
-              </span>
-            ))}
+            {sortedNotes.map((note) => {
+              const isActive = activeNote === note;
+              return (
+                <button
+                  key={note}
+                  type="button"
+                  className={`${styles.noteBadge} ${isActive ? styles.noteBadgeActive : ''}`}
+                  onClick={() => handleNoteClick(note)}
+                  aria-label={`Play ${note}`}
+                >
+                  {note}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
