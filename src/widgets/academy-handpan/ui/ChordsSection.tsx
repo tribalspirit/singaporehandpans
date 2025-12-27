@@ -1,9 +1,6 @@
 import React, {
-  useState,
   useMemo,
   useCallback,
-  useRef,
-  useEffect,
 } from 'react';
 import { findPlayableChords, type PlayableChord } from '../theory/chords';
 import { getDiatonicTriads } from '../theory/diatonicTriads';
@@ -13,7 +10,7 @@ import {
   playChord,
 } from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
-import { normalizeToPitchClass } from '../theory/normalize';
+
 import Controls from './Controls';
 import styles from '../styles/ChordsSection.module.scss';
 

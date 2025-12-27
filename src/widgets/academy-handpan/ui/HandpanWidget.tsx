@@ -64,26 +64,35 @@ export default function HandpanWidget() {
   const activeNotes = useMemo(() => {
     const notes = new Set<string>();
     if (!selectedHandpan) return notes;
-    
-    // If activeNote is set, always use exact note match (for manual clicks and scale playback)
+
+    // Always prefer pitch-class highlight when available (works for all octaves)
+    if (playbackState.activePitchClass) {
+      selectedHandpan.layout.forEach((pad) => {
+        if (
+          normalizeToPitchClass(pad.note) === playbackState.activePitchClass
+        ) {
+          notes.add(pad.note);
+        }
+      });
+      return notes;
+    }
+
+    // Fallback: exact note highlight (only if pad exists)
     if (playbackState.activeNote) {
-      // Check if there's a pad with this exact note in the layout
-      const hasPad = selectedHandpan.layout.some(pad => pad.note === playbackState.activeNote);
+      const hasPad = selectedHandpan.layout.some(
+        (pad) => pad.note === playbackState.activeNote
+      );
       if (hasPad) {
         notes.add(playbackState.activeNote);
       }
     }
-    // For chord arpeggio playback (when only pitchClass is set, no activeNote), use pitch-class match (all octaves)
-    else if (playbackState.activePitchClass && playbackState.isPlaying) {
-      selectedHandpan.layout.forEach((pad) => {
-        if (normalizeToPitchClass(pad.note) === playbackState.activePitchClass) {
-          notes.add(pad.note);
-        }
-      });
-    }
-    
+
     return notes;
-  }, [playbackState.activeNote, playbackState.activePitchClass, playbackState.isPlaying, selectedHandpan]);
+  }, [
+    playbackState.activePitchClass,
+    playbackState.activeNote,
+    selectedHandpan,
+  ]);
 
   const handlePadClick = useCallback(async (pad: HandpanPad) => {
     try {
@@ -93,10 +102,10 @@ export default function HandpanWidget() {
 
       playNote(pad.note, 500);
 
-      // Use exact note match for manual pad clicks
+      // Set both activeNote and activePitchClass for full sync
       setPlaybackState({
-        activePitchClass: null, // Don't use pitch class for manual clicks
-        activeNote: pad.note,   // Use exact note match
+        activePitchClass: normalizeToPitchClass(pad.note), // Enable pitch-class highlighting for scale notes
+        activeNote: pad.note, // Use exact note match
         isPlaying: false,
       });
 
@@ -108,14 +117,14 @@ export default function HandpanWidget() {
         });
       }, 500);
     } catch (error) {
-      try {
-        await initializeAudio();
-        playNote(pad.note, 500);
-        setPlaybackState({
-          activePitchClass: null,
-          activeNote: pad.note,
-          isPlaying: false,
-        });
+        try {
+          await initializeAudio();
+          playNote(pad.note, 500);
+          setPlaybackState({
+            activePitchClass: normalizeToPitchClass(pad.note),
+            activeNote: pad.note,
+            isPlaying: false,
+          });
         setTimeout(() => {
           setPlaybackState({
             activePitchClass: null,
