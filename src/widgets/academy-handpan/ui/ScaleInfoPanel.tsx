@@ -161,13 +161,13 @@ export default function ScaleInfoPanel({
     }
   }, [onChordSelect, onPlaybackStateChange]);
 
-  // Update scale note highlight logic to use exact note match for manual clicks
+  // Update scale note highlight logic to use exact note match
   const getNoteHighlightState = useCallback((note: string) => {
-    // For manual clicks (not playing), check exact note match
-    if (!playbackState.isPlaying && playbackState.activeNote) {
+    // If activeNote is set, always use exact note match (for manual clicks and scale playback)
+    if (playbackState.activeNote) {
       return playbackState.activeNote === note;
     }
-    // For playback, check pitch class match
+    // For chord arpeggio playback (when only pitchClass is set), check pitch class match
     if (playbackState.isPlaying && playbackState.activePitchClass) {
       return normalizeToPitchClass(note) === playbackState.activePitchClass;
     }
