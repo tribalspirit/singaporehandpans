@@ -100,17 +100,23 @@ export default function ChordsSection({
       }
 
       onPlaybackStateChange({
-        activePitchClass: null,
-        activeNote: null,
+        activePadNote: null,
+        activePitchClasses: null,
         isPlaying: true,
       });
 
       if (playbackMode === 'simultaneous') {
+        // For simultaneous playback, highlight all chord pitch classes
+        onPlaybackStateChange({
+          activePadNote: null,
+          activePitchClasses: selectedChord.pitchClasses,
+          isPlaying: true,
+        });
         playChord(selectedChord.notes, 1000);
         setTimeout(() => {
           onPlaybackStateChange({
-            activePitchClass: null,
-            activeNote: null,
+            activePadNote: null,
+            activePitchClasses: null,
             isPlaying: false,
           });
         }, 1000);
@@ -120,16 +126,17 @@ export default function ChordsSection({
           bpm: arpeggioBpm,
           direction: 'up',
           onStep: (step) => {
+            // For arpeggio, highlight one pitch class at a time
             onPlaybackStateChangeRef.current({
-              activePitchClass: step.pitchClass,
-              activeNote: step.note,
+              activePadNote: null,
+              activePitchClasses: [step.pitchClass],
               isPlaying: true,
             });
           },
           onComplete: () => {
             onPlaybackStateChangeRef.current({
-              activePitchClass: null,
-              activeNote: null,
+              activePadNote: null,
+              activePitchClasses: null,
               isPlaying: false,
             });
           },
@@ -137,8 +144,8 @@ export default function ChordsSection({
       }
     } catch (error) {
       onPlaybackStateChange({
-        activePitchClass: null,
-        activeNote: null,
+        activePadNote: null,
+        activePitchClasses: null,
         isPlaying: false,
       });
     }
@@ -155,8 +162,8 @@ export default function ChordsSection({
       stopArpeggio();
     }
     onPlaybackStateChange({
-      activePitchClass: null,
-      activeNote: null,
+      activePadNote: null,
+      activePitchClasses: null,
       isPlaying: false,
     });
   }, [playbackMode, onPlaybackStateChange]);

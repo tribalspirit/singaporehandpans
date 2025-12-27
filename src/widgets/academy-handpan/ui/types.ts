@@ -1,6 +1,6 @@
 export type PlaybackState = {
-  activePitchClass: string | null; // e.g. 'D'
-  activeNote: string | null;       // e.g. 'D4' (optional, for audio)
+  activePadNote: string | null;          // exact pad note to highlight (D4) - for single-note interactions
+  activePitchClasses: string[] | null;  // conceptual highlight set (Dm => ['D','F','A']) - for chord/conceptual highlights
   isPlaying: boolean;
 };
 
