@@ -1,20 +1,27 @@
 import * as Tone from 'tone';
 import { playNote } from './engine';
+import { normalizeToPitchClass } from '../theory/normalize';
 
 export type ArpeggioDirection = 'up' | 'down' | 'updown';
+
+export interface PlaybackStep {
+  note: string;        // e.g. 'D4'
+  pitchClass: string; // e.g. 'D'
+  index: number;
+}
 
 export interface ArpeggioOptions {
   notes: string[];
   bpm: number;
   direction?: ArpeggioDirection;
-  onStep?: (note: string, index: number) => void;
+  onStep?: (step: PlaybackStep) => void;
   onComplete?: () => void;
 }
 
 let currentArpeggio: {
   notes: string[];
   direction: ArpeggioDirection;
-  onStep?: (note: string, index: number) => void;
+  onStep?: (step: PlaybackStep) => void;
   onComplete?: () => void;
   scheduledEvents: Tone.ToneEvent[];
 } | null = null;
@@ -53,7 +60,11 @@ export function playArpeggio(options: ArpeggioOptions): void {
         // Error playing note in arpeggio
       }
       if (onStep) {
-        onStep(note, index);
+        onStep({
+          note,
+          pitchClass: normalizeToPitchClass(note),
+          index,
+        });
       }
     });
 

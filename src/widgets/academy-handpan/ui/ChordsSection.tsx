@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { findPlayableChords, type PlayableChord } from '../theory/chords';
 import { getDiatonicTriads } from '../theory/diatonicTriads';
 import {
@@ -11,13 +11,16 @@ import { normalizeToPitchClass } from '../theory/normalize';
 import Controls from './Controls';
 import styles from '../styles/ChordsSection.module.scss';
 
+import type { PlaybackState } from './types';
+
 export type PlaybackMode = 'simultaneous' | 'arpeggio';
 
 interface ChordsSectionProps {
   availableNotes: string[];
   selectedChord: PlayableChord | null;
   onChordSelect: (chord: PlayableChord | null) => void;
-  onActiveNotesChange: (notes: Set<string>) => void;
+  playbackState: PlaybackState;
+  onPlaybackStateChange: (state: PlaybackState) => void;
   playbackMode: PlaybackMode;
   onPlaybackModeChange: (mode: PlaybackMode) => void;
   arpeggioBpm: number;
@@ -28,13 +31,18 @@ export default function ChordsSection({
   availableNotes,
   selectedChord,
   onChordSelect,
-  onActiveNotesChange,
+  playbackState,
+  onPlaybackStateChange,
   playbackMode,
   onPlaybackModeChange,
   arpeggioBpm,
   onArpeggioBpmChange,
 }: ChordsSectionProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const onPlaybackStateChangeRef = React.useRef(onPlaybackStateChange);
+
+  React.useEffect(() => {
+    onPlaybackStateChangeRef.current = onPlaybackStateChange;
+  }, [onPlaybackStateChange]);
 
   const diatonicTriads = useMemo(() => {
     return getDiatonicTriads(availableNotes, availableNotes);
@@ -79,7 +87,7 @@ export default function ChordsSection({
   );
 
   const handlePlay = useCallback(async () => {
-    if (!selectedChord || isPlaying) {
+    if (!selectedChord || playbackState.isPlaying) {
       return;
     }
 
@@ -88,55 +96,67 @@ export default function ChordsSection({
         await initializeAudio();
       }
 
-      setIsPlaying(true);
-      onActiveNotesChange(new Set());
+      onPlaybackStateChange({
+        activePitchClass: null,
+        activeNote: null,
+        isPlaying: true,
+      });
 
       if (playbackMode === 'simultaneous') {
         playChord(selectedChord.notes, 1000);
         setTimeout(() => {
-          setIsPlaying(false);
-          onActiveNotesChange(new Set());
+          onPlaybackStateChange({
+            activePitchClass: null,
+            activeNote: null,
+            isPlaying: false,
+          });
         }, 1000);
       } else {
         playArpeggio({
           notes: selectedChord.notes,
           bpm: arpeggioBpm,
           direction: 'up',
-          onStep: (note) => {
-            const activePitchClass = normalizeToPitchClass(note);
-            const activeNotes = new Set<string>();
-            availableNotes.forEach((availableNote) => {
-              if (normalizeToPitchClass(availableNote) === activePitchClass) {
-                activeNotes.add(availableNote);
-              }
+          onStep: (step) => {
+            onPlaybackStateChangeRef.current({
+              activePitchClass: step.pitchClass,
+              activeNote: step.note,
+              isPlaying: true,
             });
-            onActiveNotesChange(activeNotes);
           },
           onComplete: () => {
-            setIsPlaying(false);
-            onActiveNotesChange(new Set());
+            onPlaybackStateChangeRef.current({
+              activePitchClass: null,
+              activeNote: null,
+              isPlaying: false,
+            });
           },
         });
       }
     } catch (error) {
-      setIsPlaying(false);
-      onActiveNotesChange(new Set());
+      onPlaybackStateChange({
+        activePitchClass: null,
+        activeNote: null,
+        isPlaying: false,
+      });
     }
   }, [
     selectedChord,
-    isPlaying,
+    playbackState.isPlaying,
     playbackMode,
     arpeggioBpm,
-    onActiveNotesChange,
+    onPlaybackStateChange,
   ]);
 
   const handleStop = useCallback(() => {
     if (playbackMode === 'arpeggio') {
       stopArpeggio();
     }
-    setIsPlaying(false);
-    onActiveNotesChange(new Set());
-  }, [playbackMode, onActiveNotesChange]);
+    onPlaybackStateChange({
+      activePitchClass: null,
+      activeNote: null,
+      isPlaying: false,
+    });
+  }, [playbackMode, onPlaybackStateChange]);
 
   return (
     <div className={styles.chordsSection}>
@@ -148,7 +168,7 @@ export default function ChordsSection({
             onPlaybackModeChange={onPlaybackModeChange}
             arpeggioBpm={arpeggioBpm}
             onArpeggioBpmChange={onArpeggioBpmChange}
-            isPlaying={isPlaying}
+            isPlaying={playbackState.isPlaying}
             onPlay={handlePlay}
             onStop={handleStop}
           />
