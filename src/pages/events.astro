@@ -45,10 +45,12 @@ const FALLBACK_EVENTS = [
 let events = [];
 let cmsError = false;
 
-// Fetch from Storyblok - token is configured in astro.config.mjs integration
 try {
   const storyblokApi = useStoryblokApi();
-  // Use 'published' for production builds, 'draft' for development preview
+  if (!storyblokApi) {
+    throw new Error('Storyblok API not initialized');
+  }
+  
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
   
   const { data } = await storyblokApi.get('cdn/stories', {
@@ -56,19 +58,19 @@ try {
     content_type: 'event',
     sort_by: 'content.date:desc',
     version: storyblokVersion,
-    resolve_assets: 1,  // Resolve asset fields (images) properly
-    cv: Date.now()  // Cache-busting parameter to ensure fresh data
+    resolve_assets: 1,
+    cv: Date.now()
   });
   
   if (data?.stories && data.stories.length > 0) {
     events = data.stories;
     cmsError = false;
   } else {
-    // No events in CMS - use fallback events
     cmsError = true;
     events = FALLBACK_EVENTS;
   }
 } catch (error) {
+  console.error('Events: Failed to load from Storyblok', error);
   cmsError = true;
   events = FALLBACK_EVENTS;
 }

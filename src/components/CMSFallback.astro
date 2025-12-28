@@ -1,11 +1,12 @@
 ---
-// CMS Fallback component for when Storyblok is unreachable
 export interface CMSFallbackProps {
-  type: 'events' | 'gallery' | 'workshops' | 'general';
+  type?: 'events' | 'gallery' | 'workshops' | 'general';
   title?: string;
+  message?: string;
+  showRetry?: boolean;
 }
 
-const { type, title } = Astro.props as CMSFallbackProps;
+const { type = 'general', title, message: customMessage, showRetry = false } = Astro.props as CMSFallbackProps;
 
 const fallbackData = {
   events: {
@@ -32,6 +33,7 @@ const fallbackData = {
 
 const content = fallbackData[type];
 const displayTitle = title || content.title;
+const displayMessage = customMessage || content.message;
 ---
 
 <div class="cms-fallback">
@@ -46,40 +48,49 @@ const displayTitle = title || content.title;
     
     <div class="cms-fallback__content">
       <h3 class="cms-fallback__title">{displayTitle}</h3>
-      <p class="cms-fallback__message">{content.message}</p>
+      <p class="cms-fallback__message">{displayMessage}</p>
       
-      <div class="cms-fallback__actions">
-        {type === 'events' && (
-          <a href="/contacts" class="cms-fallback__cta">
-            {content.cta}
-          </a>
-        )}
-        
-        {type === 'gallery' && (
-          <div class="cms-fallback__social">
-            <a href="https://instagram.com/sghandpan" target="_blank" rel="noopener" class="cms-fallback__cta">
-              Instagram
+      {!showRetry && (
+        <div class="cms-fallback__actions">
+          {type === 'events' && (
+            <a href="/contacts" class="cms-fallback__cta">
+              {content.cta}
             </a>
-            <a href="https://facebook.com/sghandpan" target="_blank" rel="noopener" class="cms-fallback__cta cms-fallback__cta--secondary">
-              Facebook
+          )}
+          
+          {type === 'gallery' && (
+            <div class="cms-fallback__social">
+              <a href="https://instagram.com/sghandpan" target="_blank" rel="noopener" class="cms-fallback__cta">
+                Instagram
+              </a>
+              <a href="https://facebook.com/sghandpan" target="_blank" rel="noopener" class="cms-fallback__cta cms-fallback__cta--secondary">
+                Facebook
+              </a>
+            </div>
+          )}
+          
+          {type === 'workshops' && (
+            <a href="/contacts#booking" class="cms-fallback__cta">
+              {content.cta}
             </a>
-          </div>
-        )}
-        
-        {type === 'workshops' && (
-          <a href="/contacts#booking" class="cms-fallback__cta">
-            {content.cta}
-          </a>
-        )}
-        
-        {type === 'general' && (
+          )}
+          
+          {type === 'general' && (
+            <button onclick="window.location.reload()" class="cms-fallback__cta">
+              {content.cta}
+            </button>
+          )}
+        </div>
+      )}
+      
+      {showRetry && (
+        <div class="cms-fallback__actions">
           <button onclick="window.location.reload()" class="cms-fallback__cta">
-            {content.cta}
+            Retry
           </button>
-        )}
-      </div>
+        </div>
+      )}
       
-      <!-- Fallback content slot -->
       <div class="cms-fallback__slot">
         <slot />
       </div>
