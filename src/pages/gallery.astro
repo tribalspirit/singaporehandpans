@@ -31,6 +31,10 @@ let error = null;
 
 try {
   const storyblokApi = useStoryblokApi();
+  if (!storyblokApi) {
+    throw new Error('Storyblok API not initialized');
+  }
+  
   const response = await storyblokApi.get('cdn/stories', {
     version: import.meta.env.DEV ? 'draft' : 'published',
     starts_with: 'gallery/',
@@ -39,27 +43,32 @@ try {
     resolve_assets: 1,
   });
 
-  galleryItems = response.data.stories
-    .filter((story: GalleryItem) => story.content.component === 'gallery_item')
-    .sort((a: GalleryItem, b: GalleryItem) => {
-      const orderA = a.content.sort_order || 999;
-      const orderB = b.content.sort_order || 999;
-      return orderA - orderB;
-    });
+  if (response?.data?.stories) {
+    galleryItems = response.data.stories
+      .filter((story: GalleryItem) => story.content?.component === 'gallery_item')
+      .sort((a: GalleryItem, b: GalleryItem) => {
+        const orderA = a.content?.sort_order || 999;
+        const orderB = b.content?.sort_order || 999;
+        return orderA - orderB;
+      });
+  }
 } catch (err) {
   error = err;
+  console.error('Gallery: Failed to load from Storyblok', err);
 }
 
-const transformedItems = galleryItems.map((item) => ({
-  id: item.uuid,
-  title: item.content.title,
-  media: item.content.media,
-  description: item.content.description,
-  tags: normalizeTags(item.content.tags),
-  alt_text: item.content.alt_text,
-  photographer: item.content.photographer,
-  featured: item.content.featured,
-}));
+const transformedItems = galleryItems
+  .filter((item) => item?.content)
+  .map((item) => ({
+    id: item.uuid,
+    title: item.content.title || 'Untitled',
+    media: item.content.media,
+    description: item.content.description,
+    tags: normalizeTags(item.content.tags),
+    alt_text: item.content.alt_text,
+    photographer: item.content.photographer,
+    featured: item.content.featured,
+  }));
 
 const pageTitle = 'Gallery - Singapore Handpan Studio';
 const pageDescription =
