@@ -1,2 +1,242 @@
----import BaseLayout from '../layouts/BaseLayout.astro';const seoTitle = 'Academy - Handpan Learning Resources | Singapore Handpan Studio';const seoDescription = 'Explore our handpan academy with interactive tools, learning resources, and helpful guides for handpan players of all levels.';---<BaseLayout  title={seoTitle}  description={seoDescription}  canonical={`${Astro.site}academy/`}>  <main class="academy-page">    <div class="container">      <section class="academy-hero">        <h1 class="academy-hero__title">Handpan Academy</h1>        <p class="academy-hero__description">          Welcome to our comprehensive handpan learning center. Explore interactive tools,          tutorials, and resources designed to help you master the handpan at every level.        </p>      </section>      <section class="academy-tools">        <div class="tool-card">          <div class="tool-card__icon">            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">              <circle cx="12" cy="12" r="10"/>              <path d="M12 6v6l4 2"/>            </svg>          </div>          <h2 class="tool-card__title">Handpan Chord Explorer</h2>          <p class="tool-card__description">            Your go-to practice companion for quick chord lookups and note visualization.            Instantly see which notes make up any chord and where they sit on your handpan.            Great for both learning new chords and refreshing your memory during practice.          </p>          <a href="/academy/memorization" class="tool-card__link">            Explore Tool            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">              <path d="M5 12h14M12 5l7 7-7 7"/>            </svg>          </a>        </div>        <div class="coming-soon-card">          <div class="coming-soon-card__icon">            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>            </svg>          </div>          <h2 class="coming-soon-card__title">More Tools Coming Soon</h2>          <p class="coming-soon-card__description">            We're continuously developing new learning resources including rhythm exercises,            technique tutorials, and advanced practice tools. Stay tuned for updates!          </p>        </div>      </section>    </div>  </main></BaseLayout><style lang="scss">@use "src/styles/tokens.scss";.academy-page {  min-height: calc(100vh - var(--header-height) - var(--footer-height));  padding: var(--spacing-2xl) 0;  background: linear-gradient(135deg, var(--color-gray-50) 0%, var(--color-white) 100%);  .container {    max-width: 1200px;    margin: 0 auto;    padding: 0 var(--spacing-md);  }}.academy-hero {  text-align: center;  padding: var(--spacing-2xl) 0 var(--spacing-xl);  margin-bottom: var(--spacing-2xl);}.academy-hero__title {  font-size: var(--font-size-4xl);  font-weight: var(--font-weight-bold);  color: var(--color-primary);  margin-bottom: var(--spacing-lg);  font-family: var(--font-family-heading);}.academy-hero__description {  font-size: var(--font-size-xl);  color: var(--color-text-secondary);  max-width: 800px;  margin: 0 auto;  line-height: var(--line-height-relaxed);}.academy-tools {  display: grid;  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));  gap: var(--spacing-xl);  margin-bottom: var(--spacing-2xl);}.tool-card {  background: var(--color-white);  border-radius: var(--border-radius-lg);  padding: var(--spacing-xl);  box-shadow: var(--shadow-base);  transition: all var(--transition-base);  display: flex;  flex-direction: column;  &:hover {    transform: translateY(-4px);    box-shadow: var(--shadow-lg);  }  &__icon {    color: var(--color-primary);    margin-bottom: var(--spacing-lg);  }  &__title {    font-size: var(--font-size-2xl);    font-weight: var(--font-weight-bold);    color: var(--color-text-primary);    margin-bottom: var(--spacing-md);    font-family: var(--font-family-heading);  }  &__description {    font-size: var(--font-size-base);    color: var(--color-text-secondary);    line-height: var(--line-height-relaxed);    margin-bottom: var(--spacing-lg);    flex-grow: 1;  }  &__link {    display: inline-flex;    align-items: center;    gap: var(--spacing-sm);    padding: var(--spacing-md) var(--spacing-lg);    background: var(--color-primary);    color: var(--color-white);    text-decoration: none;    border-radius: var(--border-radius-md);    font-weight: var(--font-weight-semibold);    transition: all var(--transition-base);    width: fit-content;    &:hover {      background: var(--color-primary-dark);      transform: translateX(4px);    }    svg {      transition: transform var(--transition-base);    }    &:hover svg {      transform: translateX(2px);    }  }}.coming-soon-card {  background: var(--color-white);  border-radius: var(--border-radius-lg);  padding: var(--spacing-xl);  box-shadow: var(--shadow-base);  display: flex;  flex-direction: column;  opacity: 0.8;  border: 2px dashed var(--color-gray-300);  &__icon {    color: var(--color-gray-400);    margin-bottom: var(--spacing-lg);  }  &__title {    font-size: var(--font-size-2xl);    font-weight: var(--font-weight-bold);    color: var(--color-text-secondary);    margin-bottom: var(--spacing-md);    font-family: var(--font-family-heading);  }  &__description {    font-size: var(--font-size-base);    color: var(--color-text-secondary);    line-height: var(--line-height-relaxed);  }}@media (max-width: 768px) {  .academy-hero__title {    font-size: var(--font-size-3xl);  }  .academy-hero__description {    font-size: var(--font-size-lg);  }  .academy-tools {    grid-template-columns: 1fr;  }}</style>
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
 
+const seoTitle = 'Academy - Handpan Learning Resources | Singapore Handpan Studio';
+const seoDescription =
+  'Explore our handpan academy with interactive tools, learning resources, and helpful guides for handpan players of all levels.';
+---
+
+<BaseLayout
+  title={seoTitle}
+  description={seoDescription}
+  canonical={`${Astro.site}academy/`}
+>
+  <main class="academy-page">
+    <div class="container">
+      <section class="academy-hero">
+        <h1 class="academy-hero__title">Handpan Academy</h1>
+        <p class="academy-hero__description">
+          Welcome to our comprehensive handpan learning center. Explore
+          interactive tools, tutorials, and resources designed to help you
+          master the handpan at every level.
+        </p>
+      </section>
+
+      <section class="academy-tools">
+        <div class="tool-card">
+          <div class="tool-card__icon">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 6v6l4 2"></path>
+            </svg>
+          </div>
+          <h2 class="tool-card__title">Handpan Chord Explorer</h2>
+          <p class="tool-card__description">
+            Your go-to practice companion for quick chord lookups and note
+            visualization. Instantly see which notes make up any chord and where
+            they sit on your handpan. Great for both learning new chords and
+            refreshing your memory during practice.
+          </p>
+          <a href="/academy/memorization" class="tool-card__link">
+            Explore Tool
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+
+        <div class="coming-soon-card">
+          <div class="coming-soon-card__icon">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <h2 class="coming-soon-card__title">More Tools Coming Soon</h2>
+          <p class="coming-soon-card__description">
+            We're continuously developing new learning resources including rhythm
+            exercises, technique tutorials, and advanced practice tools. Stay
+            tuned for updates!
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .academy-page {
+    min-height: calc(100vh - var(--header-height) - var(--footer-height));
+    padding: var(--spacing-2xl) 0;
+    background: linear-gradient(
+      135deg,
+      var(--color-gray-50) 0%,
+      var(--color-white) 100%
+    );
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--spacing-md);
+    }
+  }
+
+  .academy-hero {
+    text-align: center;
+    padding: var(--spacing-2xl) 0 var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .academy-hero__title {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-lg);
+    font-family: var(--font-family-heading);
+  }
+
+  .academy-hero__description {
+    font-size: var(--font-size-xl);
+    color: var(--color-text-secondary);
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: var(--line-height-relaxed);
+  }
+
+  .academy-tools {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .tool-card {
+    background: var(--color-white);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-base);
+    transition: all var(--transition-base);
+    display: flex;
+    flex-direction: column;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    &__icon {
+      color: var(--color-primary);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    &__title {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-md);
+      font-family: var(--font-family-heading);
+    }
+
+    &__description {
+      font-size: var(--font-size-base);
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-relaxed);
+      margin-bottom: var(--spacing-lg);
+      flex-grow: 1;
+    }
+
+    &__link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md) var(--spacing-lg);
+      background: var(--color-primary);
+      color: var(--color-white);
+      text-decoration: none;
+      border-radius: var(--border-radius-md);
+      font-weight: var(--font-weight-semibold);
+      transition: all var(--transition-base);
+      width: fit-content;
+
+      &:hover {
+        background: var(--color-primary-dark);
+        transform: translateX(4px);
+      }
+
+      svg {
+        transition: transform var(--transition-base);
+      }
+
+      &:hover svg {
+        transform: translateX(2px);
+      }
+    }
+  }
+
+  .coming-soon-card {
+    background: var(--color-white);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-base);
+    display: flex;
+    flex-direction: column;
+    opacity: 0.8;
+    border: 2px dashed var(--color-gray-300);
+
+    &__icon {
+      color: var(--color-gray-400);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    &__title {
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-secondary);
+      margin-bottom: var(--spacing-md);
+      font-family: var(--font-family-heading);
+    }
+
+    &__description {
+      font-size: var(--font-size-base);
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-relaxed);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .academy-hero__title {
+      font-size: var(--font-size-3xl);
+    }
+
+    .academy-hero__description {
+      font-size: var(--font-size-lg);
+    }
+
+    .academy-tools {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
