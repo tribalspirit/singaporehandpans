@@ -5,7 +5,7 @@ import { normalizeToPitchClass } from '../theory/normalize';
 export type ArpeggioDirection = 'up' | 'down' | 'updown';
 
 export interface PlaybackStep {
-  note: string;        // e.g. 'D4'
+  note: string; // e.g. 'D4'
   pitchClass: string; // e.g. 'D'
   index: number;
 }
@@ -26,15 +26,18 @@ let currentArpeggio: {
   scheduledEvents: Tone.ToneEvent[];
 } | null = null;
 
-function getOrderedNotes(notes: string[], direction: ArpeggioDirection): string[] {
+function getOrderedNotes(
+  notes: string[],
+  direction: ArpeggioDirection
+): string[] {
   const ordered = [...notes];
-  
+
   if (direction === 'down') {
     return ordered.reverse();
   } else if (direction === 'updown') {
     return [...ordered, ...ordered.slice(1, -1).reverse()];
   }
-  
+
   return ordered;
 }
 
@@ -42,56 +45,64 @@ export function playArpeggio(options: ArpeggioOptions): void {
   stopArpeggio();
 
   const { notes, bpm, direction = 'up', onStep, onComplete } = options;
-  
+
   if (notes.length === 0) {
     return;
   }
 
-  Tone.Transport.bpm.value = bpm;
-  const orderedNotes = getOrderedNotes(notes, direction);
-  const noteDuration = Tone.Time('4n').toSeconds();
-  const scheduledEvents: Tone.ToneEvent[] = [];
+  const startArpeggio = () => {
+    Tone.Transport.bpm.value = bpm;
+    const orderedNotes = getOrderedNotes(notes, direction);
+    const noteDuration = Tone.Time('4n').toSeconds();
+    const scheduledEvents: Tone.ToneEvent[] = [];
 
-  orderedNotes.forEach((note, index) => {
-    const event = new Tone.ToneEvent((time) => {
-      try {
-        playNote(note, noteDuration * 1000);
-      } catch (error) {
-        // Error playing note in arpeggio
-      }
-      if (onStep) {
-        onStep({
-          note,
-          pitchClass: normalizeToPitchClass(note),
-          index,
-        });
-      }
+    orderedNotes.forEach((note, index) => {
+      const event = new Tone.ToneEvent((_time) => {
+        try {
+          playNote(note, noteDuration * 1000);
+        } catch (_error) {
+          // Silently ignore playback errors
+        }
+        if (onStep) {
+          onStep({
+            note,
+            pitchClass: normalizeToPitchClass(note),
+            index,
+          });
+        }
+      });
+
+      event.start(index * noteDuration);
+      scheduledEvents.push(event);
     });
 
-    event.start(index * noteDuration);
-    scheduledEvents.push(event);
-  });
+    const totalDuration = orderedNotes.length * noteDuration;
+    const completeEvent = new Tone.ToneEvent(() => {
+      if (onComplete) {
+        onComplete();
+      }
+      currentArpeggio = null;
+    });
 
-  const totalDuration = orderedNotes.length * noteDuration;
-  const completeEvent = new Tone.ToneEvent(() => {
-    if (onComplete) {
-      onComplete();
-    }
-    currentArpeggio = null;
-  });
+    completeEvent.start(totalDuration);
+    scheduledEvents.push(completeEvent);
 
-  completeEvent.start(totalDuration);
-  scheduledEvents.push(completeEvent);
+    currentArpeggio = {
+      notes: orderedNotes,
+      direction,
+      onStep,
+      onComplete,
+      scheduledEvents,
+    };
 
-  currentArpeggio = {
-    notes: orderedNotes,
-    direction,
-    onStep,
-    onComplete,
-    scheduledEvents,
+    Tone.Transport.start();
   };
 
-  Tone.Transport.start();
+  if (Tone.context.state === 'suspended') {
+    Tone.context.resume().then(startArpeggio);
+  } else {
+    startArpeggio();
+  }
 }
 
 export function stopArpeggio(): void {
@@ -108,4 +119,3 @@ export function stopArpeggio(): void {
 export function isArpeggioPlaying(): boolean {
   return currentArpeggio !== null && Tone.Transport.state === 'started';
 }
-

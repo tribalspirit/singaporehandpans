@@ -1,11 +1,12 @@
 {
   "extends": [
     "eslint:recommended",
-    "@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended",
     "plugin:astro/recommended",
     "plugin:jsx-a11y/recommended"
   ],
   "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module"
