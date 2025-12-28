@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+.astro/
+.output/
+
+# Cache and temp files
+.cache/
+.temp/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Package manager lock files (don't format these)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Vendor
+vendor/
+
