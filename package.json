@@ -17,7 +17,17 @@
     "format": "prettier --write .",
     "storyblok:setup": "node scripts/storyblok-setup.js",
     "storyblok:components": "node scripts/create-components.js",
-    "storyblok:content": "node scripts/create-sample-content.js"
+    "storyblok:content": "node scripts/create-sample-content.js",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,astro}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css,scss}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@astrojs/react": "^3.0.0",
@@ -50,6 +60,8 @@
     "eslint": "^8.0.0",
     "eslint-plugin-astro": "^0.29.0",
     "eslint-plugin-jsx-a11y": "^6.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.0.0",
     "prettier-plugin-astro": "^0.12.0",
     "storyblok": "^3.0.0",
