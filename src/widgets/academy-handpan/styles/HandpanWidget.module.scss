@@ -1,0 +1,132 @@
+@use "src/styles/tokens.scss";
+
+.handpanWidget {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-md);
+  box-sizing: border-box;
+  overflow: hidden;
+
+  &,
+  & * {
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 768px) {
+    padding: var(--spacing-xl);
+  }
+}
+
+.header {
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+}
+
+.title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-lg);
+  font-family: var(--font-family-heading);
+}
+
+.selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+.label {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  min-width: 200px;
+
+  &:hover {
+    border-color: var(--color-primary);
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-color: var(--color-primary);
+  }
+}
+
+.topRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-xl);
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: var(--spacing-xl);
+
+  @media (min-width: 768px) {
+    grid-template-columns: minmax(280px, 500px) 1fr;
+    gap: var(--spacing-xl);
+  }
+
+  @media (min-width: 1024px) {
+    gap: var(--spacing-2xl);
+  }
+}
+
+.handpanSection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+
+  @media (min-width: 768px) {
+    min-height: 500px;
+  }
+
+  @media (min-width: 1024px) {
+    min-height: 600px;
+  }
+}
+
+.scaleInfoSection {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chordsSectionWrapper {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.placeholder {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  background: var(--color-gray-50);
+  border-radius: var(--border-radius-md);
+}
+

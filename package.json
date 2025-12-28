@@ -8,6 +8,10 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.astro",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.astro --fix",
     "format": "prettier --write .",
@@ -19,6 +23,13 @@
     "@astrojs/react": "^3.0.0",
     "@storyblok/astro": "^4.0.0",
     "@storyblok/js": "^3.0.0",
+    "@tonaljs/chord": "^6.1.1",
+    "@tonaljs/chord-detect": "^4.9.1",
+    "@tonaljs/chord-type": "^5.1.1",
+    "@tonaljs/core": "^5.0.2",
+    "@tonaljs/pcset": "^4.10.1",
+    "@tonaljs/scale": "^4.13.3",
+    "@tonaljs/scale-type": "^4.9.1",
     "astro": "^4.0.0",
     "dotenv": "^16.6.1",
     "embla-carousel-autoplay": "^8.6.0",
@@ -26,6 +37,7 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "sass": "^1.80.0",
+    "tone": "^15.1.22",
     "yet-another-react-lightbox": "^3.27.0"
   },
   "devDependencies": {
@@ -34,12 +46,14 @@
     "@types/react-dom": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "@vitest/ui": "^4.0.16",
     "eslint": "^8.0.0",
     "eslint-plugin-astro": "^0.29.0",
     "eslint-plugin-jsx-a11y": "^6.0.0",
     "prettier": "^3.0.0",
     "prettier-plugin-astro": "^0.12.0",
     "storyblok": "^3.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.16"
   }
 }
