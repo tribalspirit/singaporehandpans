@@ -1,4 +1,5 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useRef } from 'react';
+import { usePlayback } from './usePlayback';
 import { findPlayableChords, type PlayableChord } from '../theory/chords';
 import { getDiatonicTriads } from '../theory/diatonicTriads';
 import {
@@ -7,11 +8,9 @@ import {
   playChord,
 } from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
-
+import { normalizeToPitchClass } from '../theory/normalize';
 import Controls from './Controls';
 import styles from '../styles/ChordsSection.module.scss';
-
-import type { PlaybackState } from './types';
 
 export type PlaybackMode = 'simultaneous' | 'arpeggio';
 
@@ -19,8 +18,6 @@ interface ChordsSectionProps {
   availableNotes: string[];
   selectedChord: PlayableChord | null;
   onChordSelect: (chord: PlayableChord | null) => void;
-  playbackState: PlaybackState;
-  onPlaybackStateChange: (state: PlaybackState) => void;
   playbackMode: PlaybackMode;
   onPlaybackModeChange: (mode: PlaybackMode) => void;
   arpeggioBpm: number;
@@ -31,18 +28,30 @@ export default function ChordsSection({
   availableNotes,
   selectedChord,
   onChordSelect,
-  playbackState,
-  onPlaybackStateChange,
   playbackMode,
   onPlaybackModeChange,
   arpeggioBpm,
   onArpeggioBpmChange,
 }: ChordsSectionProps) {
-  const onPlaybackStateChangeRef = React.useRef(onPlaybackStateChange);
+  const {
+    state: playbackState,
+    setChordPitchClassesActive,
+    setIsPlaying,
+    clearPlayback,
+  } = usePlayback();
+  const setChordPitchClassesActiveRef = useRef(setChordPitchClassesActive);
+  const setIsPlayingRef = useRef(setIsPlaying);
+  const clearPlaybackRef = useRef(clearPlayback);
 
   React.useEffect(() => {
-    onPlaybackStateChangeRef.current = onPlaybackStateChange;
-  }, [onPlaybackStateChange]);
+    setChordPitchClassesActiveRef.current = setChordPitchClassesActive;
+  }, [setChordPitchClassesActive]);
+  React.useEffect(() => {
+    setIsPlayingRef.current = setIsPlaying;
+  }, [setIsPlaying]);
+  React.useEffect(() => {
+    clearPlaybackRef.current = clearPlayback;
+  }, [clearPlayback]);
 
   const diatonicTriads = useMemo(() => {
     return getDiatonicTriads(availableNotes, availableNotes);
@@ -50,16 +59,13 @@ export default function ChordsSection({
 
   const addedNoteChords = useMemo(() => {
     const allChords = findPlayableChords(availableNotes);
-    const filtered = allChords.filter((chord) => {
-      return (
+    const filtered = allChords.filter(
+      (chord) =>
         chord.category === 'advanced' &&
         chord.notes.length >= 3 &&
         chord.notes.length <= 5 &&
         chord.notes.every((note) => availableNotes.includes(note))
-      );
-    });
-
-    // Group by root note (from canonical detection)
+    );
     const grouped = new Map<string, PlayableChord[]>();
     for (const chord of filtered) {
       const root = chord.rootPc || chord.pitchClasses[0] || '';
@@ -68,8 +74,6 @@ export default function ChordsSection({
       }
       grouped.get(root)!.push(chord);
     }
-
-    // Convert to array of groups, sorted by root
     return Array.from(grouped.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([root, chords]) => ({ root, chords }));
@@ -77,7 +81,7 @@ export default function ChordsSection({
 
   const handleChordClick = useCallback(
     (chord: PlayableChord) => {
-      if (selectedChord?.name === chord.name) {
+      if (selectedChord && chord.name === selectedChord.name) {
         onChordSelect(null);
       } else {
         onChordSelect(chord);
@@ -86,36 +90,21 @@ export default function ChordsSection({
     [selectedChord, onChordSelect]
   );
 
-  const handlePlay = useCallback(async () => {
+  const handlePlayChord = useCallback(async () => {
     if (!selectedChord || playbackState.isPlaying) {
       return;
     }
-
     try {
       if (!isAudioInitialized()) {
         await initializeAudio();
       }
-
-      onPlaybackStateChange({
-        activePadNote: null,
-        activePitchClasses: null,
-        isPlaying: true,
-      });
-
+      stopArpeggio();
+      setIsPlayingRef.current(true);
       if (playbackMode === 'simultaneous') {
-        // For simultaneous playback, highlight all chord pitch classes
-        onPlaybackStateChange({
-          activePadNote: null,
-          activePitchClasses: selectedChord.pitchClasses,
-          isPlaying: true,
-        });
+        setChordPitchClassesActiveRef.current(selectedChord.pitchClasses);
         playChord(selectedChord.notes, 1000);
         setTimeout(() => {
-          onPlaybackStateChange({
-            activePadNote: null,
-            activePitchClasses: null,
-            isPlaying: false,
-          });
+          clearPlaybackRef.current();
         }, 1000);
       } else {
         playArpeggio({
@@ -123,47 +112,25 @@ export default function ChordsSection({
           bpm: arpeggioBpm,
           direction: 'up',
           onStep: (step) => {
-            // For arpeggio, highlight one pitch class at a time
-            onPlaybackStateChangeRef.current({
-              activePadNote: null,
-              activePitchClasses: [step.pitchClass],
-              isPlaying: true,
-            });
+            setChordPitchClassesActiveRef.current([
+              normalizeToPitchClass(step.note),
+            ]);
           },
           onComplete: () => {
-            onPlaybackStateChangeRef.current({
-              activePadNote: null,
-              activePitchClasses: null,
-              isPlaying: false,
-            });
+            clearPlaybackRef.current();
           },
         });
       }
     } catch (error) {
-      onPlaybackStateChange({
-        activePadNote: null,
-        activePitchClasses: null,
-        isPlaying: false,
-      });
+      console.error('Error during chord playback', error);
+      clearPlaybackRef.current();
     }
-  }, [
-    selectedChord,
-    playbackState.isPlaying,
-    playbackMode,
-    arpeggioBpm,
-    onPlaybackStateChange,
-  ]);
+  }, [selectedChord, playbackState.isPlaying, playbackMode, arpeggioBpm]);
 
-  const handleStop = useCallback(() => {
-    if (playbackMode === 'arpeggio') {
-      stopArpeggio();
-    }
-    onPlaybackStateChange({
-      activePadNote: null,
-      activePitchClasses: null,
-      isPlaying: false,
-    });
-  }, [playbackMode, onPlaybackStateChange]);
+  const handleStopChord = useCallback(() => {
+    stopArpeggio();
+    clearPlaybackRef.current();
+  }, []);
 
   return (
     <div className={styles.chordsSection}>
@@ -176,8 +143,8 @@ export default function ChordsSection({
             arpeggioBpm={arpeggioBpm}
             onArpeggioBpmChange={onArpeggioBpmChange}
             isPlaying={playbackState.isPlaying}
-            onPlay={handlePlay}
-            onStop={handleStop}
+            onPlay={handlePlayChord}
+            onStop={handleStopChord}
           />
         </div>
       )}
@@ -188,21 +155,26 @@ export default function ChordsSection({
             Main Triads (Circle of Fifths)
           </h3>
           <div className={styles.triadsRow}>
-            {diatonicTriads.map((triad) => {
-              const isSelected = selectedChord?.name === triad.chord.name;
+            {diatonicTriads.map(({ chord, isTonic, isRelativeMajor }) => {
+              const isSelected = selectedChord?.name === chord.name;
               return (
                 <button
-                  key={triad.chord.name}
+                  key={chord.name}
                   type="button"
-                  className={`${styles.triadTile} ${isSelected ? styles.triadTileSelected : ''} ${triad.isTonic ? styles.triadTileTonic : ''} ${triad.isRelativeMajor ? styles.triadTileRelativeMajor : ''}`}
-                  onClick={() => handleChordClick(triad.chord)}
+                  className={[
+                    styles.triadTile,
+                    isSelected ? styles.triadTileSelected : '',
+                    isTonic ? styles.triadTileTonic : '',
+                    isRelativeMajor ? styles.triadTileRelativeMajor : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() => handleChordClick(chord)}
                   aria-pressed={isSelected}
                 >
-                  <span className={styles.triadName}>
-                    {triad.chord.displayName}
-                  </span>
+                  <span className={styles.triadName}>{chord.displayName}</span>
                   <span className={styles.triadNotes}>
-                    {triad.chord.notes.join(' ')}
+                    {chord.notes.join(' ')}
                   </span>
                 </button>
               );

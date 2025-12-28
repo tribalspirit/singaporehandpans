@@ -1,6 +1,9 @@
+export type HighlightIntent = 'none' | 'note' | 'scalePlayback' | 'chordPlayback';
+
 export type PlaybackState = {
-  activePadNote: string | null;          // exact pad note to highlight (D4) - for single-note interactions
-  activePitchClasses: string[] | null;  // conceptual highlight set (Dm => ['D','F','A']) - for chord/conceptual highlights
+  intent: HighlightIntent;
+  activeNote: string | null;
+  activePitchClasses: string[] | null;
   isPlaying: boolean;
 };
 

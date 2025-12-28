@@ -1,9 +1,8 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import { usePlayback } from './usePlayback';
 import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
 import { sortNotesByPitch } from '../theory/utils';
-import { normalizeToPitchClass } from '../theory/normalize';
-import type { PlaybackState } from './types';
 import styles from '../styles/ScaleInfoPanel.module.scss';
 
 interface ScaleInfo {
@@ -16,170 +15,106 @@ interface ScaleInfo {
 interface ScaleInfoPanelProps {
   scaleInfo: ScaleInfo | null;
   scaleNotes: string[];
-  playbackState: PlaybackState;
-  onPlaybackStateChange: (state: PlaybackState) => void;
   onChordSelect?: () => void;
-  availableNotes?: string[];
 }
 
 export default function ScaleInfoPanel({
   scaleInfo,
   scaleNotes,
-  playbackState,
-  onPlaybackStateChange,
   onChordSelect,
-  availableNotes = [],
 }: ScaleInfoPanelProps) {
-  const onPlaybackStateChangeRef = useRef(onPlaybackStateChange);
+  const {
+    state: playbackState,
+    setNoteActive,
+    setIsPlaying,
+    clearPlayback,
+  } = usePlayback();
+  const onChordSelectRef = useRef(onChordSelect);
+  const setNoteActiveRef = useRef(setNoteActive);
+  const clearPlaybackRef = useRef(clearPlayback);
+  const setIsPlayingRef = useRef(setIsPlaying);
 
-  // Keep ref up to date
   useEffect(() => {
-    onPlaybackStateChangeRef.current = onPlaybackStateChange;
-  }, [onPlaybackStateChange]);
+    onChordSelectRef.current = onChordSelect;
+  }, [onChordSelect]);
 
   useEffect(() => {
-    if (scaleInfo) {
-      stopArpeggio();
-      onPlaybackStateChange({
-        activePadNote: null,
-        activePitchClasses: null,
-        isPlaying: false,
-      });
-    }
-  }, [scaleInfo?.name, scaleInfo?.description, onPlaybackStateChange]);
+    setNoteActiveRef.current = setNoteActive;
+    clearPlaybackRef.current = clearPlayback;
+    setIsPlayingRef.current = setIsPlaying;
+  }, [setNoteActive, clearPlayback, setIsPlaying]);
 
-  const sortedNotes = useMemo(() => {
-    return sortNotesByPitch([...scaleNotes]);
-  }, [scaleNotes]);
+  useEffect(() => {
+    stopArpeggio();
+    clearPlaybackRef.current();
+    setIsPlayingRef.current(false);
+  }, [scaleInfo?.name]);
 
-  const handlePlay = useCallback(async () => {
+  const sortedNotes = useMemo(
+    () => sortNotesByPitch([...scaleNotes]),
+    [scaleNotes]
+  );
+
+  const handlePlayScale = useCallback(async () => {
     if (sortedNotes.length === 0 || playbackState.isPlaying) {
       return;
     }
-
     try {
       if (!isAudioInitialized()) {
         await initializeAudio();
       }
-
-      // Reset selected chord if any was selected
-      if (onChordSelect) {
-        onChordSelect();
+      if (onChordSelectRef.current) {
+        onChordSelectRef.current();
       }
-
-      onPlaybackStateChange({
-        activePadNote: null,
-        activePitchClasses: null,
-        isPlaying: true,
-      });
-
+      setIsPlayingRef.current(true);
       playArpeggio({
         notes: sortedNotes,
         bpm: 120,
         direction: 'up',
         onStep: (step) => {
-          // Update unified playback state - use exact note for scale playback
-          onPlaybackStateChangeRef.current({
-            activePadNote: step.note,
-            activePitchClasses: null,
-            isPlaying: true,
-          });
+          setNoteActiveRef.current(step.note, 'scalePlayback');
         },
         onComplete: () => {
-          onPlaybackStateChangeRef.current({
-            activePadNote: null,
-            activePitchClasses: null,
-            isPlaying: false,
-          });
+          clearPlaybackRef.current();
         },
       });
     } catch (error) {
-      onPlaybackStateChange({
-        activePadNote: null,
-        activePitchClasses: null,
-        isPlaying: false,
-      });
+      console.error('Failed to play scale arpeggio', error);
+      clearPlaybackRef.current();
     }
-  }, [
-    sortedNotes,
-    playbackState.isPlaying,
-    onPlaybackStateChange,
-    onChordSelect,
-  ]);
+  }, [sortedNotes, playbackState.isPlaying]);
 
-  const handleStop = useCallback(() => {
+  const handleStopScale = useCallback(() => {
     stopArpeggio();
-    onPlaybackStateChange({
-      activePadNote: null,
-      activePitchClasses: null,
-      isPlaying: false,
-    });
-  }, [onPlaybackStateChange]);
+    clearPlaybackRef.current();
+  }, []);
 
-  const handleNoteClick = useCallback(
-    async (note: string) => {
+  const handleNoteClick = useCallback(async (note: string) => {
+    try {
+      if (!isAudioInitialized()) {
+        await initializeAudio();
+      }
+      if (onChordSelectRef.current) {
+        onChordSelectRef.current();
+      }
+      playNote(note, 500);
+      setNoteActiveRef.current(note, 'note');
+      setTimeout(() => {
+        clearPlaybackRef.current();
+      }, 500);
+    } catch (error) {
       try {
-        if (!isAudioInitialized()) {
-          await initializeAudio();
-        }
-
-        // Reset selected chord if any was selected
-        if (onChordSelect) {
-          onChordSelect();
-        }
-
+        await initializeAudio();
         playNote(note, 500);
-
-        // Update unified playback state - use exact note (will map to best pad if needed)
-        onPlaybackStateChange({
-          activePadNote: note,
-          activePitchClasses: null,
-          isPlaying: false,
-        });
-
-        // Clear highlight after note duration
+        setNoteActiveRef.current(note, 'note');
         setTimeout(() => {
-          onPlaybackStateChange({
-            activePadNote: null,
-            activePitchClasses: null,
-            isPlaying: false,
-          });
+          clearPlaybackRef.current();
         }, 500);
-      } catch (error) {
-        try {
-          await initializeAudio();
-          playNote(note, 500);
-          onPlaybackStateChange({
-            activePadNote: note,
-            activePitchClasses: null,
-            isPlaying: false,
-          });
-          setTimeout(() => {
-            onPlaybackStateChange({
-              activePadNote: null,
-              activePitchClasses: null,
-              isPlaying: false,
-            });
-          }, 500);
-        } catch (retryError) {
-          // Audio initialization failed
-        }
+      } catch (retryError) {
+        console.error('Failed to play scale note', note, retryError);
       }
-    },
-    [onChordSelect, onPlaybackStateChange]
-  );
-
-  // Scale note highlight logic - ONLY for playback/clicks, NOT for chord selection
-  const getNoteHighlightState = useCallback(
-    (note: string) => {
-      // Only highlight during playback/clicks (activePadNote), not for chord selection
-      if (playbackState.activePadNote) {
-        return playbackState.activePadNote === note;
-      }
-      return false;
-    },
-    [playbackState]
-  );
+    }
+  }, []);
 
   if (!scaleInfo) {
     return (
@@ -205,7 +140,7 @@ export default function ScaleInfoPanel({
             <button
               type="button"
               className={styles.playButton}
-              onClick={handlePlay}
+              onClick={handlePlayScale}
               aria-label="Play scale"
             >
               <svg
@@ -224,7 +159,7 @@ export default function ScaleInfoPanel({
             <button
               type="button"
               className={styles.stopButton}
-              onClick={handleStop}
+              onClick={handleStopScale}
               aria-label="Stop playback"
             >
               <svg
@@ -242,10 +177,22 @@ export default function ScaleInfoPanel({
           )}
         </div>
       </div>
-
       <div className={styles.scaleContent}>
-        <p className={styles.scaleDescription}>{scaleInfo.description}</p>
-
+        <div className={styles.descriptionWrapper}>
+          <p className={styles.scaleDescription}>{scaleInfo.description}</p>
+          <div className={styles.infoTooltipWrapper}>
+            <span className={styles.infoIcon} aria-label="Layout information">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+            </span>
+            <div className={styles.tooltip}>
+              Note: This virtual handpan layout is representative. Actual note positions may vary depending on the manufacturer and specific model.
+            </div>
+          </div>
+        </div>
         <div className={styles.scaleTags}>
           {scaleInfo.moodTags.map((tag) => (
             <span key={tag} className={styles.scaleTag}>
@@ -253,12 +200,11 @@ export default function ScaleInfoPanel({
             </span>
           ))}
         </div>
-
         <div className={styles.scaleNotesSection}>
           <h4 className={styles.notesTitle}>Scale Notes</h4>
           <div className={styles.notesList}>
             {sortedNotes.map((note) => {
-              const isActive = getNoteHighlightState(note);
+              const isActive = playbackState.activeNote === note;
               return (
                 <button
                   key={note}

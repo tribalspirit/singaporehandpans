@@ -1,4 +1,6 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { PlaybackProvider } from './PlaybackContext';
+import { usePlayback } from './usePlayback';
 import { getAllHandpanConfigs, getHandpanConfig } from '../config/handpans';
 import HandpanRenderer from './HandpanRenderer';
 import ScaleInfoPanel from './ScaleInfoPanel';
@@ -9,7 +11,6 @@ import type { PlaybackMode } from './ChordsSection';
 import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
 import { normalizeToPitchClass } from '../theory/normalize';
 import { note } from '@tonaljs/core';
-import type { PlaybackState } from './types';
 import styles from '../styles/HandpanWidget.module.scss';
 
 function pickBestPadNoteForPc(layout: HandpanPad[], pc: string): string | null {
@@ -27,22 +28,18 @@ function pickBestPadNoteForPc(layout: HandpanPad[], pc: string): string | null {
   return sorted[0].note;
 }
 
-export default function HandpanWidget() {
+function HandpanWidgetContent() {
   const configs = getAllHandpanConfigs();
-  const [selectedHandpanId, setSelectedHandpanId] = useState<string>(
+  const [selectedHandpanId, setSelectedHandpanId] = useState(
     configs[0]?.id || ''
   );
-  const [playbackState, setPlaybackState] = useState<PlaybackState>({
-    activePadNote: null,
-    activePitchClasses: null,
-    isPlaying: false,
-  });
   const [selectedChord, setSelectedChord] = useState<PlayableChord | null>(
     null
   );
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('arpeggio');
-  const [arpeggioBpm, setArpeggioBpm] = useState<number>(120);
+  const [arpeggioBpm, setArpeggioBpm] = useState(120);
 
+  const playback = usePlayback();
   const selectedHandpan = getHandpanConfig(selectedHandpanId);
   const selectedScaleInfo = useMemo(() => {
     if (!selectedHandpan) return null;
@@ -56,59 +53,46 @@ export default function HandpanWidget() {
 
   useEffect(() => {
     setSelectedChord(null);
-    setPlaybackState({
-      activePadNote: null,
-      activePitchClasses: null,
-      isPlaying: false,
-    });
+    playback.clearPlayback();
   }, [selectedHandpanId]);
 
-  const selectedNotes = useMemo(() => {
+  const selectedNotesForHandpan = useMemo<Set<string>>(() => {
+    if (!selectedHandpan || !selectedChord) return new Set();
     const notes = new Set<string>();
-    if (selectedChord && selectedHandpan) {
-      const highlightPitchClasses = new Set(selectedChord.pitchClasses);
-      // Use layout pads (not scale notes) to ensure correct highlighting
-      selectedHandpan.layout.forEach((pad) => {
-        const pc = normalizeToPitchClass(pad.note);
-        if (highlightPitchClasses.has(pc)) {
-          notes.add(pad.note);
-        }
-      });
-    }
+    const chordPitchClassSet = new Set(selectedChord.pitchClasses);
+    selectedHandpan.layout.forEach((pad) => {
+      const padPc = normalizeToPitchClass(pad.note);
+      if (chordPitchClassSet.has(padPc)) {
+        notes.add(pad.note);
+      }
+    });
     return notes;
-  }, [selectedChord, selectedHandpan]);
+  }, [selectedHandpan, selectedChord]);
 
-  const activeNotes = useMemo(() => {
+  const activeNotes = useMemo<Set<string>>(() => {
+    if (!selectedHandpan) return new Set();
     const notes = new Set<string>();
-    if (!selectedHandpan) return notes;
 
-    // Priority 1: Exact pad note match (for single-note interactions)
-    if (playbackState.activePadNote) {
-      const hasExact = selectedHandpan.layout.some(
-        (p) => p.note === playbackState.activePadNote
-      );
-      if (hasExact) {
-        notes.add(playbackState.activePadNote);
-        return notes; // IMPORTANT: no pitch-class highlight when exact note is known
+    if (playback.state.intent === 'note' || playback.state.intent === 'scalePlayback') {
+      if (playback.state.activeNote) {
+        const pad = selectedHandpan.layout.find(
+          (p) => p.note === playback.state.activeNote
+        );
+        if (pad) {
+          notes.add(pad.note);
+        } else {
+          const pc = normalizeToPitchClass(playback.state.activeNote);
+          const mapped = pickBestPadNoteForPc(selectedHandpan.layout, pc);
+          if (mapped) {
+            notes.add(mapped);
+          }
+        }
       }
-
-      // If exact pad doesn't exist, map to closest pad of same pitch class
-      const pc = normalizeToPitchClass(playbackState.activePadNote);
-      const mapped = pickBestPadNoteForPc(selectedHandpan.layout, pc);
-      if (mapped) {
-        notes.add(mapped);
-      }
-      return notes;
-    }
-
-    // Priority 2: Conceptual pitch-class highlights (for chords)
-    if (
-      playbackState.activePitchClasses &&
-      playbackState.activePitchClasses.length > 0
-    ) {
-      const pitchClassSet = new Set(playbackState.activePitchClasses);
+    } else if (playback.state.intent === 'chordPlayback' && playback.state.activePitchClasses) {
+      const pitchClassSet = new Set(playback.state.activePitchClasses);
       selectedHandpan.layout.forEach((pad) => {
-        if (pitchClassSet.has(normalizeToPitchClass(pad.note))) {
+        const padPc = normalizeToPitchClass(pad.note);
+        if (pitchClassSet.has(padPc)) {
           notes.add(pad.note);
         }
       });
@@ -116,73 +100,60 @@ export default function HandpanWidget() {
 
     return notes;
   }, [
-    playbackState.activePadNote,
-    playbackState.activePitchClasses,
     selectedHandpan,
+    playback.state.intent,
+    playback.state.activeNote,
+    playback.state.activePitchClasses,
   ]);
 
-  const handlePadClick = useCallback(async (pad: HandpanPad) => {
-    try {
-      if (!isAudioInitialized()) {
-        await initializeAudio();
-      }
-
-      playNote(pad.note, 500);
-
-      // Set exact pad note only (no pitch-class highlight for single-note clicks)
-      setPlaybackState({
-        activePadNote: pad.note,
-        activePitchClasses: null,
-        isPlaying: false,
-      });
-
-      setTimeout(() => {
-        setPlaybackState({
-          activePadNote: null,
-          activePitchClasses: null,
-          isPlaying: false,
-        });
-      }, 500);
-    } catch (error) {
+  const handlePadClick = useCallback(
+    async (pad: HandpanPad) => {
       try {
-        await initializeAudio();
+        if (!isAudioInitialized()) {
+          await initializeAudio();
+        }
+        setSelectedChord(null);
+        playback.setNoteActive(pad.note, 'note');
         playNote(pad.note, 500);
-        setPlaybackState({
-          activePadNote: pad.note,
-          activePitchClasses: null,
-          isPlaying: false,
-        });
         setTimeout(() => {
-          setPlaybackState({
-            activePadNote: null,
-            activePitchClasses: null,
-            isPlaying: false,
-          });
+          playback.clearPlayback();
         }, 500);
-      } catch (retryError) {
-        // Audio initialization failed
+      } catch (error) {
+        try {
+          await initializeAudio();
+          setSelectedChord(null);
+          playback.setNoteActive(pad.note, 'note');
+          playNote(pad.note, 500);
+          setTimeout(() => {
+            playback.clearPlayback();
+          }, 500);
+        } catch (retryError) {
+          console.error('Audio initialization failed', retryError);
+        }
       }
-    }
-  }, []);
+    },
+    [playback]
+  );
 
-  const handleChordSelect = useCallback((chord: PlayableChord | null) => {
-    setSelectedChord(chord);
-    // Reset playback state when chord changes
-    setPlaybackState({
-      activePadNote: null,
-      activePitchClasses: chord ? chord.pitchClasses : null,
-      isPlaying: false,
-    });
+  const handleChordSelect = useCallback(
+    (chord: PlayableChord | null) => {
+      setSelectedChord(chord);
+    },
+    []
+  );
+
+  const handleChordClear = useCallback(() => {
+    setSelectedChord(null);
   }, []);
 
   if (!selectedHandpan) {
-    return <div>No handpan configuration available</div>;
+    return <div>No handpan configuration available.</div>;
   }
 
   return (
     <div className={styles.handpanWidget}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Handpan Memorization</h2>
+        <h2 className={styles.title}>Chord Explorer</h2>
         <div className={styles.selector}>
           <label htmlFor="handpan-select" className={styles.label}>
             Select Handpan:
@@ -190,9 +161,7 @@ export default function HandpanWidget() {
           <select
             id="handpan-select"
             value={selectedHandpanId}
-            onChange={(e) => {
-              setSelectedHandpanId(e.target.value);
-            }}
+            onChange={(e) => setSelectedHandpanId(e.target.value)}
             className={styles.select}
             aria-label="Select handpan type"
           >
@@ -209,7 +178,7 @@ export default function HandpanWidget() {
           <HandpanRenderer
             key={selectedHandpanId}
             config={selectedHandpan}
-            selectedNotes={selectedNotes}
+            selectedNotes={selectedNotesForHandpan}
             activeNotes={activeNotes}
             onPadClick={handlePadClick}
           />
@@ -219,10 +188,7 @@ export default function HandpanWidget() {
             key={`${selectedHandpanId}-${selectedHandpan.scaleName}-${selectedHandpan.scaleDescription}`}
             scaleInfo={selectedScaleInfo}
             scaleNotes={selectedHandpan.notes}
-            playbackState={playbackState}
-            onPlaybackStateChange={setPlaybackState}
-            onChordSelect={() => setSelectedChord(null)}
-            availableNotes={selectedHandpan.notes}
+            onChordSelect={handleChordClear}
           />
         </div>
       </div>
@@ -232,8 +198,6 @@ export default function HandpanWidget() {
           availableNotes={selectedHandpan.notes}
           selectedChord={selectedChord}
           onChordSelect={handleChordSelect}
-          playbackState={playbackState}
-          onPlaybackStateChange={setPlaybackState}
           playbackMode={playbackMode}
           onPlaybackModeChange={setPlaybackMode}
           arpeggioBpm={arpeggioBpm}
@@ -241,5 +205,13 @@ export default function HandpanWidget() {
         />
       </div>
     </div>
+  );
+}
+
+export default function HandpanWidget() {
+  return (
+    <PlaybackProvider key="handpan-playback-provider">
+      <HandpanWidgetContent />
+    </PlaybackProvider>
   );
 }

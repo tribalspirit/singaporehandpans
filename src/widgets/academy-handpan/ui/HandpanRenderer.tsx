@@ -1,3 +1,4 @@
+import React from 'react';
 import type { HandpanConfig, HandpanPad } from '../config/types';
 import { parseNote } from '../theory/normalize';
 import styles from '../styles/HandpanRenderer.module.scss';
@@ -54,11 +55,10 @@ export default function HandpanRenderer({
           const isActive = activeNotes.has(pad.note);
           const sizeMultiplier = getPadSizeMultiplier(pad.note);
           const adjustedRadius = pad.r * sizeMultiplier;
-
-          const padClass = [
+          const padClassNames = [
             styles.pad,
-            isSelected && styles.padSelected,
-            isActive && styles.padActive,
+            isSelected ? styles.padSelected : '',
+            isActive ? styles.padActive : '',
           ]
             .filter(Boolean)
             .join(' ');
@@ -67,7 +67,7 @@ export default function HandpanRenderer({
             <button
               key={pad.id}
               type="button"
-              className={padClass}
+              className={padClassNames}
               style={{
                 left: `${pad.x * 100}%`,
                 top: `${pad.y * 100}%`,
