@@ -55,10 +55,12 @@ export async function getStaticPaths() {
     }
   ];
 
-  // Fetch from Storyblok - token is configured in astro.config.mjs integration
   try {
     const storyblokApi = useStoryblokApi();
-    // Use 'published' for production builds, 'draft' for development preview
+    if (!storyblokApi) {
+      throw new Error('Storyblok API not initialized');
+    }
+    
     const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
     
     const { data } = await storyblokApi.get('cdn/stories', {
@@ -76,10 +78,10 @@ export async function getStaticPaths() {
         }
       }));
     } else {
-      // No events in CMS - use fallback events
       return FALLBACK_EVENTS;
     }
   } catch (error) {
+    console.error('Event [slug]: Failed to load from Storyblok', error);
     return FALLBACK_EVENTS;
   }
 }

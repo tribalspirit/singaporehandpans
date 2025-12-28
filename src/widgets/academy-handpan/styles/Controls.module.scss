@@ -1,0 +1,230 @@
+@use "src/styles/tokens.scss";
+
+.controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-lg);
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--color-white);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  flex-wrap: wrap;
+}
+
+.chordInfo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex: 1;
+  min-width: 0;
+}
+
+.chordName {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.chordNotes {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-mono);
+  white-space: nowrap;
+}
+
+.chordFormula {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.controlsGroup {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.modeToggle {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--color-gray-100);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+
+  &:hover {
+    border-color: var(--color-primary);
+    background: var(--color-gray-200);
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.modeToggleArpeggio {
+  background: var(--color-primary);
+  color: var(--color-white);
+  border-color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+
+  &:hover {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+  }
+}
+
+.modeToggleSimultaneous {
+  background: var(--color-gray-200);
+  color: var(--color-text-primary);
+  border-color: var(--color-gray-400);
+}
+
+.speedControl {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 120px;
+}
+
+.speedLabel {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  min-width: 50px;
+}
+
+.slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-gray-200);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  min-width: 80px;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+
+    &:hover {
+      background: var(--color-primary-dark);
+      transform: scale(1.1);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition-base);
+
+    &:hover {
+      background: var(--color-primary-dark);
+      transform: scale(1.1);
+    }
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.playbackButtons {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.playButton,
+.stopButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.stopButton {
+  background: var(--color-error);
+
+  &:hover {
+    background: #c82333;
+  }
+}
+
+@media (max-width: 768px) {
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-md);
+  }
+
+  .chordInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .controlsGroup {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .speedControl {
+    flex: 1;
+    min-width: 150px;
+  }
+}
+
