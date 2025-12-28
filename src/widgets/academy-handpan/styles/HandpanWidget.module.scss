@@ -1,4 +1,4 @@
-@use "src/styles/tokens.scss";
+@use 'src/styles/tokens.scss';
 
 .handpanWidget {
   width: 100%;
@@ -19,16 +19,25 @@
 }
 
 .header {
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
   text-align: center;
+
+  @media (min-width: 768px) {
+    margin-bottom: var(--spacing-xl);
+  }
 }
 
 .title {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
   color: var(--color-primary);
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
   font-family: var(--font-family-heading);
+
+  @media (min-width: 768px) {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--spacing-lg);
+  }
 }
 
 .selector {
@@ -44,9 +53,13 @@
 }
 
 .label {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+
+  @media (max-width: 768px) {
+    font-size: var(--font-size-lg);
+  }
 }
 
 .select {
@@ -55,11 +68,18 @@
   border-radius: var(--border-radius-md);
   background: var(--color-surface);
   color: var(--color-text-primary);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all var(--transition-base);
   min-width: 200px;
+
+  @media (max-width: 768px) {
+    font-size: var(--font-size-base);
+    padding: var(--spacing-md) var(--spacing-lg);
+    min-height: 48px;
+    min-width: 250px;
+  }
 
   &:hover {
     border-color: var(--color-primary);
@@ -75,15 +95,16 @@
 .topRow {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-md);
   align-items: start;
   width: 100%;
   min-width: 0;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
 
   @media (min-width: 768px) {
     grid-template-columns: minmax(280px, 500px) 1fr;
     gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
   }
 
   @media (min-width: 1024px) {
@@ -95,7 +116,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 400px;
+  min-height: 300px;
   width: 100%;
   min-width: 0;
   overflow: hidden;
@@ -129,4 +150,3 @@
   background: var(--color-gray-50);
   border-radius: var(--border-radius-md);
 }
-
