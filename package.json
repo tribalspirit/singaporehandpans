@@ -15,10 +15,11 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.astro",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.astro --fix",
     "format": "prettier --write .",
+    "screenshots": "tsx scripts/screenshots.ts",
     "storyblok:setup": "node scripts/storyblok-setup.js",
     "storyblok:components": "node scripts/create-components.js",
     "storyblok:content": "node scripts/create-sample-content.js",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,astro}": [
@@ -62,9 +63,11 @@
     "eslint-plugin-jsx-a11y": "^6.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "playwright": "^1.57.0",
     "prettier": "^3.0.0",
     "prettier-plugin-astro": "^0.12.0",
     "storyblok": "^3.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.0.0",
     "vitest": "^4.0.16"
   }
