@@ -18,7 +18,7 @@
     "storyblok:setup": "node scripts/storyblok-setup.js",
     "storyblok:components": "node scripts/create-components.js",
     "storyblok:content": "node scripts/create-sample-content.js",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,astro}": [
