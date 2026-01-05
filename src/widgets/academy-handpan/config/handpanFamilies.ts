@@ -72,27 +72,70 @@ function buildNotesFromIntervals(
     return notes;
   }
 
-  const ringMidiValues: number[] = [];
+  const tonicPcValue = tonicSemitone % 12;
+  const nonTonicPcs = uniquePcs.filter((pc) => pc !== tonicPcValue);
 
-  let currentOctave = DING_OCTAVE;
-  let pcIndex = 0;
+  const fifthInterval = 7;
+  const fifthPc = (tonicPcValue + fifthInterval) % 12;
+  const hasFifth = nonTonicPcs.includes(fifthPc);
+
+  const ringMidiValues: number[] = [];
+  const usedPcs = new Map<number, number>();
+
+  let currentMidi = hasFifth
+    ? fifthPc + DING_OCTAVE * 12
+    : nonTonicPcs[0] + DING_OCTAVE * 12;
+
+  if (currentMidi <= midiBase) {
+    currentMidi += 12;
+  }
+  currentMidi--;
 
   while (ringMidiValues.length < ringNotesNeeded) {
-    const pc = uniquePcs[pcIndex % pcCount];
-    const candidateMidi = pc + currentOctave * 12;
+    let nextMidi = -1;
+    let nextPc = -1;
 
-    if (candidateMidi > midiBase) {
-      ringMidiValues.push(candidateMidi);
+    for (const pc of nonTonicPcs) {
+      const timesUsed = usedPcs.get(pc) || 0;
+      if (timesUsed >= 2) continue;
+
+      const octave = Math.floor(currentMidi / 12);
+      let candidateMidi = pc + octave * 12;
+
+      if (candidateMidi <= currentMidi) {
+        candidateMidi += 12;
+      }
+
+      if (octave > DING_OCTAVE + 3) continue;
+
+      if (nextMidi === -1 || candidateMidi < nextMidi) {
+        nextMidi = candidateMidi;
+        nextPc = pc;
+      }
     }
 
-    pcIndex++;
-    if (pcIndex % pcCount === 0) {
-      currentOctave++;
+    if (nextMidi === -1) {
+      if (hasFifth) {
+        const timesUsed = usedPcs.get(fifthPc) || 0;
+        if (timesUsed < 3) {
+          const octave = Math.floor(currentMidi / 12);
+          let candidateMidi = fifthPc + octave * 12;
+          if (candidateMidi <= currentMidi) {
+            candidateMidi += 12;
+          }
+          if (octave <= DING_OCTAVE + 3) {
+            nextMidi = candidateMidi;
+            nextPc = fifthPc;
+          }
+        }
+      }
     }
 
-    if (currentOctave > DING_OCTAVE + 3) {
-      break;
-    }
+    if (nextMidi === -1) break;
+
+    ringMidiValues.push(nextMidi);
+    usedPcs.set(nextPc, (usedPcs.get(nextPc) || 0) + 1);
+    currentMidi = nextMidi;
   }
 
   ringMidiValues.sort((a, b) => a - b);
