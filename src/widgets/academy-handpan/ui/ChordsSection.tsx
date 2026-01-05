@@ -8,7 +8,6 @@ import {
   playChord,
 } from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
-import { normalizeToPitchClass } from '../theory/normalize';
 import Controls from './Controls';
 import styles from '../styles/ChordsSection.module.scss';
 
@@ -36,16 +35,21 @@ export default function ChordsSection({
   const {
     state: playbackState,
     setChordPitchClassesActive,
+    setChordNotesActive,
     setIsPlaying,
     clearPlayback,
   } = usePlayback();
   const setChordPitchClassesActiveRef = useRef(setChordPitchClassesActive);
+  const setChordNotesActiveRef = useRef(setChordNotesActive);
   const setIsPlayingRef = useRef(setIsPlaying);
   const clearPlaybackRef = useRef(clearPlayback);
 
   React.useEffect(() => {
     setChordPitchClassesActiveRef.current = setChordPitchClassesActive;
   }, [setChordPitchClassesActive]);
+  React.useEffect(() => {
+    setChordNotesActiveRef.current = setChordNotesActive;
+  }, [setChordNotesActive]);
   React.useEffect(() => {
     setIsPlayingRef.current = setIsPlaying;
   }, [setIsPlaying]);
@@ -63,7 +67,6 @@ export default function ChordsSection({
       (chord) =>
         chord.category === 'advanced' &&
         chord.notes.length >= 3 &&
-        chord.notes.length <= 5 &&
         chord.notes.every((note) => availableNotes.includes(note))
     );
     const grouped = new Map<string, PlayableChord[]>();
@@ -101,7 +104,7 @@ export default function ChordsSection({
       stopArpeggio();
       setIsPlayingRef.current(true);
       if (playbackMode === 'simultaneous') {
-        setChordPitchClassesActiveRef.current(selectedChord.pitchClasses);
+        setChordNotesActiveRef.current(selectedChord.notes);
         playChord(selectedChord.notes, 1000);
         setTimeout(() => {
           clearPlaybackRef.current();
@@ -112,9 +115,7 @@ export default function ChordsSection({
           bpm: arpeggioBpm,
           direction: 'up',
           onStep: (step) => {
-            setChordPitchClassesActiveRef.current([
-              normalizeToPitchClass(step.note),
-            ]);
+            setChordNotesActiveRef.current([step.note]);
           },
           onComplete: () => {
             clearPlaybackRef.current();
@@ -154,31 +155,54 @@ export default function ChordsSection({
           <h3 className={styles.sectionTitle}>
             Main Triads (Circle of Fifths)
           </h3>
+          <p className={styles.triadsLegend}>
+            <span className={styles.legendTonic}>■ Tonic (I)</span>
+            <span className={styles.legendRelative}>
+              ■ Relative Major (III)
+            </span>
+          </p>
           <div className={styles.triadsRow}>
-            {diatonicTriads.map(({ chord, isTonic, isRelativeMajor }) => {
-              const isSelected = selectedChord?.name === chord.name;
-              return (
-                <button
-                  key={chord.name}
-                  type="button"
-                  className={[
-                    styles.triadTile,
-                    isSelected ? styles.triadTileSelected : '',
-                    isTonic ? styles.triadTileTonic : '',
-                    isRelativeMajor ? styles.triadTileRelativeMajor : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  onClick={() => handleChordClick(chord)}
-                  aria-pressed={isSelected}
-                >
-                  <span className={styles.triadName}>{chord.displayName}</span>
-                  <span className={styles.triadNotes}>
-                    {chord.notes.join(' ')}
-                  </span>
-                </button>
-              );
-            })}
+            {diatonicTriads.map(
+              ({ chord, degree, isTonic, isRelativeMajor }) => {
+                const isSelected = selectedChord?.name === chord.name;
+                const romanNumerals = [
+                  '',
+                  'I',
+                  'II',
+                  'III',
+                  'IV',
+                  'V',
+                  'VI',
+                  'VII',
+                ];
+                const degreeLabel = romanNumerals[degree] || degree.toString();
+                return (
+                  <button
+                    key={chord.name}
+                    type="button"
+                    className={[
+                      styles.triadTile,
+                      isSelected ? styles.triadTileSelected : '',
+                      isTonic ? styles.triadTileTonic : '',
+                      isRelativeMajor ? styles.triadTileRelativeMajor : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    onClick={() => handleChordClick(chord)}
+                    aria-pressed={isSelected}
+                    title={`Degree ${degreeLabel}`}
+                  >
+                    <span className={styles.triadDegree}>{degreeLabel}</span>
+                    <span className={styles.triadName}>
+                      {chord.displayName}
+                    </span>
+                    <span className={styles.triadNotes}>
+                      {chord.notes.join(' ')}
+                    </span>
+                  </button>
+                );
+              }
+            )}
           </div>
         </div>
       )}

@@ -1,8 +1,4 @@
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-} from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import type { PlaybackState } from './types';
 import { PlaybackContext, type PlaybackContextValue } from './usePlayback';
 
@@ -13,23 +9,39 @@ export const PlaybackProvider: React.FC<{ children: React.ReactNode }> = ({
     intent: 'none',
     activeNote: null,
     activePitchClasses: null,
+    activeNotes: null,
     isPlaying: false,
   });
 
-  const setNoteActive = useCallback((note: string, intent: 'note' | 'scalePlayback') => {
-    setState({
-      intent,
-      activeNote: note,
-      activePitchClasses: null,
-      isPlaying: intent === 'scalePlayback',
-    });
-  }, []);
+  const setNoteActive = useCallback(
+    (note: string, intent: 'note' | 'scalePlayback') => {
+      setState({
+        intent,
+        activeNote: note,
+        activePitchClasses: null,
+        activeNotes: null,
+        isPlaying: intent === 'scalePlayback',
+      });
+    },
+    []
+  );
 
   const setChordPitchClassesActive = useCallback((pcs: string[]) => {
     setState({
       intent: 'chordPlayback',
       activeNote: null,
       activePitchClasses: pcs,
+      activeNotes: null,
+      isPlaying: true,
+    });
+  }, []);
+
+  const setChordNotesActive = useCallback((notes: string[]) => {
+    setState({
+      intent: 'chordPlayback',
+      activeNote: null,
+      activePitchClasses: null,
+      activeNotes: notes,
       isPlaying: true,
     });
   }, []);
@@ -43,6 +55,7 @@ export const PlaybackProvider: React.FC<{ children: React.ReactNode }> = ({
       intent: 'none',
       activeNote: null,
       activePitchClasses: null,
+      activeNotes: null,
       isPlaying: false,
     });
   }, []);
@@ -52,6 +65,7 @@ export const PlaybackProvider: React.FC<{ children: React.ReactNode }> = ({
       state,
       setNoteActive,
       setChordPitchClassesActive,
+      setChordNotesActive,
       setIsPlaying,
       clearPlayback,
     }),
@@ -59,6 +73,7 @@ export const PlaybackProvider: React.FC<{ children: React.ReactNode }> = ({
       state,
       setNoteActive,
       setChordPitchClassesActive,
+      setChordNotesActive,
       setIsPlaying,
       clearPlayback,
     ]

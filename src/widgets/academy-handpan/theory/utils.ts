@@ -7,7 +7,7 @@ export function assignOctavesToPitchClasses(
   availableNotes: string[]
 ): string[] {
   const availableMap = new Map<string, string[]>();
-  
+
   for (const note of availableNotes) {
     const pc = normalizeToPitchClass(note);
     if (!availableMap.has(pc)) {
@@ -21,7 +21,7 @@ export function assignOctavesToPitchClasses(
 
   for (const pc of pitchClasses) {
     const candidates = availableMap.get(pc) || [];
-    
+
     if (candidates.length === 0) {
       continue;
     }
@@ -38,6 +38,36 @@ export function assignOctavesToPitchClasses(
         break;
       }
     }
+  }
+
+  return result;
+}
+
+export function assignAllOctavesToPitchClasses(
+  pitchClasses: string[],
+  availableNotes: string[]
+): string[] {
+  const availableMap = new Map<string, string[]>();
+
+  for (const note of availableNotes) {
+    const pc = normalizeToPitchClass(note);
+    if (!availableMap.has(pc)) {
+      availableMap.set(pc, []);
+    }
+    availableMap.get(pc)!.push(note);
+  }
+
+  const result: string[] = [];
+
+  for (const pc of pitchClasses) {
+    const candidates = availableMap.get(pc) || [];
+
+    const sortedCandidates = stableSort(candidates, (n) => {
+      const parsed = parseNote(n);
+      return parsed.octave !== null ? parsed.octave.toString() : '999';
+    });
+
+    result.push(...sortedCandidates);
   }
 
   return result;
@@ -69,5 +99,3 @@ export function deduplicateNotes(notes: string[]): string[] {
     return true;
   });
 }
-
-

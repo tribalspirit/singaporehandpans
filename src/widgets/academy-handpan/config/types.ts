@@ -1,5 +1,24 @@
 export type Note = string;
 
+export type PitchClass =
+  | 'C'
+  | 'C#'
+  | 'Db'
+  | 'D'
+  | 'D#'
+  | 'Eb'
+  | 'E'
+  | 'F'
+  | 'F#'
+  | 'Gb'
+  | 'G'
+  | 'G#'
+  | 'Ab'
+  | 'A'
+  | 'A#'
+  | 'Bb'
+  | 'B';
+
 export interface HandpanPad {
   id: string;
   note: Note;
@@ -9,10 +28,29 @@ export interface HandpanPad {
   role?: 'ding' | 'ring' | 'bottom';
 }
 
+export interface HandpanScaleFamilyTemplate {
+  id: string;
+  name: string;
+  description: string;
+  aliases?: string[];
+  makers?: string[];
+  modeHint?: 'minor' | 'major' | 'mixed' | 'exotic';
+  intervalsPcSemitones?: number[];
+  orderedRingIntervalsByNoteCount?: Record<number, number[]>;
+  suggestedNoteCounts: number[];
+  supportedKeys: PitchClass[];
+  defaultKey?: PitchClass;
+  defaultNoteCount?: number;
+}
+
 export interface HandpanConfig {
   id: string;
   name: string;
   family?: string;
+  familyId?: string;
+  tonicPc?: string;
+  ding?: Note;
+  noteCount?: number;
   notes: Note[];
   layout: HandpanPad[];
   scaleName: string;
@@ -20,6 +58,7 @@ export interface HandpanConfig {
   scaleDescription: string;
   scaleMoodTags: string[];
   scaleTypicalKeys?: string[];
+  makers?: string[];
 }
 
 export const NOTE_PATTERN = /^[A-G](?:#|b)?\d*$/;
@@ -62,12 +101,17 @@ export function validateHandpanConfig(config: HandpanConfig): boolean {
       return false;
     }
 
-    if (pad.x < 0 || pad.x > 1 || pad.y < 0 || pad.y > 1 || pad.r <= 0 || pad.r > 1) {
+    if (
+      pad.x < 0 ||
+      pad.x > 1 ||
+      pad.y < 0 ||
+      pad.y > 1 ||
+      pad.r <= 0 ||
+      pad.r > 1
+    ) {
       return false;
     }
   }
 
   return true;
 }
-
-
