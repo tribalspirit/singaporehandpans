@@ -356,7 +356,12 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
     );
     const orderedNotes = sortNotesByPitch(mappedNotes);
 
-    if (orderedNotes.length < candidate.pitchClasses.length) {
+    const uniquePcsInResult = new Set(orderedNotes.map(normalizeToPitchClass));
+    const hasAllRequiredPitchClasses = candidate.pitchClasses.every((pc) =>
+      uniquePcsInResult.has(pc)
+    );
+
+    if (!hasAllRequiredPitchClasses || orderedNotes.length < 3) {
       continue;
     }
 
