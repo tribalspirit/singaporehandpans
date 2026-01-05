@@ -89,10 +89,9 @@ function HandpanWidgetContent() {
   const selectedNotesForHandpan = useMemo<Set<string>>(() => {
     if (!selectedHandpan || !selectedChord) return new Set();
     const notes = new Set<string>();
-    const chordPitchClassSet = new Set(selectedChord.pitchClasses);
+    const chordNotesSet = new Set(selectedChord.notes);
     selectedHandpan.layout.forEach((pad) => {
-      const padPc = normalizeToPitchClass(pad.note);
-      if (chordPitchClassSet.has(padPc)) {
+      if (chordNotesSet.has(pad.note)) {
         notes.add(pad.note);
       }
     });
