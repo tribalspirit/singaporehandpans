@@ -59,12 +59,19 @@ export default function ChordsSection({
 
   const addedNoteChords = useMemo(() => {
     const allChords = findPlayableChords(availableNotes);
+    console.log(
+      '[ChordsSection] Total chords from findPlayableChords:',
+      allChords.length
+    );
+
     const filtered = allChords.filter(
       (chord) =>
         chord.category === 'advanced' &&
         chord.notes.length >= 3 &&
         chord.notes.every((note) => availableNotes.includes(note))
     );
+    console.log('[ChordsSection] Filtered advanced chords:', filtered.length);
+
     const grouped = new Map<string, PlayableChord[]>();
     for (const chord of filtered) {
       const root = chord.rootPc || chord.pitchClasses[0] || '';
@@ -73,16 +80,31 @@ export default function ChordsSection({
       }
       grouped.get(root)!.push(chord);
     }
-    return Array.from(grouped.entries())
+
+    const result = Array.from(grouped.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([root, chords]) => ({ root, chords }));
+
+    console.log(
+      '[ChordsSection] Grouped by root:',
+      result.map((r) => `${r.root}: ${r.chords.length}`)
+    );
+
+    return result;
   }, [availableNotes]);
 
   const handleChordClick = useCallback(
     (chord: PlayableChord) => {
+      console.log(
+        '[ChordsSection] handleChordClick called with:',
+        chord.displayName,
+        chord.name
+      );
       if (selectedChord && chord.name === selectedChord.name) {
+        console.log('[ChordsSection] Deselecting chord');
         onChordSelect(null);
       } else {
+        console.log('[ChordsSection] Selecting chord');
         onChordSelect(chord);
       }
     },
