@@ -33,6 +33,44 @@
   min-width: 0;
   overflow: hidden;
 }
+
+.triadsLegend {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    font-size: var(--font-size-xs);
+    gap: var(--spacing-sm);
+  }
+}
+
+.legendTonic {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+
+  &::before {
+    content: '■';
+    color: rgba(99, 102, 241, 0.8);
+    font-size: var(--font-size-lg);
+  }
+}
+
+.legendRelative {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+
+  &::before {
+    content: '■';
+    color: rgba(234, 179, 8, 0.8);
+    font-size: var(--font-size-lg);
+  }
+}
 .triadsRow {
   display: flex;
   gap: var(--spacing-sm);
@@ -209,6 +247,18 @@
     );
   }
 }
+.triadDegree {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-serif, serif);
+  font-style: italic;
+
+  @media (max-width: 768px) {
+    font-size: var(--font-size-sm);
+  }
+}
+
 .triadName {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);

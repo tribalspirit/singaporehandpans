@@ -214,7 +214,7 @@ function HandpanWidgetContent() {
               id="key-select"
               value={selectedKey}
               onChange={(e) => setSelectedKey(e.target.value as PitchClass)}
-              className={styles.select}
+              className={`${styles.select} ${styles.selectCompact}`}
               aria-label="Select key"
               disabled={keyOptions.length <= 1}
             >
@@ -233,7 +233,7 @@ function HandpanWidgetContent() {
               id="pads-select"
               value={selectedNoteCount}
               onChange={(e) => setSelectedNoteCount(Number(e.target.value))}
-              className={styles.select}
+              className={`${styles.select} ${styles.selectCompact}`}
               aria-label="Select number of pads"
               disabled={noteCountOptions.length <= 1}
             >

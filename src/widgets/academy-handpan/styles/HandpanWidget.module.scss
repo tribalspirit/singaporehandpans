@@ -49,7 +49,8 @@
   margin: 0 auto;
 
   @media (min-width: 640px) {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr;
+    align-items: end;
   }
 }
 
@@ -112,6 +113,12 @@
     opacity: 0.5;
     cursor: not-allowed;
     border-color: var(--color-border);
+  }
+}
+
+.selectCompact {
+  @media (min-width: 640px) {
+    max-width: 120px;
   }
 }
 

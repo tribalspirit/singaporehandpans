@@ -154,31 +154,54 @@ export default function ChordsSection({
           <h3 className={styles.sectionTitle}>
             Main Triads (Circle of Fifths)
           </h3>
+          <p className={styles.triadsLegend}>
+            <span className={styles.legendTonic}>■ Tonic (I)</span>
+            <span className={styles.legendRelative}>
+              ■ Relative Major (III)
+            </span>
+          </p>
           <div className={styles.triadsRow}>
-            {diatonicTriads.map(({ chord, isTonic, isRelativeMajor }) => {
-              const isSelected = selectedChord?.name === chord.name;
-              return (
-                <button
-                  key={chord.name}
-                  type="button"
-                  className={[
-                    styles.triadTile,
-                    isSelected ? styles.triadTileSelected : '',
-                    isTonic ? styles.triadTileTonic : '',
-                    isRelativeMajor ? styles.triadTileRelativeMajor : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  onClick={() => handleChordClick(chord)}
-                  aria-pressed={isSelected}
-                >
-                  <span className={styles.triadName}>{chord.displayName}</span>
-                  <span className={styles.triadNotes}>
-                    {chord.notes.join(' ')}
-                  </span>
-                </button>
-              );
-            })}
+            {diatonicTriads.map(
+              ({ chord, degree, isTonic, isRelativeMajor }) => {
+                const isSelected = selectedChord?.name === chord.name;
+                const romanNumerals = [
+                  '',
+                  'I',
+                  'II',
+                  'III',
+                  'IV',
+                  'V',
+                  'VI',
+                  'VII',
+                ];
+                const degreeLabel = romanNumerals[degree] || degree.toString();
+                return (
+                  <button
+                    key={chord.name}
+                    type="button"
+                    className={[
+                      styles.triadTile,
+                      isSelected ? styles.triadTileSelected : '',
+                      isTonic ? styles.triadTileTonic : '',
+                      isRelativeMajor ? styles.triadTileRelativeMajor : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    onClick={() => handleChordClick(chord)}
+                    aria-pressed={isSelected}
+                    title={`Degree ${degreeLabel}`}
+                  >
+                    <span className={styles.triadDegree}>{degreeLabel}</span>
+                    <span className={styles.triadName}>
+                      {chord.displayName}
+                    </span>
+                    <span className={styles.triadNotes}>
+                      {chord.notes.join(' ')}
+                    </span>
+                  </button>
+                );
+              }
+            )}
           </div>
         </div>
       )}
