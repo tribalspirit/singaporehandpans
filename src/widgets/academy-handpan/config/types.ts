@@ -35,7 +35,8 @@ export interface HandpanScaleFamilyTemplate {
   aliases?: string[];
   makers?: string[];
   modeHint?: 'minor' | 'major' | 'mixed' | 'exotic';
-  intervalsPcSemitones: number[];
+  intervalsPcSemitones?: number[];
+  orderedRingIntervalsByNoteCount?: Record<number, number[]>;
   suggestedNoteCounts: number[];
   supportedKeys: PitchClass[];
   defaultKey?: PitchClass;

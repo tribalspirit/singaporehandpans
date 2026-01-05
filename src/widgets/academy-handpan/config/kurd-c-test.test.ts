@@ -54,11 +54,11 @@ describe('Kurd scale degree completeness', () => {
       'A3',
       'Bb3',
       'C4',
+      'D4',
       'E4',
       'F4',
       'G4',
       'A4',
-      'Bb4',
     ];
     expect(config.notes).toEqual(expectedNotes);
 
