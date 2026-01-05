@@ -38,6 +38,8 @@ export interface HandpanScaleFamilyTemplate {
   intervalsPcSemitones: number[];
   suggestedNoteCounts: number[];
   supportedKeys: PitchClass[];
+  defaultKey?: PitchClass;
+  defaultNoteCount?: number;
 }
 
 export interface HandpanConfig {

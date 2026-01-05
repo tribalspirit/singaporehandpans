@@ -153,6 +153,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 3, 5, 7, 8, 10],
     suggestedNoteCounts: [9, 10, 13],
     supportedKeys: ['D', 'E', 'F#', 'G', 'A', 'C', 'C#'],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
 
   {
@@ -166,6 +168,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 3, 5, 7, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['D', 'C#', 'E', 'F#', 'G', 'A'],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
 
   {
@@ -179,6 +183,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 3, 7, 8, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['D', 'C#', 'E', 'F', 'F#', 'G', 'A'],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
 
   {
@@ -191,6 +197,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 1, 3, 5, 7, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['D', 'C#', 'E', 'F', 'G', 'A'],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
 
   {
@@ -203,6 +211,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 3, 5, 7, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['F', 'F#', 'G', 'A', 'D', 'E'],
+    defaultKey: 'F',
+    defaultNoteCount: 9,
   },
 
   {
@@ -216,6 +226,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 3, 7, 9, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['E', 'F', 'D', 'C#', 'G'],
+    defaultKey: 'E',
+    defaultNoteCount: 9,
   },
 
   {
@@ -229,6 +241,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 5, 7, 8, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['D', 'C#', 'E', 'F#', 'G'],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
 
   {
@@ -242,6 +256,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 4, 7, 9],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['C', 'D', 'E', 'F#', 'G', 'A'],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
 
   {
@@ -254,6 +270,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 4, 7, 9, 11],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['G', 'F', 'D', 'C', 'A', 'E'],
+    defaultKey: 'G',
+    defaultNoteCount: 9,
   },
 
   {
@@ -266,6 +284,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 1, 4, 5, 7, 8, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['C', 'D', 'E', 'F#', 'G', 'A'],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
 
   {
@@ -282,6 +302,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 3, 5, 7, 8, 11],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['C', 'C#', 'D', 'E', 'F', 'F#', 'G', 'A'],
+    defaultKey: 'C',
+    defaultNoteCount: 9,
   },
 
   {
@@ -294,6 +316,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 3, 6, 7, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['B', 'C#', 'D', 'E', 'F#'],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
 
   {
@@ -306,6 +330,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['G', 'D', 'C', 'E', 'A'],
+    defaultKey: 'G',
+    defaultNoteCount: 9,
   },
 
   {
@@ -318,6 +344,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['D', 'E', 'F', 'G', 'A', 'C'],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
 
   {
@@ -329,6 +357,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 11],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['C', 'D', 'E', 'F', 'G', 'A'],
+    defaultKey: 'C',
+    defaultNoteCount: 9,
   },
 
   {
@@ -340,6 +370,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 3, 5, 7, 9, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['D', 'E', 'F', 'G', 'A', 'C'],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
 
   {
@@ -351,6 +383,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 4, 6, 7, 9, 11],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['C', 'D', 'E', 'F', 'G', 'A'],
+    defaultKey: 'F',
+    defaultNoteCount: 9,
   },
 
   {
@@ -362,6 +396,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['C', 'D', 'E', 'F', 'G', 'A'],
+    defaultKey: 'G',
+    defaultNoteCount: 9,
   },
 
   {
@@ -374,6 +410,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     intervalsPcSemitones: [0, 2, 3, 5, 7, 8, 10],
     suggestedNoteCounts: [9, 10],
     supportedKeys: ['D', 'E', 'F#', 'G', 'A', 'C', 'C#'],
+    defaultKey: 'A',
+    defaultNoteCount: 9,
   },
 ];
 
