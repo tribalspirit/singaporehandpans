@@ -120,17 +120,23 @@ function HandpanWidgetContent() {
           }
         }
       }
-    } else if (
-      playback.state.intent === 'chordPlayback' &&
-      playback.state.activePitchClasses
-    ) {
-      const pitchClassSet = new Set(playback.state.activePitchClasses);
-      selectedHandpan.layout.forEach((pad) => {
-        const padPc = normalizeToPitchClass(pad.note);
-        if (pitchClassSet.has(padPc)) {
-          notes.add(pad.note);
-        }
-      });
+    } else if (playback.state.intent === 'chordPlayback') {
+      if (playback.state.activeNotes) {
+        const activeNotesSet = new Set(playback.state.activeNotes);
+        selectedHandpan.layout.forEach((pad) => {
+          if (activeNotesSet.has(pad.note)) {
+            notes.add(pad.note);
+          }
+        });
+      } else if (playback.state.activePitchClasses) {
+        const pitchClassSet = new Set(playback.state.activePitchClasses);
+        selectedHandpan.layout.forEach((pad) => {
+          const padPc = normalizeToPitchClass(pad.note);
+          if (pitchClassSet.has(padPc)) {
+            notes.add(pad.note);
+          }
+        });
+      }
     }
 
     return notes;
@@ -139,6 +145,7 @@ function HandpanWidgetContent() {
     playback.state.intent,
     playback.state.activeNote,
     playback.state.activePitchClasses,
+    playback.state.activeNotes,
   ]);
 
   const handlePadClick = useCallback(

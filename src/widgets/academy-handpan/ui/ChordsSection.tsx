@@ -8,7 +8,6 @@ import {
   playChord,
 } from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
-import { normalizeToPitchClass } from '../theory/normalize';
 import Controls from './Controls';
 import styles from '../styles/ChordsSection.module.scss';
 
@@ -36,16 +35,21 @@ export default function ChordsSection({
   const {
     state: playbackState,
     setChordPitchClassesActive,
+    setChordNotesActive,
     setIsPlaying,
     clearPlayback,
   } = usePlayback();
   const setChordPitchClassesActiveRef = useRef(setChordPitchClassesActive);
+  const setChordNotesActiveRef = useRef(setChordNotesActive);
   const setIsPlayingRef = useRef(setIsPlaying);
   const clearPlaybackRef = useRef(clearPlayback);
 
   React.useEffect(() => {
     setChordPitchClassesActiveRef.current = setChordPitchClassesActive;
   }, [setChordPitchClassesActive]);
+  React.useEffect(() => {
+    setChordNotesActiveRef.current = setChordNotesActive;
+  }, [setChordNotesActive]);
   React.useEffect(() => {
     setIsPlayingRef.current = setIsPlaying;
   }, [setIsPlaying]);
@@ -100,7 +104,7 @@ export default function ChordsSection({
       stopArpeggio();
       setIsPlayingRef.current(true);
       if (playbackMode === 'simultaneous') {
-        setChordPitchClassesActiveRef.current(selectedChord.pitchClasses);
+        setChordNotesActiveRef.current(selectedChord.notes);
         playChord(selectedChord.notes, 1000);
         setTimeout(() => {
           clearPlaybackRef.current();
@@ -111,9 +115,7 @@ export default function ChordsSection({
           bpm: arpeggioBpm,
           direction: 'up',
           onStep: (step) => {
-            setChordPitchClassesActiveRef.current([
-              normalizeToPitchClass(step.note),
-            ]);
+            setChordNotesActiveRef.current([step.note]);
           },
           onComplete: () => {
             clearPlaybackRef.current();

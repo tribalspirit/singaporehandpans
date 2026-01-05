@@ -5,6 +5,7 @@ export interface PlaybackContextValue {
   state: PlaybackState;
   setNoteActive: (note: string, intent: 'note' | 'scalePlayback') => void;
   setChordPitchClassesActive: (pcs: string[]) => void;
+  setChordNotesActive: (notes: string[]) => void;
   setIsPlaying: (playing: boolean) => void;
   clearPlayback: () => void;
 }
@@ -20,4 +21,3 @@ export const usePlayback = () => {
   }
   return ctx;
 };
-
