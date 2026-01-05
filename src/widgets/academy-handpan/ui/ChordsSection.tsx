@@ -63,7 +63,6 @@ export default function ChordsSection({
       (chord) =>
         chord.category === 'advanced' &&
         chord.notes.length >= 3 &&
-        chord.notes.length <= 5 &&
         chord.notes.every((note) => availableNotes.includes(note))
     );
     const grouped = new Map<string, PlayableChord[]>();
