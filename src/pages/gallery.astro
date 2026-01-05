@@ -1,1 +1,168 @@
+---
+import { useStoryblokApi } from '@storyblok/astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import GalleryGrid from '../components/GalleryGrid';
+import CMSFallback from '../components/CMSFallback.astro';
+import { normalizeTags } from '../utils/tags';
 
+interface GalleryItem {
+  id: string;
+  uuid: string;
+  name: string;
+  slug: string;
+  content: {
+    component: string;
+    title: string;
+    media?: {
+      filename: string;
+      alt?: string;
+    };
+    description?: string;
+    tags?: string | string[];
+    alt_text?: string;
+    photographer?: string;
+    featured?: boolean;
+    sort_order?: number;
+  };
+}
+
+let galleryItems: GalleryItem[] = [];
+let error = null;
+
+try {
+  const storyblokApi = useStoryblokApi();
+  const response = await storyblokApi.get('cdn/stories', {
+    version: import.meta.env.DEV ? 'draft' : 'published',
+    starts_with: 'gallery/',
+    is_startpage: false,
+    per_page: 100,
+    resolve_assets: 1,
+  });
+
+  galleryItems = response.data.stories
+    .filter((story: GalleryItem) => story.content.component === 'gallery_item')
+    .sort((a: GalleryItem, b: GalleryItem) => {
+      const orderA = a.content.sort_order || 999;
+      const orderB = b.content.sort_order || 999;
+      return orderA - orderB;
+    });
+} catch (err) {
+  console.error('Failed to fetch gallery items:', err);
+  error = err;
+}
+
+const transformedItems = galleryItems.map((item) => ({
+  id: item.uuid,
+  title: item.content.title,
+  media: item.content.media,
+  description: item.content.description,
+  tags: normalizeTags(item.content.tags),
+  alt_text: item.content.alt_text,
+  photographer: item.content.photographer,
+  featured: item.content.featured,
+}));
+
+const pageTitle = 'Gallery';
+const pageDescription =
+  'Explore our collection of handpan moments - workshops, performances, instruments, and community gatherings at Singapore Handpan Studio.';
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <main class="gallery-page">
+    <section class="hero-section">
+      <div class="container">
+        <h1 class="page-title">Gallery</h1>
+        <p class="page-subtitle">
+          Explore moments from our studio, workshops, and community gatherings
+        </p>
+      </div>
+    </section>
+
+    <section class="gallery-section">
+      <div class="container">
+        {error ? (
+          <CMSFallback
+            message="Unable to load gallery content. Please try again later."
+            showRetry={true}
+          />
+        ) : galleryItems.length === 0 ? (
+          <div class="empty-state">
+            <p>No gallery items available yet. Check back soon!</p>
+          </div>
+        ) : (
+          <GalleryGrid items={transformedItems} client:load />
+        )}
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  .gallery-page {
+    min-height: 100vh;
+  }
+
+  .hero-section {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-light) 0%,
+      var(--color-accent-light) 100%
+    );
+    padding: var(--space-16) 0 var(--space-12);
+    text-align: center;
+
+    @media (max-width: 768px) {
+      padding: var(--space-12) 0 var(--space-8);
+    }
+  }
+
+  .page-title {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+    margin-bottom: var(--space-4);
+    line-height: var(--line-height-tight);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-5xl);
+    }
+  }
+
+  .page-subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--color-gray-700);
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: var(--line-height-relaxed);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-xl);
+    }
+  }
+
+  .gallery-section {
+    padding: var(--space-16) 0;
+    background: var(--color-gray-50);
+
+    @media (max-width: 768px) {
+      padding: var(--space-12) 0;
+    }
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+
+    @media (max-width: 768px) {
+      padding: 0 var(--space-4);
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--space-16);
+    color: var(--color-gray-600);
+    font-size: var(--font-size-lg);
+  }
+</style>
