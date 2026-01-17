@@ -12,11 +12,13 @@ Complete documentation for Singapore Handpan Studio website.
 ## Setup
 
 ### Getting Started
+
 - **[Environment Setup](setup/ENVIRONMENT.md)** - Install dependencies, configure environment variables
 - **[Storyblok CMS](setup/STORYBLOK.md)** - Setup content management system
 - **[Calendly Integration](setup/CALENDLY.md)** - Configure booking system
 
 ### First Time Setup
+
 1. Follow [Environment Setup](setup/ENVIRONMENT.md)
 2. Setup [Storyblok CMS](setup/STORYBLOK.md)
 3. (Optional) Configure [Calendly](setup/CALENDLY.md)
@@ -25,9 +27,15 @@ Complete documentation for Singapore Handpan Studio website.
 ## Features
 
 ### Content Management
+
 - **[Gallery Feature](features/GALLERY.md)** - Photo/video gallery with filtering and lightbox
 
+### E-Commerce
+
+- **[Shop Feature](features/SHOP.md)** - Shopify integration for selling handpans and accessories
+
 ### Coming Soon
+
 - Events management guide
 - SEO optimization guide
 - Performance tuning guide
@@ -110,6 +118,7 @@ npm run storyblok:content    # Create sample content
 ### Common Issues
 
 See individual setup guides for troubleshooting:
+
 - [Environment Issues](setup/ENVIRONMENT.md#troubleshooting)
 - [Storyblok Issues](setup/STORYBLOK.md#troubleshooting)
 - [Deployment Issues](deployment/CLOUDFLARE.md#troubleshooting)
@@ -124,7 +133,3 @@ See individual setup guides for troubleshooting:
 ## License
 
 This project is proprietary to Singapore Handpan Studio.
-
-
-
-

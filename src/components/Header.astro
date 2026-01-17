@@ -1,16 +1,24 @@
 ---
-// Header component with responsive navigation
+import { isShopEnabled } from '../lib/shopifyClient';
 
 const currentPath = Astro.url.pathname;
+const shopEnabled = isShopEnabled();
 
-const navigation = [
+const baseNavigation = [
   { name: 'Home', href: '/' },
   { name: 'About', href: '/about' },
   { name: 'Academy', href: '/academy' },
   { name: 'Events', href: '/events' },
   { name: 'Gallery', href: '/gallery' },
-  { name: 'Contact', href: '/contacts' },
 ];
+
+const navigation = shopEnabled
+  ? [
+      ...baseNavigation,
+      { name: 'Shop', href: '/shop' },
+      { name: 'Contact', href: '/contacts' },
+    ]
+  : [...baseNavigation, { name: 'Contact', href: '/contacts' }];
 ---
 
 <header class="header">
@@ -19,9 +27,9 @@ const navigation = [
       <!-- Logo -->
       <div class="header__logo">
         <a href="/" aria-label="Singapore Handpan Studio - Home">
-          <img 
-            src="/images/logo.svg" 
-            alt="Singapore Handpan Studio" 
+          <img
+            src="/images/logo.svg"
+            alt="Singapore Handpan Studio"
             class="logo__image"
             width="120"
             height="40"
@@ -32,22 +40,24 @@ const navigation = [
       <!-- Desktop Navigation -->
       <nav class="header__nav" aria-label="Main navigation">
         <ul class="nav__list">
-          {navigation.map((item) => (
-            <li class="nav__item">
-              <a 
-                href={item.href}
-                class={`nav__link ${currentPath === item.href ? 'nav__link--active' : ''}`}
-                aria-current={currentPath === item.href ? 'page' : undefined}
-              >
-                {item.name}
-              </a>
-            </li>
-          ))}
+          {
+            navigation.map((item) => (
+              <li class="nav__item">
+                <a
+                  href={item.href}
+                  class={`nav__link ${currentPath === item.href ? 'nav__link--active' : ''}`}
+                  aria-current={currentPath === item.href ? 'page' : undefined}
+                >
+                  {item.name}
+                </a>
+              </li>
+            ))
+          }
         </ul>
       </nav>
 
       <!-- Mobile Menu Button -->
-      <button 
+      <button
         class="mobile-menu-toggle"
         aria-label="Toggle mobile menu"
         aria-expanded="false"
@@ -65,239 +75,243 @@ const navigation = [
     <!-- Mobile Navigation -->
     <nav class="mobile-nav" aria-label="Mobile navigation" data-mobile-menu>
       <ul class="mobile-nav__list">
-        {navigation.map((item) => (
-          <li class="mobile-nav__item">
-            <a 
-              href={item.href}
-              class={`mobile-nav__link ${currentPath === item.href ? 'mobile-nav__link--active' : ''}`}
-              aria-current={currentPath === item.href ? 'page' : undefined}
-            >
-              {item.name}
-            </a>
-          </li>
-        ))}
+        {
+          navigation.map((item) => (
+            <li class="mobile-nav__item">
+              <a
+                href={item.href}
+                class={`mobile-nav__link ${currentPath === item.href ? 'mobile-nav__link--active' : ''}`}
+                aria-current={currentPath === item.href ? 'page' : undefined}
+              >
+                {item.name}
+              </a>
+            </li>
+          ))
+        }
       </ul>
     </nav>
   </div>
 </header>
 
 <style lang="scss">
-.header {
-  background-color: var(--color-white);
-  border-bottom: 1px solid var(--color-gray-200);
-  position: sticky;
-  top: 0;
-  z-index: var(--z-index-sticky);
-  transition: box-shadow var(--transition-fast);
+  .header {
+    background-color: var(--color-white);
+    border-bottom: 1px solid var(--color-gray-200);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-index-sticky);
+    transition: box-shadow var(--transition-fast);
 
-  &.scrolled {
-    box-shadow: var(--shadow-md);
-  }
-}
-
-.header__content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4) 0;
-
-  @media (min-width: 768px) {
-    padding: var(--space-6) 0;
-  }
-}
-
-.header__logo {
-  flex-shrink: 0;
-}
-
-.logo__image {
-  height: 40px;
-  width: auto;
-  transition: opacity var(--transition-fast);
-
-  &:hover {
-    opacity: 0.8;
-  }
-
-  @media (min-width: 768px) {
-    height: 80px;
-    width: 100px;
-  }
-}
-
-.header__nav {
-  display: none;
-
-  @media (min-width: 768px) {
-    display: block;
-  }
-}
-
-.nav__list {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.nav__link {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-gray-700);
-  text-decoration: none;
-  padding: var(--space-2) 0;
-  position: relative;
-  transition: color var(--transition-fast);
-
-  &:hover {
-    color: var(--color-primary);
-  }
-
-  &--active {
-    color: var(--color-primary);
-    font-weight: var(--font-weight-semibold);
-
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background-color: var(--color-primary);
-      border-radius: var(--radius-full);
+    &.scrolled {
+      box-shadow: var(--shadow-md);
     }
   }
-}
 
-.mobile-menu-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-2);
-  background: none;
-  border: none;
-  cursor: pointer;
+  .header__content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) 0;
 
-  @media (min-width: 768px) {
+    @media (min-width: 768px) {
+      padding: var(--space-6) 0;
+    }
+  }
+
+  .header__logo {
+    flex-shrink: 0;
+  }
+
+  .logo__image {
+    height: 40px;
+    width: auto;
+    transition: opacity var(--transition-fast);
+
+    &:hover {
+      opacity: 0.8;
+    }
+
+    @media (min-width: 768px) {
+      height: 80px;
+      width: 100px;
+    }
+  }
+
+  .header__nav {
     display: none;
-  }
-}
 
-.hamburger {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 24px;
-  height: 18px;
-}
-
-.hamburger__line {
-  height: 2px;
-  width: 100%;
-  background-color: var(--color-gray-700);
-  transition: all var(--transition-fast);
-  transform-origin: center;
-}
-
-.mobile-menu-toggle[aria-expanded="true"] {
-  .hamburger__line:first-child {
-    transform: translateY(8px) rotate(45deg);
+    @media (min-width: 768px) {
+      display: block;
+    }
   }
 
-  .hamburger__line:nth-child(2) {
-    opacity: 0;
+  .nav__list {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
 
-  .hamburger__line:last-child {
-    transform: translateY(-8px) rotate(-45deg);
+  .nav__link {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-gray-700);
+    text-decoration: none;
+    padding: var(--space-2) 0;
+    position: relative;
+    transition: color var(--transition-fast);
+
+    &:hover {
+      color: var(--color-primary);
+    }
+
+    &--active {
+      color: var(--color-primary);
+      font-weight: var(--font-weight-semibold);
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: var(--color-primary);
+        border-radius: var(--radius-full);
+      }
+    }
   }
-}
 
-.mobile-nav {
-  display: none;
-  padding: var(--space-4) 0;
-  border-top: 1px solid var(--color-gray-200);
-  background-color: var(--color-white);
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2);
+    background: none;
+    border: none;
+    cursor: pointer;
 
-  &.open {
+    @media (min-width: 768px) {
+      display: none;
+    }
+  }
+
+  .hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 24px;
+    height: 18px;
+  }
+
+  .hamburger__line {
+    height: 2px;
+    width: 100%;
+    background-color: var(--color-gray-700);
+    transition: all var(--transition-fast);
+    transform-origin: center;
+  }
+
+  .mobile-menu-toggle[aria-expanded='true'] {
+    .hamburger__line:first-child {
+      transform: translateY(8px) rotate(45deg);
+    }
+
+    .hamburger__line:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger__line:last-child {
+      transform: translateY(-8px) rotate(-45deg);
+    }
+  }
+
+  .mobile-nav {
+    display: none;
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--color-gray-200);
+    background-color: var(--color-white);
+
+    &.open {
+      display: block;
+    }
+
+    @media (min-width: 768px) {
+      display: none !important;
+    }
+  }
+
+  .mobile-nav__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .mobile-nav__item {
+    border-bottom: 1px solid var(--color-gray-100);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .mobile-nav__link {
     display: block;
+    padding: var(--space-4);
+    color: var(--color-gray-700);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background-color: var(--color-gray-50);
+      color: var(--color-primary);
+    }
+
+    &--active {
+      color: var(--color-primary);
+      background-color: var(--color-gray-50);
+      font-weight: var(--font-weight-semibold);
+    }
   }
-
-  @media (min-width: 768px) {
-    display: none !important;
-  }
-}
-
-.mobile-nav__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.mobile-nav__item {
-  border-bottom: 1px solid var(--color-gray-100);
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.mobile-nav__link {
-  display: block;
-  padding: var(--space-4);
-  color: var(--color-gray-700);
-  text-decoration: none;
-  font-weight: var(--font-weight-medium);
-  transition: all var(--transition-fast);
-
-  &:hover {
-    background-color: var(--color-gray-50);
-    color: var(--color-primary);
-  }
-
-  &--active {
-    color: var(--color-primary);
-    background-color: var(--color-gray-50);
-    font-weight: var(--font-weight-semibold);
-  }
-}
 </style>
 
 <script>
-// Mobile menu toggle functionality
-document.addEventListener('DOMContentLoaded', () => {
-  const toggle = document.querySelector('[data-mobile-menu-toggle]') as HTMLButtonElement;
-  const menu = document.querySelector('[data-mobile-menu]') as HTMLElement;
-  const header = document.querySelector('.header') as HTMLElement;
+  // Mobile menu toggle functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.querySelector(
+      '[data-mobile-menu-toggle]'
+    ) as HTMLButtonElement;
+    const menu = document.querySelector('[data-mobile-menu]') as HTMLElement;
+    const header = document.querySelector('.header') as HTMLElement;
 
-  if (!toggle || !menu) return;
+    if (!toggle || !menu) return;
 
-  // Toggle mobile menu
-  toggle.addEventListener('click', () => {
-    const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-    toggle.setAttribute('aria-expanded', (!isExpanded).toString());
-    menu.classList.toggle('open');
-  });
+    // Toggle mobile menu
+    toggle.addEventListener('click', () => {
+      const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', (!isExpanded).toString());
+      menu.classList.toggle('open');
+    });
 
-  // Close mobile menu when clicking on a link
-  const mobileLinks = menu.querySelectorAll('a');
-  mobileLinks.forEach(link => {
-    link.addEventListener('click', () => {
-      toggle.setAttribute('aria-expanded', 'false');
-      menu.classList.remove('open');
+    // Close mobile menu when clicking on a link
+    const mobileLinks = menu.querySelectorAll('a');
+    mobileLinks.forEach((link) => {
+      link.addEventListener('click', () => {
+        toggle.setAttribute('aria-expanded', 'false');
+        menu.classList.remove('open');
+      });
+    });
+
+    // Add shadow to header on scroll
+    let scrolled = false;
+    window.addEventListener('scroll', () => {
+      const isScrolled = window.scrollY > 0;
+      if (isScrolled !== scrolled) {
+        scrolled = isScrolled;
+        header.classList.toggle('scrolled', scrolled);
+      }
     });
   });
-
-  // Add shadow to header on scroll
-  let scrolled = false;
-  window.addEventListener('scroll', () => {
-    const isScrolled = window.scrollY > 0;
-    if (isScrolled !== scrolled) {
-      scrolled = isScrolled;
-      header.classList.toggle('scrolled', scrolled);
-    }
-  });
-});
 </script>
