@@ -15,7 +15,15 @@
       "Bash(timeout:*)",
       "Bash(ping:*)",
       "Bash(dir /s \"D:\\\\dev\\\\sghandpan\\\\.specify\")",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(node -e \"\nconst { getDiatonicTriads } = require\\(''./src/widgets/academy-handpan/theory/diatonicTriads.ts''\\);\n\")",
+      "Bash(npx tsx -e:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }
