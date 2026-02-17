@@ -7,6 +7,7 @@ import {
   isAudioInitialized,
   playChord,
 } from '../audio/engine';
+import { displayFlat } from '../theory/utils';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
 import Controls from './Controls';
 import styles from '../styles/ChordsSection.module.scss';
@@ -217,7 +218,7 @@ export default function ChordsSection({
           <div className={styles.chordGroups}>
             {addedNoteChords.map(({ root, chords }) => (
               <div key={root} className={styles.chordGroup}>
-                <h4 className={styles.groupTitle}>{root}</h4>
+                <h4 className={styles.groupTitle}>{displayFlat(root)}</h4>
                 <div className={styles.chordGrid}>
                   {chords.map((chord) => {
                     const isSelected = selectedChord?.name === chord.name;

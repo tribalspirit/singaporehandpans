@@ -89,6 +89,15 @@ export function sortNotesByPitch(notes: string[]): string[] {
   });
 }
 
+/**
+ * Replace ASCII 'b' flat indicator with Unicode flat sign '♭' for display.
+ * Useful in uppercase CSS contexts where 'Bb' would incorrectly render as 'BB'.
+ * Only affects the accidental suffix, not the letter name (e.g. "B" stays "B").
+ */
+export function displayFlat(name: string): string {
+  return name.replace(/([A-G])b/g, '$1♭');
+}
+
 export function deduplicateNotes(notes: string[]): string[] {
   const seen = new Set<string>();
   return notes.filter((note) => {
