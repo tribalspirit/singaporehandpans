@@ -1,0 +1,202 @@
+---
+import { useStoryblokApi } from '@storyblok/astro';
+import HomeEventCard from './HomeEventCard.astro';
+
+const FALLBACK_EVENTS = [
+  {
+    id: 'fallback-1',
+    name: 'Beginner Handpan Workshop',
+    slug: 'beginner-handpan-workshop',
+    content: {
+      title: 'Beginner Handpan Workshop',
+      description:
+        'Join us for an introduction to the beautiful world of handpan music. Perfect for complete beginners who want to learn the basics in a supportive environment.',
+      date: '2024-03-15T19:00:00Z',
+      location: 'Singapore Handpan Studio',
+      price: 'S$120',
+      booking_url:
+        import.meta.env.PUBLIC_CALENDLY_WORKSHOP_URL ||
+        'https://calendly.com/singaporehandpan/workshop',
+    },
+  },
+  {
+    id: 'fallback-2',
+    name: 'Community Handpan Gathering',
+    slug: 'community-handpan-gathering',
+    content: {
+      title: 'Community Handpan Gathering',
+      description:
+        'A relaxed gathering for handpan enthusiasts to play together, share music, and connect with fellow musicians in Singapore.',
+      date: '2024-03-22T15:00:00Z',
+      location: 'Singapore Handpan Studio',
+      price: 'Free',
+    },
+  },
+];
+
+let allUpcomingEvents: Record<string, unknown>[] = [];
+let totalUpcoming = 0;
+
+try {
+  const storyblokApi = useStoryblokApi();
+  if (!storyblokApi) {
+    throw new Error('Storyblok API not initialized');
+  }
+
+  const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
+  const now = new Date().toISOString().slice(0, 10) + ' 00:00';
+
+  const { data } = await storyblokApi.get('cdn/stories', {
+    starts_with: 'events/',
+    content_type: 'event',
+    sort_by: 'content.date:asc',
+    filter_query: {
+      date: { gt_date: now },
+    },
+    version: storyblokVersion,
+    resolve_assets: 1,
+    cv: Date.now(),
+  });
+
+  if (data?.stories && data.stories.length > 0) {
+    allUpcomingEvents = data.stories;
+    totalUpcoming = data.stories.length;
+  }
+} catch (error) {
+  console.error('UpcomingEvents: Failed to load from Storyblok', error);
+  // Use fallback events for development/preview
+  const now = new Date();
+  allUpcomingEvents = FALLBACK_EVENTS.filter(
+    (e) => new Date(e.content.date) >= now
+  );
+  totalUpcoming = allUpcomingEvents.length;
+}
+
+const displayEvents = allUpcomingEvents.slice(0, 3);
+const hasMoreEvents = totalUpcoming > 3;
+---
+
+{
+  displayEvents.length > 0 ? (
+    <section class="section upcoming-events">
+      <div class="container">
+        <div class="upcoming-events__header">
+          <h2 class="section__title section__title--center">Upcoming Events</h2>
+          <p class="upcoming-events__subtitle">
+            Join our next workshops, performances, and community gatherings
+          </p>
+        </div>
+
+        <div class="upcoming-events__grid">
+          {displayEvents.map((event) => (
+            <HomeEventCard event={event} />
+          ))}
+        </div>
+
+        {hasMoreEvents && (
+          <div class="upcoming-events__more">
+            <a href="/events" class="btn btn--outline">
+              View All Events
+              <svg
+                class="btn__icon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </a>
+          </div>
+        )}
+      </div>
+    </section>
+  ) : (
+    <section class="section upcoming-events">
+      <div class="container">
+        <div class="upcoming-events__empty">
+          <svg
+            class="upcoming-events__empty-icon"
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <h3 class="upcoming-events__empty-title">New Events Coming Soon</h3>
+          <p class="upcoming-events__empty-text">
+            We're planning exciting new workshops and gatherings. Stay tuned!
+          </p>
+          <a href="/contacts" class="btn btn--primary">
+            Get in Touch
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<style lang="scss">
+  .upcoming-events__header {
+    text-align: center;
+    margin-bottom: var(--space-12);
+  }
+
+  .upcoming-events__subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--color-gray-500);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: var(--line-height-relaxed);
+  }
+
+  .upcoming-events__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+
+    @media (min-width: 640px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .upcoming-events__more {
+    text-align: center;
+    margin-top: var(--space-10);
+  }
+
+  .upcoming-events__empty {
+    text-align: center;
+    padding: var(--space-16) var(--space-8);
+  }
+
+  .upcoming-events__empty-icon {
+    color: var(--color-gray-300);
+    margin-bottom: var(--space-4);
+  }
+
+  .upcoming-events__empty-title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-gray-900);
+    margin-bottom: var(--space-2);
+  }
+
+  .upcoming-events__empty-text {
+    font-size: var(--font-size-base);
+    color: var(--color-gray-500);
+    margin-bottom: var(--space-8);
+  }
+</style>

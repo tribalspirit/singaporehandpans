@@ -23,6 +23,7 @@ interface EventStory {
     image?: { filename: string; alt?: string };
     tags?: string | string[];
     status?: string;
+    availability_status?: 'available' | 'few_spots' | 'sold_out';
     max_participants?: number;
     seo_title?: string;
     seo_description?: string;
