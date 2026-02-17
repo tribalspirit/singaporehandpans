@@ -88,29 +88,26 @@ function extractScalePitchClasses(handpanNotes: string[]): string[] {
 }
 
 /**
- * Get interval in semitones between two pitch classes.
+ * Get interval in semitones between two pitch classes (0-11).
  */
 function getIntervalInSemitones(pc1: string, pc2: string): number {
-  // Convert to notes with octave for MIDI calculation
   const n1 = note(`${pc1}4`);
   const n2 = note(`${pc2}4`);
   if (n1.midi !== null && n2.midi !== null) {
-    let interval = n2.midi - n1.midi;
-    // Normalize to 0-11 range
-    if (interval < 0) interval += 12;
-    return interval;
+    return (((n2.midi - n1.midi) % 12) + 12) % 12;
   }
   return 0;
 }
 
 /**
  * Determine triad quality from intervals.
+ * Returns null if intervals don't match any known triad template.
  */
 function determineTriadQuality(
   rootPc: string,
   thirdPc: string,
   fifthPc: string
-): 'major' | 'minor' | 'diminished' | 'augmented' {
+): 'major' | 'minor' | 'diminished' | 'augmented' | null {
   const rootToThird = getIntervalInSemitones(rootPc, thirdPc);
   const rootToFifth = getIntervalInSemitones(rootPc, fifthPc);
 
@@ -119,31 +116,70 @@ function determineTriadQuality(
   if (rootToThird === 3 && rootToFifth === 6) return 'diminished';
   if (rootToThird === 4 && rootToFifth === 8) return 'augmented';
 
-  // Fallback: try to determine from actual notes
-  const rootNote = note(`${rootPc}4`);
-  const thirdNote = note(`${thirdPc}4`);
-  const fifthNote = note(`${fifthPc}4`);
+  return null;
+}
 
-  if (
-    rootNote.midi !== null &&
-    thirdNote.midi !== null &&
-    fifthNote.midi !== null
-  ) {
-    const thirdInterval = (thirdNote.midi - rootNote.midi + 12) % 12;
-    const fifthInterval = (fifthNote.midi - rootNote.midi + 12) % 12;
+/**
+ * Try to build a triad result from root, third, fifth pitch classes.
+ * Returns null if notes aren't available or quality is invalid.
+ */
+function tryBuildTriad(
+  rootPc: string,
+  thirdPc: string,
+  fifthPc: string,
+  degree: number,
+  availableNotes: string[]
+): DiatonicTriad | null {
+  const triadPcs = [rootPc, thirdPc, fifthPc];
+  const availablePcs = availableNotes.map(normalizeToPitchClass);
 
-    if (thirdInterval === 4 && fifthInterval === 7) return 'major';
-    if (thirdInterval === 3 && fifthInterval === 7) return 'minor';
-    if (thirdInterval === 3 && fifthInterval === 6) return 'diminished';
-    if (thirdInterval === 4 && fifthInterval === 8) return 'augmented';
+  if (!isSubset(triadPcs, availablePcs)) {
+    return null;
   }
 
-  return 'minor'; // Default fallback
+  const quality = determineTriadQuality(rootPc, thirdPc, fifthPc);
+  if (!quality) return null;
+
+  const mappedNotes = assignAllOctavesToPitchClasses(triadPcs, availableNotes);
+  const orderedNotes = sortNotesByPitch(mappedNotes);
+
+  if (orderedNotes.length < 3) {
+    return null;
+  }
+
+  let displayName = '';
+  if (quality === 'major') {
+    displayName = rootPc;
+  } else if (quality === 'minor') {
+    displayName = `${rootPc}m`;
+  } else if (quality === 'diminished') {
+    displayName = `${rootPc}°`;
+  } else if (quality === 'augmented') {
+    displayName = `${rootPc}+`;
+  }
+
+  const chord: PlayableChord = {
+    name: `${rootPc}-triad-${degree}`,
+    displayName,
+    notes: orderedNotes,
+    pitchClasses: triadPcs,
+    category: 'basic',
+  };
+
+  return {
+    degree,
+    root: rootPc,
+    chord,
+    isTonic: degree === 1,
+    isRelativeMajor: false, // Set later in getDiatonicTriads
+  };
 }
 
 /**
  * Build a triad on a specific scale degree.
- * Works with scales of 5-7 notes.
+ * Strategy 1: Traditional stacking (positions +2 and +4) — works for 7-note scales.
+ * Strategy 2: Interval-based search with P5 preference — handles non-heptatonic scales.
+ * Returns null if no valid triad can be built on this degree.
  */
 function buildTriadOnDegree(
   scalePcs: string[],
@@ -156,71 +192,64 @@ function buildTriadOnDegree(
   }
 
   const rootIndex = (degree - 1) % scaleSize;
-  const thirdIndex = (degree + 1) % scaleSize;
-  const fifthIndex = (degree + 3) % scaleSize;
-
   const rootPc = scalePcs[rootIndex];
-  const thirdPc = scalePcs[thirdIndex];
-  const fifthPc = scalePcs[fifthIndex];
+  if (!rootPc) return null;
 
-  if (!rootPc || !thirdPc || !fifthPc) {
-    return null;
-  }
-
-  const triadPcs = [rootPc, thirdPc, fifthPc];
-  const availablePcs = availableNotes.map(normalizeToPitchClass);
-
-  if (!isSubset(triadPcs, availablePcs)) {
-    return null;
-  }
-
-  const mappedNotes = assignAllOctavesToPitchClasses(triadPcs, availableNotes);
-  const orderedNotes = sortNotesByPitch(mappedNotes);
-
-  if (orderedNotes.length < 3) {
-    return null;
-  }
-
-  const quality = determineTriadQuality(rootPc, thirdPc, fifthPc);
-
-  let displayName = '';
-  if (quality === 'major') {
-    displayName = rootPc;
-  } else if (quality === 'minor') {
-    displayName = `${rootPc}m`;
-  } else if (quality === 'diminished') {
-    displayName = `${rootPc}°`;
-  } else if (quality === 'augmented') {
-    displayName = `${rootPc}+`;
-  } else {
-    displayName = rootPc;
-  }
-
-  const chord: PlayableChord = {
-    name: `${rootPc}-triad-${degree}`,
-    displayName,
-    notes: orderedNotes,
-    pitchClasses: triadPcs,
-    category: 'basic',
-  };
-
-  const isTonic = degree === 1;
-
-  const tonicQuality = determineTriadQuality(
-    scalePcs[0],
-    scalePcs[2 % scaleSize],
-    scalePcs[4 % scaleSize]
-  );
-  const isRelativeMajor =
-    degree === 3 && tonicQuality === 'minor' && quality === 'major';
-
-  return {
+  // Strategy 1: Traditional stacking (skip every other note)
+  const tradThirdPc = scalePcs[(rootIndex + 2) % scaleSize];
+  const tradFifthPc = scalePcs[(rootIndex + 4) % scaleSize];
+  const tradResult = tryBuildTriad(
+    rootPc,
+    tradThirdPc,
+    tradFifthPc,
     degree,
-    root: rootPc,
-    chord,
-    isTonic,
-    isRelativeMajor,
-  };
+    availableNotes
+  );
+  if (tradResult) return tradResult;
+
+  // Strategy 2: Interval-based search
+  // Collect all third candidates (3=m3 or 4=M3 semitones above root)
+  const thirdCandidates: Array<{ pc: string; interval: number }> = [];
+  // Collect all fifth candidates (6=dim5, 7=P5, or 8=aug5 semitones above root)
+  const fifthCandidates: Array<{ pc: string; interval: number }> = [];
+
+  for (let i = 1; i < scaleSize; i++) {
+    const idx = (rootIndex + i) % scaleSize;
+    const interval = getIntervalInSemitones(rootPc, scalePcs[idx]);
+    if (interval === 3 || interval === 4) {
+      thirdCandidates.push({ pc: scalePcs[idx], interval });
+    }
+    if (interval === 6 || interval === 7 || interval === 8) {
+      fifthCandidates.push({ pc: scalePcs[idx], interval });
+    }
+  }
+
+  if (thirdCandidates.length === 0 || fifthCandidates.length === 0) {
+    return null;
+  }
+
+  // Sort fifths: P5 (7) preferred, then dim5 (6), then aug5 (8)
+  const fifthPriority = [7, 6, 8];
+  fifthCandidates.sort(
+    (a, b) =>
+      fifthPriority.indexOf(a.interval) - fifthPriority.indexOf(b.interval)
+  );
+
+  // Try all (fifth, third) combinations, return first valid triad
+  for (const fifth of fifthCandidates) {
+    for (const third of thirdCandidates) {
+      const result = tryBuildTriad(
+        rootPc,
+        third.pc,
+        fifth.pc,
+        degree,
+        availableNotes
+      );
+      if (result) return result;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -249,7 +278,7 @@ function orderTriadsByCircleOfFifths(
     }
   }
 
-  // Add any remaining triads (shouldn't happen if we have exactly 7)
+  // Add any remaining triads not in the standard order
   for (const triad of triads) {
     if (!used.has(triad.degree)) {
       ordered.push(triad);
@@ -262,7 +291,7 @@ function orderTriadsByCircleOfFifths(
 /**
  * Get all diatonic triads for a handpan scale.
  * Works with scales of 5-7 notes (pentatonic, hexatonic, heptatonic).
- * Returns triads if at least 3 can be built from the scale.
+ * Returns triads if at least 1 can be built from the scale.
  */
 export function getDiatonicTriads(
   handpanNotes: string[],
@@ -284,12 +313,25 @@ export function getDiatonicTriads(
     }
   }
 
-  if (triads.length < 3) {
+  if (triads.length < 1) {
     return [];
   }
 
+  // Determine tonic triad quality and set isRelativeMajor
   const tonicTriad = triads.find((t) => t.degree === 1);
-  const isMinor = tonicTriad?.chord.displayName.endsWith('m') || false;
+  const tonicIsMinor = tonicTriad?.chord.displayName.endsWith('m') || false;
+  const tonicPc = scalePcs[0];
 
-  return orderTriadsByCircleOfFifths(triads, isMinor);
+  for (const triad of triads) {
+    // isRelativeMajor: root is 3 semitones above tonic, quality is major, tonic is minor
+    const intervalFromTonic = getIntervalInSemitones(tonicPc, triad.root);
+    triad.isRelativeMajor =
+      intervalFromTonic === 3 &&
+      tonicIsMinor &&
+      !triad.chord.displayName.endsWith('m') &&
+      !triad.chord.displayName.endsWith('°') &&
+      !triad.chord.displayName.endsWith('+');
+  }
+
+  return orderTriadsByCircleOfFifths(triads, tonicIsMinor);
 }
