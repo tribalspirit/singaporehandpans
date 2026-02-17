@@ -10,7 +10,7 @@ Singapore Handpan Studio is dedicated to sharing the healing sounds of handpan m
 
 - 🎨 **Modern Design** - Clean, responsive UI with smooth animations
 - 📱 **Mobile-First** - Optimized for all devices
-- 🎭 **Event Management** - Upcoming/past events with Calendly booking
+- 🎭 **Event Management** - Upcoming/past events with Acuity Scheduling booking
 - 🖼️ **Photo Gallery** - Tag-based filtering with lightbox viewer
 - 📝 **CMS Integration** - Content management via Storyblok
 - ⚡ **Performance** - Static site generation, lazy loading, CDN
@@ -40,7 +40,7 @@ Visit `http://localhost:4321` to see your site.
 
 Complete documentation is available in the [`/docs`](./docs) folder:
 
-- **[Setup Guide](docs/setup/ENVIRONMENT.md)** - Environment, Storyblok, Calendly setup
+- **[Setup Guide](docs/setup/ENVIRONMENT.md)** - Environment, Storyblok, Acuity setup
 - **[Gallery Feature](docs/features/GALLERY.md)** - Using the gallery feature
 - **[Deployment](docs/deployment/CLOUDFLARE.md)** - Deploy to Cloudflare Pages
 
@@ -48,7 +48,7 @@ Complete documentation is available in the [`/docs`](./docs) folder:
 
 - [Environment Setup](docs/setup/ENVIRONMENT.md)
 - [Storyblok CMS Setup](docs/setup/STORYBLOK.md)
-- [Calendly Integration](docs/setup/CALENDLY.md)
+- [Acuity Scheduling Integration](docs/setup/ACUITY.md)
 - [Cloudflare Deployment](docs/deployment/CLOUDFLARE.md)
 
 ## 🛠️ Tech Stack
@@ -114,9 +114,10 @@ STORYBLOK_TOKEN=your_preview_token_here
 NODE_ENV=development
 PUBLIC_SITE_URL=http://localhost:4321
 
-# Calendly Integration (Optional)
-PUBLIC_CALENDLY_EVENT_URL=https://calendly.com/your-username/event
-PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/your-username/private-session
+# Acuity Scheduling (Booking)
+PUBLIC_ACUITY_OWNER_ID=your_acuity_owner_id
+PUBLIC_ACUITY_WORKSHOP_URL=https://app.acuityscheduling.com/schedule.php?owner=YOUR_ID
+PUBLIC_ACUITY_PRIVATE_URL=https://app.acuityscheduling.com/schedule.php?owner=YOUR_ID
 ```
 
 See [Environment Setup Guide](docs/setup/ENVIRONMENT.md) for detailed instructions.
@@ -154,11 +155,13 @@ This project is proprietary to Singapore Handpan Studio.
 ## 📞 Support
 
 For technical issues or questions:
+
 - Check the [Documentation](docs/README.md)
 - Review setup guides for specific features
 - Check browser console for errors
 
 For studio inquiries:
+
 - Visit `/contacts` page
 - Email: hello@sghandpan.com
 

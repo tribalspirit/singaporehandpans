@@ -31,14 +31,19 @@ STORYBLOK_SPACE_ID=your_space_id_here
 NODE_ENV=development
 PUBLIC_SITE_URL=http://localhost:4321
 
-# Calendly Integration (Optional)
-PUBLIC_CALENDLY_EVENT_URL=https://calendly.com/your-username/event
-PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/your-username/private-session
+# Acuity Scheduling (Booking)
+PUBLIC_ACUITY_OWNER_ID=your_acuity_owner_id
+PUBLIC_ACUITY_WORKSHOP_URL=https://app.acuityscheduling.com/schedule.php?owner=YOUR_ID
+PUBLIC_ACUITY_PRIVATE_URL=https://app.acuityscheduling.com/schedule.php?owner=YOUR_ID
+ACUITY_USER_ID=your_acuity_user_id
+ACUITY_API_KEY=your_acuity_api_key
+ACUITY_WEBHOOK_SECRET=your_webhook_secret
 ```
 
 ### 3. Get Your Storyblok Tokens
 
 #### Preview Token (Required for development)
+
 1. Go to [Storyblok](https://app.storyblok.com/)
 2. Select your space
 3. Navigate to **Settings** → **Access Tokens**
@@ -46,6 +51,7 @@ PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/your-username/private-session
 5. Add to `.env` as `STORYBLOK_TOKEN`
 
 #### Management Token (Required for automation scripts)
+
 1. Go to [Storyblok Account Settings](https://app.storyblok.com/#!/me/account?tab=token)
 2. Click **Generate new token**
 3. Name it (e.g., "CLI Automation")
@@ -53,6 +59,7 @@ PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/your-username/private-session
 5. Add to `.env` as `STORYBLOK_MANAGEMENT_TOKEN`
 
 #### Space ID
+
 1. In Storyblok, go to **Settings** → **General**
 2. Copy the **Space ID** (numeric)
 3. Add to `.env` as `STORYBLOK_SPACE_ID`
@@ -75,17 +82,20 @@ Your site will be available at `http://localhost:4321`
 ## Troubleshooting
 
 ### "STORYBLOK_TOKEN not found"
+
 - Ensure `.env` file exists in project root
 - Verify token is copied correctly (no extra spaces)
 - Restart dev server after adding `.env`
 
 ### "Failed to fetch from Storyblok"
+
 - Verify tokens are correct
 - Check Space ID matches your space
 - Ensure you're using the Preview token, not Published token
 - Check network connection
 
 ### Build Errors
+
 ```bash
 # Clear cache and rebuild
 rm -rf node_modules dist .astro
@@ -96,9 +106,5 @@ npm run build
 ## Next Steps
 
 - [Setup Storyblok CMS](./STORYBLOK.md)
-- [Configure Calendly](./CALENDLY.md)
+- [Configure Acuity Scheduling](./ACUITY.md)
 - [Setup Deployment](../deployment/CLOUDFLARE.md)
-
-
-
-

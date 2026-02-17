@@ -37,7 +37,7 @@
       "type": "text",
       "pos": 5,
       "required": false,
-      "description": "Calendly or booking link URL"
+      "description": "Acuity booking page URL (fallback)"
     },
     "image": {
       "type": "asset",
@@ -103,6 +103,41 @@
       "required": false,
       "max_length": 160,
       "description": "SEO meta description"
+    },
+    "acuity_type": {
+      "type": "option",
+      "pos": 13,
+      "required": false,
+      "options": [
+        { "name": "Workshop", "value": "workshop" },
+        { "name": "Private Session", "value": "private" }
+      ],
+      "description": "Acuity booking type"
+    },
+    "acuity_appointment_type_id": {
+      "type": "text",
+      "pos": 14,
+      "required": false,
+      "description": "Acuity appointment type ID"
+    },
+    "acuity_class_id": {
+      "type": "text",
+      "pos": 15,
+      "required": false,
+      "description": "Acuity class ID (for workshop capacity tracking)"
+    },
+    "sold_out_override": {
+      "type": "boolean",
+      "pos": 16,
+      "required": false,
+      "default_value": false,
+      "description": "Force sold-out display regardless of Acuity availability"
+    },
+    "spots_remaining": {
+      "type": "number",
+      "pos": 17,
+      "required": false,
+      "description": "Number of spots remaining (updated automatically via webhook)"
     }
   },
   "image": null,

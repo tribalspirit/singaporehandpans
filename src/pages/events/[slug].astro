@@ -3,32 +3,12 @@ import { useStoryblokApi } from '@storyblok/astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CMSFallback from '../../components/CMSFallback.astro';
 import EventDetail from '../../components/EventDetail.astro';
+import type { EventStory } from '../../types/event';
 
 const EVENT_DURATION_MS = 2 * 60 * 60 * 1000;
 const PRICE_SANITIZE_REGEX = /[^0-9.]/g;
 const FREE_LABEL = 'Free';
 const PRICE_CURRENCY = 'SGD';
-
-interface EventStory {
-  id: string;
-  name: string;
-  slug: string;
-  content: {
-    title: string;
-    description: string;
-    date: string;
-    location: string;
-    price?: string;
-    booking_url?: string;
-    image?: { filename: string; alt?: string };
-    tags?: string | string[];
-    status?: string;
-    availability_status?: 'available' | 'few_spots' | 'sold_out';
-    max_participants?: number;
-    seo_title?: string;
-    seo_description?: string;
-  };
-}
 
 const FALLBACK_EVENTS: EventStory[] = [
   {
@@ -43,8 +23,8 @@ const FALLBACK_EVENTS: EventStory[] = [
       location: 'Singapore Handpan Studio',
       price: 'S$120',
       booking_url:
-        import.meta.env.PUBLIC_CALENDLY_WORKSHOP_URL ||
-        'https://calendly.com/singaporehandpanstudio/group-meeting',
+        import.meta.env.PUBLIC_ACUITY_WORKSHOP_URL ||
+        'https://app.acuityscheduling.com/schedule.php',
       tags: ['workshop', 'beginner'],
       status: 'upcoming',
       max_participants: 6,
@@ -154,7 +134,13 @@ const structuredData = {
         '@type': 'Offer',
         price: priceValue,
         priceCurrency: PRICE_CURRENCY,
-        availability: 'https://schema.org/InStock',
+        availability:
+          event.content.sold_out_override ||
+          event.content.availability_status === 'sold_out'
+            ? 'https://schema.org/SoldOut'
+            : event.content.availability_status === 'few_spots'
+              ? 'https://schema.org/LimitedAvailability'
+              : 'https://schema.org/InStock',
         url: event.content.booking_url || `${Astro.site}events/${event.slug}`,
       }
     : undefined,

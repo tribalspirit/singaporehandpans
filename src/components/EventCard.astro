@@ -1,26 +1,8 @@
 ---
+import type { EventStory } from '../types/event';
+
 export interface Props {
-  event: {
-    id: string;
-    name: string;
-    slug: string;
-    content: {
-      title: string;
-      description: string;
-      date: string;
-      location: string;
-      price?: string;
-      booking_url?: string;
-      image?: {
-        filename: string;
-        alt?: string;
-      };
-      tags?: string | string[];
-      status?: string;
-      availability_status?: 'available' | 'few_spots' | 'sold_out';
-      max_participants?: number;
-    };
-  };
+  event: EventStory;
   isPast?: boolean;
 }
 
@@ -62,9 +44,24 @@ const formatTime = (dateString: string) => {
 const eventUrl = `/events/${event.slug}`;
 const eventDate = new Date(event.content.date);
 const isUpcoming = eventDate >= new Date();
+
+const isSoldOut =
+  event.content.sold_out_override ||
+  event.content.availability_status === 'sold_out';
+const availabilityStatus = event.content.availability_status || 'available';
+const availabilityLabel: Record<string, string> = {
+  available: 'Available',
+  few_spots: 'Few Spots Left',
+  sold_out: 'Sold Out',
+};
 ---
 
-<article class={`event-card ${isPast ? 'past-event' : ''}`}>
+<article
+  class={`event-card ${isPast ? 'past-event' : ''}`}
+  data-acuity-class-id={event.content.acuity_class_id || undefined}
+  data-acuity-appointment-type-id={event.content.acuity_appointment_type_id ||
+    undefined}
+>
   <div class="event-image">
     {
       event.content.image ? (
@@ -94,6 +91,17 @@ const isUpcoming = eventDate >= new Date();
     {
       !isPast && (
         <div class="event-status">{isUpcoming ? 'Upcoming' : 'Today'}</div>
+      )
+    }
+
+    {
+      !isPast && availabilityStatus !== 'available' && (
+        <div
+          class={`event-availability event-availability--${availabilityStatus}`}
+          data-availability-badge
+        >
+          {availabilityLabel[availabilityStatus]}
+        </div>
       )
     }
   </div>
@@ -210,16 +218,19 @@ const isUpcoming = eventDate >= new Date();
       <a href={eventUrl} class="btn btn-outline"> Learn More</a>
 
       {
-        !isPast && event.content.booking_url && (
+        !isPast && isSoldOut ? (
+          <span class="btn btn-primary btn-disabled">Sold Out</span>
+        ) : !isPast && event.content.booking_url ? (
           <a
             href={event.content.booking_url}
             class="btn btn-primary"
             target="_blank"
             rel="noopener noreferrer"
+            data-booking-cta
           >
             Book Now
           </a>
-        )
+        ) : null
       }
     </div>
   </div>
@@ -297,6 +308,26 @@ const isUpcoming = eventDate >= new Date();
 
     &:hover img {
       transform: scale(1.05);
+    }
+
+    .event-availability {
+      position: absolute;
+      top: var(--spacing-sm);
+      left: var(--spacing-sm);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--border-radius-sm);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+
+      &--few_spots {
+        background: var(--color-warning, #f39c12);
+        color: white;
+      }
+
+      &--sold_out {
+        background: var(--color-error, #e74c3c);
+        color: white;
+      }
     }
   }
 
@@ -426,6 +457,14 @@ const isUpcoming = eventDate >= new Date();
           background: var(--color-primary-dark);
           transform: translateY(-1px);
         }
+      }
+
+      &.btn-disabled {
+        background: var(--color-text-secondary);
+        color: white;
+        cursor: not-allowed;
+        pointer-events: none;
+        opacity: 0.7;
       }
     }
   }

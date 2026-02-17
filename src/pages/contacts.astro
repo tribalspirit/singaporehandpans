@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import CalendlyEmbed from '../components/CalendlyEmbed.astro';
+import AcuityEmbed from '../components/AcuityEmbed.astro';
 import MapEmbed from '../components/MapEmbed.astro';
 import {
   STUDIO_PHONE_PRIMARY,
@@ -20,12 +20,14 @@ const title = 'Contact Us';
 const description =
   'Get in touch with Singapore Handpan Studio. Book workshops, ask questions, or connect with our community in Singapore.';
 
-const CALENDLY_WORKSHOP_URL =
-  import.meta.env.PUBLIC_CALENDLY_WORKSHOP_URL ||
-  'https://calendly.com/singaporehandpanstudio/group-meeting';
-const CALENDLY_PRIVATE_URL =
-  import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL ||
-  'https://calendly.com/singaporehandpanstudio/private';
+const ACUITY_OWNER_ID = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
+const ACUITY_CALENDAR_ID = import.meta.env.PUBLIC_ACUITY_CALENDAR_ID || '';
+const ACUITY_WORKSHOP_URL =
+  import.meta.env.PUBLIC_ACUITY_WORKSHOP_URL ||
+  'https://app.acuityscheduling.com/schedule.php';
+const ACUITY_PRIVATE_URL =
+  import.meta.env.PUBLIC_ACUITY_PRIVATE_URL ||
+  'https://app.acuityscheduling.com/schedule.php';
 ---
 
 <BaseLayout title={title} description={description}>
@@ -229,7 +231,7 @@ const CALENDLY_PRIVATE_URL =
 
           <div class="booking-actions">
             <a
-              href={CALENDLY_WORKSHOP_URL}
+              href={ACUITY_WORKSHOP_URL}
               class="btn btn--white btn--large"
               target="_blank"
               rel="noopener noreferrer"
@@ -237,7 +239,7 @@ const CALENDLY_PRIVATE_URL =
               Book Workshop
             </a>
             <a
-              href={CALENDLY_PRIVATE_URL}
+              href={ACUITY_PRIVATE_URL}
               class="btn btn--outline-white btn--large"
               target="_blank"
               rel="noopener noreferrer"
@@ -247,14 +249,13 @@ const CALENDLY_PRIVATE_URL =
           </div>
         </div>
 
-        <div class="calendly-container">
-          <CalendlyEmbed
-            url={CALENDLY_WORKSHOP_URL}
+        <div class="acuity-container">
+          <AcuityEmbed
+            ownerId={ACUITY_OWNER_ID}
+            calendarId={ACUITY_CALENDAR_ID}
+            mode="inline"
+            bookingUrl={ACUITY_WORKSHOP_URL}
             height="600px"
-            hideEventTypeDetails={false}
-            hideLandingPageDetails={true}
-            primaryColor="#D4A574"
-            textColor="#2C3E50"
           />
         </div>
       </div>
@@ -564,7 +565,7 @@ const CALENDLY_PRIVATE_URL =
     }
   }
 
-  .calendly-container {
+  .acuity-container {
     background: var(--color-white);
     border-radius: var(--radius-lg);
     overflow: hidden;

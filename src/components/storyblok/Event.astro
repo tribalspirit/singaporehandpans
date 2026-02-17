@@ -1,24 +1,10 @@
 ---
 import { storyblokEditable } from '@storyblok/astro';
+import AcuityEmbed from '../AcuityEmbed.astro';
+import type { EventContent } from '../../types/event';
 
 export interface Props {
-  blok: {
-    title: string;
-    description: string;
-    date: string;
-    location: string;
-    price?: string;
-    booking_url?: string;
-    image?: {
-      filename: string;
-      alt?: string;
-    };
-    tags?: string | string[];
-    status?: string;
-    max_participants?: number;
-    seo_title?: string;
-    seo_description?: string;
-  };
+  blok: EventContent;
 }
 
 const { blok } = Astro.props;
@@ -27,7 +13,11 @@ const { blok } = Astro.props;
 const normalizeTags = (tags: string | string[] | undefined): string[] => {
   if (!tags) return [];
   if (Array.isArray(tags)) return tags;
-  if (typeof tags === 'string') return tags.split(',').map(t => t.trim()).filter(Boolean);
+  if (typeof tags === 'string')
+    return tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
   return [];
 };
 
@@ -39,7 +29,7 @@ const formatDate = (dateString: string) => {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   });
 };
 
@@ -48,26 +38,33 @@ const formatTime = (dateString: string) => {
   return date.toLocaleTimeString('en-SG', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
   });
 };
 
 const eventDate = new Date(blok.date);
 const isUpcoming = eventDate >= new Date();
 const isPast = eventDate < new Date();
+
+const isSoldOut =
+  blok.sold_out_override || blok.availability_status === 'sold_out';
+const hasAcuity = !!blok.acuity_appointment_type_id;
+const acuityOwnerId = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
 ---
 
 <article class="storyblok-event" {...storyblokEditable(blok)}>
   <header class="event-header">
     <div class="event-meta">
-      {eventTags.length > 0 && (
-        <div class="event-tags">
-          {eventTags.map(tag => (
-            <span class="tag">{tag}</span>
-          ))}
-        </div>
-      )}
-      
+      {
+        eventTags.length > 0 && (
+          <div class="event-tags">
+            {eventTags.map((tag) => (
+              <span class="tag">{tag}</span>
+            ))}
+          </div>
+        )
+      }
+
       <div class="event-status">
         {isPast && <span class="status past">Past Event</span>}
         {isUpcoming && <span class="status upcoming">Upcoming Event</span>}
@@ -75,14 +72,21 @@ const isPast = eventDate < new Date();
     </div>
 
     <h1 class="event-title">{blok.title}</h1>
-    
+
     <div class="event-summary">
       <div class="event-datetime">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
         <div>
           <div class="date">{formatDate(blok.date)}</div>
@@ -91,323 +95,396 @@ const isPast = eventDate < new Date();
       </div>
 
       <div class="event-location">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-          <circle cx="12" cy="10" r="3"/>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
         </svg>
         <span>{blok.location}</span>
       </div>
 
-      {blok.price && (
-        <div class="event-price">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="1" x2="12" y2="23"/>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-          <span class={blok.price.toLowerCase() === 'free' ? 'free-price' : 'paid-price'}>
-            {blok.price}
-          </span>
-        </div>
-      )}
+      {
+        blok.price && (
+          <div class="event-price">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            <span
+              class={
+                blok.price.toLowerCase() === 'free'
+                  ? 'free-price'
+                  : 'paid-price'
+              }
+            >
+              {blok.price}
+            </span>
+          </div>
+        )
+      }
 
-      {blok.max_participants && (
-        <div class="event-capacity">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span>Limited to {blok.max_participants} participants</span>
-        </div>
-      )}
+      {
+        blok.max_participants && (
+          <div class="event-capacity">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>Limited to {blok.max_participants} participants</span>
+          </div>
+        )
+      }
     </div>
   </header>
 
   <div class="event-content">
-    {blok.image && (
-      <div class="event-image">
-        <img 
-          src={blok.image.filename} 
-          alt={blok.image.alt || blok.title}
-          loading="lazy"
-        />
-      </div>
-    )}
+    {
+      blok.image && (
+        <div class="event-image">
+          <img
+            src={blok.image.filename}
+            alt={blok.image.alt || blok.title}
+            loading="lazy"
+          />
+        </div>
+      )
+    }
 
     <div class="event-description">
       <h2>About This Event</h2>
       <div class="description-content">
-        {blok.description.split('\n').map(paragraph => (
-          paragraph.trim() && <p>{paragraph}</p>
-        ))}
+        {
+          blok.description
+            .split('\n')
+            .map((paragraph) => paragraph.trim() && <p>{paragraph}</p>)
+        }
       </div>
     </div>
 
-    {isUpcoming && blok.booking_url && (
-      <div class="event-booking">
-        <h2>Reserve Your Spot</h2>
-        <p>Secure your place in this event. Limited spaces available!</p>
-        
-        <a 
-          href={blok.booking_url}
-          class="btn btn-primary btn-large"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Book Now
-        </a>
-      </div>
-    )}
+    {
+      isUpcoming && isSoldOut && (
+        <div class="event-sold-out">
+          <h2>Sold Out</h2>
+          <p>
+            This event is fully booked. Check out our other upcoming events!
+          </p>
+          <a href="/events" class="btn btn-outline">
+            View Upcoming Events
+          </a>
+        </div>
+      )
+    }
 
-    {isPast && (
-      <div class="past-event-notice">
-        <h2>Event Completed</h2>
-        <p>This event has already taken place. Check out our upcoming events!</p>
-        <a href="/events" class="btn btn-outline">View Upcoming Events</a>
-      </div>
-    )}
+    {
+      isUpcoming && !isSoldOut && hasAcuity && (
+        <div class="event-booking">
+          <h2>Reserve Your Spot</h2>
+          <p>Secure your place in this event. Limited spaces available!</p>
+          <AcuityEmbed
+            ownerId={acuityOwnerId}
+            appointmentTypeId={blok.acuity_appointment_type_id}
+            classId={blok.acuity_class_id}
+            mode="inline"
+            bookingUrl={blok.booking_url}
+          />
+        </div>
+      )
+    }
+
+    {
+      isUpcoming && !isSoldOut && !hasAcuity && blok.booking_url && (
+        <div class="event-booking">
+          <h2>Reserve Your Spot</h2>
+          <p>Secure your place in this event. Limited spaces available!</p>
+
+          <a
+            href={blok.booking_url}
+            class="btn btn-primary btn-large"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Book Now
+          </a>
+        </div>
+      )
+    }
+
+    {
+      isPast && (
+        <div class="past-event-notice">
+          <h2>Event Completed</h2>
+          <p>
+            This event has already taken place. Check out our upcoming events!
+          </p>
+          <a href="/events" class="btn btn-outline">
+            View Upcoming Events
+          </a>
+        </div>
+      )
+    }
   </div>
 </article>
 
 <style lang="scss">
-@use "src/styles/tokens.scss";
+  @use 'src/styles/tokens.scss';
 
-.storyblok-event {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: var(--spacing-lg);
-}
-
-.event-header {
-  margin-bottom: var(--spacing-2xl);
-  text-align: center;
-
-  .event-meta {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-    flex-wrap: wrap;
-  }
-
-  .event-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-xs);
-    justify-content: center;
-
-    .tag {
-      background: var(--color-accent-light);
-      color: var(--color-accent-dark);
-      padding: var(--spacing-xs) var(--spacing-sm);
-      border-radius: var(--border-radius-sm);
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-medium);
-      text-transform: capitalize;
-    }
-  }
-
-  .event-status {
-    .status {
-      padding: var(--spacing-xs) var(--spacing-md);
-      border-radius: var(--border-radius-md);
-      font-size: var(--font-size-sm);
-      font-weight: var(--font-weight-semibold);
-
-      &.upcoming {
-        background: var(--color-success-light);
-        color: var(--color-success-dark);
-      }
-
-      &.past {
-        background: var(--color-text-secondary);
-        color: white;
-      }
-    }
-  }
-
-  .event-title {
-    font-size: var(--font-size-xxl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-primary);
-    margin-bottom: var(--spacing-lg);
-    line-height: 1.2;
-  }
-
-  .event-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--spacing-md);
-    max-width: 600px;
+  .storyblok-event {
+    max-width: 800px;
     margin: 0 auto;
-
-    > div {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-sm);
-      padding: var(--spacing-md);
-      background: var(--color-surface);
-      border-radius: var(--border-radius-md);
-      border: 1px solid var(--color-border);
-
-      svg {
-        color: var(--color-primary);
-        flex-shrink: 0;
-      }
-    }
+    padding: var(--spacing-lg);
   }
 
-  .event-datetime {
-    .date {
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
-    }
-    
-    .time {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-secondary);
-      margin-top: 2px;
-    }
-  }
-
-  .event-price {
-    .free-price {
-      color: var(--color-success);
-      font-weight: var(--font-weight-semibold);
-    }
-
-    .paid-price {
-      color: var(--color-primary);
-      font-weight: var(--font-weight-semibold);
-    }
-  }
-}
-
-.event-content {
-  .event-image {
-    margin-bottom: var(--spacing-xl);
-    border-radius: var(--border-radius-lg);
-    overflow: hidden;
-
-    img {
-      width: 100%;
-      height: 400px;
-      object-fit: cover;
-    }
-  }
-
-  .event-description {
-    margin-bottom: var(--spacing-xl);
-
-    h2 {
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
-      margin-bottom: var(--spacing-md);
-    }
-
-    .description-content {
-      color: var(--color-text-secondary);
-      line-height: 1.7;
-      font-size: var(--font-size-md);
-
-      p {
-        margin-bottom: var(--spacing-md);
-
-        &:last-child {
-          margin-bottom: 0;
-        }
-      }
-    }
-  }
-
-  .event-booking, .past-event-notice {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-xl);
+  .event-header {
+    margin-bottom: var(--spacing-2xl);
     text-align: center;
-    margin-bottom: var(--spacing-xl);
 
-    h2 {
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
-      margin-bottom: var(--spacing-md);
-    }
-
-    p {
-      color: var(--color-text-secondary);
+    .event-meta {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--spacing-lg);
       margin-bottom: var(--spacing-lg);
-      line-height: 1.6;
+      flex-wrap: wrap;
     }
 
-    .btn {
-      display: inline-block;
-      padding: var(--spacing-md) var(--spacing-xl);
-      border-radius: var(--border-radius-md);
-      text-decoration: none;
-      font-weight: var(--font-weight-semibold);
-      transition: all 0.2s ease;
-      border: 1px solid transparent;
+    .event-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-xs);
+      justify-content: center;
 
-      &.btn-primary {
-        background: var(--color-primary);
-        color: white;
-
-        &:hover {
-          background: var(--color-primary-dark);
-          transform: translateY(-2px);
-        }
-
-        &.btn-large {
-          padding: var(--spacing-lg) var(--spacing-2xl);
-          font-size: var(--font-size-md);
-        }
+      .tag {
+        background: var(--color-accent-light);
+        color: var(--color-accent-dark);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--border-radius-sm);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+        text-transform: capitalize;
       }
+    }
 
-      &.btn-outline {
-        color: var(--color-primary);
-        border-color: var(--color-primary);
-        background: transparent;
+    .event-status {
+      .status {
+        padding: var(--spacing-xs) var(--spacing-md);
+        border-radius: var(--border-radius-md);
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-semibold);
 
-        &:hover {
-          background: var(--color-primary);
+        &.upcoming {
+          background: var(--color-success-light);
+          color: var(--color-success-dark);
+        }
+
+        &.past {
+          background: var(--color-text-secondary);
           color: white;
         }
       }
     }
-  }
-}
-
-@media (max-width: 768px) {
-  .storyblok-event {
-    padding: var(--spacing-md);
-  }
-
-  .event-header {
-    .event-meta {
-      flex-direction: column;
-      gap: var(--spacing-md);
-    }
 
     .event-title {
-      font-size: var(--font-size-xl);
+      font-size: var(--font-size-xxl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-primary);
+      margin-bottom: var(--spacing-lg);
+      line-height: 1.2;
     }
 
     .event-summary {
-      grid-template-columns: 1fr;
-      text-align: left;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--spacing-md);
+      max-width: 600px;
+      margin: 0 auto;
+
+      > div {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+        background: var(--color-surface);
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--color-border);
+
+        svg {
+          color: var(--color-primary);
+          flex-shrink: 0;
+        }
+      }
+    }
+
+    .event-datetime {
+      .date {
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-primary);
+      }
+
+      .time {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-secondary);
+        margin-top: 2px;
+      }
+    }
+
+    .event-price {
+      .free-price {
+        color: var(--color-success);
+        font-weight: var(--font-weight-semibold);
+      }
+
+      .paid-price {
+        color: var(--color-primary);
+        font-weight: var(--font-weight-semibold);
+      }
     }
   }
 
   .event-content {
-    .event-image img {
-      height: 250px;
+    .event-image {
+      margin-bottom: var(--spacing-xl);
+      border-radius: var(--border-radius-lg);
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+      }
+    }
+
+    .event-description {
+      margin-bottom: var(--spacing-xl);
+
+      h2 {
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-primary);
+        margin-bottom: var(--spacing-md);
+      }
+
+      .description-content {
+        color: var(--color-text-secondary);
+        line-height: 1.7;
+        font-size: var(--font-size-md);
+
+        p {
+          margin-bottom: var(--spacing-md);
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
+
+    .event-booking,
+    .past-event-notice {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--border-radius-lg);
+      padding: var(--spacing-xl);
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+
+      h2 {
+        font-size: var(--font-size-xl);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-text-primary);
+        margin-bottom: var(--spacing-md);
+      }
+
+      p {
+        color: var(--color-text-secondary);
+        margin-bottom: var(--spacing-lg);
+        line-height: 1.6;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: var(--spacing-md) var(--spacing-xl);
+        border-radius: var(--border-radius-md);
+        text-decoration: none;
+        font-weight: var(--font-weight-semibold);
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+
+        &.btn-primary {
+          background: var(--color-primary);
+          color: white;
+
+          &:hover {
+            background: var(--color-primary-dark);
+            transform: translateY(-2px);
+          }
+
+          &.btn-large {
+            padding: var(--spacing-lg) var(--spacing-2xl);
+            font-size: var(--font-size-md);
+          }
+        }
+
+        &.btn-outline {
+          color: var(--color-primary);
+          border-color: var(--color-primary);
+          background: transparent;
+
+          &:hover {
+            background: var(--color-primary);
+            color: white;
+          }
+        }
+      }
     }
   }
-}
-</style>
 
+  @media (max-width: 768px) {
+    .storyblok-event {
+      padding: var(--spacing-md);
+    }
+
+    .event-header {
+      .event-meta {
+        flex-direction: column;
+        gap: var(--spacing-md);
+      }
+
+      .event-title {
+        font-size: var(--font-size-xl);
+      }
+
+      .event-summary {
+        grid-template-columns: 1fr;
+        text-align: left;
+      }
+    }
+
+    .event-content {
+      .event-image img {
+        height: 250px;
+      }
+    }
+  }
+</style>

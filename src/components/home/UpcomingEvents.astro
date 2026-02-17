@@ -15,8 +15,8 @@ const FALLBACK_EVENTS = [
       location: 'Singapore Handpan Studio',
       price: 'S$120',
       booking_url:
-        import.meta.env.PUBLIC_CALENDLY_WORKSHOP_URL ||
-        'https://calendly.com/singaporehandpan/workshop',
+        import.meta.env.PUBLIC_ACUITY_WORKSHOP_URL ||
+        'https://app.acuityscheduling.com/schedule.php',
     },
   },
   {
@@ -143,6 +143,8 @@ const hasMoreEvents = totalUpcoming > 3;
     </section>
   )
 }
+
+<script src="../../scripts/availability-hydration.ts"></script>
 
 <style lang="scss">
   .upcoming-events__header {

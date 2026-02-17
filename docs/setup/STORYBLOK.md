@@ -5,6 +5,7 @@ Complete guide for setting up and using Storyblok CMS for content management.
 ## Overview
 
 Storyblok is used as the headless CMS for:
+
 - Event listings and details
 - Gallery images with tags
 - Page content (future expansion)
@@ -18,6 +19,7 @@ npm run storyblok:setup
 ```
 
 This creates:
+
 - Event component schema
 - Gallery Item component schema
 - Page component schema
@@ -30,6 +32,7 @@ npm run storyblok:content
 ```
 
 This creates sample:
+
 - 3 event entries
 - 2 gallery items
 - 1 page entry
@@ -59,6 +62,7 @@ npm run storyblok:components page
 ### Component Schemas
 
 Component definitions are in `/storyblok/components/`:
+
 - `event.json` - Event schema
 - `gallery_item.json` - Gallery item schema
 - `page.json` - Page schema
@@ -70,6 +74,7 @@ Component definitions are in `/storyblok/components/`:
 **Location**: Content → Events folder
 
 **Required Fields**:
+
 - Title
 - Description
 - Date & Time
@@ -77,13 +82,15 @@ Component definitions are in `/storyblok/components/`:
 - Status (upcoming/past)
 
 **Optional Fields**:
+
 - Price
-- Booking URL (Calendly link)
+- Booking URL (Acuity Scheduling link)
 - Image
 - Tags (workshop, community, performance)
 - Max Participants
 
 **Important**:
+
 - Set status to "upcoming" for future events
 - Set status to "past" for completed events
 - Add booking URL to enable "Book Now" button
@@ -94,10 +101,12 @@ Component definitions are in `/storyblok/components/`:
 **Location**: Content → Gallery folder
 
 **Required Fields**:
+
 - Title
 - Media (image or video)
 
 **Optional Fields**:
+
 - Description
 - Tags (workshop, instruments, studio, etc.)
 - Featured (displays item at 2x size)
@@ -106,6 +115,7 @@ Component definitions are in `/storyblok/components/`:
 - Sort order (lower numbers appear first)
 
 **Best Practices**:
+
 - Use descriptive titles
 - Add alt text for accessibility
 - Use tags for filtering
@@ -130,6 +140,7 @@ https://a.storyblok.com/f/SPACE_ID/WIDTHxHEIGHT/HASH/image.jpg
 ```
 
 Available transforms:
+
 - `/640x0/` - Resize width, auto height
 - `/0x480/` - Resize height, auto width
 - `/filters:quality(80)/` - Adjust quality
@@ -148,21 +159,25 @@ This triggers automatic rebuilds when you publish content.
 ## Troubleshooting
 
 ### "Component already exists"
+
 - This is normal - the script updates existing components
 - No action needed
 
 ### "Failed to create content"
+
 - Check your Management Token is correct
 - Verify Space ID matches your space
 - Ensure you have permission to create content
 
 ### Images Not Showing
+
 1. Verify image is uploaded in Storyblok
 2. Check entry is **Published** (not just Saved)
 3. Clear browser cache
 4. Rebuild site: `npm run build`
 
 ### Content Not Updating
+
 1. Always click **Publish** after saving
 2. In development, changes appear immediately
 3. In production, may need to trigger rebuild
@@ -170,17 +185,20 @@ This triggers automatic rebuilds when you publish content.
 ## API Limits
 
 **Free Tier**:
+
 - 25,000 API requests/month
 - Unlimited content entries
 - 100 GB bandwidth
 
 **Rate Limits**:
+
 - 5 requests/second per space
 - Automatic throttling if exceeded
 
 ## Security
 
 ### Token Management
+
 - ✅ Use Preview token for development
 - ✅ Use Published token for production
 - ❌ Never commit tokens to Git
@@ -188,6 +206,7 @@ This triggers automatic rebuilds when you publish content.
 - ✅ Add `.env` to `.gitignore`
 
 ### Access Control
+
 - Manage team members in **Settings** → **Users**
 - Assign appropriate roles (Admin, Editor, etc.)
 - Use SSO for enterprise accounts
@@ -198,7 +217,3 @@ This triggers automatic rebuilds when you publish content.
 - [Content Delivery API](https://www.storyblok.com/docs/api/content-delivery)
 - [Management API](https://www.storyblok.com/docs/api/management)
 - [Image Service](https://www.storyblok.com/docs/image-service)
-
-
-
-

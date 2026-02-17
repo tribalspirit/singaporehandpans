@@ -1,27 +1,14 @@
 ---
+import type { EventStory } from '../../types/event';
+
 export interface Props {
-  event: {
-    id: string;
-    name: string;
-    slug: string;
-    content: {
-      title: string;
-      description: string;
-      date: string;
-      location: string;
-      price?: string;
-      booking_url?: string;
-      image?: {
-        filename: string;
-        alt?: string;
-      };
-      availability_status?: 'available' | 'few_spots' | 'sold_out';
-    };
-  };
+  event: EventStory;
 }
 
 const { event } = Astro.props;
-const status = event.content.availability_status || 'available';
+const status = event.content.sold_out_override
+  ? 'sold_out'
+  : event.content.availability_status || 'available';
 const isSoldOut = status === 'sold_out';
 
 const eventDate = new Date(event.content.date);
@@ -43,7 +30,12 @@ const imageUrl = event.content.image?.filename
   : null;
 ---
 
-<article class="home-event-card">
+<article
+  class="home-event-card"
+  data-acuity-class-id={event.content.acuity_class_id || undefined}
+  data-acuity-appointment-type-id={event.content.acuity_appointment_type_id ||
+    undefined}
+>
   <a href={eventUrl} class="home-event-card__image-link">
     <div class="home-event-card__image-wrapper">
       {
@@ -103,19 +95,34 @@ const imageUrl = event.content.image?.filename
     </div>
 
     <p class="home-event-card__description">{event.content.description}</p>
+
+    {
+      event.content.spots_remaining != null &&
+        event.content.spots_remaining > 0 &&
+        !isSoldOut && (
+          <p class="home-event-card__spots" data-spots-remaining>
+            {event.content.spots_remaining} spot
+            {event.content.spots_remaining === 1 ? '' : 's'} left
+          </p>
+        )
+    }
   </div>
 
   <div class="home-event-card__footer">
     <div
       class={`home-event-card__availability home-event-card__availability--${status}`}
     >
-      <span class="home-event-card__availability-dot"></span>
-      <span>{availabilityLabel[status]}</span>
+      <span class="home-event-card__availability-dot" data-availability-dot
+      ></span>
+      <span data-availability-badge>{availabilityLabel[status]}</span>
     </div>
 
     {
       isSoldOut ? (
-        <span class="home-event-card__cta home-event-card__cta--disabled">
+        <span
+          class="home-event-card__cta home-event-card__cta--disabled"
+          data-booking-cta
+        >
           Sold Out
         </span>
       ) : event.content.booking_url ? (
@@ -124,11 +131,12 @@ const imageUrl = event.content.image?.filename
           class="home-event-card__cta"
           target="_blank"
           rel="noopener noreferrer"
+          data-booking-cta
         >
           Book Now
         </a>
       ) : (
-        <a href={eventUrl} class="home-event-card__cta">
+        <a href={eventUrl} class="home-event-card__cta" data-booking-cta>
           Learn More
         </a>
       )
@@ -262,6 +270,13 @@ const imageUrl = event.content.image?.filename
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .home-event-card__spots {
+    font-size: var(--font-size-sm);
+    color: var(--color-warning, #f39c12);
+    font-weight: var(--font-weight-medium);
+    margin: var(--space-2) 0 0;
   }
 
   .home-event-card__footer {

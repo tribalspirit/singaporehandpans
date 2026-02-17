@@ -1,0 +1,294 @@
+---
+export interface Props {
+  ownerId: string;
+  appointmentTypeId?: string;
+  calendarId?: string;
+  classId?: string;
+  mode?: 'inline' | 'button';
+  bookingUrl?: string;
+  height?: string;
+  buttonText?: string;
+}
+
+const {
+  ownerId,
+  appointmentTypeId,
+  calendarId,
+  mode = 'inline',
+  bookingUrl,
+  height = '600px',
+  buttonText = 'Book Now',
+} = Astro.props;
+
+// Build the Acuity scheduling URL
+const scheduleParams = new URLSearchParams();
+scheduleParams.set('owner', ownerId);
+if (calendarId) {
+  scheduleParams.set('calendarID', calendarId);
+}
+if (appointmentTypeId) {
+  scheduleParams.set('appointmentType', appointmentTypeId);
+}
+
+const scheduleUrl = `https://app.acuityscheduling.com/schedule.php?${scheduleParams.toString()}`;
+
+// Generate a unique ID for this embed instance
+const embedId = `acuity-embed-${Math.random().toString(36).substr(2, 9)}`;
+---
+
+{
+  mode === 'inline' ? (
+    <div class="acuity-embed-wrapper">
+      <div
+        class="acuity-inline-widget"
+        id={embedId}
+        style={`min-width:320px;height:${height};`}
+      >
+        <div class="acuity-loading">
+          <div class="loading-spinner" />
+          <p>Loading booking calendar...</p>
+          <noscript>
+            <p>
+              JavaScript is required to load the booking calendar.
+              {bookingUrl && (
+                <a href={bookingUrl} target="_blank" rel="noopener noreferrer">
+                  Click here to book directly
+                </a>
+              )}
+            </p>
+          </noscript>
+        </div>
+
+        <iframe
+          src={scheduleUrl}
+          title="Schedule Appointment"
+          width="100%"
+          height="100%"
+          frameborder="0"
+          class="acuity-iframe"
+        />
+      </div>
+
+      <div class="acuity-fallback">
+        <p>Having trouble with the booking calendar?</p>
+        <a
+          href={bookingUrl || scheduleUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="acuity-fallback-link"
+        >
+          Book directly on our scheduling page
+        </a>
+      </div>
+    </div>
+  ) : (
+    <div class="acuity-button-wrapper">
+      <a
+        href={bookingUrl || scheduleUrl}
+        class="acuity-book-btn"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {buttonText}
+      </a>
+      <noscript>
+        <a
+          href={bookingUrl || scheduleUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {buttonText}
+        </a>
+      </noscript>
+    </div>
+  )
+}
+
+<script define:vars={{ embedId }}>
+  // Hide loading spinner once iframe loads
+  const wrapper = document.getElementById(embedId);
+  if (wrapper) {
+    const iframe = wrapper.querySelector('.acuity-iframe');
+    const loading = wrapper.querySelector('.acuity-loading');
+
+    if (iframe && loading) {
+      iframe.addEventListener('load', () => {
+        loading.style.display = 'none';
+      });
+
+      // Timeout fallback after 10 seconds
+      setTimeout(() => {
+        if (loading.style.display !== 'none') {
+          loading.innerHTML =
+            '<p>Unable to load booking calendar. Please use the link below.</p>';
+          const fallback = wrapper
+            .closest('.acuity-embed-wrapper')
+            ?.querySelector('.acuity-fallback');
+          if (fallback) {
+            fallback.style.display = 'block';
+          }
+        }
+      }, 10000);
+    }
+  }
+</script>
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .acuity-embed-wrapper {
+    position: relative;
+    width: 100%;
+    margin: var(--spacing-md) 0;
+  }
+
+  .acuity-inline-widget {
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    background: var(--color-surface);
+    position: relative;
+  }
+
+  .acuity-iframe {
+    position: relative;
+    z-index: 1;
+    border: none;
+  }
+
+  .acuity-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    text-align: center;
+    z-index: 0;
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--color-border);
+      border-top: 3px solid var(--color-primary);
+      border-radius: 50%;
+      animation: acuity-spin 1s linear infinite;
+      margin-bottom: var(--spacing-md);
+    }
+
+    p {
+      color: var(--color-text-secondary);
+      margin: 0;
+      font-size: var(--font-size-md);
+    }
+
+    noscript p {
+      margin-top: var(--spacing-md);
+      padding: var(--spacing-md);
+      background: var(--color-warning-light);
+      border: 1px solid var(--color-warning);
+      border-radius: var(--border-radius-sm);
+      color: var(--color-warning-dark);
+
+      a {
+        color: var(--color-primary);
+        font-weight: var(--font-weight-semibold);
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .acuity-fallback {
+    display: none;
+    text-align: center;
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-sm);
+
+    p {
+      color: var(--color-text-secondary);
+      margin: 0 0 var(--spacing-sm) 0;
+      font-size: var(--font-size-sm);
+    }
+
+    .acuity-fallback-link {
+      display: inline-block;
+      padding: var(--spacing-sm) var(--spacing-lg);
+      background: var(--color-primary);
+      color: white;
+      text-decoration: none;
+      border-radius: var(--border-radius-md);
+      font-weight: var(--font-weight-semibold);
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background: var(--color-primary-dark);
+      }
+    }
+  }
+
+  .acuity-button-wrapper {
+    .acuity-book-btn {
+      display: inline-block;
+      padding: var(--spacing-md) var(--spacing-xl);
+      background: var(--color-primary);
+      color: white;
+      text-decoration: none;
+      border-radius: var(--border-radius-md);
+      font-weight: var(--font-weight-semibold);
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+
+      &:hover {
+        background: var(--color-primary-dark);
+        transform: translateY(-2px);
+      }
+    }
+  }
+
+  @keyframes acuity-spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .acuity-inline-widget {
+      min-height: 500px;
+    }
+
+    .acuity-loading {
+      padding: var(--spacing-md);
+
+      .loading-spinner {
+        width: 30px;
+        height: 30px;
+      }
+
+      p {
+        font-size: var(--font-size-sm);
+      }
+    }
+  }
+
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .acuity-inline-widget {
+      background: var(--color-surface-dark, #1a1a1a);
+      border-color: var(--color-border-dark, #333);
+    }
+  }
+</style>

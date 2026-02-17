@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
+import cloudflare from '@astrojs/cloudflare';
 import storyblok from '@storyblok/astro';
 import { loadEnv } from 'vite';
 
@@ -11,7 +12,8 @@ const storyblokToken = process.env.STORYBLOK_TOKEN || env.STORYBLOK_TOKEN || '';
 export default defineConfig({
   // Cloudflare Pages configuration
   site: 'https://singaporehandpans.com',
-  output: 'static',
+  output: 'hybrid',
+  adapter: cloudflare(),
   
   integrations: [
     react(),
