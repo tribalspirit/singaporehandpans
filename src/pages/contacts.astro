@@ -13,14 +13,19 @@ import {
   STUDIO_ADDRESS_LINES,
   SOCIAL_LINKS,
   WHATSAPP_LINK,
-  WHATSAPP_LABEL
+  WHATSAPP_LABEL,
 } from '../constants/contacts';
 
 const title = 'Contact Us';
-const description = 'Get in touch with Singapore Handpan Studio. Book workshops, ask questions, or connect with our community in Singapore.';
+const description =
+  'Get in touch with Singapore Handpan Studio. Book workshops, ask questions, or connect with our community in Singapore.';
 
-const CALENDLY_WORKSHOP_URL = import.meta.env.PUBLIC_CALENDLY_WORKSHOP_URL || 'https://calendly.com/singaporehandpan/workshop';
-const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'https://calendly.com/singaporehandpan/private-session';
+const CALENDLY_WORKSHOP_URL =
+  import.meta.env.PUBLIC_CALENDLY_WORKSHOP_URL ||
+  'https://calendly.com/singaporehandpanstudio/group-meeting';
+const CALENDLY_PRIVATE_URL =
+  import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL ||
+  'https://calendly.com/singaporehandpanstudio/private';
 ---
 
 <BaseLayout title={title} description={description}>
@@ -29,7 +34,8 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
       <div class="page-hero__content">
         <h1 class="page-hero__title">Get In Touch</h1>
         <p class="page-hero__subtitle">
-          Ready to start your handpan journey? We're here to help you every step of the way.
+          Ready to start your handpan journey? We're here to help you every step
+          of the way.
         </p>
       </div>
     </div>
@@ -40,12 +46,19 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
       <div class="contact-layout">
         <div class="contact-card">
           <h2 class="section__title">Contact Information</h2>
-          
+
           <div class="contact-methods">
             <div class="contact-method">
               <div class="contact-method__icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                  ></path>
                 </svg>
               </div>
               <div class="contact-method__content">
@@ -55,17 +68,29 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
                 </p>
                 <p class="contact-method__note">{STUDIO_PHONE_HOURS}</p>
                 <p class="contact-method__note">{STUDIO_PHONE_NOTE}</p>
-                <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" class="contact-method__whatsapp">
+                <a
+                  href={WHATSAPP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="contact-method__whatsapp"
+                >
                   {WHATSAPP_LABEL}
                 </a>
               </div>
             </div>
-            
+
             <div class="contact-method">
               <div class="contact-method__icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                  ></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
               </div>
               <div class="contact-method__content">
@@ -76,48 +101,67 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
                 <p class="contact-method__note">{STUDIO_EMAIL_RESPONSE_TIME}</p>
               </div>
             </div>
-            
+
             <div class="contact-method">
               <div class="contact-method__icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                  ></path>
+                  <circle cx="12" cy="10" r="3"></circle>
                 </svg>
               </div>
               <div class="contact-method__content">
                 <h3 class="contact-method__title">Visit Us</h3>
                 <p class="contact-method__details">
-                  {STUDIO_ADDRESS_LINES.map((line) => (
-                    <>
-                      {line}
-                      <br />
-                    </>
-                  ))}
+                  {
+                    STUDIO_ADDRESS_LINES.map((line) => (
+                      <>
+                        {line}
+                        <br />
+                      </>
+                    ))
+                  }
                 </p>
               </div>
             </div>
-            
+
             <div class="contact-method">
               <div class="contact-method__icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"
+                  ></path>
                 </svg>
               </div>
               <div class="contact-method__content">
                 <h3 class="contact-method__title">Social Media</h3>
                 <div class="social-links">
-                  {SOCIAL_LINKS.map((social) => (
-                    <a 
-                      href={social.href} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      aria-label={social.ariaLabel}
-                    >
-                      {social.label}
-                    </a>
-                  ))}
+                  {
+                    SOCIAL_LINKS.map((social) => (
+                      <a
+                        href={social.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={social.ariaLabel}
+                      >
+                        {social.label}
+                      </a>
+                    ))
+                  }
                 </div>
-                <p class="contact-method__note">Follow for updates and events</p>
+                <p class="contact-method__note">
+                  Follow for updates and events
+                </p>
               </div>
             </div>
           </div>
@@ -137,45 +181,74 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
         <div class="booking-content">
           <h2 class="section__title section__title--white">Book a Session</h2>
           <p class="booking-description">
-            Ready to start learning? Use our online booking system to schedule 
-            your first workshop or private session. Choose the time that works best for you.
+            Ready to start learning? Use our online booking system to schedule
+            your first workshop or private session. Choose the time that works
+            best for you.
           </p>
-          
+
           <div class="booking-features">
             <div class="booking-feature">
-              <svg class="booking-feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M9 11H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h4l5 4V7l-5 4Z"/>
+              <svg
+                class="booking-feature__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path d="M9 11H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h4l5 4V7l-5 4Z"
+                ></path>
               </svg>
               <span>Instant confirmation</span>
             </div>
-            
+
             <div class="booking-feature">
-              <svg class="booking-feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M8 2v4l-3 3H2v4h3l3 3v4l8-8L8 2Z"/>
+              <svg
+                class="booking-feature__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path d="M8 2v4l-3 3H2v4h3l3 3v4l8-8L8 2Z"></path>
               </svg>
               <span>Flexible scheduling</span>
             </div>
-            
+
             <div class="booking-feature">
-              <svg class="booking-feature__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              <svg
+                class="booking-feature__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                ></path>
               </svg>
               <span>Secure online payment</span>
             </div>
           </div>
-          
+
           <div class="booking-actions">
-            <a href={CALENDLY_WORKSHOP_URL} class="btn btn--white btn--large" target="_blank" rel="noopener noreferrer">
+            <a
+              href={CALENDLY_WORKSHOP_URL}
+              class="btn btn--white btn--large"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Book Workshop
             </a>
-            <a href={CALENDLY_PRIVATE_URL} class="btn btn--outline-white btn--large" target="_blank" rel="noopener noreferrer">
+            <a
+              href={CALENDLY_PRIVATE_URL}
+              class="btn btn--outline-white btn--large"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Book Private Session
             </a>
           </div>
         </div>
-        
+
         <div class="calendly-container">
-          <CalendlyEmbed 
+          <CalendlyEmbed
             url={CALENDLY_WORKSHOP_URL}
             height="600px"
             hideEventTypeDetails={false}
@@ -190,54 +263,60 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
 
   <section class="section">
     <div class="container">
-      <h2 class="section__title section__title--center">Frequently Asked Questions</h2>
-      
+      <h2 class="section__title section__title--center">
+        Frequently Asked Questions
+      </h2>
+
       <div class="faq-grid">
         <div class="faq-item">
           <h3 class="faq-question">Do I need any musical experience?</h3>
           <p class="faq-answer">
-            Not at all! Our beginner workshops are designed for complete newcomers to music. 
-            The handpan is very intuitive and accessible for everyone.
+            Not at all! Our beginner workshops are designed for complete
+            newcomers to music. The handpan is very intuitive and accessible for
+            everyone.
           </p>
         </div>
-        
+
         <div class="faq-item">
           <h3 class="faq-question">Do I need to bring my own handpan?</h3>
           <p class="faq-answer">
-            No, we provide professional handpan instruments for all workshops and sessions. 
-            We'll also guide you on purchasing your own instrument when you're ready.
+            No, we provide professional handpan instruments for all workshops
+            and sessions. We'll also guide you on purchasing your own instrument
+            when you're ready.
           </p>
         </div>
-        
+
         <div class="faq-item">
           <h3 class="faq-question">What should I wear to class?</h3>
           <p class="faq-answer">
-            Comfortable, loose-fitting clothing is recommended. We often sit on the floor 
-            or use cushions, so dress for comfort and ease of movement.
+            Comfortable, loose-fitting clothing is recommended. We often sit on
+            the floor or use cushions, so dress for comfort and ease of
+            movement.
           </p>
         </div>
-        
+
         <div class="faq-item">
           <h3 class="faq-question">Can I make up a missed class?</h3>
           <p class="faq-answer">
-            Yes! We offer makeup sessions and provide recordings of lessons. 
+            Yes! We offer makeup sessions and provide recordings of lessons.
             Just let us know in advance and we'll arrange an alternative.
           </p>
         </div>
-        
+
         <div class="faq-item">
           <h3 class="faq-question">Is parking available?</h3>
           <p class="faq-answer">
-            Yes, there's public parking nearby, and we're just 2 minutes walk from 
-            Tanjong Pagar MRT station for your convenience.
+            Yes, there's public parking nearby, and we're just 2 minutes walk
+            from Tanjong Pagar MRT station for your convenience.
           </p>
         </div>
-        
+
         <div class="faq-item">
           <h3 class="faq-question">What's your cancellation policy?</h3>
           <p class="faq-answer">
-            We offer full refunds for cancellations made at least 48 hours in advance. 
-            For last-minute changes, we're happy to reschedule your session.
+            We offer full refunds for cancellations made at least 48 hours in
+            advance. For last-minute changes, we're happy to reschedule your
+            session.
           </p>
         </div>
       </div>
@@ -246,350 +325,358 @@ const CALENDLY_PRIVATE_URL = import.meta.env.PUBLIC_CALENDLY_PRIVATE_URL || 'htt
 </BaseLayout>
 
 <style lang="scss">
-.page-hero {
-  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
-  color: var(--color-white);
-  padding: var(--space-20) 0 var(--space-16);
-  text-align: center;
-  
-  @media (min-width: 768px) {
-    padding: var(--space-24) 0 var(--space-20);
+  .page-hero {
+    background: linear-gradient(
+      135deg,
+      var(--color-accent) 0%,
+      var(--color-accent-dark) 100%
+    );
+    color: var(--color-white);
+    padding: var(--space-20) 0 var(--space-16);
+    text-align: center;
+
+    @media (min-width: 768px) {
+      padding: var(--space-24) 0 var(--space-20);
+    }
   }
-}
 
-.page-hero__title {
-  font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-bold);
-  margin-bottom: var(--space-6);
-  
-  @media (min-width: 768px) {
-    font-size: var(--font-size-5xl);
+  .page-hero__title {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--space-6);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-5xl);
+    }
   }
-}
 
-.page-hero__subtitle {
-  font-size: var(--font-size-lg);
-  line-height: var(--line-height-relaxed);
-  max-width: 600px;
-  margin: 0 auto;
-  opacity: 0.9;
-  
-  @media (min-width: 768px) {
-    font-size: var(--font-size-xl);
+  .page-hero__subtitle {
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-relaxed);
+    max-width: 600px;
+    margin: 0 auto;
+    opacity: 0.9;
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-xl);
+    }
   }
-}
 
-.contact-layout {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-16);
-  
-  @media (min-width: 1024px) {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-20);
+  .contact-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-16);
+
+    @media (min-width: 1024px) {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-20);
+    }
   }
-}
 
-.contact-card {
-  background: var(--color-white);
-  padding: var(--space-8);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  
-  @media (min-width: 768px) {
-    padding: var(--space-10);
-  }
-}
-
-.map-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.contact-methods {
-  display: grid;
-  gap: var(--space-6);
-  margin-top: var(--space-8);
-}
-
-.contact-method {
-  display: flex;
-  gap: var(--space-4);
-  padding: var(--space-6);
-  background: var(--color-gray-50);
-  border-radius: var(--radius-lg);
-  transition: all var(--transition-fast);
-  
-  &:hover {
-    transform: translateY(-2px);
+  .contact-card {
+    background: var(--color-white);
+    padding: var(--space-8);
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
+
+    @media (min-width: 768px) {
+      padding: var(--space-10);
+    }
   }
-}
 
-.contact-method__icon {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  background: var(--color-primary-light);
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-white);
-  
-  svg {
-    width: 24px;
-    height: 24px;
+  .map-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
   }
-}
 
-.contact-method__title {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
-  margin-bottom: var(--space-2);
-  color: var(--color-gray-900);
-}
+  .contact-methods {
+    display: grid;
+    gap: var(--space-6);
+    margin-top: var(--space-8);
+  }
 
-.contact-method__details {
-  margin-bottom: var(--space-1);
-  
-  a {
-    color: var(--color-primary);
-    text-decoration: none;
-    font-weight: var(--font-weight-medium);
-    
+  .contact-method {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    background: var(--color-gray-50);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
+
     &:hover {
-      text-decoration: underline;
-    }
-    
-    &:focus {
-      outline: 2px solid var(--color-accent);
-      outline-offset: 2px;
-      border-radius: var(--radius-sm);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
     }
   }
-}
 
-.contact-method__note {
-  font-size: var(--font-size-sm);
-  color: var(--color-gray-600);
-  margin-top: var(--space-1);
-}
+  .contact-method__icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-white);
 
-.contact-method__whatsapp {
-  display: inline-block;
-  margin-top: var(--space-2);
-  color: var(--color-primary);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  
-  &:hover {
-    text-decoration: underline;
+    svg {
+      width: 24px;
+      height: 24px;
+    }
   }
-  
-  &:focus {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-    border-radius: var(--radius-sm);
-  }
-}
 
-.social-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  margin-bottom: var(--space-2);
-  
-  a {
+  .contact-method__title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--space-2);
+    color: var(--color-gray-900);
+  }
+
+  .contact-method__details {
+    margin-bottom: var(--space-1);
+
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+      font-weight: var(--font-weight-medium);
+
+      &:hover {
+        text-decoration: underline;
+      }
+
+      &:focus {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+        border-radius: var(--radius-sm);
+      }
+    }
+  }
+
+  .contact-method__note {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+    margin-top: var(--space-1);
+  }
+
+  .contact-method__whatsapp {
+    display: inline-block;
+    margin-top: var(--space-2);
     color: var(--color-primary);
     text-decoration: none;
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
-    
+
     &:hover {
       text-decoration: underline;
     }
-    
+
     &:focus {
       outline: 2px solid var(--color-accent);
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }
   }
-}
 
-.section--accent {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  color: var(--color-white);
-}
+  .social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-bottom: var(--space-2);
 
-.section__title--white {
-  color: var(--color-white);
-}
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
 
-.booking-section {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-12);
-  align-items: center;
-  
-  @media (min-width: 1024px) {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-16);
-  }
-}
+      &:hover {
+        text-decoration: underline;
+      }
 
-.booking-description {
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-relaxed);
-  margin-bottom: var(--space-8);
-  opacity: 0.9;
-}
-
-.booking-features {
-  display: grid;
-  gap: var(--space-4);
-  margin-bottom: var(--space-8);
-}
-
-.booking-feature {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--font-size-base);
-}
-
-.booking-feature__icon {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2;
-}
-
-.booking-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  
-  @media (min-width: 640px) {
-    flex-direction: row;
-  }
-}
-
-.calendly-container {
-  background: var(--color-white);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  min-height: 600px;
-}
-
-.faq-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
-  margin-top: var(--space-12);
-  
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.faq-item {
-  background: var(--color-white);
-  padding: var(--space-6);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-}
-
-.faq-question {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  margin-bottom: var(--space-3);
-  color: var(--color-gray-900);
-}
-
-.faq-answer {
-  font-size: var(--font-size-sm);
-  color: var(--color-gray-600);
-  line-height: var(--line-height-relaxed);
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-md);
-  font-weight: var(--font-weight-medium);
-  text-decoration: none;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-  border: none;
-  font-size: var(--font-size-base);
-  
-  &:focus {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-  
-  &--primary {
-    background-color: var(--color-primary);
-    color: var(--color-white);
-    
-    &:hover {
-      background-color: var(--color-primary-dark);
+      &:focus {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+        border-radius: var(--radius-sm);
+      }
     }
   }
-  
-  &--white {
-    background-color: var(--color-white);
-    color: var(--color-primary);
-    
-    &:hover {
-      background-color: var(--color-gray-100);
+
+  .section--accent {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary) 0%,
+      var(--color-primary-dark) 100%
+    );
+    color: var(--color-white);
+  }
+
+  .section__title--white {
+    color: var(--color-white);
+  }
+
+  .booking-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-12);
+    align-items: center;
+
+    @media (min-width: 1024px) {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-16);
     }
   }
-  
-  &--outline-white {
-    background-color: transparent;
-    color: var(--color-white);
-    border: 2px solid var(--color-white);
-    
-    &:hover {
+
+  .booking-description {
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+    margin-bottom: var(--space-8);
+    opacity: 0.9;
+  }
+
+  .booking-features {
+    display: grid;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
+
+  .booking-feature {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--font-size-base);
+  }
+
+  .booking-feature__icon {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+  }
+
+  .booking-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    @media (min-width: 640px) {
+      flex-direction: row;
+    }
+  }
+
+  .calendly-container {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    min-height: 600px;
+  }
+
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    margin-top: var(--space-12);
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .faq-item {
+    background: var(--color-white);
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .faq-question {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--space-3);
+    color: var(--color-gray-900);
+  }
+
+  .faq-answer {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+    line-height: var(--line-height-relaxed);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-medium);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    border: none;
+    font-size: var(--font-size-base);
+
+    &:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    &--primary {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+
+      &:hover {
+        background-color: var(--color-primary-dark);
+      }
+    }
+
+    &--white {
       background-color: var(--color-white);
       color: var(--color-primary);
+
+      &:hover {
+        background-color: var(--color-gray-100);
+      }
+    }
+
+    &--outline-white {
+      background-color: transparent;
+      color: var(--color-white);
+      border: 2px solid var(--color-white);
+
+      &:hover {
+        background-color: var(--color-white);
+        color: var(--color-primary);
+      }
+    }
+
+    &--full {
+      width: 100%;
+    }
+
+    &--large {
+      padding: var(--space-4) var(--space-8);
+      font-size: var(--font-size-lg);
     }
   }
-  
-  &--full {
-    width: 100%;
-  }
-  
-  &--large {
-    padding: var(--space-4) var(--space-8);
-    font-size: var(--font-size-lg);
-  }
-}
 
-.section {
-  padding: var(--space-16) 0;
-  
-  @media (min-width: 768px) {
-    padding: var(--space-24) 0;
-  }
-}
+  .section {
+    padding: var(--space-16) 0;
 
-.section__title {
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  margin-bottom: var(--space-8);
-  color: var(--color-gray-900);
-  
-  &--center {
-    text-align: center;
+    @media (min-width: 768px) {
+      padding: var(--space-24) 0;
+    }
   }
-}
+
+  .section__title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--space-8);
+    color: var(--color-gray-900);
+
+    &--center {
+      text-align: center;
+    }
+  }
 </style>
