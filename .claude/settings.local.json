@@ -23,7 +23,20 @@
       "Bash(npx vitest run:*)",
       "Bash(node -e \"\nconst { getDiatonicTriads } = require\\(''./src/widgets/academy-handpan/theory/diatonicTriads.ts''\\);\n\")",
       "Bash(npx tsx -e:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "mcp__serena__list_dir",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(npm install:*)",
+      "Bash(npm view:*)",
+      "Bash(node -e:*)",
+      "Bash(git rm:*)",
+      "WebFetch(domain:react-photo-album.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:app.unpkg.com)",
+      "Bash(npm run storyblok:components:*)",
+      "Bash(node scripts/create-gallery-test-data.js:*)",
+      "Bash(gh pr:*)"
     ]
   }
 }
