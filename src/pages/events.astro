@@ -53,8 +53,11 @@ const FALLBACK_EVENTS = [
 let events = [];
 let cmsError = false;
 
+const runtime = Astro.locals.runtime;
+const token = runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+
 try {
-  const storyblokApi = getStoryblokClient();
+  const storyblokApi = getStoryblokClient(token);
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
 
   const { data } = await storyblokApi.get('cdn/stories', {
@@ -63,7 +66,6 @@ try {
     sort_by: 'content.date:desc',
     version: storyblokVersion,
     resolve_assets: 1,
-    cv: Date.now(),
   });
 
   if (data?.stories && data.stories.length > 0) {

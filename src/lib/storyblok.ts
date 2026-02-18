@@ -6,9 +6,7 @@ const STORYBLOK_BASE = 'https://api.storyblok.com/v2';
  * Uses native fetch instead of storyblok-js-client, whose internal
  * throttle/setTimeout machinery hangs inside the Workers runtime.
  */
-export function getStoryblokClient() {
-  const token = import.meta.env.STORYBLOK_TOKEN;
-
+export function getStoryblokClient(token: string) {
   return {
     async get(path: string, params: Record<string, unknown> = {}) {
       const query = new URLSearchParams();
@@ -21,13 +19,28 @@ export function getStoryblokClient() {
       }
 
       const url = `${STORYBLOK_BASE}/${path}?${query}`;
+      console.log('[storyblok] fetching:', url.replace(token, '***'));
+
       const res = await fetch(url);
 
       if (!res.ok) {
+        console.error(
+          '[storyblok] error:',
+          res.status,
+          res.statusText,
+          'url:',
+          url.replace(token, '***')
+        );
         throw new Error(`Storyblok API error: ${res.status} ${res.statusText}`);
       }
 
       const data = await res.json();
+      console.log(
+        '[storyblok] success:',
+        path,
+        '- stories:',
+        data?.stories?.length ?? 'n/a'
+      );
       return { data, total: Number(res.headers.get('total') ?? 0) };
     },
   };
