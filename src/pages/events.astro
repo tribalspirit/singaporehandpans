@@ -4,6 +4,8 @@ import EventCard from '../components/EventCard.astro';
 import CMSFallback from '../components/CMSFallback.astro';
 import { useStoryblokApi } from '@storyblok/astro';
 
+export const prerender = false;
+
 const FALLBACK_EVENTS = [
   {
     id: 'fallback-1',
