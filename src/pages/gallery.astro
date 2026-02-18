@@ -8,6 +8,8 @@ import { normalizeTags } from '../utils/tags';
 import { transformAlbum } from '../lib/galleryApi';
 import type { GalleryAlbumStory } from '../types/gallery';
 
+export const prerender = false;
+
 interface LegacyGalleryItem {
   id: string;
   uuid: string;
