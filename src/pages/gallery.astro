@@ -35,8 +35,11 @@ let albums: ReturnType<typeof transformAlbum>[] = [];
 let legacyItems: LegacyGalleryItem[] = [];
 let error = null;
 
+const runtime = Astro.locals.runtime;
+const token = runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+
 try {
-  const storyblokApi = getStoryblokClient();
+  const storyblokApi = getStoryblokClient(token);
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
 
   // Try fetching albums first
@@ -46,7 +49,6 @@ try {
     content_type: 'gallery_album',
     per_page: 100,
     resolve_assets: 1,
-    cv: Date.now(),
   });
 
   const albumStories: GalleryAlbumStory[] = albumResponse.data.stories || [];
@@ -69,7 +71,6 @@ try {
             per_page: 1,
             sort_by: 'content.sort_order:asc',
             resolve_assets: 1,
-            cv: Date.now(),
           });
           const itemCount =
             mediaResponse.total || mediaResponse.data?.stories?.length || 0;
@@ -99,7 +100,6 @@ try {
       is_startpage: false,
       per_page: 100,
       resolve_assets: 1,
-      cv: Date.now(),
     });
 
     legacyItems = (legacyResponse.data.stories || [])
