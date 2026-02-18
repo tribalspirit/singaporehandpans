@@ -19,6 +19,7 @@
     "storyblok:setup": "node scripts/storyblok-setup.js",
     "storyblok:components": "node scripts/create-components.js",
     "storyblok:content": "node scripts/create-sample-content.js",
+    "gallery:migrate": "node scripts/migrate-gallery.js",
     "prepare": "husky || true"
   },
   "lint-staged": {
@@ -48,6 +49,7 @@
     "embla-carousel-react": "^8.6.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "react-photo-album": "^3.5.0",
     "sass": "^1.80.0",
     "tone": "^15.1.22",
     "yet-another-react-lightbox": "^3.27.0"

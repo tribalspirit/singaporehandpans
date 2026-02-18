@@ -1,0 +1,210 @@
+---
+import type { GalleryAlbum } from '../../types/gallery';
+import { storyblokImageTransform } from '../../lib/galleryApi';
+import { HYPHEN_TO_SPACE_REGEX } from '../../utils/tags';
+
+export interface Props {
+  album: GalleryAlbum;
+}
+
+const { album } = Astro.props;
+const albumUrl = `/gallery/albums/${album.slug}`;
+const coverSrc = album.coverSrc
+  ? storyblokImageTransform(album.coverSrc, 600, 400)
+  : '';
+
+const formatTagLabel = (tag: string): string =>
+  tag.replace(HYPHEN_TO_SPACE_REGEX, ' ');
+
+const truncatedDescription =
+  album.description && album.description.length > 100
+    ? album.description.substring(0, 100) + '...'
+    : album.description;
+---
+
+<article class={`album-card ${album.featured ? 'featured' : ''}`}>
+  <a href={albumUrl} class="album-link">
+    <div class="album-image">
+      {
+        coverSrc ? (
+          <img
+            src={coverSrc}
+            alt={album.title}
+            loading="lazy"
+            width="600"
+            height="400"
+          />
+        ) : (
+          <div class="placeholder-image">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
+            </svg>
+          </div>
+        )
+      }
+      <div class="album-overlay">
+        <span class="item-count"
+          >{album.itemCount} {album.itemCount === 1 ? 'photo' : 'photos'}</span
+        >
+      </div>
+    </div>
+
+    <div class="album-content">
+      <h3 class="album-title">{album.title}</h3>
+
+      {
+        truncatedDescription && (
+          <p class="album-description">{truncatedDescription}</p>
+        )
+      }
+
+      {
+        album.tags.length > 0 && (
+          <div class="album-tags">
+            {album.tags.map((tag) => (
+              <span class="tag">{formatTagLabel(tag)}</span>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </a>
+</article>
+
+<style lang="scss">
+  .album-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      border-color: var(--color-primary-light);
+    }
+
+    &.featured {
+      grid-column: span 2;
+
+      @media (max-width: 768px) {
+        grid-column: span 1;
+      }
+
+      .album-image {
+        height: 300px;
+      }
+    }
+  }
+
+  .album-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .album-image {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+    background: var(--color-background-secondary);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .placeholder-image {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--color-text-secondary);
+      background: linear-gradient(
+        135deg,
+        var(--color-primary-light),
+        var(--color-accent-light)
+      );
+    }
+
+    &:hover img {
+      transform: scale(1.05);
+    }
+  }
+
+  .album-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .item-count {
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    backdrop-filter: blur(4px);
+  }
+
+  .album-content {
+    padding: var(--spacing-md);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .album-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+    line-height: 1.3;
+  }
+
+  .album-description {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-base);
+    flex: 1;
+  }
+
+  .album-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-top: auto;
+
+    .tag {
+      background: var(--color-accent-light);
+      color: var(--color-accent-dark);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--border-radius-sm);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      text-transform: capitalize;
+    }
+  }
+</style>

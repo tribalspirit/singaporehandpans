@@ -2,10 +2,13 @@
 import { useStoryblokApi } from '@storyblok/astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import GalleryGrid from '../components/GalleryGrid';
+import AlbumCard from '../components/gallery/AlbumCard.astro';
 import CMSFallback from '../components/CMSFallback.astro';
 import { normalizeTags } from '../utils/tags';
+import { transformAlbum } from '../lib/galleryApi';
+import type { GalleryAlbumStory } from '../types/gallery';
 
-interface GalleryItem {
+interface LegacyGalleryItem {
   id: string;
   uuid: string;
   name: string;
@@ -26,32 +29,80 @@ interface GalleryItem {
   };
 }
 
-let galleryItems: GalleryItem[] = [];
+let albums: ReturnType<typeof transformAlbum>[] = [];
+let legacyItems: LegacyGalleryItem[] = [];
 let error = null;
 
 try {
   const storyblokApi = useStoryblokApi();
-  const response = await storyblokApi.get('cdn/stories', {
-    version: import.meta.env.DEV ? 'draft' : 'published',
-    starts_with: 'gallery/',
-    is_startpage: false,
+  const storyblokVersion = import.meta.env.DEV ? 'draft' : 'published';
+
+  // Try fetching albums first
+  const albumResponse = await storyblokApi.get('cdn/stories', {
+    version: storyblokVersion,
+    starts_with: 'gallery/albums/',
+    content_type: 'gallery_album',
     per_page: 100,
     resolve_assets: 1,
   });
 
-  galleryItems = response.data.stories
-    .filter((story: GalleryItem) => story.content.component === 'gallery_item')
-    .sort((a: GalleryItem, b: GalleryItem) => {
-      const orderA = a.content.sort_order || 999;
-      const orderB = b.content.sort_order || 999;
-      return orderA - orderB;
+  const albumStories: GalleryAlbumStory[] = albumResponse.data.stories || [];
+
+  if (albumStories.length > 0) {
+    // Get media counts for each album via lightweight queries
+    const albumsWithCounts = await Promise.all(
+      albumStories.map(async (story) => {
+        try {
+          const mediaResponse = await storyblokApi.get('cdn/stories', {
+            version: storyblokVersion,
+            starts_with: `${story.full_slug}/`,
+            content_type: 'gallery_media',
+            per_page: 1,
+          });
+          const itemCount =
+            mediaResponse.total || mediaResponse.data?.stories?.length || 0;
+          return transformAlbum(story, itemCount);
+        } catch {
+          return transformAlbum(story, 0);
+        }
+      })
+    );
+
+    // Sort: featured first, then by sort_order, then by date
+    albums = albumsWithCounts.sort((a, b) => {
+      if (a.featured !== b.featured) return a.featured ? -1 : 1;
+      if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+      if (a.date && b.date)
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      return 0;
     });
+  } else {
+    // Fallback: fetch legacy gallery_item stories
+    const legacyResponse = await storyblokApi.get('cdn/stories', {
+      version: storyblokVersion,
+      starts_with: 'gallery/',
+      is_startpage: false,
+      per_page: 100,
+      resolve_assets: 1,
+    });
+
+    legacyItems = (legacyResponse.data.stories || [])
+      .filter(
+        (story: LegacyGalleryItem) => story.content.component === 'gallery_item'
+      )
+      .sort((a: LegacyGalleryItem, b: LegacyGalleryItem) => {
+        const orderA = a.content.sort_order || 999;
+        const orderB = b.content.sort_order || 999;
+        return orderA - orderB;
+      });
+  }
 } catch (err) {
-  console.error('Failed to fetch gallery items:', err);
+  console.error('Failed to fetch gallery content:', err);
   error = err;
 }
 
-const transformedItems = galleryItems.map((item) => ({
+// Transform legacy items for GalleryGrid (backward compat)
+const transformedLegacyItems = legacyItems.map((item) => ({
   id: item.uuid,
   title: item.content.title,
   media: item.content.media,
@@ -61,6 +112,10 @@ const transformedItems = galleryItems.map((item) => ({
   photographer: item.content.photographer,
   featured: item.content.featured,
 }));
+
+const hasAlbums = albums.length > 0;
+const featuredAlbums = albums.filter((a) => a.featured);
+const regularAlbums = albums.filter((a) => !a.featured);
 
 const pageTitle = 'Gallery';
 const pageDescription =
@@ -80,18 +135,44 @@ const pageDescription =
 
     <section class="gallery-section">
       <div class="container">
-        {error ? (
-          <CMSFallback
-            message="Unable to load gallery content. Please try again later."
-            showRetry={true}
-          />
-        ) : galleryItems.length === 0 ? (
-          <div class="empty-state">
-            <p>No gallery items available yet. Check back soon!</p>
-          </div>
-        ) : (
-          <GalleryGrid items={transformedItems} client:load />
-        )}
+        {
+          error ? (
+            <CMSFallback
+              message="Unable to load gallery content. Please try again later."
+              showRetry={true}
+            />
+          ) : hasAlbums ? (
+            <>
+              {featuredAlbums.length > 0 && (
+                <div class="featured-albums">
+                  <h2 class="section-title">Featured Albums</h2>
+                  <div class="albums-grid">
+                    {featuredAlbums.map((album) => (
+                      <AlbumCard album={album} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div class="all-albums">
+                {featuredAlbums.length > 0 && (
+                  <h2 class="section-title">All Albums</h2>
+                )}
+                <div class="albums-grid">
+                  {regularAlbums.map((album) => (
+                    <AlbumCard album={album} />
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : legacyItems.length === 0 ? (
+            <div class="empty-state">
+              <p>No gallery items available yet. Check back soon!</p>
+            </div>
+          ) : (
+            <GalleryGrid items={transformedLegacyItems} client:load />
+          )
+        }
       </div>
     </section>
   </main>
@@ -156,6 +237,28 @@ const pageDescription =
 
     @media (max-width: 768px) {
       padding: 0 var(--space-4);
+    }
+  }
+
+  .section-title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+    margin-bottom: var(--space-8);
+  }
+
+  .featured-albums {
+    margin-bottom: var(--space-16);
+  }
+
+  .albums-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md);
     }
   }
 

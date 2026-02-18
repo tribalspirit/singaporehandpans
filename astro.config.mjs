@@ -22,7 +22,9 @@ export default defineConfig({
       bridge: (env.NODE_ENV || process.env.NODE_ENV) === 'development',
       components: {
         event: 'src/components/storyblok/Event',
-        gallery_item: 'src/components/storyblok/GalleryItem', 
+        gallery_item: 'src/components/storyblok/GalleryItem',
+        gallery_album: 'src/components/storyblok/GalleryAlbum',
+        gallery_media: 'src/components/storyblok/GalleryMedia',
         page: 'src/components/storyblok/Page',
       }
     })
@@ -54,6 +56,7 @@ export default defineConfig({
         'react',
         'react-dom',
         'yet-another-react-lightbox',
+        'react-photo-album',
         'embla-carousel-react',
         'embla-carousel-autoplay'
       ]

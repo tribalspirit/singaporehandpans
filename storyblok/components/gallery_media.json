@@ -1,0 +1,97 @@
+{
+  "name": "gallery_media",
+  "display_name": "Gallery Media",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "required": true,
+      "description": "Media title"
+    },
+    "media": {
+      "type": "asset",
+      "pos": 1,
+      "required": true,
+      "filetypes": ["images", "videos"],
+      "description": "Image or video file"
+    },
+    "media_type": {
+      "type": "option",
+      "pos": 2,
+      "required": false,
+      "options": [
+        { "name": "Image", "value": "image" },
+        { "name": "Video", "value": "video" }
+      ],
+      "default_value": "image",
+      "description": "Type of media (auto-detected if not set)"
+    },
+    "description": {
+      "type": "textarea",
+      "pos": 3,
+      "required": false,
+      "description": "Media description / caption"
+    },
+    "tags": {
+      "type": "options",
+      "pos": 4,
+      "required": false,
+      "options": [
+        { "name": "Workshop", "value": "workshop" },
+        { "name": "Instruments", "value": "instruments" },
+        { "name": "Studio", "value": "studio" },
+        { "name": "Performance", "value": "performance" },
+        { "name": "Community", "value": "community" },
+        { "name": "Behind the Scenes", "value": "behind-scenes" },
+        { "name": "Students", "value": "students" }
+      ],
+      "description": "Media categories (multiple allowed)"
+    },
+    "alt_text": {
+      "type": "text",
+      "pos": 5,
+      "required": false,
+      "description": "Alternative text for accessibility"
+    },
+    "photographer": {
+      "type": "text",
+      "pos": 6,
+      "required": false,
+      "description": "Photographer or videographer credit"
+    },
+    "date_taken": {
+      "type": "datetime",
+      "pos": 7,
+      "required": false,
+      "description": "When photo/video was taken"
+    },
+    "sort_order": {
+      "type": "number",
+      "pos": 8,
+      "required": false,
+      "description": "Display order within album (lower = first)"
+    },
+    "video_poster": {
+      "type": "asset",
+      "pos": 9,
+      "required": false,
+      "filetypes": ["images"],
+      "description": "Poster/thumbnail image for video"
+    },
+    "video_duration": {
+      "type": "text",
+      "pos": 10,
+      "required": false,
+      "description": "Video duration (e.g. 2:30)"
+    }
+  },
+  "image": null,
+  "preview_field": "title",
+  "is_root": true,
+  "preview_tmpl": null,
+  "is_nestable": false,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "gallery_media",
+  "component_group_uuid": null
+}

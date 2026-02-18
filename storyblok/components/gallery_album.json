@@ -1,0 +1,80 @@
+{
+  "name": "gallery_album",
+  "display_name": "Gallery Album",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "required": true,
+      "description": "Album title"
+    },
+    "description": {
+      "type": "textarea",
+      "pos": 1,
+      "required": false,
+      "description": "Album description"
+    },
+    "cover_image": {
+      "type": "asset",
+      "pos": 2,
+      "required": false,
+      "filetypes": ["images"],
+      "description": "Album cover image"
+    },
+    "tags": {
+      "type": "options",
+      "pos": 3,
+      "required": false,
+      "options": [
+        { "name": "Workshop", "value": "workshop" },
+        { "name": "Instruments", "value": "instruments" },
+        { "name": "Studio", "value": "studio" },
+        { "name": "Performance", "value": "performance" },
+        { "name": "Community", "value": "community" },
+        { "name": "Behind the Scenes", "value": "behind-scenes" },
+        { "name": "Students", "value": "students" }
+      ],
+      "description": "Album categories (multiple allowed)"
+    },
+    "date": {
+      "type": "datetime",
+      "pos": 4,
+      "required": false,
+      "description": "Album date"
+    },
+    "featured": {
+      "type": "boolean",
+      "pos": 5,
+      "required": false,
+      "default_value": false,
+      "description": "Feature this album prominently"
+    },
+    "sort_order": {
+      "type": "number",
+      "pos": 6,
+      "required": false,
+      "description": "Display order (lower = first)"
+    },
+    "seo_title": {
+      "type": "text",
+      "pos": 7,
+      "required": false,
+      "description": "SEO title override"
+    },
+    "seo_description": {
+      "type": "textarea",
+      "pos": 8,
+      "required": false,
+      "description": "SEO description override"
+    }
+  },
+  "image": null,
+  "preview_field": "title",
+  "is_root": true,
+  "preview_tmpl": null,
+  "is_nestable": false,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "gallery_album",
+  "component_group_uuid": null
+}

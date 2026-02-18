@@ -1,0 +1,142 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import { normalizeTags } from '../../utils/tags';
+
+export interface Props {
+  blok: {
+    title: string;
+    media?: {
+      filename: string;
+      alt?: string;
+    };
+    media_type?: 'image' | 'video';
+    description?: string;
+    tags?: string | string[];
+    alt_text?: string;
+    photographer?: string;
+  };
+}
+
+const { blok } = Astro.props;
+const mediaTags = normalizeTags(blok.tags);
+---
+
+<div class="storyblok-gallery-media" {...storyblokEditable(blok)}>
+  {
+    blok.media?.filename && (
+      <div class="media-preview">
+        {blok.media_type === 'video' ? (
+          <video src={blok.media.filename} controls preload="metadata">
+            <track kind="captions" />
+          </video>
+        ) : (
+          <img
+            src={blok.media.filename}
+            alt={blok.alt_text || blok.media.alt || blok.title}
+            loading="lazy"
+          />
+        )}
+      </div>
+    )
+  }
+
+  <div class="media-content">
+    <h3 class="media-title">{blok.title}</h3>
+
+    {blok.description && <p class="media-description">{blok.description}</p>}
+
+    {
+      blok.photographer && (
+        <p class="media-photographer">Photo by {blok.photographer}</p>
+      )
+    }
+
+    {
+      mediaTags.length > 0 && (
+        <div class="media-tags">
+          {mediaTags.map((tag) => (
+            <span class="tag">{tag}</span>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</div>
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .storyblok-gallery-media {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .media-preview {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+
+    img,
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    img {
+      transition: transform 0.3s ease;
+    }
+
+    &:hover img {
+      transform: scale(1.05);
+    }
+  }
+
+  .media-content {
+    padding: var(--spacing-md);
+  }
+
+  .media-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .media-description {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .media-photographer {
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-sm);
+    font-style: italic;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .media-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+
+    .tag {
+      background: var(--color-accent-light);
+      color: var(--color-accent-dark);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--border-radius-sm);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      text-transform: capitalize;
+    }
+  }
+</style>

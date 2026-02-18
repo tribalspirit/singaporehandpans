@@ -1,0 +1,117 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import { normalizeTags } from '../../utils/tags';
+
+export interface Props {
+  blok: {
+    title: string;
+    description?: string;
+    cover_image?: {
+      filename: string;
+      alt?: string;
+    };
+    tags?: string | string[];
+    featured?: boolean;
+  };
+}
+
+const { blok } = Astro.props;
+const albumTags = normalizeTags(blok.tags);
+---
+
+<div class="storyblok-gallery-album" {...storyblokEditable(blok)}>
+  {
+    blok.cover_image?.filename && (
+      <div class="album-image">
+        <img
+          src={blok.cover_image.filename}
+          alt={blok.cover_image.alt || blok.title}
+          loading="lazy"
+        />
+      </div>
+    )
+  }
+
+  <div class="album-content">
+    <h3 class="album-title">{blok.title}</h3>
+
+    {blok.description && <p class="album-description">{blok.description}</p>}
+
+    {
+      albumTags.length > 0 && (
+        <div class="album-tags">
+          {albumTags.map((tag) => (
+            <span class="tag">{tag}</span>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</div>
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .storyblok-gallery-album {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .album-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    &:hover img {
+      transform: scale(1.05);
+    }
+  }
+
+  .album-content {
+    padding: var(--spacing-md);
+  }
+
+  .album-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .album-description {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .album-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+
+    .tag {
+      background: var(--color-accent-light);
+      color: var(--color-accent-dark);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--border-radius-sm);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      text-transform: capitalize;
+    }
+  }
+</style>

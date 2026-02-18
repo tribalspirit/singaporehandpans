@@ -1,0 +1,242 @@
+---
+import { useStoryblokApi } from '@storyblok/astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import CMSFallback from '../../../components/CMSFallback.astro';
+import MediaGrid from '../../../components/gallery/MediaGrid';
+import { transformAlbum, transformMedia } from '../../../lib/galleryApi';
+import type {
+  GalleryAlbumStory,
+  GalleryMediaStory,
+  GalleryMediaItem,
+} from '../../../types/gallery';
+
+export async function getStaticPaths() {
+  try {
+    const storyblokApi = useStoryblokApi();
+    if (!storyblokApi) {
+      throw new Error('Storyblok API not initialized');
+    }
+
+    const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
+
+    // Fetch all albums
+    const { data: albumData } = await storyblokApi.get('cdn/stories', {
+      starts_with: 'gallery/albums/',
+      content_type: 'gallery_album',
+      version: storyblokVersion,
+      per_page: 100,
+    });
+
+    const albumStories: GalleryAlbumStory[] = albumData?.stories || [];
+
+    if (albumStories.length === 0) {
+      return [];
+    }
+
+    // For each album, fetch its media items
+    const paths = await Promise.all(
+      albumStories.map(async (albumStory) => {
+        let mediaItems: GalleryMediaItem[] = [];
+
+        try {
+          const { data: mediaData } = await storyblokApi.get('cdn/stories', {
+            starts_with: `${albumStory.full_slug}/`,
+            content_type: 'gallery_media',
+            version: storyblokVersion,
+            per_page: 100,
+            resolve_assets: 1,
+          });
+
+          const mediaStories: GalleryMediaStory[] = mediaData?.stories || [];
+          mediaItems = mediaStories.map(transformMedia).sort((a, b) => {
+            // Items already have tags etc, sort by original sort_order
+            const storyA = mediaStories.find((s) => s.uuid === a.id);
+            const storyB = mediaStories.find((s) => s.uuid === b.id);
+            const orderA = storyA?.content.sort_order || 999;
+            const orderB = storyB?.content.sort_order || 999;
+            return orderA - orderB;
+          });
+        } catch (err) {
+          console.error(
+            `Failed to fetch media for album ${albumStory.slug}:`,
+            err
+          );
+        }
+
+        const album = transformAlbum(albumStory, mediaItems.length);
+
+        return {
+          params: { slug: albumStory.slug },
+          props: { album, mediaItems, cmsError: false },
+        };
+      })
+    );
+
+    return paths;
+  } catch (error) {
+    console.error('Gallery album [slug]: Failed to load from Storyblok', error);
+    return [];
+  }
+}
+
+const { album, mediaItems, cmsError } = Astro.props as {
+  album: ReturnType<typeof transformAlbum>;
+  mediaItems: GalleryMediaItem[];
+  cmsError: boolean;
+};
+
+if (!album) {
+  return Astro.redirect('/gallery');
+}
+
+const seoTitle = album.title
+  ? `${album.title} - Gallery - Singapore Handpan Studio`
+  : 'Gallery Album - Singapore Handpan Studio';
+const seoDescription =
+  album.description ||
+  `Browse photos from ${album.title} at Singapore Handpan Studio.`;
+---
+
+<BaseLayout
+  title={seoTitle}
+  description={seoDescription}
+  canonical={`${Astro.site}gallery/albums/${album.slug}/`}
+>
+  <main class="album-detail-page">
+    {cmsError && <CMSFallback type="gallery" />}
+
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/">Home</a>
+        <span class="separator">›</span>
+        <a href="/gallery">Gallery</a>
+        <span class="separator">›</span>
+        <span class="current">{album.title}</span>
+      </nav>
+
+      <header class="album-header">
+        <h1 class="album-title">{album.title}</h1>
+        {
+          album.description && (
+            <p class="album-description">{album.description}</p>
+          )
+        }
+        <div class="album-meta">
+          <span class="item-count">
+            {album.itemCount}
+            {album.itemCount === 1 ? 'photo' : 'photos'}
+          </span>
+        </div>
+      </header>
+
+      {
+        mediaItems.length === 0 ? (
+          <div class="empty-state">
+            <p>No media in this album yet. Check back soon!</p>
+          </div>
+        ) : (
+          <MediaGrid items={mediaItems} albumTitle={album.title} client:load />
+        )
+      }
+    </div>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .album-detail-page {
+    min-height: calc(100vh - var(--header-height) - var(--footer-height));
+    padding: var(--spacing-lg) 0 var(--spacing-2xl);
+    background: var(--color-gray-50);
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .separator {
+      color: var(--color-text-tertiary);
+    }
+
+    .current {
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-medium);
+    }
+  }
+
+  .album-header {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .album-title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-md);
+    line-height: var(--line-height-tight);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-4xl);
+    }
+  }
+
+  .album-description {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-secondary);
+    max-width: 700px;
+    margin: 0 auto var(--spacing-md);
+    line-height: var(--line-height-relaxed);
+  }
+
+  .album-meta {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+  }
+
+  .item-count {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-lg);
+  }
+
+  @media (max-width: 768px) {
+    .breadcrumb {
+      flex-wrap: wrap;
+      gap: var(--spacing-xs);
+
+      .current {
+        flex: 1 0 100%;
+        margin-top: var(--spacing-xs);
+      }
+    }
+  }
+</style>
