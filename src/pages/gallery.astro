@@ -1,5 +1,5 @@
 ---
-import { useStoryblokApi } from '@storyblok/astro';
+import { getStoryblokClient } from '../lib/storyblok';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import GalleryGrid from '../components/GalleryGrid';
 import AlbumCard from '../components/gallery/AlbumCard.astro';
@@ -36,7 +36,7 @@ let legacyItems: LegacyGalleryItem[] = [];
 let error = null;
 
 try {
-  const storyblokApi = useStoryblokApi();
+  const storyblokApi = getStoryblokClient();
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
 
   // Try fetching albums first
