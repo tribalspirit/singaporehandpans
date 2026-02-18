@@ -25,6 +25,7 @@ export async function getStaticPaths() {
       content_type: 'gallery_album',
       version: storyblokVersion,
       per_page: 100,
+      cv: Date.now(),
     });
 
     const albumStories: GalleryAlbumStory[] = albumData?.stories || [];
@@ -38,13 +39,22 @@ export async function getStaticPaths() {
       albumStories.map(async (albumStory) => {
         let mediaItems: GalleryMediaItem[] = [];
 
+        // Album lives inside its folder, e.g. gallery/albums/workshop-moments/workshop-moments
+        // Media siblings are at gallery/albums/workshop-moments/*
+        // So we query the parent folder path: strip the last slug segment
+        const folderPath = albumStory.full_slug.substring(
+          0,
+          albumStory.full_slug.lastIndexOf('/')
+        );
+
         try {
           const { data: mediaData } = await storyblokApi.get('cdn/stories', {
-            starts_with: `${albumStory.full_slug}/`,
+            starts_with: `${folderPath}/`,
             content_type: 'gallery_media',
             version: storyblokVersion,
             per_page: 100,
             resolve_assets: 1,
+            cv: Date.now(),
           });
 
           const mediaStories: GalleryMediaStory[] = mediaData?.stories || [];

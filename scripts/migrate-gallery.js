@@ -280,7 +280,7 @@ async function main() {
         story: {
           name: albumName,
           slug: albumSlug,
-          parent_id: albumsFolderId,
+          parent_id: albumFolderId,
           content: {
             component: 'gallery_album',
             title: albumName,

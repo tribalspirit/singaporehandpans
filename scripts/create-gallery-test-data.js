@@ -447,8 +447,8 @@ async function main() {
     );
     await delay(250);
 
-    // Create the gallery_album story (sibling to folder, inside albums/)
-    const albumStory = await createStory(album, albumsFolderId);
+    // Create the gallery_album story inside the album folder
+    const albumStory = await createStory(album, albumFolderId);
     if (albumStory) {
       console.log(`  ✅ Album story created (ID: ${albumStory.id})`);
       totalAlbums++;

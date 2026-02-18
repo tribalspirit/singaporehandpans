@@ -35,7 +35,7 @@ let error = null;
 
 try {
   const storyblokApi = useStoryblokApi();
-  const storyblokVersion = import.meta.env.DEV ? 'draft' : 'published';
+  const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
 
   // Try fetching albums first
   const albumResponse = await storyblokApi.get('cdn/stories', {
@@ -44,6 +44,7 @@ try {
     content_type: 'gallery_album',
     per_page: 100,
     resolve_assets: 1,
+    cv: Date.now(),
   });
 
   const albumStories: GalleryAlbumStory[] = albumResponse.data.stories || [];
@@ -52,12 +53,19 @@ try {
     // Get media counts for each album via lightweight queries
     const albumsWithCounts = await Promise.all(
       albumStories.map(async (story) => {
+        // Album story is inside its folder, e.g. gallery/albums/workshop-moments/workshop-moments
+        // Media siblings are at gallery/albums/workshop-moments/*
+        const folderPath = story.full_slug.substring(
+          0,
+          story.full_slug.lastIndexOf('/')
+        );
         try {
           const mediaResponse = await storyblokApi.get('cdn/stories', {
             version: storyblokVersion,
-            starts_with: `${story.full_slug}/`,
+            starts_with: `${folderPath}/`,
             content_type: 'gallery_media',
             per_page: 1,
+            cv: Date.now(),
           });
           const itemCount =
             mediaResponse.total || mediaResponse.data?.stories?.length || 0;
@@ -84,6 +92,7 @@ try {
       is_startpage: false,
       per_page: 100,
       resolve_assets: 1,
+      cv: Date.now(),
     });
 
     legacyItems = (legacyResponse.data.stories || [])
