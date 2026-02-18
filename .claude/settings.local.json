@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(iconv:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx astro check:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: add Shop page with Shopify Storefront API integration\n\n- Add shopifyClient.ts for Shopify Storefront GraphQL API\n- Create /shop page route with feature toggle guard\n- Build ShopProductList React island with search and filters\n- Build ProductCard component for product display\n- Add feature-toggled Shop link in navigation\n- Update .env.example with Shopify configuration\n- Add docs/features/SHOP.md documentation\n- Update spec kit memory files with Shop feature\n\nFeature is disabled by default \\(PUBLIC_ENABLE_SHOP=false\\).\nWhen enabled, displays products from Shopify with:\n- Search by title, description, tags\n- Filter by category, price range, availability\n- Buy links redirect to Shopify product pages\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "Bash(dir /s \"D:\\\\dev\\\\sghandpan\\\\.specify\")",
+      "WebSearch",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(node -e \"\nconst { getDiatonicTriads } = require\\(''./src/widgets/academy-handpan/theory/diatonicTriads.ts''\\);\n\")",
+      "Bash(npx tsx -e:*)",
+      "Bash(npx tsx:*)",
+      "mcp__serena__list_dir",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(npm install:*)",
+      "Bash(npm view:*)",
+      "Bash(node -e:*)",
+      "Bash(git rm:*)",
+      "WebFetch(domain:react-photo-album.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:app.unpkg.com)",
+      "Bash(npm run storyblok:components:*)",
+      "Bash(node scripts/create-gallery-test-data.js:*)"
+    ]
+  }
+}
