@@ -109,6 +109,18 @@ export default function MediaGrid({ items, albumTitle }: MediaGridProps) {
             spacing={12}
             onClick={handleClick}
             render={{
+              image: ({ alt, ...rest }) => (
+                // eslint-disable-next-line jsx-a11y/alt-text
+                <img
+                  alt={alt}
+                  {...rest}
+                  style={{
+                    ...rest.style,
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                  }}
+                />
+              ),
               extras: (_, { index }) => {
                 const item = filteredItems[index];
                 if (!item) return null;

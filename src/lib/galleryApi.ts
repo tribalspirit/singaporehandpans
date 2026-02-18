@@ -53,13 +53,14 @@ function videoMimeType(filename: string): string {
 /** Transform a gallery_album story into a component-ready GalleryAlbum. */
 export function transformAlbum(
   story: GalleryAlbumStory,
-  itemCount: number
+  itemCount: number,
+  fallbackCoverSrc?: string
 ): GalleryAlbum {
   return {
     slug: story.slug,
     title: story.content.title,
     description: story.content.description,
-    coverSrc: story.content.cover_image?.filename || '',
+    coverSrc: story.content.cover_image?.filename || fallbackCoverSrc || '',
     tags: normalizeTags(story.content.tags),
     date: story.content.date,
     itemCount,

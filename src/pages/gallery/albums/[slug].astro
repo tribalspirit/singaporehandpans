@@ -73,7 +73,13 @@ export async function getStaticPaths() {
           );
         }
 
-        const album = transformAlbum(albumStory, mediaItems.length);
+        const fallbackCover =
+          mediaItems.find((m) => m.mediaType === 'image')?.src || '';
+        const album = transformAlbum(
+          albumStory,
+          mediaItems.length,
+          fallbackCover
+        );
 
         return {
           params: { slug: albumStory.slug },
