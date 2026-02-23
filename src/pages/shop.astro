@@ -4,6 +4,8 @@ import ShopProductList from '../components/ShopProductList';
 import { fetchAllProducts, isShopEnabled } from '../lib/shopifyClient';
 import type { ShopProduct } from '../lib/shopifyClient';
 
+export const prerender = false;
+
 if (!isShopEnabled()) {
   return Astro.redirect('/404');
 }
