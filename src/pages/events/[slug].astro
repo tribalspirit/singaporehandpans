@@ -1,100 +1,35 @@
 ---
-import { useStoryblokApi } from '@storyblok/astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import CMSFallback from '../../components/CMSFallback.astro';
 import EventDetail from '../../components/EventDetail.astro';
+import { getStoryblokClient } from '../../lib/storyblok';
 import type { EventStory } from '../../types/event';
+
+export const prerender = false;
 
 const EVENT_DURATION_MS = 2 * 60 * 60 * 1000;
 const PRICE_SANITIZE_REGEX = /[^0-9.]/g;
 const FREE_LABEL = 'Free';
 const PRICE_CURRENCY = 'SGD';
 
-const FALLBACK_EVENTS: EventStory[] = [
-  {
-    id: 'fallback-1',
-    name: 'Beginner Handpan Workshop',
-    slug: 'beginner-handpan-workshop',
-    content: {
-      title: 'Beginner Handpan Workshop',
-      description:
-        'Join us for an introduction to the beautiful world of handpan music. Perfect for complete beginners who want to learn the basics in a supportive environment.',
-      date: '2024-03-15T19:00:00Z',
-      location: 'Singapore Handpan Studio',
-      price: 'S$120',
-      booking_url:
-        import.meta.env.PUBLIC_ACUITY_WORKSHOP_URL ||
-        'https://app.acuityscheduling.com/schedule.php',
-      tags: ['workshop', 'beginner'],
-      status: 'upcoming',
-      max_participants: 6,
-      seo_title: 'Beginner Handpan Workshop Singapore - Learn Handpan Music',
-      seo_description:
-        'Join our beginner-friendly handpan workshop in Singapore. Learn the basics of this beautiful instrument with experienced instructors.',
-    },
-  },
-  {
-    id: 'fallback-2',
-    name: 'Community Handpan Gathering',
-    slug: 'community-handpan-gathering',
-    content: {
-      title: 'Community Handpan Gathering',
-      description:
-        'A relaxed gathering for handpan enthusiasts to play together, share music, and connect with fellow musicians in Singapore.',
-      date: '2024-03-22T15:00:00Z',
-      location: 'Singapore Handpan Studio',
-      price: 'Free',
-      tags: ['community', 'gathering'],
-      status: 'upcoming',
-      max_participants: 15,
-      seo_title: 'Community Handpan Gathering Singapore - Free Event',
-      seo_description:
-        'Join fellow handpan enthusiasts for a free community gathering. Share music and connect with other musicians in Singapore.',
-    },
-  },
-];
+const { slug } = Astro.params;
 
-export async function getStaticPaths() {
-  try {
-    const storyblokApi = useStoryblokApi();
-    if (!storyblokApi) {
-      throw new Error('Storyblok API not initialized');
-    }
+let event: EventStory | undefined;
 
-    const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
+try {
+  const runtime = Astro.locals.runtime;
+  const token =
+    runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+  const storyblokApi = getStoryblokClient(token);
+  const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
 
-    const { data } = await storyblokApi.get('cdn/stories', {
-      starts_with: 'events/',
-      content_type: 'event',
-      version: storyblokVersion,
-    });
+  const { data } = await storyblokApi.get(`cdn/stories/events/${slug}`, {
+    version: storyblokVersion,
+  });
 
-    const stories: EventStory[] = data?.stories || [];
-
-    if (stories.length > 0) {
-      return stories.map((story) => ({
-        params: { slug: story.slug },
-        props: { event: story, cmsError: false },
-      }));
-    }
-
-    return FALLBACK_EVENTS.map((event) => ({
-      params: { slug: event.slug },
-      props: { event, cmsError: true },
-    }));
-  } catch (error) {
-    console.error('Event [slug]: Failed to load from Storyblok', error);
-    return FALLBACK_EVENTS.map((event) => ({
-      params: { slug: event.slug },
-      props: { event, cmsError: true },
-    }));
-  }
+  event = data?.story;
+} catch (error) {
+  console.error('Event [slug]: Failed to load from Storyblok', error);
 }
-
-const { event, cmsError } = Astro.props as {
-  event?: EventStory;
-  cmsError?: boolean;
-};
 
 if (!event) {
   return Astro.redirect('/events');
@@ -167,8 +102,6 @@ const seoDescription =
     slot="head"
   />
   <main class="event-detail-page">
-    {cmsError && <CMSFallback type="events" />}
-
     <div class="container">
       <nav class="breadcrumb">
         <a href="/">Home</a>

@@ -1,8 +1,7 @@
 ---
-import { useStoryblokApi } from '@storyblok/astro';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import CMSFallback from '../../../components/CMSFallback.astro';
 import MediaGrid from '../../../components/gallery/MediaGrid';
+import { getStoryblokClient } from '../../../lib/storyblok';
 import { transformAlbum, transformMedia } from '../../../lib/galleryApi';
 import type {
   GalleryAlbumStory,
@@ -10,96 +9,68 @@ import type {
   GalleryMediaItem,
 } from '../../../types/gallery';
 
-export async function getStaticPaths() {
-  try {
-    const storyblokApi = useStoryblokApi();
-    if (!storyblokApi) {
-      throw new Error('Storyblok API not initialized');
-    }
+export const prerender = false;
 
-    const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
+const { slug } = Astro.params;
 
-    // Fetch all albums
-    const { data: albumData } = await storyblokApi.get('cdn/stories', {
-      starts_with: 'gallery/albums/',
-      content_type: 'gallery_album',
-      version: storyblokVersion,
-      per_page: 100,
-      cv: Date.now(),
-    });
+let album: ReturnType<typeof transformAlbum> | undefined;
+let mediaItems: GalleryMediaItem[] = [];
 
-    const albumStories: GalleryAlbumStory[] = albumData?.stories || [];
+try {
+  const runtime = Astro.locals.runtime;
+  const token =
+    runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+  const storyblokApi = getStoryblokClient(token);
+  const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
 
-    if (albumStories.length === 0) {
-      return [];
-    }
+  // Fetch all albums to find the one matching the slug
+  const { data: albumData } = await storyblokApi.get('cdn/stories', {
+    starts_with: 'gallery/albums/',
+    content_type: 'gallery_album',
+    version: storyblokVersion,
+    per_page: 100,
+  });
 
-    // For each album, fetch its media items
-    const paths = await Promise.all(
-      albumStories.map(async (albumStory) => {
-        let mediaItems: GalleryMediaItem[] = [];
+  const albumStories: GalleryAlbumStory[] = albumData?.stories || [];
+  const albumStory = albumStories.find((s) => s.slug === slug);
 
-        // Album lives inside its folder, e.g. gallery/albums/workshop-moments/workshop-moments
-        // Media siblings are at gallery/albums/workshop-moments/*
-        // So we query the parent folder path: strip the last slug segment
-        const folderPath = albumStory.full_slug.substring(
-          0,
-          albumStory.full_slug.lastIndexOf('/')
-        );
-
-        try {
-          const { data: mediaData } = await storyblokApi.get('cdn/stories', {
-            starts_with: `${folderPath}/`,
-            content_type: 'gallery_media',
-            version: storyblokVersion,
-            per_page: 100,
-            resolve_assets: 1,
-            cv: Date.now(),
-          });
-
-          const mediaStories: GalleryMediaStory[] = mediaData?.stories || [];
-          mediaItems = mediaStories.map(transformMedia).sort((a, b) => {
-            // Items already have tags etc, sort by original sort_order
-            const storyA = mediaStories.find((s) => s.uuid === a.id);
-            const storyB = mediaStories.find((s) => s.uuid === b.id);
-            const orderA = storyA?.content.sort_order || 999;
-            const orderB = storyB?.content.sort_order || 999;
-            return orderA - orderB;
-          });
-        } catch (err) {
-          console.error(
-            `Failed to fetch media for album ${albumStory.slug}:`,
-            err
-          );
-        }
-
-        const fallbackCover =
-          mediaItems.find((m) => m.mediaType === 'image')?.src || '';
-        const album = transformAlbum(
-          albumStory,
-          mediaItems.length,
-          fallbackCover
-        );
-
-        return {
-          params: { slug: albumStory.slug },
-          props: { album, mediaItems, cmsError: false },
-        };
-      })
+  if (albumStory) {
+    // Album lives inside its folder, e.g. gallery/albums/workshop-moments/workshop-moments
+    // Media siblings are at gallery/albums/workshop-moments/*
+    // So we query the parent folder path: strip the last slug segment
+    const folderPath = albumStory.full_slug.substring(
+      0,
+      albumStory.full_slug.lastIndexOf('/')
     );
 
-    return paths;
-  } catch (error) {
-    console.error('Gallery album [slug]: Failed to load from Storyblok', error);
-    return [];
-  }
-}
+    try {
+      const { data: mediaData } = await storyblokApi.get('cdn/stories', {
+        starts_with: `${folderPath}/`,
+        content_type: 'gallery_media',
+        version: storyblokVersion,
+        per_page: 100,
+        resolve_assets: 1,
+      });
 
-const { album, mediaItems, cmsError } = Astro.props as {
-  album: ReturnType<typeof transformAlbum>;
-  mediaItems: GalleryMediaItem[];
-  cmsError: boolean;
-};
+      const mediaStories: GalleryMediaStory[] = mediaData?.stories || [];
+      mediaItems = mediaStories.map(transformMedia).sort((a, b) => {
+        const storyA = mediaStories.find((s) => s.uuid === a.id);
+        const storyB = mediaStories.find((s) => s.uuid === b.id);
+        const orderA = storyA?.content.sort_order || 999;
+        const orderB = storyB?.content.sort_order || 999;
+        return orderA - orderB;
+      });
+    } catch (err) {
+      console.error(`Failed to fetch media for album ${albumStory.slug}:`, err);
+    }
+
+    const fallbackCover =
+      mediaItems.find((m) => m.mediaType === 'image')?.src || '';
+    album = transformAlbum(albumStory, mediaItems.length, fallbackCover);
+  }
+} catch (error) {
+  console.error('Gallery album [slug]: Failed to load from Storyblok', error);
+}
 
 if (!album) {
   return Astro.redirect('/gallery');
@@ -119,8 +90,6 @@ const seoDescription =
   canonical={`${Astro.site}gallery/albums/${album.slug}/`}
 >
   <main class="album-detail-page">
-    {cmsError && <CMSFallback type="gallery" />}
-
     <div class="container">
       <nav class="breadcrumb">
         <a href="/">Home</a>
