@@ -1,48 +1,15 @@
 ---
-import { useStoryblokApi } from '@storyblok/astro';
+import { getStoryblokClient } from '../../lib/storyblok';
 import HomeEventCard from './HomeEventCard.astro';
-
-const FALLBACK_EVENTS = [
-  {
-    id: 'fallback-1',
-    name: 'Beginner Handpan Workshop',
-    slug: 'beginner-handpan-workshop',
-    content: {
-      title: 'Beginner Handpan Workshop',
-      description:
-        'Join us for an introduction to the beautiful world of handpan music. Perfect for complete beginners who want to learn the basics in a supportive environment.',
-      date: '2024-03-15T19:00:00Z',
-      location: 'Singapore Handpan Studio',
-      price: 'S$120',
-      booking_url:
-        import.meta.env.PUBLIC_ACUITY_WORKSHOP_URL ||
-        'https://app.acuityscheduling.com/schedule.php',
-    },
-  },
-  {
-    id: 'fallback-2',
-    name: 'Community Handpan Gathering',
-    slug: 'community-handpan-gathering',
-    content: {
-      title: 'Community Handpan Gathering',
-      description:
-        'A relaxed gathering for handpan enthusiasts to play together, share music, and connect with fellow musicians in Singapore.',
-      date: '2024-03-22T15:00:00Z',
-      location: 'Singapore Handpan Studio',
-      price: 'Free',
-    },
-  },
-];
 
 let allUpcomingEvents: Record<string, unknown>[] = [];
 let totalUpcoming = 0;
 
 try {
-  const storyblokApi = useStoryblokApi();
-  if (!storyblokApi) {
-    throw new Error('Storyblok API not initialized');
-  }
-
+  const runtime = Astro.locals.runtime;
+  const token =
+    runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+  const storyblokApi = getStoryblokClient(token);
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
   const now = new Date().toISOString().slice(0, 10) + ' 00:00';
 
@@ -55,7 +22,6 @@ try {
     },
     version: storyblokVersion,
     resolve_assets: 1,
-    cv: Date.now(),
   });
 
   if (data?.stories && data.stories.length > 0) {
@@ -64,12 +30,6 @@ try {
   }
 } catch (error) {
   console.error('UpcomingEvents: Failed to load from Storyblok', error);
-  // Use fallback events for development/preview
-  const now = new Date();
-  allUpcomingEvents = FALLBACK_EVENTS.filter(
-    (e) => new Date(e.content.date) >= now
-  );
-  totalUpcoming = allUpcomingEvents.length;
 }
 
 const displayEvents = allUpcomingEvents.slice(0, 3);
