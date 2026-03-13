@@ -1,0 +1,540 @@
+---
+import { fetchAllProducts, isShopEnabled } from '../../lib/shopifyClient';
+import type { ShopProduct } from '../../lib/shopifyClient';
+
+function formatPrice(price: { amount: number; currencyCode: string }): string {
+  return new Intl.NumberFormat('en-SG', {
+    style: 'currency',
+    currency: price.currencyCode,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price.amount);
+}
+
+function selectFeaturedProducts(
+  products: ShopProduct[],
+  count = 3
+): ShopProduct[] {
+  const available = products.filter((p) => p.availableForSale);
+  // Shuffle so each page load shows a varied selection
+  for (let i = available.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [available[i], available[j]] = [available[j], available[i]];
+  }
+  return available.slice(0, count);
+}
+
+const shopEnabled = isShopEnabled();
+let featuredProducts: ShopProduct[] = [];
+
+if (shopEnabled) {
+  try {
+    const allProducts = await fetchAllProducts();
+    featuredProducts = selectFeaturedProducts(allProducts);
+  } catch {
+    // Fail silently — section will be hidden
+  }
+}
+
+const shouldRender = shopEnabled && featuredProducts.length > 0;
+---
+
+{
+  shouldRender && (
+    <section
+      class="featured-products"
+      aria-labelledby="featured-products-heading"
+    >
+      <div class="container">
+        <div class="featured-products__header">
+          <div class="featured-products__heading-group">
+            <span class="featured-products__eyebrow" aria-hidden="true">
+              Shop
+            </span>
+            <h2 id="featured-products-heading" class="featured-products__title">
+              Handpans & Accessories
+            </h2>
+            <p class="featured-products__subtitle">
+              From entry-level instruments to premium handpans and carry
+              essentials — everything you need to start or deepen your practice.
+            </p>
+          </div>
+
+          <a
+            href="/shop"
+            class="featured-products__view-all"
+            aria-label="View all instruments in the shop"
+          >
+            View all instruments
+            <svg
+              aria-hidden="true"
+              focusable="false"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </a>
+        </div>
+
+        <ul
+          class="featured-products__rail"
+          aria-label="Featured handpan instruments"
+        >
+          {featuredProducts.map((product) => {
+            const tag = product.productType || 'Instrument';
+            const ctaLabel = 'View product';
+
+            return (
+              <li class="featured-product-card">
+                <a
+                  href={product.shopUrl}
+                  class="featured-product-card__link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${product.title} — ${formatPrice(product.priceMin)} — opens in Shopify store`}
+                >
+                  <div class="featured-product-card__image-wrapper">
+                    {product.image ? (
+                      <img
+                        src={product.image.url}
+                        alt={product.image.altText || product.title}
+                        class="featured-product-card__image"
+                        loading="lazy"
+                        decoding="async"
+                        width="400"
+                        height="300"
+                      />
+                    ) : (
+                      <div
+                        class="featured-product-card__image-placeholder"
+                        aria-hidden="true"
+                      >
+                        <svg
+                          width="48"
+                          height="48"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <circle cx="12" cy="12" r="3" />
+                          <line x1="12" y1="2" x2="12" y2="5" />
+                          <line x1="12" y1="19" x2="12" y2="22" />
+                          <line x1="2" y1="12" x2="5" y2="12" />
+                          <line x1="19" y1="12" x2="22" y2="12" />
+                        </svg>
+                      </div>
+                    )}
+
+                    {!product.availableForSale && (
+                      <span
+                        class="featured-product-card__sold-out"
+                        aria-label="Sold out"
+                      >
+                        Sold out
+                      </span>
+                    )}
+                  </div>
+
+                  <div class="featured-product-card__content">
+                    <span class="featured-product-card__tag" aria-hidden="true">
+                      {tag}
+                    </span>
+
+                    <h3 class="featured-product-card__title">
+                      {product.title}
+                    </h3>
+
+                    <div class="featured-product-card__footer">
+                      <span class="featured-product-card__price">
+                        {formatPrice(product.priceMin)}
+                      </span>
+                      <span
+                        class="featured-product-card__cta"
+                        aria-hidden="true"
+                      >
+                        {ctaLabel}
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div class="featured-products__mobile-cta">
+          <a href="/shop" class="featured-products__view-all-mobile">
+            View all instruments
+            <svg
+              aria-hidden="true"
+              focusable="false"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<style lang="scss">
+  .featured-products {
+    padding: var(--space-16) 0;
+    background-color: var(--color-gray-50);
+
+    @media (min-width: 768px) {
+      padding: var(--space-24) 0;
+    }
+  }
+
+  // ── Header row ──────────────────────────────────────────────────────────────
+
+  .featured-products__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    margin-bottom: var(--space-10);
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-8);
+      margin-bottom: var(--space-12);
+    }
+  }
+
+  .featured-products__heading-group {
+    flex: 1;
+    max-width: 560px;
+  }
+
+  .featured-products__eyebrow {
+    display: block;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: var(--space-2);
+  }
+
+  .featured-products__title {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+    line-height: var(--line-height-tight);
+    margin: 0 0 var(--space-3) 0;
+  }
+
+  .featured-products__subtitle {
+    font-size: var(--font-size-base);
+    color: var(--color-gray-600);
+    line-height: var(--line-height-relaxed);
+    margin: 0;
+    max-width: 480px;
+  }
+
+  .featured-products__view-all {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid transparent;
+    transition:
+      border-color var(--transition-fast),
+      color var(--transition-fast);
+
+    &:hover {
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 4px;
+      border-radius: 2px;
+    }
+
+    svg {
+      transition: transform var(--transition-fast);
+    }
+
+    &:hover svg {
+      transform: translateX(3px);
+    }
+
+    @media (min-width: 768px) {
+      display: inline-flex;
+    }
+  }
+
+  // ── Product rail ─────────────────────────────────────────────────────────────
+
+  .featured-products__rail {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    // Mobile: horizontal scroll with scroll-snap
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-4);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    // Hide scrollbar but keep functionality
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    // Padding so the peek card is partially visible but not cut flush
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+    margin-left: calc(-1 * var(--space-4));
+    margin-right: calc(-1 * var(--space-4));
+
+    @media (min-width: 768px) {
+      // Desktop: 3-column grid, no scrolling
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-6);
+      overflow-x: visible;
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  // ── Product card ─────────────────────────────────────────────────────────────
+
+  .featured-product-card {
+    // Mobile: 85% width so next card peeks (1.1-card pattern)
+    flex: 0 0 85%;
+    scroll-snap-align: start;
+    min-width: 260px;
+    max-width: 340px;
+
+    @media (min-width: 480px) {
+      flex: 0 0 75%;
+    }
+
+    @media (min-width: 768px) {
+      flex: unset;
+      max-width: unset;
+      min-width: unset;
+    }
+  }
+
+  .featured-product-card__link {
+    display: block;
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+    transition:
+      box-shadow var(--transition-fast),
+      transform var(--transition-fast);
+
+    &:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-3px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+
+  .featured-product-card__image-wrapper {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--color-gray-100);
+    overflow: hidden;
+  }
+
+  .featured-product-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--transition-base);
+
+    .featured-product-card__link:hover & {
+      transform: scale(1.04);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .featured-product-card__link:hover & {
+        transform: none;
+      }
+    }
+  }
+
+  .featured-product-card__image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-400);
+  }
+
+  .featured-product-card__sold-out {
+    position: absolute;
+    top: var(--space-3);
+    left: var(--space-3);
+    background: rgba(33, 37, 41, 0.85);
+    color: var(--color-white);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    backdrop-filter: blur(4px);
+  }
+
+  .featured-product-card__content {
+    padding: var(--space-4) var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+
+    @media (min-width: 768px) {
+      padding: var(--space-5) var(--space-6);
+    }
+  }
+
+  .featured-product-card__tag {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .featured-product-card__title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-gray-900);
+    line-height: var(--line-height-tight);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .featured-product-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+  }
+
+  .featured-product-card__price {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+    line-height: 1;
+  }
+
+  .featured-product-card__cta {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    white-space: nowrap;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--transition-fast);
+
+    .featured-product-card__link:hover & {
+      border-bottom-color: var(--color-primary);
+    }
+  }
+
+  // ── Mobile CTA (below rail on small screens) ──────────────────────────────
+
+  .featured-products__mobile-cta {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-8);
+
+    @media (min-width: 768px) {
+      display: none;
+    }
+  }
+
+  .featured-products__view-all-mobile {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border: 1.5px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    color: var(--color-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast);
+    min-height: 44px;
+
+    &:hover {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+
+    svg {
+      transition: transform var(--transition-fast);
+    }
+
+    &:hover svg {
+      transform: translateX(3px);
+    }
+  }
+</style>
