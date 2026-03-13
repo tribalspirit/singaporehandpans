@@ -36,7 +36,17 @@
       "WebFetch(domain:app.unpkg.com)",
       "Bash(npm run storyblok:components:*)",
       "Bash(node scripts/create-gallery-test-data.js:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "WebFetch(domain:smithery.ai)",
+      "Bash(smithery mcp:*)",
+      "Bash(smithery auth:*)",
+      "Bash(npx astro:*)",
+      "Bash(node_modules/.bin/astro build:*)",
+      "Bash(brew install:*)",
+      "Bash(/opt/homebrew/bin/gh auth:*)",
+      "Bash(/opt/homebrew/bin/gh pr:*)",
+      "Bash(git cherry-pick:*)",
+      "mcp__serena__search_for_pattern"
     ]
   }
 }
