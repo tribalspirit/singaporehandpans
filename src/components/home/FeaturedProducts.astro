@@ -11,48 +11,17 @@ function formatPrice(price: { amount: number; currencyCode: string }): string {
   }).format(price.amount);
 }
 
-function getDescriptorTag(product: ShopProduct): string {
-  const type = product.productType.toLowerCase();
-  if (type.includes('handpan')) {
-    const noteMatch = product.title.match(/(\d+)\s*note/i);
-    if (noteMatch) return `${noteMatch[1]}-note handpan`;
-    if (product.title.toLowerCase().includes('stainless'))
-      return 'Stainless steel';
-    return 'Handpan instrument';
-  }
-  if (type.includes('bag')) return 'Protective carry bag';
-  return product.productType || 'Instrument accessory';
-}
-
 function selectFeaturedProducts(
   products: ShopProduct[],
   count = 3
 ): ShopProduct[] {
   const available = products.filter((p) => p.availableForSale);
-
-  // Priority 1: tagged "featured" handpans
-  const featuredHandpans = available.filter(
-    (p) =>
-      p.tags.map((t) => t.toLowerCase()).includes('featured') &&
-      p.productType.toLowerCase().includes('handpan')
-  );
-
-  // Priority 2: non-featured handpans, sorted by price asc (entry → premium spread)
-  const otherHandpans = available
-    .filter(
-      (p) =>
-        p.productType.toLowerCase().includes('handpan') &&
-        !p.tags.map((t) => t.toLowerCase()).includes('featured')
-    )
-    .sort((a, b) => a.priceMin.amount - b.priceMin.amount);
-
-  // Priority 3: non-handpan accessories (only to pad if needed)
-  const accessories = available.filter(
-    (p) => !p.productType.toLowerCase().includes('handpan')
-  );
-
-  const pool = [...featuredHandpans, ...otherHandpans, ...accessories];
-  return pool.slice(0, count);
+  // Shuffle so each page load shows a varied selection
+  for (let i = available.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [available[i], available[j]] = [available[j], available[i]];
+  }
+  return available.slice(0, count);
 }
 
 const shopEnabled = isShopEnabled();
@@ -80,14 +49,14 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
         <div class="featured-products__header">
           <div class="featured-products__heading-group">
             <span class="featured-products__eyebrow" aria-hidden="true">
-              Handpan Collection
+              Shop
             </span>
             <h2 id="featured-products-heading" class="featured-products__title">
-              Instruments, Curated for You
+              Handpans & Accessories
             </h2>
             <p class="featured-products__subtitle">
-              Each handpan is chosen for its voice, its craftsmanship, and its
-              ability to move you. Browse our current selection.
+              From entry-level instruments to premium handpans and carry
+              essentials — everything you need to start or deepen your practice.
             </p>
           </div>
 
@@ -119,11 +88,8 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
           aria-label="Featured handpan instruments"
         >
           {featuredProducts.map((product) => {
-            const tag = getDescriptorTag(product);
-            const isHandpan = product.productType
-              .toLowerCase()
-              .includes('handpan');
-            const ctaLabel = isHandpan ? 'View instrument' : 'View product';
+            const tag = product.productType || 'Instrument';
+            const ctaLabel = 'View product';
 
             return (
               <li class="featured-product-card">
