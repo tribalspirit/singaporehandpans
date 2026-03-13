@@ -97,9 +97,9 @@ const pastEvents = events
   .sort((a, b) => new Date(b.content.date) - new Date(a.content.date));
 
 const seoTitle =
-  'Events - Singapore Handpan Studio | Workshops & Community Gatherings';
+  'Classes & Events - Singapore Handpan Studio | Workshops & Community Gatherings';
 const seoDescription =
-  'Join our handpan workshops, community gatherings, and special events in Singapore. Learn from experienced instructors and connect with fellow musicians.';
+  'Join our handpan classes, workshops, community gatherings, and special events in Singapore. Learn from experienced instructors and connect with fellow musicians.';
 ---
 
 <BaseLayout
@@ -112,17 +112,17 @@ const seoDescription =
 
     <div class="container">
       <header class="page-header">
-        <h1>Events & Workshops</h1>
+        <h1>Classes & Events</h1>
         <p class="page-subtitle">
-          Join our community of handpan enthusiasts through workshops,
-          performances, and gatherings. All skill levels welcome!
+          Join our handpan classes, workshops, and community gatherings. Whether
+          you're a complete beginner or seasoned player — all levels welcome!
         </p>
       </header>
 
       {
         upcomingEvents.length > 0 && (
           <section class="events-section">
-            <h2>Upcoming Events</h2>
+            <h2>Upcoming Classes & Events</h2>
             <div class="events-grid">
               {upcomingEvents.map((event) => (
                 <EventCard event={event} />
@@ -135,7 +135,7 @@ const seoDescription =
       {
         pastEvents.length > 0 && (
           <section class="events-section">
-            <h2>Past Events</h2>
+            <h2>Past Classes & Events</h2>
             <div class="events-grid">
               {pastEvents.map((event) => (
                 <EventCard event={event} isPast={true} />
@@ -148,10 +148,10 @@ const seoDescription =
       {
         events.length === 0 && (
           <section class="no-events">
-            <h2>No Events Available</h2>
+            <h2>No Classes Available Right Now</h2>
             <p>
-              We're currently planning our next events. Check back soon or
-              <a href="/contacts">contact us</a> to stay updated!
+              We're currently planning our next classes and events. Check back
+              soon or <a href="/contacts">contact us</a> to stay updated!
             </p>
           </section>
         )
