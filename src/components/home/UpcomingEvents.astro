@@ -41,9 +41,12 @@ const hasMoreEvents = totalUpcoming > 3;
     <section class="section upcoming-events">
       <div class="container">
         <div class="upcoming-events__header">
-          <h2 class="section__title section__title--center">Upcoming Events</h2>
+          <h2 class="section__title section__title--center">
+            Upcoming Classes & Events
+          </h2>
           <p class="upcoming-events__subtitle">
-            Join our next workshops, performances, and community gatherings
+            Book a spot in our next handpan classes, workshops, and community
+            gatherings
           </p>
         </div>
 
@@ -56,7 +59,7 @@ const hasMoreEvents = totalUpcoming > 3;
         {hasMoreEvents && (
           <div class="upcoming-events__more">
             <a href="/events" class="btn btn--outline">
-              View All Events
+              View All Classes
               <svg
                 class="btn__icon"
                 width="16"
@@ -91,9 +94,9 @@ const hasMoreEvents = totalUpcoming > 3;
             <line x1="8" y1="2" x2="8" y2="6" />
             <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
-          <h3 class="upcoming-events__empty-title">New Events Coming Soon</h3>
+          <h3 class="upcoming-events__empty-title">New Classes Coming Soon</h3>
           <p class="upcoming-events__empty-text">
-            We're planning exciting new workshops and gatherings. Stay tuned!
+            We're planning exciting new classes and workshops. Stay tuned!
           </p>
           <a href="/contacts" class="btn btn--primary">
             Get in Touch
