@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroBackgroundCarousel from '../components/HeroBackgroundCarousel';
+import FeaturedProducts from '../components/home/FeaturedProducts.astro';
 import UpcomingEvents from '../components/home/UpcomingEvents.astro';
 
 export const prerender = false;
@@ -35,6 +36,9 @@ const description =
       </div>
     </div>
   </section>
+
+  <!-- Featured Products (shop widget) -->
+  <FeaturedProducts />
 
   <!-- Upcoming Events -->
   <UpcomingEvents />
