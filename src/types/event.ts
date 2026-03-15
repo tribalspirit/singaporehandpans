@@ -21,6 +21,7 @@ export interface EventContent {
   acuity_class_id?: string;
   sold_out_override?: boolean;
   spots_remaining?: number;
+  duration?: number;
 }
 
 export interface EventStory {

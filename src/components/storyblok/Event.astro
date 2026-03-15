@@ -50,6 +50,9 @@ const isSoldOut =
   blok.sold_out_override || blok.availability_status === 'sold_out';
 const hasAcuity = !!blok.acuity_appointment_type_id;
 const acuityOwnerId = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
+
+const formatDuration = (hours: number) =>
+  hours === 1 ? '1 hour' : `${hours} hours`;
 ---
 
 <article class="storyblok-event" {...storyblokEditable(blok)}>
@@ -132,6 +135,49 @@ const acuityOwnerId = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
             >
               {blok.price}
             </span>
+          </div>
+        )
+      }
+
+      {
+        blok.duration && (
+          <div class="event-duration">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span>{formatDuration(blok.duration)}</span>
+            <button
+              type="button"
+              class="info-tooltip-wrapper"
+              aria-label="Duration info"
+            >
+              <svg
+                class="info-icon"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="16" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12.01" y2="8" />
+              </svg>
+              <span class="info-tooltip">
+                This is the approximate expected duration. The actual session is
+                often a little longer, so please plan accordingly. Please note
+                that the duration shown on the booking page may differ.
+              </span>
+            </button>
           </div>
         )
       }
@@ -358,6 +404,69 @@ const acuityOwnerId = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
       .paid-price {
         color: var(--color-primary);
         font-weight: var(--font-weight-semibold);
+      }
+    }
+
+    .event-duration {
+      .info-tooltip-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: help;
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+
+        .info-icon {
+          color: var(--color-text-secondary);
+          transition: color var(--transition-base);
+        }
+
+        &:hover .info-icon,
+        &:focus .info-icon {
+          color: var(--color-primary);
+        }
+
+        .info-tooltip {
+          position: absolute;
+          top: calc(100% + 8px);
+          left: 50%;
+          transform: translateX(-50%);
+          background: var(--color-text-primary);
+          color: white;
+          padding: var(--spacing-sm) var(--spacing-md);
+          border-radius: var(--border-radius-md);
+          font-size: var(--font-size-sm);
+          line-height: 1.5;
+          min-width: 240px;
+          max-width: 300px;
+          z-index: var(--z-index-tooltip);
+          pointer-events: none;
+          opacity: 0;
+          visibility: hidden;
+          transition:
+            opacity var(--transition-base),
+            visibility var(--transition-base);
+          box-shadow: var(--shadow-lg);
+          text-align: left;
+
+          &::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-bottom-color: var(--color-text-primary);
+          }
+        }
+
+        &:hover .info-tooltip,
+        &:focus .info-tooltip {
+          opacity: 1;
+          visibility: visible;
+        }
       }
     }
   }
