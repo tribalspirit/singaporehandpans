@@ -138,6 +138,12 @@
       "pos": 17,
       "required": false,
       "description": "Number of spots remaining (updated automatically via webhook)"
+    },
+    "duration": {
+      "type": "number",
+      "pos": 18,
+      "required": false,
+      "description": "Approximate event duration in hours (e.g., 1.5, 2)"
     }
   },
   "image": null,

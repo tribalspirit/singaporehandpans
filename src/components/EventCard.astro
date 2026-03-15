@@ -54,6 +54,9 @@ const availabilityLabel: Record<string, string> = {
   few_spots: 'Few Spots Left',
   sold_out: 'Sold Out',
 };
+
+const formatDuration = (hours: number) =>
+  hours === 1 ? '1 hour' : `${hours} hours`;
 ---
 
 <article
@@ -180,6 +183,25 @@ const availabilityLabel: Record<string, string> = {
             >
               {event.content.price}
             </span>
+          </div>
+        )
+      }
+
+      {
+        event.content.duration && (
+          <div class="event-duration">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            <span>~{formatDuration(event.content.duration)}</span>
           </div>
         )
       }
