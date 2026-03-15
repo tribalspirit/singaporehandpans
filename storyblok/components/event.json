@@ -20,35 +20,41 @@
       "required": true,
       "description": "Event date and time"
     },
+    "duration": {
+      "type": "number",
+      "pos": 3,
+      "required": false,
+      "description": "Approximate event duration in hours (e.g., 1.5, 2)"
+    },
     "location": {
       "type": "text",
-      "pos": 3,
+      "pos": 4,
       "required": true,
       "default_value": "Singapore Handpan Studio",
       "description": "Event location"
     },
     "price": {
       "type": "text",
-      "pos": 4,
+      "pos": 5,
       "required": false,
       "description": "Event price (e.g., S$120, Free)"
     },
     "booking_url": {
       "type": "text",
-      "pos": 5,
+      "pos": 6,
       "required": false,
       "description": "Acuity booking page URL (fallback)"
     },
     "image": {
       "type": "asset",
-      "pos": 6,
+      "pos": 7,
       "required": false,
       "filetypes": ["images"],
       "description": "Event featured image"
     },
     "tags": {
       "type": "options",
-      "pos": 7,
+      "pos": 8,
       "required": false,
       "options": [
         { "name": "Workshop", "value": "workshop" },
@@ -63,7 +69,7 @@
     },
     "status": {
       "type": "option",
-      "pos": 8,
+      "pos": 9,
       "required": true,
       "default_value": "upcoming",
       "options": [
@@ -75,7 +81,7 @@
     },
     "availability_status": {
       "type": "option",
-      "pos": 9,
+      "pos": 10,
       "required": false,
       "default_value": "available",
       "options": [
@@ -87,26 +93,26 @@
     },
     "max_participants": {
       "type": "number",
-      "pos": 10,
+      "pos": 11,
       "required": false,
       "description": "Maximum number of participants"
     },
     "seo_title": {
       "type": "text",
-      "pos": 11,
+      "pos": 12,
       "required": false,
       "description": "SEO title override"
     },
     "seo_description": {
       "type": "textarea",
-      "pos": 12,
+      "pos": 13,
       "required": false,
       "max_length": 160,
       "description": "SEO meta description"
     },
     "acuity_type": {
       "type": "option",
-      "pos": 13,
+      "pos": 14,
       "required": false,
       "options": [
         { "name": "Workshop", "value": "workshop" },
@@ -116,26 +122,26 @@
     },
     "acuity_appointment_type_id": {
       "type": "text",
-      "pos": 14,
+      "pos": 15,
       "required": false,
       "description": "Acuity appointment type ID"
     },
     "acuity_class_id": {
       "type": "text",
-      "pos": 15,
+      "pos": 16,
       "required": false,
       "description": "Acuity class ID (for workshop capacity tracking)"
     },
     "sold_out_override": {
       "type": "boolean",
-      "pos": 16,
+      "pos": 17,
       "required": false,
       "default_value": false,
       "description": "Force sold-out display regardless of Acuity availability"
     },
     "spots_remaining": {
       "type": "number",
-      "pos": 17,
+      "pos": 18,
       "required": false,
       "description": "Number of spots remaining (updated automatically via webhook)"
     }
