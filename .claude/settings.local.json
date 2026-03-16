@@ -46,7 +46,20 @@
       "Bash(/opt/homebrew/bin/gh auth:*)",
       "Bash(/opt/homebrew/bin/gh pr:*)",
       "Bash(git cherry-pick:*)",
-      "mcp__serena__search_for_pattern"
+      "mcp__serena__search_for_pattern",
+      "Read(//Users/nickturunov/.claude/skills/**)",
+      "Read(//Users/nickturunov/.claude/**)",
+      "Bash(smithery tool:*)",
+      "Bash(find /Users/nickturunov/Documents/dev/singaporehandpans/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.astro \\\\\\))",
+      "Bash(find /Users/nickturunov/Documents/dev/singaporehandpans/src/styles -type f \\\\\\(-name *.scss -o -name *.css \\\\\\))",
+      "Bash(grep -r \"tooltip\\\\|hint\\\\|popover\" /Users/nickturunov/Documents/dev/singaporehandpans/src --include=*.astro --include=*.tsx)",
+      "Bash(grep -r storyblok-cli /Users/nickturunov/Documents/dev/singaporehandpans --include=*.json --include=*.js --include=*.ts)",
+      "Bash(npm test:*)",
+      "Bash(grep -r \"cloudflare\\\\|webhook\\\\|ISR\\\\|revalidate\\\\|cache\" /Users/nickturunov/Documents/dev/singaporehandpans/src --include=*.ts --include=*.tsx --include=*.js --include=*.jsx --include=*.astro)",
+      "Bash(grep -E \"\\\\.\\(json|mjs|ts|xml|txt\\)$|package\")",
+      "Bash(find /Users/nickturunov/Documents/dev/singaporehandpans -name .env* -type f)",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/nickturunov/Documents/dev/singaporehandpans/public/images/handpan-player.jpg)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }

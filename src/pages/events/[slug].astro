@@ -89,6 +89,23 @@ const seoTitle =
   `${event.content.title} - Singapore Handpan Studio`;
 const seoDescription =
   event.content.seo_description || event.content.description;
+
+const siteUrl =
+  Astro.site?.toString().replace(/\/$/, '') || 'https://singaporehandpans.com';
+const breadcrumbData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Classes',
+      item: `${siteUrl}/events`,
+    },
+    { '@type': 'ListItem', position: 3, name: event.content.title },
+  ],
+};
 ---
 
 <BaseLayout
@@ -99,6 +116,11 @@ const seoDescription =
   <script
     type="application/ld+json"
     set:html={JSON.stringify(structuredData)}
+    slot="head"
+  />
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbData)}
     slot="head"
   />
   <main class="event-detail-page">

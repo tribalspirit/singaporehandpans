@@ -82,6 +82,23 @@ const seoTitle = album.title
 const seoDescription =
   album.description ||
   `Browse photos from ${album.title} at Singapore Handpan Studio.`;
+
+const siteUrl =
+  Astro.site?.toString().replace(/\/$/, '') || 'https://singaporehandpans.com';
+const breadcrumbData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Gallery',
+      item: `${siteUrl}/gallery`,
+    },
+    { '@type': 'ListItem', position: 3, name: album.title },
+  ],
+};
 ---
 
 <BaseLayout
@@ -89,6 +106,11 @@ const seoDescription =
   description={seoDescription}
   canonical={`${Astro.site}gallery/albums/${album.slug}/`}
 >
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbData)}
+    slot="head"
+  />
   <main class="album-detail-page">
     <div class="container">
       <nav class="breadcrumb">

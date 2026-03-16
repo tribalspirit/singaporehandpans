@@ -14,7 +14,7 @@ const {
   title,
   description,
   canonical,
-  image = '/images/og-default.jpg',
+  image = '/images/handpan-player.jpg',
   imageAlt = 'Singapore Handpan Studio',
   type = 'website',
   publishedTime,
@@ -22,9 +22,14 @@ const {
 } = Astro.props as SEOProps;
 
 const siteName = 'Singapore Handpan Studio';
-const siteUrl = Astro.site?.toString() || 'https://sghandpan.com';
+const siteUrl = (
+  Astro.site?.toString() || 'https://singaporehandpans.com'
+).replace(/\/$/, '');
 const canonicalUrl = canonical || Astro.url.toString();
 const imageUrl = image.startsWith('http') ? image : `${siteUrl}${image}`;
+
+const ga4Id = import.meta.env.PUBLIC_GA4_ID;
+const gtmId = import.meta.env.PUBLIC_GTM_ID;
 ---
 
 <!-- Primary Meta Tags -->
@@ -55,12 +60,16 @@ const imageUrl = image.startsWith('http') ? image : `${siteUrl}${image}`;
 <meta property="twitter:image:alt" content={imageAlt} />
 
 <!-- Article specific meta tags -->
-{type === 'article' && publishedTime && (
-  <meta property="article:published_time" content={publishedTime} />
-)}
-{type === 'article' && modifiedTime && (
-  <meta property="article:modified_time" content={modifiedTime} />
-)}
+{
+  type === 'article' && publishedTime && (
+    <meta property="article:published_time" content={publishedTime} />
+  )
+}
+{
+  type === 'article' && modifiedTime && (
+    <meta property="article:modified_time" content={modifiedTime} />
+  )
+}
 
 <!-- Favicon and Icons -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -84,33 +93,79 @@ const imageUrl = image.startsWith('http') ? image : `${siteUrl}${image}`;
 />
 
 <!-- JSON-LD Schema for Organization -->
-<script type="application/ld+json" set:html={JSON.stringify({
-  "@context": "https://schema.org",
-  "@type": "MusicGroup",
-  "name": siteName,
-  "url": siteUrl,
-  "logo": `${siteUrl}/images/logo.png`,
-  "image": imageUrl,
-  "description": description,
-  "genre": ["World Music", "Ambient", "Meditation Music"],
-  "sameAs": [
-    "https://www.facebook.com/sghandpan",
-    "https://www.instagram.com/sghandpan",
-    "https://www.youtube.com/sghandpan"
-  ],
-  "address": {
-    "@type": "PostalAddress",
-    "addressCountry": "SG",
-    "addressLocality": "Singapore"
-  }
-})} />
+<script
+  type="application/ld+json"
+  set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'MusicGroup',
+    name: siteName,
+    url: siteUrl,
+    logo: `${siteUrl}/images/logo.png`,
+    image: imageUrl,
+    description: description,
+    genre: ['World Music', 'Ambient', 'Meditation Music'],
+    sameAs: [
+      'https://www.facebook.com/sghandpan',
+      'https://www.instagram.com/sghandpan',
+      'https://www.youtube.com/sghandpan',
+    ],
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'SG',
+      addressLocality: 'Singapore',
+    },
+  })}
+/>
 
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<!-- Add your Google Analytics tracking ID here when available -->
-<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_TRACKING_ID"></script> -->
-<!-- <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'GA_TRACKING_ID');
-</script> -->
+<!-- JSON-LD Schema for LocalBusiness -->
+<script
+  type="application/ld+json"
+  set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: siteName,
+    url: siteUrl,
+    logo: `${siteUrl}/images/logo.png`,
+    image: imageUrl,
+    description: description,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Singapore',
+      addressCountry: 'SG',
+    },
+    email: 'hello@singaporehandpans.com',
+    sameAs: [
+      'https://www.facebook.com/sghandpan',
+      'https://www.instagram.com/sghandpan',
+      'https://www.youtube.com/sghandpan',
+    ],
+  })}
+/>
+
+<!-- Google Tag Manager -->
+{
+  gtmId && (
+    <script
+      set:html={`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${gtmId}');`}
+    />
+  )
+}
+
+<!-- Google Analytics 4 (standalone, when GTM is not used) -->
+{
+  ga4Id && !gtmId && (
+    <Fragment>
+      <script
+        async
+        src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}
+      />
+      <script
+        set:html={`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${ga4Id}');`}
+      />
+    </Fragment>
+  )
+}
