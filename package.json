@@ -16,6 +16,7 @@
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.astro --fix",
     "format": "prettier --write .",
     "screenshots": "tsx scripts/screenshots.ts",
+    "audit": "tsx scripts/layout-audit.ts",
     "storyblok:setup": "node scripts/storyblok-setup.js",
     "storyblok:components": "node scripts/create-components.js",
     "storyblok:content": "node scripts/create-sample-content.js",

@@ -30,6 +30,7 @@ Always use:
 | Cloudflare Pages deploy, env vars, build issues | `/deploy` + **cloudflare-docs** MCP |
 | Dev environment, local setup, tokens | `/setup` |
 | Find or add a new MCP / skill | `/smithery-ai-cli` |
+| Layout audit, responsive issues, UI bugs | `/layout-audit` |
 | Code quality review after changes | `/simplify` |
 
 ## Workflow
