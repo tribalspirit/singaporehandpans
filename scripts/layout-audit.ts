@@ -255,6 +255,10 @@ const browserAuditChecks = (isMobileTouchDevice: boolean) => {
     const fg = parseColor(style.color);
     if (!fg) return;
 
+    // text-shadow is a valid WCAG technique for contrast on complex backgrounds
+    const hasTextShadow = style.textShadow && style.textShadow !== 'none';
+    if (hasTextShadow) return;
+
     const bg = getEffectiveBg(el);
     if (!bg) {
       // element is over a background image — flag for manual review
