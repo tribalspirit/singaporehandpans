@@ -327,6 +327,7 @@ const ACUITY_PRIVATE_URL =
 
 <style lang="scss">
   .page-hero {
+    position: relative;
     background: linear-gradient(
       135deg,
       var(--color-accent) 0%,
@@ -335,6 +336,21 @@ const ACUITY_PRIVATE_URL =
     color: var(--color-white);
     padding: var(--space-20) 0 var(--space-16);
     text-align: center;
+
+    // Dark overlay for WCAG contrast on white text
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+    }
+
+    // Ensure content sits above overlay
+    .container {
+      position: relative;
+      z-index: 1;
+    }
 
     @media (min-width: 768px) {
       padding: var(--space-24) 0 var(--space-20);
@@ -345,6 +361,7 @@ const ACUITY_PRIVATE_URL =
     font-size: var(--font-size-4xl);
     font-weight: var(--font-weight-bold);
     margin-bottom: var(--space-6);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 
     @media (min-width: 768px) {
       font-size: var(--font-size-5xl);
@@ -356,7 +373,7 @@ const ACUITY_PRIVATE_URL =
     line-height: var(--line-height-relaxed);
     max-width: 600px;
     margin: 0 auto;
-    opacity: 0.9;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 
     @media (min-width: 768px) {
       font-size: var(--font-size-xl);
@@ -376,9 +393,15 @@ const ACUITY_PRIVATE_URL =
 
   .contact-card {
     background: var(--color-white);
-    padding: var(--space-8);
+    padding: var(--space-4);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
+    overflow-wrap: break-word;
+    word-break: break-word;
+
+    @media (min-width: 640px) {
+      padding: var(--space-8);
+    }
 
     @media (min-width: 768px) {
       padding: var(--space-10);
@@ -389,6 +412,7 @@ const ACUITY_PRIVATE_URL =
     display: flex;
     flex-direction: column;
     gap: var(--space-6);
+    min-width: 0;
   }
 
   .contact-methods {
@@ -399,11 +423,16 @@ const ACUITY_PRIVATE_URL =
 
   .contact-method {
     display: flex;
-    gap: var(--space-4);
-    padding: var(--space-6);
+    gap: var(--space-3);
+    padding: var(--space-4);
     background: var(--color-gray-50);
     border-radius: var(--radius-lg);
     transition: all var(--transition-fast);
+
+    @media (min-width: 640px) {
+      gap: var(--space-4);
+      padding: var(--space-6);
+    }
 
     &:hover {
       transform: translateY(-2px);
@@ -442,6 +471,9 @@ const ACUITY_PRIVATE_URL =
       color: var(--color-primary);
       text-decoration: none;
       font-weight: var(--font-weight-medium);
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
 
       &:hover {
         text-decoration: underline;
@@ -452,17 +484,23 @@ const ACUITY_PRIVATE_URL =
         outline-offset: 2px;
         border-radius: var(--radius-sm);
       }
+
+      @media (min-width: 1280px) {
+        min-height: 32px;
+      }
     }
   }
 
   .contact-method__note {
     font-size: var(--font-size-sm);
-    color: var(--color-gray-600);
+    color: var(--color-gray-700);
     margin-top: var(--space-1);
   }
 
   .contact-method__whatsapp {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
     margin-top: var(--space-2);
     color: var(--color-primary);
     text-decoration: none;
@@ -478,6 +516,10 @@ const ACUITY_PRIVATE_URL =
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }
+
+    @media (min-width: 1280px) {
+      min-height: 32px;
+    }
   }
 
   .social-links {
@@ -491,6 +533,9 @@ const ACUITY_PRIVATE_URL =
       text-decoration: none;
       font-size: var(--font-size-sm);
       font-weight: var(--font-weight-medium);
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
 
       &:hover {
         text-decoration: underline;
@@ -501,20 +546,42 @@ const ACUITY_PRIVATE_URL =
         outline-offset: 2px;
         border-radius: var(--radius-sm);
       }
+
+      @media (min-width: 1280px) {
+        min-height: 32px;
+      }
     }
   }
 
   .section--accent {
+    position: relative;
+    background-color: #654321;
     background: linear-gradient(
       135deg,
       var(--color-primary) 0%,
       var(--color-primary-dark) 100%
     );
     color: var(--color-white);
+
+    // Dark overlay for WCAG contrast on white text
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      pointer-events: none;
+    }
+
+    // Ensure content sits above overlay
+    > .container {
+      position: relative;
+      z-index: 1;
+    }
   }
 
   .section__title--white {
     color: var(--color-white);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   }
 
   .booking-section {
@@ -533,7 +600,7 @@ const ACUITY_PRIVATE_URL =
     font-size: var(--font-size-base);
     line-height: var(--line-height-relaxed);
     margin-bottom: var(--space-8);
-    opacity: 0.9;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   }
 
   .booking-features {
@@ -547,6 +614,7 @@ const ACUITY_PRIVATE_URL =
     align-items: center;
     gap: var(--space-3);
     font-size: var(--font-size-base);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   }
 
   .booking-feature__icon {
@@ -570,6 +638,7 @@ const ACUITY_PRIVATE_URL =
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-lg);
+    max-width: 100%;
     min-height: 800px;
   }
 
@@ -609,6 +678,7 @@ const ACUITY_PRIVATE_URL =
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
+    min-height: 44px;
     padding: var(--space-3) var(--space-6);
     border-radius: var(--radius-md);
     font-weight: var(--font-weight-medium);
@@ -645,10 +715,12 @@ const ACUITY_PRIVATE_URL =
       background-color: transparent;
       color: var(--color-white);
       border: 2px solid var(--color-white);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 
       &:hover {
         background-color: var(--color-white);
         color: var(--color-primary);
+        text-shadow: none;
       }
     }
 

@@ -276,8 +276,8 @@ const description =
   .page-hero {
     background: linear-gradient(
       135deg,
-      var(--color-primary-light) 0%,
-      var(--color-primary) 100%
+      var(--color-primary) 0%,
+      var(--color-primary-dark) 100%
     );
     color: var(--color-white);
     padding: var(--space-20) 0 var(--space-16);
@@ -303,8 +303,8 @@ const description =
     line-height: var(--line-height-relaxed);
     max-width: 600px;
     margin: 0 auto;
-    opacity: 0.9;
     font-style: italic;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 
     @media (min-width: 768px) {
       font-size: var(--font-size-xl);
@@ -338,7 +338,7 @@ const description =
   .section__subtitle {
     text-align: center;
     font-size: var(--font-size-lg);
-    color: var(--color-gray-600);
+    color: var(--color-gray-700);
     max-width: 600px;
     margin: 0 auto var(--space-12);
     line-height: var(--line-height-relaxed);
@@ -485,8 +485,8 @@ const description =
   .cta-section {
     background: linear-gradient(
       135deg,
-      var(--color-primary-light) 0%,
-      var(--color-primary) 100%
+      var(--color-primary) 0%,
+      var(--color-primary-dark) 100%
     );
     color: var(--color-white);
   }
@@ -502,6 +502,7 @@ const description =
     font-weight: var(--font-weight-semibold);
     line-height: var(--line-height-relaxed);
     margin-bottom: var(--space-2);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 
     @media (min-width: 768px) {
       font-size: var(--font-size-3xl);
@@ -510,7 +511,6 @@ const description =
     &--accent {
       font-family: var(--font-family-heading);
       font-style: italic;
-      opacity: 0.9;
       font-weight: var(--font-weight-normal);
       margin-top: var(--space-4);
     }

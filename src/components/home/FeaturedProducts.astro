@@ -199,6 +199,7 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
   .featured-products {
     padding: var(--space-16) 0;
     background-color: var(--color-gray-50);
+    overflow-x: clip;
 
     @media (min-width: 768px) {
       padding: var(--space-24) 0;
@@ -248,7 +249,7 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
 
   .featured-products__subtitle {
     font-size: var(--font-size-base);
-    color: var(--color-gray-600);
+    color: var(--color-gray-700);
     line-height: var(--line-height-relaxed);
     margin: 0;
     max-width: 480px;
@@ -258,6 +259,7 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
     display: none;
     align-items: center;
     gap: var(--space-2);
+    min-height: 44px;
     color: var(--color-primary);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);

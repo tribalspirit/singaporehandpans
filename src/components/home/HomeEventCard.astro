@@ -213,7 +213,7 @@ const imageUrl = event.content.image?.filename
 
   .home-event-card__date-month {
     display: block;
-    font-size: 11px;
+    font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
     color: var(--color-primary);
     letter-spacing: 0.05em;
@@ -252,7 +252,7 @@ const imageUrl = event.content.image?.filename
     align-items: center;
     gap: var(--space-1);
     font-size: var(--font-size-sm);
-    color: var(--color-gray-500);
+    color: var(--color-gray-700);
     margin-bottom: var(--space-3);
 
     svg {
@@ -305,6 +305,7 @@ const imageUrl = event.content.image?.filename
 
     .home-event-card__availability--available & {
       background-color: var(--color-success);
+      outline: 2px solid var(--color-gray-400);
     }
 
     .home-event-card__availability--few_spots & {
@@ -319,6 +320,7 @@ const imageUrl = event.content.image?.filename
   .home-event-card__cta {
     display: inline-flex;
     align-items: center;
+    min-height: 44px;
     padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-md);
     font-size: var(--font-size-sm);

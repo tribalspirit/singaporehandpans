@@ -1,4 +1,4 @@
-@use "src/styles/tokens.scss";
+@use 'src/styles/tokens.scss';
 
 .gallery-grid-container {
   width: 100%;
@@ -175,7 +175,7 @@
 
   .tag {
     background: var(--color-accent-light);
-    color: var(--color-accent-dark);
+    color: var(--color-gray-900);
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-sm);
@@ -203,7 +203,3 @@
     transform: translateY(0);
   }
 }
-
-
-
-
