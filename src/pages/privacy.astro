@@ -335,6 +335,8 @@ const lastUpdated = 'January 5, 2026';
     padding: var(--space-8);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
+    overflow-wrap: break-word;
+    word-break: break-word;
 
     @media (min-width: 768px) {
       padding: var(--space-16);
@@ -428,6 +430,9 @@ const lastUpdated = 'January 5, 2026';
       color: var(--color-primary);
       text-decoration: none;
       font-weight: var(--font-weight-medium);
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
 
       &:hover {
         text-decoration: underline;
@@ -437,6 +442,10 @@ const lastUpdated = 'January 5, 2026';
         outline: 2px solid var(--color-accent);
         outline-offset: 2px;
         border-radius: var(--radius-sm);
+      }
+
+      @media (min-width: 1280px) {
+        min-height: 32px;
       }
     }
   }

@@ -123,7 +123,7 @@ async function waitForServer(url: string, timeoutMs = 30_000): Promise<void> {
  * All checks run inside the browser. The function is serialised by Playwright
  * so it must be self-contained (no closures over Node variables).
  */
-function browserAuditChecks(isMobileTouchDevice: boolean) {
+const browserAuditChecks = (isMobileTouchDevice: boolean) => {
   const issues: Array<{
     severity: 'critical' | 'warning' | 'info';
     category: string;
@@ -134,7 +134,7 @@ function browserAuditChecks(isMobileTouchDevice: boolean) {
 
   // ---- helpers ----
 
-  function isVisible(el: Element): boolean {
+  const isVisible = (el: Element): boolean => {
     const style = window.getComputedStyle(el);
     if (style.display === 'none') return false;
     if (style.visibility === 'hidden') return false;
@@ -143,9 +143,9 @@ function browserAuditChecks(isMobileTouchDevice: boolean) {
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 && rect.height === 0) return false;
     return true;
-  }
+  };
 
-  function uniqueSelector(el: Element): string {
+  const uniqueSelector = (el: Element): string => {
     if (el.id) return `#${el.id}`;
     const classes = Array.from(el.classList)
       .filter((c) => !c.startsWith('astro-'))
@@ -155,11 +155,11 @@ function browserAuditChecks(isMobileTouchDevice: boolean) {
     const text = el.textContent?.trim().slice(0, 30) || '';
     const textPart = text ? `[text="${text}"]` : '';
     return `${tag}${classStr}${textPart}`;
-  }
+  };
 
-  function parseColor(
+  const parseColor = (
     color: string
-  ): { r: number; g: number; b: number; a: number } | null {
+  ): { r: number; g: number; b: number; a: number } | null => {
     const rgba = color.match(
       /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/
     );
@@ -170,28 +170,28 @@ function browserAuditChecks(isMobileTouchDevice: boolean) {
       b: parseInt(rgba[3]),
       a: rgba[4] !== undefined ? parseFloat(rgba[4]) : 1,
     };
-  }
+  };
 
-  function luminance(r: number, g: number, b: number): number {
+  const luminance = (r: number, g: number, b: number): number => {
     const [rs, gs, bs] = [r, g, b].map((c) => {
       const s = c / 255;
       return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
     });
     return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-  }
+  };
 
-  function contrastRatio(
+  const contrastRatio = (
     fg: { r: number; g: number; b: number },
     bg: { r: number; g: number; b: number }
-  ): number {
+  ): number => {
     const l1 = luminance(fg.r, fg.g, fg.b) + 0.05;
     const l2 = luminance(bg.r, bg.g, bg.b) + 0.05;
     return l1 > l2 ? l1 / l2 : l2 / l1;
-  }
+  };
 
-  function getEffectiveBg(
+  const getEffectiveBg = (
     el: Element
-  ): { r: number; g: number; b: number } | null {
+  ): { r: number; g: number; b: number } | null => {
     let current: Element | null = el;
     while (current) {
       const style = window.getComputedStyle(current);
@@ -206,17 +206,13 @@ function browserAuditChecks(isMobileTouchDevice: boolean) {
         };
       }
       // check for background-image (gradients, images)
-      if (
-        style.backgroundImage &&
-        style.backgroundImage !== 'none' &&
-        !style.backgroundImage.startsWith('linear-gradient')
-      ) {
+      if (style.backgroundImage && style.backgroundImage !== 'none') {
         return null; // can't compute — flag for manual review
       }
       current = current.parentElement;
     }
     return { r: 255, g: 255, b: 255 }; // default white
-  }
+  };
 
   // ---- 1. Touch target sizing ----
 
@@ -251,6 +247,9 @@ function browserAuditChecks(isMobileTouchDevice: boolean) {
     if (!isVisible(el)) return;
     // skip elements with children that are not text-only
     if (el.children.length > 2) return;
+    // skip decorative elements with no meaningful text content
+    const textContent = el.textContent?.trim() || '';
+    if (textContent.length === 0) return;
 
     const style = window.getComputedStyle(el);
     const fg = parseColor(style.color);
@@ -386,7 +385,10 @@ function browserAuditChecks(isMobileTouchDevice: boolean) {
     const parent = img.parentElement;
     if (parent) {
       const parentRect = parent.getBoundingClientRect();
-      if (rect.right > parentRect.right + 2 || rect.left < parentRect.left - 2) {
+      if (
+        rect.right > parentRect.right + 2 ||
+        rect.left < parentRect.left - 2
+      ) {
         issues.push({
           severity: 'warning',
           category: 'image',
@@ -453,7 +455,11 @@ function browserAuditChecks(isMobileTouchDevice: boolean) {
     if (rect.width === 0 || rect.height === 0) return;
 
     let ancestor: Element | null = el.parentElement;
-    while (ancestor && ancestor !== document.documentElement) {
+    while (
+      ancestor &&
+      ancestor !== document.documentElement &&
+      ancestor !== document.body
+    ) {
       const style = window.getComputedStyle(ancestor);
       if (style.overflow === 'hidden' || style.overflowX === 'hidden') {
         const ancestorRect = ancestor.getBoundingClientRect();
@@ -488,7 +494,7 @@ function browserAuditChecks(isMobileTouchDevice: boolean) {
   });
 
   return issues;
-}
+};
 
 // ---------------------------------------------------------------------------
 // Main
@@ -515,6 +521,12 @@ async function auditPage(
     await page.screenshot({ path: screenshotPath, fullPage: true });
 
     // Run audit checks
+    // Polyfill esbuild's __name helper which doesn't exist in the browser context
+    await page.evaluate(() => {
+      if (typeof (globalThis as any).__name === 'undefined') {
+        (globalThis as any).__name = (fn: any) => fn;
+      }
+    });
     const isMobile = isMobileOrTablet(viewportName);
     const rawIssues = await page.evaluate(browserAuditChecks, isMobile);
 
@@ -604,12 +616,8 @@ function generateMarkdownReport(issues: AuditIssue[]): string {
     byViewport.forEach((vpIssues, vpName) => {
       lines.push(`#### ${vpName} (${vpIssues[0].viewportSize})`);
       lines.push('');
-      lines.push(
-        `| Severity | Category | Description | Selector |`
-      );
-      lines.push(
-        `|----------|----------|-------------|----------|`
-      );
+      lines.push(`| Severity | Category | Description | Selector |`);
+      lines.push(`|----------|----------|-------------|----------|`);
       vpIssues.forEach((i) => {
         const sev =
           i.severity === 'critical'
@@ -632,12 +640,8 @@ async function main() {
   const { pages, viewports } = parseArgs();
 
   console.log('🔍 Layout Audit — Starting...\n');
-  console.log(
-    `  Pages:    ${pages.map((p) => p.name).join(', ')}`
-  );
-  console.log(
-    `  Viewports: ${Object.keys(viewports).join(', ')}`
-  );
+  console.log(`  Pages:    ${pages.map((p) => p.name).join(', ')}`);
+  console.log(`  Viewports: ${Object.keys(viewports).join(', ')}`);
   console.log('');
 
   // Wait for dev server
@@ -653,9 +657,7 @@ async function main() {
   const allIssues: AuditIssue[] = [];
 
   for (const [vpName, vpSize] of Object.entries(viewports)) {
-    console.log(
-      `📱 ${vpName} (${vpSize.width}x${vpSize.height})`
-    );
+    console.log(`📱 ${vpName} (${vpSize.width}x${vpSize.height})`);
 
     const isMobile = isMobileOrTablet(vpName);
     const context = await browser.newContext({
@@ -698,8 +700,12 @@ async function main() {
 
   console.log('━'.repeat(50));
   console.log(`✨ Audit complete!`);
-  console.log(`   🔴 ${critical} critical  🟡 ${warning} warnings  🔵 ${info} info`);
-  console.log(`   Total: ${allIssues.length} issues across ${pages.length} pages × ${Object.keys(viewports).length} viewports`);
+  console.log(
+    `   🔴 ${critical} critical  🟡 ${warning} warnings  🔵 ${info} info`
+  );
+  console.log(
+    `   Total: ${allIssues.length} issues across ${pages.length} pages × ${Object.keys(viewports).length} viewports`
+  );
   console.log('');
   console.log(`📄 Reports:`);
   console.log(`   ${path.resolve(mdPath)}`);

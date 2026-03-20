@@ -117,7 +117,7 @@ const hasMoreEvents = totalUpcoming > 3;
 
   .upcoming-events__subtitle {
     font-size: var(--font-size-lg);
-    color: var(--color-gray-500);
+    color: var(--color-gray-700);
     max-width: 480px;
     margin: 0 auto;
     line-height: var(--line-height-relaxed);
@@ -140,6 +140,39 @@ const hasMoreEvents = totalUpcoming > 3;
   .upcoming-events__more {
     text-align: center;
     margin-top: var(--space-10);
+  }
+
+  .btn.btn--outline {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-medium);
+    text-decoration: none;
+    font-size: var(--font-size-base);
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+    }
+
+    @media (min-width: 1280px) {
+      min-height: 32px;
+    }
+  }
+
+  .btn__icon {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
   }
 
   .upcoming-events__empty {

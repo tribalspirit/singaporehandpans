@@ -512,7 +512,7 @@ const formatDuration = (hours: number) =>
 
     .event-price {
       .free-price {
-        color: var(--color-success);
+        color: var(--color-success-dark);
         font-weight: var(--font-weight-semibold);
       }
 
@@ -661,7 +661,7 @@ const formatDuration = (hours: number) =>
           border-left: 3px solid var(--color-accent-light);
 
           &.free-price {
-            color: var(--color-success);
+            color: var(--color-success-dark);
             font-weight: var(--font-weight-semibold);
           }
 
@@ -706,7 +706,10 @@ const formatDuration = (hours: number) =>
     }
 
     .btn {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
       padding: var(--spacing-md) var(--spacing-xl);
       border-radius: var(--border-radius-md);
       text-decoration: none;
@@ -766,7 +769,10 @@ const formatDuration = (hours: number) =>
     }
 
     .btn {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
       padding: var(--spacing-md) var(--spacing-xl);
       border-radius: var(--border-radius-md);
       text-decoration: none;
@@ -839,6 +845,10 @@ const formatDuration = (hours: number) =>
     border-top: 1px solid var(--color-border);
 
     .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
       padding: var(--spacing-sm) var(--spacing-lg);
       border-radius: var(--border-radius-md);
       text-decoration: none;

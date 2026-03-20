@@ -43,7 +43,7 @@
 }
 
 .placeholderIcon {
-  color: var(--color-gray-400);
+  color: var(--color-gray-600);
 }
 
 .soldOutBadge {
@@ -117,6 +117,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 44px;
   padding: var(--space-2) var(--space-5);
   background: var(--color-primary);
   color: var(--color-white);
@@ -139,7 +140,8 @@
   }
 
   &.disabled {
-    background: var(--color-gray-400);
+    background: var(--color-gray-600);
+    color: var(--color-white);
     cursor: default;
   }
 }

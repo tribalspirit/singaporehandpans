@@ -323,7 +323,7 @@ const formatDuration = (hours: number) =>
 
       .tag {
         background: var(--color-accent-light);
-        color: var(--color-accent-dark);
+        color: var(--color-gray-900);
         padding: var(--spacing-xs) var(--spacing-sm);
         border-radius: var(--border-radius-sm);
         font-size: var(--font-size-sm);
@@ -397,7 +397,7 @@ const formatDuration = (hours: number) =>
 
     .event-price {
       .free-price {
-        color: var(--color-success);
+        color: var(--color-success-dark);
         font-weight: var(--font-weight-semibold);
       }
 
@@ -532,7 +532,10 @@ const formatDuration = (hours: number) =>
       }
 
       .btn {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
         padding: var(--spacing-md) var(--spacing-xl);
         border-radius: var(--border-radius-md);
         text-decoration: none;
