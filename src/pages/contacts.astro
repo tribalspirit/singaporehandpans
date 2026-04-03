@@ -16,9 +16,9 @@ import {
   WHATSAPP_LABEL,
 } from '../constants/contacts';
 
-const title = 'Contact Us';
+const title = 'Contact Us — Book a Handpan Session';
 const description =
-  'Get in touch with Singapore Handpan Studio. Book workshops, ask questions, or connect with our community in Singapore.';
+  "Book a handpan lesson, rent our studio, or enquire about corporate events. Visit us at Pearl's Hill Terrace, Singapore, or reach out online. We reply within 24 hours.";
 
 const ACUITY_OWNER_ID = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
 const ACUITY_CALENDAR_ID = import.meta.env.PUBLIC_ACUITY_CALENDAR_ID || '';
@@ -30,7 +30,69 @@ const ACUITY_PRIVATE_URL =
   'https://app.acuityscheduling.com/schedule.php';
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout
+  title={title}
+  description={description}
+  canonical={`${Astro.site}contacts/`}
+>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Do I need any musical experience to learn handpan?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Not at all! Our beginner workshops are designed for complete newcomers to music. The handpan is very intuitive and accessible for everyone.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Do I need to bring my own handpan?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: "No, we provide professional handpan instruments for all workshops and sessions. We'll also guide you on purchasing your own instrument when you're ready.",
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What should I wear to a handpan class?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Comfortable, loose-fitting clothing is recommended. We often sit on the floor or use cushions, so dress for comfort and ease of movement.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Can I make up a missed handpan class?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: "Yes! We offer makeup sessions and provide recordings of lessons. Just let us know in advance and we'll arrange an alternative.",
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Is there parking near Singapore Handpan Studio?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: "Yes, there's public parking nearby, and we're just five minutes walk from Outram Park or Chinatown MRT station for your convenience.",
+          },
+        },
+        {
+          '@type': 'Question',
+          name: "What's the cancellation policy for handpan lessons?",
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: "We offer full refunds for cancellations made at least 48 hours in advance. For last-minute changes, we're happy to reschedule your session.",
+          },
+        },
+      ],
+    })}
+    slot="head"
+  />
   <section class="page-hero">
     <div class="container">
       <div class="page-hero__content">

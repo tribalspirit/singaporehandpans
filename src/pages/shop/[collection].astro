@@ -61,7 +61,11 @@ const breadcrumbData = {
 };
 ---
 
-<BaseLayout title={pageTitle} description={pageDescription}>
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={`${Astro.site}shop/${collection.handle}/`}
+>
   <script
     type="application/ld+json"
     set:html={JSON.stringify(breadcrumbData)}

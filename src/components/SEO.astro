@@ -105,14 +105,16 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID;
     description: description,
     genre: ['World Music', 'Ambient', 'Meditation Music'],
     sameAs: [
-      'https://www.facebook.com/sghandpan',
-      'https://www.instagram.com/sghandpan',
-      'https://www.youtube.com/sghandpan',
+      'https://www.facebook.com/yana.an.54/',
+      'https://www.instagram.com/singapore_handpans',
+      'https://www.youtube.com/@SingaporeHandpanStudio',
     ],
     address: {
       '@type': 'PostalAddress',
-      addressCountry: 'SG',
+      streetAddress: "195 Pearl's Hill Ter, #03-07",
       addressLocality: 'Singapore',
+      postalCode: '168976',
+      addressCountry: 'SG',
     },
   })}
 />
@@ -123,22 +125,67 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID;
   set:html={JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
+    '@id': `${siteUrl}/#business`,
     name: siteName,
     url: siteUrl,
     logo: `${siteUrl}/images/logo.png`,
     image: imageUrl,
-    description: description,
+    description:
+      'Handpan shop, studio and school in Singapore. Buy premium handpans, take lessons, rent our studio for practice, recording and sound healing.',
+    telephone: '+65 9685 7818',
+    email: 'singaporehandpanstduio@gmail.com',
+    priceRange: '$$',
     address: {
       '@type': 'PostalAddress',
+      streetAddress: "195 Pearl's Hill Ter, #03-07",
       addressLocality: 'Singapore',
+      postalCode: '168976',
       addressCountry: 'SG',
     },
-    email: 'hello@singaporehandpans.com',
-    sameAs: [
-      'https://www.facebook.com/sghandpan',
-      'https://www.instagram.com/sghandpan',
-      'https://www.youtube.com/sghandpan',
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 1.2808,
+      longitude: 103.839,
+    },
+    openingHoursSpecification: [
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ],
+        opens: '10:00',
+        closes: '20:00',
+      },
     ],
+    sameAs: [
+      'https://www.facebook.com/yana.an.54/',
+      'https://www.instagram.com/singapore_handpans',
+      'https://www.youtube.com/@SingaporeHandpanStudio',
+    ],
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Handpan Services',
+      itemListElement: [
+        {
+          '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: 'Handpan Lessons' },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: { '@type': 'Service', name: 'Studio Rental' },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: { '@type': 'Product', name: 'Handpan Instruments' },
+        },
+      ],
+    },
   })}
 />
 

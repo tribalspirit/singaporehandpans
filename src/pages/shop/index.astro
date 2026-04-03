@@ -25,19 +25,23 @@ try {
   error = err instanceof Error ? err : new Error('Unknown error');
 }
 
-const pageTitle = 'Shop';
+const pageTitle = 'Handpan Shop Singapore';
 const pageDescription =
-  'Browse our collection of handpans and accessories. Find your perfect instrument from Singapore Handpan Studio.';
+  'Buy handcrafted handpans and accessories in Singapore. Browse premium hand pan drums from MAG, Battiloro, Sirvan & SEW — ember steel, stainless steel, cases, stands & more.';
 ---
 
-<BaseLayout title={pageTitle} description={pageDescription}>
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={`${Astro.site}shop/`}
+>
   <main class="shop-page">
     <section class="hero-section">
       <div class="container">
-        <h1 class="page-title">Shop</h1>
+        <h1 class="page-title">Handpan Shop</h1>
         <p class="page-subtitle">
-          Browse by brand or explore our full collection of handpans and
-          accessories
+          Buy handpans, hand pan drums, cases, stands and accessories from
+          trusted makers. Browse by brand or explore our full collection.
         </p>
       </div>
     </section>
