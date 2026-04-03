@@ -1,0 +1,266 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ShopProductList from '../../components/ShopProductList';
+import {
+  fetchCollectionByHandle,
+  isShopEnabled,
+} from '../../lib/shopifyClient';
+import type { ShopProduct, ShopCollection } from '../../lib/shopifyClient';
+
+export const prerender = false;
+
+if (!isShopEnabled()) {
+  return Astro.redirect('/404');
+}
+
+const { collection: collectionSlug } = Astro.params;
+
+let collection: ShopCollection | null = null;
+let products: ShopProduct[] = [];
+
+try {
+  const result = await fetchCollectionByHandle(collectionSlug!);
+  collection = result.collection;
+  products = result.products;
+} catch (err) {
+  console.error('Failed to fetch collection:', err);
+}
+
+if (!collection) {
+  return Astro.redirect('/shop');
+}
+
+const pageTitle = `${collection.title} - Shop`;
+const pageDescription =
+  collection.description ||
+  `Browse ${collection.title} products from Singapore Handpan Studio.`;
+
+const breadcrumbData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: 'https://singaporehandpans.com',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Shop',
+      item: 'https://singaporehandpans.com/shop',
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: collection.title,
+      item: `https://singaporehandpans.com/shop/${collection.handle}`,
+    },
+  ],
+};
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbData)}
+    slot="head"
+  />
+
+  <main class="collection-page">
+    <section class="hero-section">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li><a href="/shop">Shop</a></li>
+            <li aria-current="page">{collection.title}</li>
+          </ol>
+        </nav>
+
+        <h1 class="page-title">{collection.title}</h1>
+        {
+          collection.description && (
+            <p class="page-description">{collection.description}</p>
+          )
+        }
+        <p class="product-count">
+          {collection.productCount}{' '}
+          {collection.productCount === 1 ? 'product' : 'products'}
+        </p>
+      </div>
+    </section>
+
+    <section class="shop-section">
+      <div class="container">
+        {
+          products.length === 0 ? (
+            <div class="empty-state">
+              <p>No products available in this collection yet.</p>
+              <a href="/shop" class="back-link">
+                View all products
+              </a>
+            </div>
+          ) : (
+            <ShopProductList products={products} client:load />
+          )
+        }
+
+        <div class="back-section">
+          <a href="/shop" class="back-link"> &larr; Back to all products</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  .collection-page {
+    min-height: 100vh;
+  }
+
+  .hero-section {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-light) 0%,
+      var(--color-accent-light) 100%
+    );
+    padding: var(--space-12) 0 var(--space-10);
+    text-align: center;
+
+    @media (max-width: 768px) {
+      padding: var(--space-10) 0 var(--space-8);
+    }
+  }
+
+  .breadcrumb {
+    margin-bottom: var(--space-6);
+
+    ol {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--space-2);
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: var(--font-size-sm);
+      color: var(--color-gray-600);
+      flex-wrap: wrap;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+
+      &:not(:last-child)::after {
+        content: '/';
+        color: var(--color-gray-400);
+      }
+    }
+
+    a {
+      color: var(--color-gray-600);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+
+      &:hover {
+        color: var(--color-primary);
+        text-decoration: underline;
+      }
+    }
+
+    [aria-current='page'] {
+      color: var(--color-gray-900);
+      font-weight: var(--font-weight-medium);
+    }
+  }
+
+  .page-title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+    margin-bottom: var(--space-4);
+    line-height: var(--line-height-tight);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-4xl);
+    }
+  }
+
+  .page-description {
+    font-size: var(--font-size-base);
+    color: var(--color-gray-700);
+    max-width: 700px;
+    margin: 0 auto var(--space-3);
+    line-height: var(--line-height-relaxed);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-lg);
+    }
+  }
+
+  .product-count {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-500);
+  }
+
+  .shop-section {
+    padding: var(--space-12) 0 var(--space-16);
+    background: var(--color-gray-50);
+
+    @media (max-width: 768px) {
+      padding: var(--space-8) 0 var(--space-12);
+    }
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+
+    @media (max-width: 768px) {
+      padding: 0 var(--space-4);
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--space-16);
+    color: var(--color-gray-600);
+
+    p {
+      font-size: var(--font-size-lg);
+      margin-bottom: var(--space-6);
+    }
+  }
+
+  .back-section {
+    margin-top: var(--space-10);
+    text-align: center;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+
+    &:hover {
+      color: var(--color-primary-dark, var(--color-gray-800));
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+  }
+</style>
