@@ -1,10 +1,13 @@
-import { useState, useMemo } from 'react';
-import type { ShopProduct } from '../lib/shopifyClient';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import type { ShopProduct, ShopCollection } from '../lib/shopifyClient';
 import ProductCard from './ProductCard';
 import styles from './ShopProductList.module.scss';
 
 interface ShopProductListProps {
   products: ShopProduct[];
+  collections?: ShopCollection[];
+  collectionProductMap?: Record<string, string[]>;
+  pageSize?: number;
 }
 
 type AvailabilityFilter = 'all' | 'in-stock' | 'out-of-stock';
@@ -36,12 +39,20 @@ function matchesPriceBucket(price: number, bucket: PriceFilter): boolean {
   }
 }
 
-export default function ShopProductList({ products }: ShopProductListProps) {
+export default function ShopProductList({
+  products,
+  collections,
+  collectionProductMap,
+  pageSize = 12,
+}: ShopProductListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priceFilter, setPriceFilter] = useState<PriceFilter>('all');
   const [availabilityFilter, setAvailabilityFilter] =
     useState<AvailabilityFilter>('all');
+  const [collectionFilter, setCollectionFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const categories = useMemo(() => {
     const uniqueCategories = new Set(products.map((p) => p.productType));
@@ -70,27 +81,73 @@ export default function ShopProductList({ products }: ShopProductListProps) {
         (availabilityFilter === 'in-stock' && product.availableForSale) ||
         (availabilityFilter === 'out-of-stock' && !product.availableForSale);
 
+      const matchesCollection =
+        collectionFilter === 'all' ||
+        (collectionProductMap?.[collectionFilter]?.includes(product.id) ??
+          false);
+
       return (
-        matchesSearch && matchesCategory && matchesPrice && matchesAvailability
+        matchesSearch &&
+        matchesCategory &&
+        matchesPrice &&
+        matchesAvailability &&
+        matchesCollection
       );
     });
-  }, [products, searchTerm, categoryFilter, priceFilter, availabilityFilter]);
+  }, [
+    products,
+    searchTerm,
+    categoryFilter,
+    priceFilter,
+    availabilityFilter,
+    collectionFilter,
+    collectionProductMap,
+  ]);
+
+  const totalPages = Math.ceil(filteredProducts.length / pageSize);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const rangeStart = (currentPage - 1) * pageSize + 1;
+  const rangeEnd = Math.min(currentPage * pageSize, filteredProducts.length);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchTerm,
+    categoryFilter,
+    priceFilter,
+    availabilityFilter,
+    collectionFilter,
+  ]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const handleClearFilters = () => {
     setSearchTerm('');
     setCategoryFilter('all');
     setPriceFilter('all');
     setAvailabilityFilter('all');
+    setCollectionFilter('all');
   };
 
   const hasActiveFilters =
     searchTerm !== '' ||
     categoryFilter !== 'all' ||
     priceFilter !== 'all' ||
-    availabilityFilter !== 'all';
+    availabilityFilter !== 'all' ||
+    collectionFilter !== 'all';
+
+  const showCollectionFilter = collections && collections.length > 0;
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} ref={gridRef}>
       <div className={styles.filters}>
         <div className={styles.searchWrapper}>
           <label htmlFor="product-search" className={styles.srOnly}>
@@ -119,6 +176,27 @@ export default function ShopProductList({ products }: ShopProductListProps) {
         </div>
 
         <div className={styles.dropdowns}>
+          {showCollectionFilter && (
+            <div className={styles.selectWrapper}>
+              <label htmlFor="collection-filter" className={styles.srOnly}>
+                Filter by brand
+              </label>
+              <select
+                id="collection-filter"
+                value={collectionFilter}
+                onChange={(e) => setCollectionFilter(e.target.value)}
+                className={styles.select}
+              >
+                <option value="all">All Brands</option>
+                {collections.map((col) => (
+                  <option key={col.handle} value={col.handle}>
+                    {col.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className={styles.selectWrapper}>
             <label htmlFor="category-filter" className={styles.srOnly}>
               Filter by category
@@ -189,8 +267,11 @@ export default function ShopProductList({ products }: ShopProductListProps) {
 
       <div className={styles.resultsInfo}>
         <span>
-          {filteredProducts.length}{' '}
-          {filteredProducts.length === 1 ? 'product' : 'products'} found
+          {filteredProducts.length === 0
+            ? '0 products found'
+            : totalPages > 1
+              ? `Showing ${rangeStart}\u2013${rangeEnd} of ${filteredProducts.length} products`
+              : `${filteredProducts.length} ${filteredProducts.length === 1 ? 'product' : 'products'} found`}
         </span>
       </div>
 
@@ -208,11 +289,47 @@ export default function ShopProductList({ products }: ShopProductListProps) {
           )}
         </div>
       ) : (
-        <div className={styles.grid}>
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <>
+          <div className={styles.grid}>
+            {paginatedProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <nav className={styles.pagination} aria-label="Product pagination">
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={styles.pageButton}
+              >
+                Previous
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    type="button"
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`${styles.pageButton} ${page === currentPage ? styles.active : ''}`}
+                    aria-current={page === currentPage ? 'page' : undefined}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={styles.pageButton}
+              >
+                Next
+              </button>
+            </nav>
+          )}
+        </>
       )}
     </div>
   );

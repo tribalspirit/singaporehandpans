@@ -3,12 +3,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroBackgroundCarousel from '../components/HeroBackgroundCarousel';
 import FeaturedProducts from '../components/home/FeaturedProducts.astro';
 import UpcomingEvents from '../components/home/UpcomingEvents.astro';
+import OurPartners from '../components/home/OurPartners.astro';
 
 export const prerender = false;
 
-const title = 'Home';
+const title = 'Handpan Shop, Studio & School in Singapore';
 const description =
-  'Discover the healing sounds of handpan music through our academy, classes, and community in Singapore. Join Singapore Handpan Studio in our journey of musical expression and mindful living.';
+  "Singapore's dedicated handpan space. Shop premium handpans from MAG, Battiloro & Sirvan. Take beginner to advanced lessons. Rent our studio for practice, recording & sound healing.";
 ---
 
 <BaseLayout title={title} description={description}>
@@ -25,8 +26,9 @@ const description =
         </h1>
 
         <p class="hero__subtitle">
-          Experience the healing sounds and vibrations of handpan drums through
-          our academy, handpan classes, and musical journeys in Singapore.
+          Experience the healing sounds of the handpan — also known as a hang
+          drum or pantam — through our academy, classes and musical journeys in
+          Singapore.
         </p>
 
         <div class="hero__actions">
@@ -40,6 +42,9 @@ const description =
   <!-- Featured Products (shop widget) -->
   <FeaturedProducts />
 
+  <!-- Our Partners -->
+  <OurPartners />
+
   <!-- Upcoming Events -->
   <UpcomingEvents />
 
@@ -51,8 +56,8 @@ const description =
           <h2 class="section__title">Our Musical Journey</h2>
           <p class="about-preview__text">
             At Singapore Handpan Studio, we believe in the transformative power
-            of music. Our handpan instruments create soothing, meditative sounds
-            that promote healing, relaxation, and mindful living.
+            of music. Our hand pan instruments create soothing, meditative
+            sounds that promote sound healing, relaxation, and mindful living.
           </p>
 
           <p class="about-preview__text">
@@ -109,10 +114,10 @@ const description =
             </svg>
           </div>
 
-          <h3 class="service-card__title">Academy</h3>
+          <h3 class="service-card__title">Handpan Academy</h3>
           <p class="service-card__description">
-            Access learning resources, tutorials, and interactive tools for
-            handpan players of all levels.
+            Free learning resources, tutorials, and interactive tools for
+            handpan players of all levels — from beginner to advanced.
           </p>
           <a href="/academy" class="service-card__link">Explore Academy</a>
         </div>
@@ -132,10 +137,10 @@ const description =
             </svg>
           </div>
 
-          <h3 class="service-card__title">Classes & Events</h3>
+          <h3 class="service-card__title">Handpan Lessons & Events</h3>
           <p class="service-card__description">
-            Join our beginner and intermediate handpan classes, performances,
-            and special community gatherings.
+            Private and group handpan lessons for beginners and advanced
+            players. Workshops, masterclasses, and community jam sessions.
           </p>
           <a href="/events" class="service-card__link">View Classes</a>
         </div>
@@ -153,10 +158,10 @@ const description =
             </svg>
           </div>
 
-          <h3 class="service-card__title">Community</h3>
+          <h3 class="service-card__title">Handpan Community</h3>
           <p class="service-card__description">
-            Connect with fellow musicians and enthusiasts in our welcoming
-            community space.
+            Connect with fellow handpan musicians and enthusiasts in Singapore's
+            most welcoming handpan community space.
           </p>
           <a href="/contacts" class="service-card__link">Join Us</a>
         </div>

@@ -133,18 +133,23 @@ const hasAlbums = albums.length > 0;
 const featuredAlbums = albums.filter((a) => a.featured);
 const regularAlbums = albums.filter((a) => !a.featured);
 
-const pageTitle = 'Gallery';
+const pageTitle = 'Gallery — Handpan Performances & Community';
 const pageDescription =
-  'Explore our collection of handpan moments - workshops, performances, instruments, and community gatherings at Singapore Handpan Studio.';
+  'Photos and videos from our handpan workshops, performances, jam sessions and community gatherings at Singapore Handpan Studio.';
 ---
 
-<BaseLayout title={pageTitle} description={pageDescription}>
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={`${Astro.site}gallery/`}
+>
   <main class="gallery-page">
     <section class="hero-section">
       <div class="container">
-        <h1 class="page-title">Gallery</h1>
+        <h1 class="page-title">Handpan Gallery</h1>
         <p class="page-subtitle">
-          Explore moments from our studio, workshops, and community gatherings
+          Moments from our handpan studio — workshops, performances, jam
+          sessions and community gatherings in Singapore
         </p>
       </div>
     </section>
