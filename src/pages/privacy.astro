@@ -12,7 +12,12 @@ const description =
 const lastUpdated = 'January 5, 2026';
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout
+  title={title}
+  description={description}
+  canonical={`${Astro.site}privacy/`}
+  noindex
+>
   <div class="legal-page">
     <div class="container">
       <div class="legal-content">

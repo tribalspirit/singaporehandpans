@@ -47,7 +47,7 @@ const shouldRender = shopEnabled && partners.length > 0;
           {partners.map((partner) => (
             <li>
               <a
-                href={`/shop/${partner.handle}`}
+                href={`/shop/${partner.handle}/`}
                 class="partner-card"
                 aria-label={`${partner.title} — view collection`}
               >
@@ -79,7 +79,7 @@ const shouldRender = shopEnabled && partners.length > 0;
         </ul>
 
         <div class="partners__cta">
-          <a href="/shop" class="partners__cta-link">
+          <a href="/shop/" class="partners__cta-link">
             Browse all brands
             <svg
               class="partners__cta-icon"

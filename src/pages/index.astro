@@ -14,7 +14,11 @@ const description =
   "Singapore's dedicated handpan space. Shop premium handpans from MAG, Battiloro & Sirvan. Take beginner to advanced lessons. Rent our studio for practice, recording & sound healing.";
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout
+  title={title}
+  description={description}
+  canonical={Astro.site?.toString()}
+>
   <!-- Hero Section -->
   <section class="hero">
     <HeroBackgroundCarousel client:load />
@@ -34,8 +38,8 @@ const description =
         </p>
 
         <div class="hero__actions">
-          <a href="/academy" class="btn btn--primary"> Explore Academy</a>
-          <a href="/events" class="btn btn--outline"> Classes & Events</a>
+          <a href="/academy/" class="btn btn--primary"> Explore Academy</a>
+          <a href="/events/" class="btn btn--outline"> Classes & Events</a>
         </div>
       </div>
     </div>
@@ -68,7 +72,7 @@ const description =
             beautiful instrument.
           </p>
 
-          <a href="/about" class="btn btn--text">
+          <a href="/about/" class="btn btn--text">
             Learn More About Us
             <svg
               class="btn__icon"
@@ -121,7 +125,7 @@ const description =
             Free learning resources, tutorials, and interactive tools for
             handpan players of all levels — from beginner to advanced.
           </p>
-          <a href="/academy" class="service-card__link">Explore Academy</a>
+          <a href="/academy/" class="service-card__link">Explore Academy</a>
         </div>
 
         <div class="service-card">
@@ -144,7 +148,7 @@ const description =
             Private and group handpan lessons for beginners and advanced
             players. Workshops, masterclasses, and community jam sessions.
           </p>
-          <a href="/events" class="service-card__link">View Classes</a>
+          <a href="/events/" class="service-card__link">View Classes</a>
         </div>
 
         <div class="service-card">
@@ -165,7 +169,7 @@ const description =
             Connect with fellow handpan musicians and enthusiasts in Singapore's
             most welcoming handpan community space.
           </p>
-          <a href="/contacts" class="service-card__link">Join Us</a>
+          <a href="/contacts/" class="service-card__link">Join Us</a>
         </div>
       </div>
     </div>
@@ -182,10 +186,10 @@ const description =
         </p>
 
         <div class="cta__actions">
-          <a href="/contacts#booking" class="btn btn--primary btn--large">
+          <a href="/contacts/#booking" class="btn btn--primary btn--large">
             Book a Session
           </a>
-          <a href="/events" class="btn btn--outline btn--large">
+          <a href="/events/" class="btn btn--outline btn--large">
             View Classes</a
           >
         </div>

@@ -8,6 +8,7 @@ export interface SEOProps {
   type?: 'website' | 'article';
   publishedTime?: string;
   modifiedTime?: string;
+  noindex?: boolean;
 }
 
 const {
@@ -19,13 +20,26 @@ const {
   type = 'website',
   publishedTime,
   modifiedTime,
+  noindex = false,
 } = Astro.props as SEOProps;
 
 const siteName = 'Singapore Handpan Studio';
 const siteUrl = (
   Astro.site?.toString() || 'https://singaporehandpans.com'
 ).replace(/\/$/, '');
-const canonicalUrl = canonical || Astro.url.toString();
+
+// Build the canonical URL. If a canonical was passed explicitly, trust it.
+// Otherwise derive from the current pathname, stripping any query string and
+// forcing a trailing slash so Google sees one stable URL per page regardless
+// of how the request arrived (UTM params, missing slash, etc.).
+function buildCanonical(): string {
+  if (canonical) return canonical;
+  const path = Astro.url.pathname;
+  const normalised = path === '/' || path.endsWith('/') ? path : `${path}/`;
+  return `${siteUrl}${normalised}`;
+}
+
+const canonicalUrl = buildCanonical();
 const imageUrl = image.startsWith('http') ? image : `${siteUrl}${image}`;
 
 const ga4Id = import.meta.env.PUBLIC_GA4_ID;
@@ -40,6 +54,8 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID;
 
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalUrl} />
+
+{noindex && <meta name="robots" content="noindex, follow" />}
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content={type} />
