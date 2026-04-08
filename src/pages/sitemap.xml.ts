@@ -106,7 +106,11 @@ ${entries.join('\n')}
     status: 200,
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+      // s-maxage lets the edge middleware cache the sitemap for 1 hour so
+      // Googlebot doesn't trigger live Storyblok + Shopify fetches on every
+      // crawl. stale-while-revalidate keeps the contract correct downstream.
+      'Cache-Control':
+        'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
     },
   });
 };

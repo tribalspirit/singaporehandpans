@@ -4,8 +4,10 @@ import HeroBackgroundCarousel from '../components/HeroBackgroundCarousel';
 import FeaturedProducts from '../components/home/FeaturedProducts.astro';
 import UpcomingEvents from '../components/home/UpcomingEvents.astro';
 import OurPartners from '../components/home/OurPartners.astro';
+import { setEdgeCache } from '../lib/edgeCache';
 
 export const prerender = false;
+setEdgeCache(Astro.response, 'short');
 
 const title = 'Handpan Shop, Studio & School in Singapore';
 const description =

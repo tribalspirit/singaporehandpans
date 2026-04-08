@@ -3,6 +3,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import MediaGrid from '../../../components/gallery/MediaGrid';
 import { getStoryblokClient } from '../../../lib/storyblok';
 import { transformAlbum, transformMedia } from '../../../lib/galleryApi';
+import { setEdgeCache } from '../../../lib/edgeCache';
 import type {
   GalleryAlbumStory,
   GalleryMediaStory,
@@ -10,6 +11,7 @@ import type {
 } from '../../../types/gallery';
 
 export const prerender = false;
+setEdgeCache(Astro.response, 'medium');
 
 const { slug } = Astro.params;
 
