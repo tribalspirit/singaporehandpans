@@ -46,8 +46,10 @@ function isCacheablePath(pathname: string): boolean {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const method = context.request.method;
-  if (method !== 'GET' && method !== 'HEAD') {
+  // Only GET is cached. HEAD is intentionally excluded: the cache key is
+  // normalised to GET, so storing a (bodyless) HEAD response would poison
+  // subsequent GET requests with an empty page until s-maxage expires.
+  if (context.request.method !== 'GET') {
     return next();
   }
 
