@@ -3,8 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import EventCard from '../components/EventCard.astro';
 import CMSFallback from '../components/CMSFallback.astro';
 import { getStoryblokClient } from '../lib/storyblok';
+import { setEdgeCache } from '../lib/edgeCache';
 
 export const prerender = false;
+setEdgeCache(Astro.response, 'short');
 
 const FALLBACK_EVENTS = [
   {

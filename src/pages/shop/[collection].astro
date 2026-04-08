@@ -5,9 +5,11 @@ import {
   fetchCollectionByHandle,
   isShopEnabled,
 } from '../../lib/shopifyClient';
+import { setEdgeCache } from '../../lib/edgeCache';
 import type { ShopProduct, ShopCollection } from '../../lib/shopifyClient';
 
 export const prerender = false;
+setEdgeCache(Astro.response, 'medium');
 
 if (!isShopEnabled()) {
   return Astro.redirect('/404');
