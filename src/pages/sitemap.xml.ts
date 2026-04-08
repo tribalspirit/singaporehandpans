@@ -4,7 +4,11 @@ import { fetchAllCollections, isShopEnabled } from '../lib/shopifyClient';
 
 const SITE = 'https://singaporehandpans.com';
 
-/** Static pages with their change frequency and priority */
+/**
+ * Static pages with their change frequency and priority.
+ * NOTE: /privacy/ and /terms/ are intentionally excluded — they are
+ * marked noindex and should not appear in the sitemap.
+ */
 const STATIC_PAGES: { path: string; changefreq: string; priority: number }[] = [
   { path: '/', changefreq: 'weekly', priority: 1.0 },
   { path: '/about/', changefreq: 'monthly', priority: 0.8 },
@@ -14,8 +18,6 @@ const STATIC_PAGES: { path: string; changefreq: string; priority: number }[] = [
   { path: '/gallery/', changefreq: 'weekly', priority: 0.8 },
   { path: '/shop/', changefreq: 'weekly', priority: 0.9 },
   { path: '/contacts/', changefreq: 'monthly', priority: 0.7 },
-  { path: '/privacy/', changefreq: 'yearly', priority: 0.3 },
-  { path: '/terms/', changefreq: 'yearly', priority: 0.3 },
 ];
 
 function urlEntry(loc: string, changefreq: string, priority: number): string {
