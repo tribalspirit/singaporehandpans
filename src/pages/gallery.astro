@@ -6,9 +6,11 @@ import AlbumCard from '../components/gallery/AlbumCard.astro';
 import CMSFallback from '../components/CMSFallback.astro';
 import { normalizeTags } from '../utils/tags';
 import { transformAlbum } from '../lib/galleryApi';
+import { setEdgeCache } from '../lib/edgeCache';
 import type { GalleryAlbumStory } from '../types/gallery';
 
 export const prerender = false;
+setEdgeCache(Astro.response, 'medium');
 
 interface LegacyGalleryItem {
   id: string;

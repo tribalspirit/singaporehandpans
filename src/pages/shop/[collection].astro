@@ -5,9 +5,11 @@ import {
   fetchCollectionByHandle,
   isShopEnabled,
 } from '../../lib/shopifyClient';
+import { setEdgeCache } from '../../lib/edgeCache';
 import type { ShopProduct, ShopCollection } from '../../lib/shopifyClient';
 
 export const prerender = false;
+setEdgeCache(Astro.response, 'medium');
 
 if (!isShopEnabled()) {
   return Astro.redirect('/404');
@@ -78,7 +80,7 @@ const breadcrumbData = {
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <ol>
             <li><a href="/">Home</a></li>
-            <li><a href="/shop">Shop</a></li>
+            <li><a href="/shop/">Shop</a></li>
             <li aria-current="page">{collection.title}</li>
           </ol>
         </nav>
@@ -102,7 +104,7 @@ const breadcrumbData = {
           products.length === 0 ? (
             <div class="empty-state">
               <p>No products available in this collection yet.</p>
-              <a href="/shop" class="back-link">
+              <a href="/shop/" class="back-link">
                 View all products
               </a>
             </div>
@@ -112,7 +114,7 @@ const breadcrumbData = {
         }
 
         <div class="back-section">
-          <a href="/shop" class="back-link"> &larr; Back to all products</a>
+          <a href="/shop/" class="back-link"> &larr; Back to all products</a>
         </div>
       </div>
     </section>

@@ -1,24 +1,28 @@
 ---
 import { isShopEnabled } from '../lib/shopifyClient';
 
-const currentPath = Astro.url.pathname;
+// Normalise to trailing-slash form so the active-link comparison matches the
+// nav hrefs regardless of which slash form Cloudflare hands us.
+const rawPath = Astro.url.pathname;
+const currentPath =
+  rawPath === '/' || rawPath.endsWith('/') ? rawPath : `${rawPath}/`;
 const shopEnabled = isShopEnabled();
 
 const baseNavigation = [
   { name: 'Home', href: '/' },
-  { name: 'About', href: '/about' },
-  { name: 'Academy', href: '/academy' },
-  { name: 'Classes', href: '/events' },
-  { name: 'Gallery', href: '/gallery' },
+  { name: 'About', href: '/about/' },
+  { name: 'Academy', href: '/academy/' },
+  { name: 'Classes', href: '/events/' },
+  { name: 'Gallery', href: '/gallery/' },
 ];
 
 const navigation = shopEnabled
   ? [
       ...baseNavigation,
-      { name: 'Shop', href: '/shop' },
-      { name: 'Contact', href: '/contacts' },
+      { name: 'Shop', href: '/shop/' },
+      { name: 'Contact', href: '/contacts/' },
     ]
-  : [...baseNavigation, { name: 'Contact', href: '/contacts' }];
+  : [...baseNavigation, { name: 'Contact', href: '/contacts/' }];
 ---
 
 <header class="header">

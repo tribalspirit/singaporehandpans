@@ -3,8 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import EventCard from '../components/EventCard.astro';
 import CMSFallback from '../components/CMSFallback.astro';
 import { getStoryblokClient } from '../lib/storyblok';
+import { setEdgeCache } from '../lib/edgeCache';
 
 export const prerender = false;
+setEdgeCache(Astro.response, 'short');
 
 const FALLBACK_EVENTS = [
   {
@@ -150,7 +152,7 @@ const seoDescription =
             <h2>No Classes Available Right Now</h2>
             <p>
               We're currently planning our next classes and events. Check back
-              soon or <a href="/contacts">contact us</a> to stay updated!
+              soon or <a href="/contacts/">contact us</a> to stay updated!
             </p>
           </section>
         )
