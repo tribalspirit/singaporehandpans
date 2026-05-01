@@ -163,7 +163,7 @@ For technical issues or questions:
 For studio inquiries:
 
 - Visit `/contacts` page
-- Email: hello@sghandpan.com
+- Email: <singaporehandpanstudio@gmail.com>
 
 ---
 
