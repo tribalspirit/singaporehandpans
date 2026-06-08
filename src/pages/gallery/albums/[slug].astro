@@ -91,15 +91,41 @@ const breadcrumbData = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Gallery',
-      item: `${siteUrl}/gallery`,
+      item: `${siteUrl}/gallery/`,
     },
-    { '@type': 'ListItem', position: 3, name: album.title },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: album.title,
+      item: `${siteUrl}/gallery/albums/${album.slug}/`,
+    },
   ],
+};
+
+// ImageGallery structured data + a no-JS fallback list so the album's images
+// (and their alt text) are crawlable without executing the MediaGrid island.
+// Built from the same request-time `mediaItems`, so freshness is unchanged.
+const imageItems = mediaItems.filter((m) => m.mediaType === 'image');
+const imageGallerySchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ImageGallery',
+  name: album.title,
+  ...(album.description && { description: album.description }),
+  url: `${siteUrl}/gallery/albums/${album.slug}/`,
+  associatedMedia: imageItems.map((item) => ({
+    '@type': 'ImageObject',
+    contentUrl: item.src,
+    name: item.title || album.title,
+    ...(item.description && { description: item.description }),
+    ...(item.photographer && {
+      creator: { '@type': 'Person', name: item.photographer },
+    }),
+  })),
 };
 ---
 
@@ -113,6 +139,15 @@ const breadcrumbData = {
     set:html={JSON.stringify(breadcrumbData)}
     slot="head"
   />
+  {
+    imageItems.length > 0 && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(imageGallerySchema)}
+        slot="head"
+      />
+    )
+  }
   <main class="album-detail-page">
     <div class="container">
       <nav class="breadcrumb">
@@ -144,7 +179,31 @@ const breadcrumbData = {
             <p>No media in this album yet. Check back soon!</p>
           </div>
         ) : (
-          <MediaGrid items={mediaItems} albumTitle={album.title} client:load />
+          <Fragment>
+            {/* Crawlable, no-JS fallback. MediaGrid enhances it for visitors;
+                both render from the same request-time `mediaItems`. */}
+            <noscript>
+              <ul class="ssr-media-list">
+                {imageItems.map((item) => (
+                  <li>
+                    <img
+                      src={item.src}
+                      alt={item.alt}
+                      width={item.width}
+                      height={item.height}
+                      loading="lazy"
+                    />
+                    {item.description && <p>{item.description}</p>}
+                  </li>
+                ))}
+              </ul>
+            </noscript>
+            <MediaGrid
+              items={mediaItems}
+              albumTitle={album.title}
+              client:visible
+            />
+          </Fragment>
         )
       }
     </div>

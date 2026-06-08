@@ -28,7 +28,10 @@
 *.webp
   Cache-Control: public, max-age=2592000
 
-# Redirect common paths (if needed)
+# Trailing-slash policy is enforced in src/middleware.ts (301 to the slashed
+# form). Do NOT add a trailing-slash rule here — it would conflict.
+
+# Redirect common paths / dead URLs (if needed)
 # /workshop /workshops 301
 # /contact /contacts 301
 

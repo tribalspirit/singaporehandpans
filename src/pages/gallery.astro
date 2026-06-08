@@ -193,7 +193,7 @@ const pageDescription =
               <p>No gallery items available yet. Check back soon!</p>
             </div>
           ) : (
-            <GalleryGrid items={transformedLegacyItems} client:load />
+            <GalleryGrid items={transformedLegacyItems} client:visible />
           )
         }
       </div>
