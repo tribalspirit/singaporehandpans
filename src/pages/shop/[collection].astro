@@ -37,30 +37,62 @@ const pageDescription =
   collection.description ||
   `Browse ${collection.title} products from Singapore Handpan Studio.`;
 
+// Build absolute, trailing-slash URLs from Astro.site so schema matches the
+// page canonical exactly (see src/components/SEO.astro + the trailing-slash
+// middleware). Astro.site already ends in '/'.
+const siteBase = Astro.site!.toString().replace(/\/$/, '');
+const homeUrl = `${siteBase}/`;
+const shopUrl = `${siteBase}/shop/`;
+const collectionUrl = `${siteBase}/shop/${collection.handle}/`;
+
 const breadcrumbData = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    {
-      '@type': 'ListItem',
-      position: 1,
-      name: 'Home',
-      item: 'https://singaporehandpans.com',
-    },
-    {
-      '@type': 'ListItem',
-      position: 2,
-      name: 'Shop',
-      item: 'https://singaporehandpans.com/shop',
-    },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: homeUrl },
+    { '@type': 'ListItem', position: 2, name: 'Shop', item: shopUrl },
     {
       '@type': 'ListItem',
       position: 3,
       name: collection.title,
-      item: `https://singaporehandpans.com/shop/${collection.handle}`,
+      item: collectionUrl,
     },
   ],
 };
+
+// Product/ItemList structured data so Googlebot can index the catalogue
+// (product names, prices, availability, brand) without executing the client
+// island. Products are already fetched server-side above.
+const productListSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: collection.title,
+  numberOfItems: products.length,
+  itemListElement: products.map((product, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    item: {
+      '@type': 'Product',
+      name: product.title,
+      ...(product.description && { description: product.description }),
+      ...(product.image && { image: product.image.url }),
+      url: product.shopUrl,
+      brand: { '@type': 'Brand', name: collection.title },
+      offers: {
+        '@type': 'Offer',
+        price: product.priceMin.amount,
+        priceCurrency: product.priceMin.currencyCode,
+        availability: product.availableForSale
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+        url: product.shopUrl,
+      },
+    },
+  })),
+};
+
+const formatPrice = (p: { amount: number; currencyCode: string }) =>
+  `${p.currencyCode} ${p.amount.toLocaleString('en-SG')}`;
 ---
 
 <BaseLayout
@@ -73,6 +105,15 @@ const breadcrumbData = {
     set:html={JSON.stringify(breadcrumbData)}
     slot="head"
   />
+  {
+    products.length > 0 && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(productListSchema)}
+        slot="head"
+      />
+    )
+  }
 
   <main class="collection-page">
     <section class="hero-section">
@@ -109,7 +150,26 @@ const breadcrumbData = {
               </a>
             </div>
           ) : (
-            <ShopProductList products={products} client:load />
+            <Fragment>
+              {/* Crawlable, no-JS product list. The interactive island below
+                  enhances it for visitors; both render from the same live
+                  server-fetched `products`, so freshness is unchanged. */}
+              <noscript>
+                <ul class="ssr-product-list">
+                  {products.map((product) => (
+                    <li>
+                      <a href={product.shopUrl}>{product.title}</a>
+                      <span class="ssr-product-price">
+                        {' '}
+                        — {formatPrice(product.priceMin)}
+                      </span>
+                      {product.description && <p>{product.description}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </noscript>
+              <ShopProductList products={products} client:visible />
+            </Fragment>
           )
         }
 

@@ -41,7 +41,7 @@ const formatTime = (dateString: string) => {
   });
 };
 
-const eventUrl = `/events/${event.slug}`;
+const eventUrl = `/events/${event.slug}/`;
 const eventDate = new Date(event.content.date);
 const isUpcoming = eventDate >= new Date();
 

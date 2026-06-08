@@ -81,6 +81,36 @@ const seoDescription =
           </p>
         </div>
       </section>
+
+      <section class="academy-about">
+        <h2 class="academy-about__title">Learn the Handpan in Singapore</h2>
+        <p>
+          The handpan is one of the most approachable instruments to begin with
+          — no musical background is required, and its intuitive layout means
+          you can play your first melody within minutes. Our academy brings
+          together free online tools and hands-on teaching so you can learn
+          handpan at your own pace, whether you are a complete beginner or an
+          advancing player refining technique and repertoire.
+        </p>
+        <p>
+          Prefer to learn in person? Singapore Handpan Studio runs
+          beginner-friendly handpan lessons, private and group classes,
+          workshops and masterclasses out of our studio. Pair the Chord Explorer
+          above with a class to move from understanding scales and chords to
+          confidently improvising your own music.
+        </p>
+        <div class="academy-about__cta">
+          <a href="/events/" class="academy-about__link">
+            Browse handpan classes &amp; events
+          </a>
+          <a
+            href="/contacts/"
+            class="academy-about__link academy-about__link--secondary"
+          >
+            Book a lesson
+          </a>
+        </div>
+      </section>
     </div>
   </main>
 </BaseLayout>
@@ -192,6 +222,62 @@ const seoDescription =
 
       &:hover svg {
         transform: translateX(2px);
+      }
+    }
+  }
+
+  .academy-about {
+    max-width: 800px;
+    margin: 0 auto var(--spacing-2xl);
+    text-align: center;
+
+    &__title {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-lg);
+      font-family: var(--font-family-heading);
+    }
+
+    p {
+      font-size: var(--font-size-base);
+      color: var(--color-text-secondary);
+      line-height: var(--line-height-relaxed);
+      margin-bottom: var(--spacing-md);
+    }
+
+    &__cta {
+      display: flex;
+      gap: var(--spacing-md);
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: var(--spacing-lg);
+    }
+
+    &__link {
+      display: inline-flex;
+      align-items: center;
+      padding: var(--spacing-md) var(--spacing-lg);
+      background: var(--color-primary);
+      color: var(--color-white);
+      text-decoration: none;
+      border-radius: var(--border-radius-md);
+      font-weight: var(--font-weight-semibold);
+      transition: all var(--transition-base);
+
+      &:hover {
+        background: var(--color-primary-dark);
+      }
+
+      &--secondary {
+        background: transparent;
+        color: var(--color-primary);
+        border: 2px solid var(--color-primary);
+
+        &:hover {
+          background: var(--color-primary);
+          color: var(--color-white);
+        }
       }
     }
   }
