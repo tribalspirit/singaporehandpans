@@ -8,7 +8,7 @@ export interface Props {
 }
 
 const { album } = Astro.props;
-const albumUrl = `/gallery/albums/${album.slug}`;
+const albumUrl = `/gallery/albums/${album.slug}/`;
 const coverSrc = album.coverSrc
   ? storyblokImageTransform(album.coverSrc, 600, 400)
   : '';

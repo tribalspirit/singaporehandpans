@@ -1,4 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
+import { canonicalRedirectTarget } from './lib/trailingSlash';
 
 /**
  * Edge HTML caching middleware for Cloudflare Pages.
@@ -54,6 +55,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   const url = new URL(context.request.url);
+
+  // Enforce the canonical host + trailing-slash form with a single 301 before
+  // anything else, so the redirect itself is cached at the edge and never hits
+  // SSR. See `src/lib/trailingSlash.ts` for the policy rationale.
+  const canonicalTarget = canonicalRedirectTarget(url);
+  if (canonicalTarget) {
+    return new Response(null, {
+      status: 301,
+      headers: {
+        Location: canonicalTarget,
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  }
+
   if (!isCacheablePath(url.pathname)) {
     return next();
   }

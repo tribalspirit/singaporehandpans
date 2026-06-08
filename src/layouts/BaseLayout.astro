@@ -47,6 +47,8 @@ const seoProps: SEOProps = {
 <html lang="en">
   <head>
     <SEO {...seoProps} />
+    <!-- Page-level head content (e.g. per-page JSON-LD passed via slot="head") -->
+    <slot name="head" />
   </head>
 
   <body class={`layout ${bodyClass}`}>
