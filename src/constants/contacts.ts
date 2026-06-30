@@ -7,8 +7,8 @@ export const STUDIO_ADDRESS_LINES = [
   'Singapore 168976',
 ];
 
-export const STUDIO_PHONE_PRIMARY = '+65 9685 7818';
-export const STUDIO_PHONE_PRIMARY_TEL = 'tel:+6596857818';
+export const STUDIO_PHONE_PRIMARY = '+65 9088 6848';
+export const STUDIO_PHONE_PRIMARY_TEL = 'tel:+6590886848';
 export const STUDIO_PHONE_HOURS = 'Daily 10:00 AM - 8:00 PM';
 export const STUDIO_PHONE_NOTE = 'If no answer, you may contact via WhatsApp.';
 
@@ -48,7 +48,7 @@ export const SOCIAL_LINKS: SocialLink[] = [
   },
 ];
 
-export const WHATSAPP_LINK = `https://wa.me/6596857818`;
+export const WHATSAPP_LINK = `https://wa.me/6590886848`;
 export const WHATSAPP_LABEL = 'Contact via WhatsApp';
 
 export const GOOGLE_MAPS_ADDRESS = encodeURIComponent(STUDIO_ADDRESS);
