@@ -1,0 +1,592 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { fetchProductBySlug, isShopEnabled } from '../../../lib/shopClient';
+import { setEdgeCache } from '../../../lib/edgeCache';
+import type { ShopProduct } from '../../../lib/shopClient';
+
+export const prerender = false;
+setEdgeCache(Astro.response, 'medium');
+
+if (!isShopEnabled()) {
+  return Astro.redirect('/404');
+}
+
+const { slug } = Astro.params;
+
+const storyblokToken =
+  Astro.locals.runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+
+let product: ShopProduct | null = null;
+
+try {
+  product = await fetchProductBySlug(storyblokToken, slug!);
+} catch (err) {
+  console.error('Failed to fetch product:', err);
+}
+
+if (!product) {
+  return Astro.redirect('/shop/');
+}
+
+// Checkout failures redirect back here with ?checkout=<reason>
+const checkoutState = Astro.url.searchParams.get('checkout');
+const CHECKOUT_MESSAGES: Record<string, string> = {
+  unavailable: 'Sorry, this product is currently unavailable for purchase.',
+  error:
+    'We could not start the payment. Please try again, or contact us and we will arrange the purchase directly.',
+};
+const checkoutMessage = checkoutState
+  ? (CHECKOUT_MESSAGES[checkoutState] ?? CHECKOUT_MESSAGES.error)
+  : null;
+
+const pageTitle = `${product.title} - Shop`;
+const pageDescription =
+  product.seoDescription ||
+  product.description.slice(0, 155) ||
+  `Buy ${product.title} from Singapore Handpan Studio.`;
+
+const formatPrice = (p: { amount: number; currencyCode: string }) =>
+  new Intl.NumberFormat('en-SG', {
+    style: 'currency',
+    currency: p.currencyCode,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(p.amount);
+
+const siteBase = Astro.site!.toString().replace(/\/$/, '');
+const productUrl = `${siteBase}${product.shopUrl}`;
+const brandTitle = product.brand
+  ? product.brand.charAt(0).toUpperCase() + product.brand.slice(1)
+  : undefined;
+
+const breadcrumbData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteBase}/` },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Shop',
+      item: `${siteBase}/shop/`,
+    },
+    ...(product.brand
+      ? [
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: brandTitle,
+            item: `${siteBase}/shop/${product.brand}/`,
+          },
+        ]
+      : []),
+    {
+      '@type': 'ListItem',
+      position: product.brand ? 4 : 3,
+      name: product.title,
+      item: productUrl,
+    },
+  ],
+};
+
+const productSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: product.title,
+  ...(product.description && { description: product.description }),
+  ...(product.images &&
+    product.images.length > 0 && {
+      image: product.images.map((img) => img.url),
+    }),
+  url: productUrl,
+  ...(brandTitle && { brand: { '@type': 'Brand', name: brandTitle } }),
+  offers: {
+    '@type': 'Offer',
+    price: product.priceMin.amount,
+    priceCurrency: product.priceMin.currencyCode,
+    availability: product.availableForSale
+      ? 'https://schema.org/InStock'
+      : 'https://schema.org/OutOfStock',
+    url: productUrl,
+  },
+};
+
+const galleryImages = product.images ?? [];
+const mainImage = galleryImages[0];
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={productUrl}
+>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbData)}
+    slot="head"
+  />
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(productSchema)}
+    slot="head"
+  />
+
+  <main class="product-page">
+    <section class="product-section">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/">Home</a></li>
+            <li><a href="/shop/">Shop</a></li>
+            {
+              product.brand && (
+                <li>
+                  <a href={`/shop/${product.brand}/`}>{brandTitle}</a>
+                </li>
+              )
+            }
+            <li aria-current="page">{product.title}</li>
+          </ol>
+        </nav>
+
+        {
+          checkoutMessage && (
+            <div class="checkout-alert" role="alert">
+              {checkoutMessage}
+            </div>
+          )
+        }
+
+        <div class="product-layout">
+          <div class="product-gallery">
+            {
+              mainImage ? (
+                <img
+                  src={mainImage.url}
+                  alt={mainImage.altText || product.title}
+                  class="product-main-image"
+                  width="640"
+                  height="480"
+                  loading="eager"
+                  fetchpriority="high"
+                />
+              ) : (
+                <div class="product-image-placeholder" aria-hidden="true">
+                  <svg
+                    width="64"
+                    height="64"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </div>
+              )
+            }
+            {
+              galleryImages.length > 1 && (
+                <ul class="product-thumbs" aria-label="More product photos">
+                  {galleryImages.slice(1).map((img) => (
+                    <li>
+                      <img
+                        src={img.url}
+                        alt={img.altText || product.title}
+                        loading="lazy"
+                        width="160"
+                        height="120"
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )
+            }
+          </div>
+
+          <div class="product-info">
+            <span class="product-category">{product.productType}</span>
+            <h1 class="product-title">{product.title}</h1>
+            <p class="product-price">{formatPrice(product.priceMin)}</p>
+
+            {
+              product.description && (
+                <p class="product-description">{product.description}</p>
+              )
+            }
+
+            {
+              product.availableForSale ? (
+                <form
+                  method="POST"
+                  action="/api/shop/checkout"
+                  class="buy-form"
+                >
+                  <input type="hidden" name="slug" value={product.handle} />
+                  {/* Honeypot — hidden from humans, bots fill it in */}
+                  <div class="hp-field" aria-hidden="true">
+                    <label>
+                      Leave this field empty
+                      <input
+                        type="text"
+                        name="website"
+                        tabindex="-1"
+                        autocomplete="off"
+                      />
+                    </label>
+                  </div>
+
+                  <div class="buy-form__fields">
+                    <label class="buy-form__label">
+                      Your name
+                      <input
+                        type="text"
+                        name="name"
+                        maxlength="100"
+                        autocomplete="name"
+                        class="buy-form__input"
+                      />
+                    </label>
+                    <label class="buy-form__label">
+                      Email for your receipt
+                      <input
+                        type="email"
+                        name="email"
+                        maxlength="200"
+                        required
+                        autocomplete="email"
+                        class="buy-form__input"
+                      />
+                    </label>
+                  </div>
+
+                  <button type="submit" class="buy-button">
+                    Buy now — pay with PayNow or card
+                  </button>
+                  <p class="buy-form__note">
+                    Secure payment via HitPay. You will be redirected to
+                    complete the payment.
+                  </p>
+                </form>
+              ) : (
+                <div class="sold-out">
+                  <span class="sold-out__badge">Sold out</span>
+                  <p>
+                    This item is currently unavailable.{' '}
+                    <a href="/contacts/">Contact us</a> to ask about the next
+                    batch.
+                  </p>
+                </div>
+              )
+            }
+          </div>
+        </div>
+
+        <div class="back-section">
+          <a href="/shop/" class="back-link">&larr; Back to all products</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  .product-page {
+    min-height: 100vh;
+    background: var(--color-gray-50);
+  }
+
+  .product-section {
+    padding: var(--space-10) 0 var(--space-16);
+
+    @media (max-width: 768px) {
+      padding: var(--space-6) 0 var(--space-12);
+    }
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+
+    @media (max-width: 768px) {
+      padding: 0 var(--space-4);
+    }
+  }
+
+  .breadcrumb {
+    margin-bottom: var(--space-8);
+
+    ol {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: var(--font-size-sm);
+      color: var(--color-gray-600);
+      flex-wrap: wrap;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+
+      &:not(:last-child)::after {
+        content: '/';
+        color: var(--color-gray-400);
+      }
+    }
+
+    a {
+      color: var(--color-gray-600);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+
+      &:hover {
+        color: var(--color-primary);
+        text-decoration: underline;
+      }
+    }
+
+    [aria-current='page'] {
+      color: var(--color-gray-900);
+      font-weight: var(--font-weight-medium);
+    }
+  }
+
+  .checkout-alert {
+    background: var(--color-error-light, #fdecea);
+    color: var(--color-error, #b3261e);
+    border-radius: var(--radius-md);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-6);
+    font-size: var(--font-size-base);
+  }
+
+  .product-layout {
+    display: grid;
+    gap: var(--space-10);
+    grid-template-columns: 1fr;
+
+    @media (min-width: 900px) {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: start;
+    }
+  }
+
+  .product-main-image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    background: var(--color-gray-100);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .product-image-placeholder {
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-400);
+    background: var(--color-gray-100);
+    border-radius: var(--radius-lg);
+  }
+
+  .product-thumbs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--space-3);
+    list-style: none;
+    padding: 0;
+    margin: var(--space-4) 0 0;
+
+    img {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      border-radius: var(--radius-md);
+      background: var(--color-gray-100);
+    }
+  }
+
+  .product-category {
+    display: inline-block;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--space-2);
+  }
+
+  .product-title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+    line-height: var(--line-height-tight);
+    margin: 0 0 var(--space-3);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-4xl);
+    }
+  }
+
+  .product-price {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+    margin: 0 0 var(--space-5);
+  }
+
+  .product-description {
+    font-size: var(--font-size-base);
+    color: var(--color-gray-700);
+    line-height: var(--line-height-relaxed);
+    margin: 0 0 var(--space-8);
+    white-space: pre-line;
+  }
+
+  .buy-form__fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+
+  .buy-form__label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-gray-700);
+  }
+
+  .buy-form__input {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    background: var(--color-white);
+    transition: border-color var(--transition-fast);
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-primary-light);
+    }
+  }
+
+  // Honeypot: visually removed but still submittable by naive bots
+  .hp-field {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .buy-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-primary);
+    color: var(--color-white);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      transform var(--transition-fast);
+
+    &:hover {
+      background: var(--color-primary-dark, var(--color-primary));
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+
+  .buy-form__note {
+    margin-top: var(--space-3);
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-500);
+  }
+
+  .sold-out {
+    padding: var(--space-5);
+    background: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+
+    p {
+      margin: var(--space-3) 0 0;
+      color: var(--color-gray-700);
+      font-size: var(--font-size-base);
+    }
+
+    a {
+      color: var(--color-primary);
+    }
+  }
+
+  .sold-out__badge {
+    display: inline-block;
+    background: var(--color-gray-800);
+    color: var(--color-white);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .back-section {
+    margin-top: var(--space-12);
+    text-align: center;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+
+    &:hover {
+      color: var(--color-primary-dark, var(--color-gray-800));
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+  }
+</style>

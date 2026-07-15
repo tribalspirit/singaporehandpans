@@ -1,0 +1,196 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { isShopEnabled } from '../../lib/shopClient';
+
+// Payment-status page — always rendered live, never edge-cached, so each
+// buyer sees their own redirect state.
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+if (!isShopEnabled()) {
+  return Astro.redirect('/404');
+}
+
+const reference = Astro.url.searchParams.get('reference') ?? '';
+const status = Astro.url.searchParams.get('status') ?? '';
+const isCompleted = status === 'completed';
+---
+
+<BaseLayout
+  title={isCompleted ? 'Thank you for your order' : 'Payment status'}
+  description="Order confirmation for your Singapore Handpan Studio purchase."
+  noindex
+>
+  <main class="thank-you-page">
+    <section class="status-section">
+      <div class="container">
+        {
+          isCompleted ? (
+            <div class="status-card">
+              <div class="status-icon status-icon--success" aria-hidden="true">
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              </div>
+              <h1 class="status-title">Thank you for your order!</h1>
+              <p class="status-text">
+                Your payment was received. A receipt is on its way to your
+                email, and we will contact you shortly to arrange delivery or
+                pickup at the studio.
+              </p>
+              {reference && (
+                <p class="status-reference">
+                  Order reference: <strong>{reference}</strong>
+                </p>
+              )}
+            </div>
+          ) : (
+            <div class="status-card">
+              <div class="status-icon status-icon--pending" aria-hidden="true">
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <h1 class="status-title">Payment not completed</h1>
+              <p class="status-text">
+                Your payment was not completed. No money has been taken. You can
+                return to the shop and try again, or{' '}
+                <a href="/contacts/">contact us</a> if something went wrong.
+              </p>
+              {reference && (
+                <p class="status-reference">
+                  Reference: <strong>{reference}</strong>
+                </p>
+              )}
+            </div>
+          )
+        }
+
+        <div class="actions">
+          <a href="/shop/" class="action-link">&larr; Back to the shop</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  .thank-you-page {
+    min-height: 70vh;
+    background: var(--color-gray-50);
+    display: flex;
+    align-items: center;
+  }
+
+  .status-section {
+    width: 100%;
+    padding: var(--space-16) 0;
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+
+    @media (max-width: 768px) {
+      padding: 0 var(--space-4);
+    }
+  }
+
+  .status-card {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-10) var(--space-8);
+    text-align: center;
+  }
+
+  .status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    margin-bottom: var(--space-5);
+
+    &--success {
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+    }
+
+    &--pending {
+      background: var(--color-gray-100);
+      color: var(--color-gray-600);
+    }
+  }
+
+  .status-title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+    margin: 0 0 var(--space-4);
+  }
+
+  .status-text {
+    font-size: var(--font-size-base);
+    color: var(--color-gray-700);
+    line-height: var(--line-height-relaxed);
+    margin: 0 0 var(--space-4);
+
+    a {
+      color: var(--color-primary);
+    }
+  }
+
+  .status-reference {
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-500);
+    margin: 0;
+  }
+
+  .actions {
+    margin-top: var(--space-8);
+    text-align: center;
+  }
+
+  .action-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-primary);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+  }
+</style>

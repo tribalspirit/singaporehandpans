@@ -1,12 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ShopProductList from '../../components/ShopProductList';
-import {
-  fetchCollectionByHandle,
-  isShopEnabled,
-} from '../../lib/shopifyClient';
+import { fetchCollectionByHandle, isShopEnabled } from '../../lib/shopClient';
 import { setEdgeCache } from '../../lib/edgeCache';
-import type { ShopProduct, ShopCollection } from '../../lib/shopifyClient';
+import type { ShopProduct, ShopCollection } from '../../lib/shopClient';
 
 export const prerender = false;
 setEdgeCache(Astro.response, 'medium');
@@ -17,11 +14,14 @@ if (!isShopEnabled()) {
 
 const { collection: collectionSlug } = Astro.params;
 
+const storyblokToken =
+  Astro.locals.runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+
 let collection: ShopCollection | null = null;
 let products: ShopProduct[] = [];
 
 try {
-  const result = await fetchCollectionByHandle(collectionSlug!);
+  const result = await fetchCollectionByHandle(storyblokToken, collectionSlug!);
   collection = result.collection;
   products = result.products;
 } catch (err) {
@@ -76,7 +76,7 @@ const productListSchema = {
       name: product.title,
       ...(product.description && { description: product.description }),
       ...(product.image && { image: product.image.url }),
-      url: product.shopUrl,
+      url: `${siteBase}${product.shopUrl}`,
       brand: { '@type': 'Brand', name: collection.title },
       offers: {
         '@type': 'Offer',
@@ -85,7 +85,7 @@ const productListSchema = {
         availability: product.availableForSale
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
-        url: product.shopUrl,
+        url: `${siteBase}${product.shopUrl}`,
       },
     },
   })),

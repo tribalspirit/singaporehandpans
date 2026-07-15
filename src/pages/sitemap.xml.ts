@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getStoryblokClient } from '../lib/storyblok';
-import { fetchAllCollections, isShopEnabled } from '../lib/shopifyClient';
+import { fetchAllCollections, isShopEnabled } from '../lib/shopClient';
 
 const SITE = 'https://singaporehandpans.com';
 
@@ -29,7 +29,7 @@ function urlEntry(loc: string, changefreq: string, priority: number): string {
 }
 
 export const GET: APIRoute = async ({ locals }) => {
-  const runtime = (locals as any).runtime;
+  const runtime = locals.runtime;
   const token =
     runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
@@ -87,12 +87,15 @@ export const GET: APIRoute = async ({ locals }) => {
     console.error('[sitemap] Failed to fetch gallery albums:', err);
   }
 
-  // Dynamic shop collection pages from Shopify
+  // Dynamic shop collection + product pages from Storyblok
   if (isShopEnabled()) {
     try {
-      const { collections } = await fetchAllCollections();
+      const { collections, allProducts } = await fetchAllCollections(token);
       for (const col of collections) {
         entries.push(urlEntry(`${SITE}/shop/${col.handle}/`, 'weekly', 0.7));
+      }
+      for (const product of allProducts) {
+        entries.push(urlEntry(`${SITE}${product.shopUrl}`, 'weekly', 0.6));
       }
     } catch (err) {
       console.error('[sitemap] Failed to fetch shop collections:', err);

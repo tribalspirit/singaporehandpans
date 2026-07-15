@@ -1,6 +1,6 @@
 ---
-import { fetchAllCollections, isShopEnabled } from '../../lib/shopifyClient';
-import type { ShopCollection } from '../../lib/shopifyClient';
+import { fetchAllCollections, isShopEnabled } from '../../lib/shopClient';
+import type { ShopCollection } from '../../lib/shopClient';
 
 function getShortDescription(description: string): string {
   if (!description) return '';
@@ -16,7 +16,10 @@ let partners: ShopCollection[] = [];
 
 if (shopEnabled) {
   try {
-    const { collections } = await fetchAllCollections();
+    const storyblokToken =
+      Astro.locals.runtime?.env?.STORYBLOK_TOKEN ??
+      import.meta.env.STORYBLOK_TOKEN;
+    const { collections } = await fetchAllCollections(storyblokToken);
     partners = collections.filter((c) => c.image && c.productCount > 0);
   } catch {
     // Fail silently — section will be hidden

@@ -1,4 +1,4 @@
-import type { ShopProduct } from '../lib/shopifyClient';
+import type { ShopProduct } from '../lib/shopClient';
 import styles from './ProductCard.module.scss';
 
 interface ProductCardProps {
@@ -81,13 +81,11 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           <a
             href={shopUrl}
-            target="_blank"
-            rel="noopener noreferrer"
             className={`${styles.buyButton} ${!availableForSale ? styles.disabled : ''}`}
             aria-label={
               availableForSale
-                ? `Buy ${title} - opens Shopify store in new tab`
-                : `${title} is sold out`
+                ? `Buy ${title}`
+                : `${title} is sold out — view details`
             }
           >
             {availableForSale ? 'Buy' : 'View'}
