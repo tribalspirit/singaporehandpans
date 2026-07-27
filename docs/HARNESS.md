@@ -6,6 +6,10 @@ The Claude Code harness for SG Handpan Studio: a spec-driven flow, a Definition-
 
 **`/go <task>`** ([.claude/commands/go.md](../.claude/commands/go.md)) is the entry point. It classifies the task (feature / bug / small change / review / question), routes it through the matching flow, dispatches skills and agents (in parallel where independent), and verifies against the Definition of Done. You can also invoke any step directly.
 
+## Branching policy (mandatory)
+
+Every new requirement is implemented on its own feature branch created **off `dev`**, and `main`+`dev` are synced before work starts. [sync-branches.sh](../.specify/scripts/bash/sync-branches.sh) fetches origin, fast-forwards `main` and `dev`, and rebases `dev` onto `main` (aborting on a dirty tree or conflict). `/specify` (via `create-new-feature.sh`) runs this automatically, then branches off the synced `dev`. Never work directly on `main`/`dev`. Full rule: [rules/common/git-workflow.md](../.claude/rules/common/git-workflow.md).
+
 ## Spec-Driven Development flow
 
 For any substantial feature. Each step is a slash command that drives the templates in [.specify/templates/](../.specify/templates/) and the bash scripts in [.specify/scripts/bash/](../.specify/scripts/bash/).

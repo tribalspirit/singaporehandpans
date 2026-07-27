@@ -10,13 +10,13 @@ You are running **step 1 of the Spec-Driven Development flow**: `specify → pla
 
 1. **Check the constitution first.** Read `.specify/memory/constitution.md` (or invoke the `constitution` skill). The spec must respect its scope, non-goals, and principles. If the request conflicts with a non-goal (custom backend, user accounts, payments), flag it before proceeding.
 
-2. **Scaffold the feature.** Run from the repo root:
+2. **Scaffold the feature (branches off `dev`, syncs first — MANDATORY).** Commit or stash any working-tree changes first (the sync aborts on a dirty tree). Then run from the repo root:
 
    ```bash
    bash .specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS"
    ```
 
-   Parse the JSON for `BRANCH_NAME` and `SPEC_FILE`. All later steps in this session operate on this feature; if you are not on the created git branch, `export SPECIFY_FEATURE=<BRANCH_NAME>` so the other scripts target it.
+   This enforces the branching policy in `rules/common/git-workflow.md`: it fetches origin, fast-forwards `main` and `dev`, rebases `dev` onto `main`, and creates the new feature branch **off the synced `dev`**. If the sync fails (dirty tree, divergence, or rebase conflict), stop and resolve it — do not proceed with `--no-sync` unless you understand why. Parse the JSON for `BRANCH_NAME` and `SPEC_FILE`. All later steps operate on this feature; if you are not on the created branch, `export SPECIFY_FEATURE=<BRANCH_NAME>` so the other scripts target it.
 
 3. **Fill in the spec.** Edit `SPEC_FILE` (seeded from `.specify/templates/spec-template.md`). Replace every placeholder:
    - **User Scenarios** — prioritized user stories (P1/P2/P3), each independently testable, each an MVP slice. Given/When/Then acceptance scenarios.

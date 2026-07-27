@@ -26,6 +26,10 @@ You are the orchestrator. Don't just start editing — **classify → route → 
 
 ---
 
+## Step 0 — Branch discipline (MANDATORY for any code change)
+
+Every new requirement/feature is implemented on its own feature branch **off `dev`**, and `main`+`dev` must be synced first. Commit/stash the working tree, then let `/specify` (or `create-new-feature.sh`) run the sync + branch — it fetches origin, fast-forwards `main` and `dev`, rebases `dev` onto `main`, and branches off the synced `dev`. For a bug fix or small change that skips `/specify`, run `bash .specify/scripts/bash/sync-branches.sh` and branch off `dev` yourself. Never work directly on `main` or `dev`. See `rules/common/git-workflow.md`.
+
 ## Step 1 — Classify the task
 
 Pick the flow. When unsure, ask one clarifying question rather than guessing.

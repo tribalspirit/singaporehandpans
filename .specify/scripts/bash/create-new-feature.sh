@@ -11,13 +11,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 JSON=false
 SHORT_NAME=""
+BASE_BRANCH="dev"     # Every feature branches off dev (mandatory branching policy).
+SYNC=true             # Sync main+dev and rebase dev onto main before branching.
 ARGS=()
 while [ $# -gt 0 ]; do
     case "$1" in
         --json) JSON=true; shift ;;
         --short-name) SHORT_NAME="$2"; shift 2 ;;
+        --base) BASE_BRANCH="$2"; shift 2 ;;
+        --no-sync) SYNC=false; shift ;;
         -h|--help)
-            echo "Usage: create-new-feature.sh [--json] [--short-name <name>] <feature description>"
+            echo "Usage: create-new-feature.sh [--json] [--short-name <name>] [--base <branch>] [--no-sync] <feature description>"
+            echo "  Branches off '$BASE_BRANCH' by default and syncs main+dev first (mandatory policy)."
             exit 0 ;;
         *) ARGS+=("$1"); shift ;;
     esac
@@ -100,6 +105,19 @@ if [ ${#BRANCH_NAME} -gt 244 ]; then
 fi
 
 if has_git; then
+    # MANDATORY: sync main+dev and rebase dev onto main so the feature starts from a current base.
+    if [ "$SYNC" = true ]; then
+        if ! bash "$SCRIPT_DIR/sync-branches.sh"; then
+            echo "[specify] Branch sync failed — resolve it (or re-run with --no-sync) before creating a feature branch." >&2
+            exit 1
+        fi
+    fi
+    # Branch off the base (dev by default).
+    if git show-ref --verify --quiet "refs/heads/$BASE_BRANCH"; then
+        git checkout "$BASE_BRANCH" >/dev/null 2>&1
+    else
+        echo "[specify] Warning: base branch '$BASE_BRANCH' not found; branching off current HEAD." >&2
+    fi
     git checkout -b "$BRANCH_NAME" >/dev/null 2>&1 || \
         echo "[specify] Warning: failed to create git branch: $BRANCH_NAME" >&2
 else
