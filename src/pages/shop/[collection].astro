@@ -1,9 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ShopProductList from '../../components/ShopProductList';
-import { fetchCollectionByHandle, isShopEnabled } from '../../lib/shopClient';
+import { fetchCollectionByHandle, isShopEnabled } from '../../lib/shop';
 import { setEdgeCache } from '../../lib/edgeCache';
-import type { ShopProduct, ShopCollection } from '../../lib/shopClient';
+import type { ShopProduct, ShopCollection } from '../../lib/shop';
 
 export const prerender = false;
 setEdgeCache(Astro.response, 'medium');
@@ -21,7 +21,7 @@ let collection: ShopCollection | null = null;
 let products: ShopProduct[] = [];
 
 try {
-  const result = await fetchCollectionByHandle(storyblokToken, collectionSlug!);
+  const result = await fetchCollectionByHandle(collectionSlug!, storyblokToken);
   collection = result.collection;
   products = result.products;
 } catch (err) {

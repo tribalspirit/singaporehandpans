@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { verifyWebhookSignature } from '../../../lib/hitpay';
-import { isShopEnabled } from '../../../lib/shopClient';
+import { isShopEnabled, isHitpayShop } from '../../../lib/shop';
 import {
   getOrderEmailConfig,
   sendOwnerNotification,
@@ -17,8 +17,8 @@ export const prerender = false;
  * pointless retries of an already-confirmed payment).
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  // Keep the whole shop surface inert in production when the flag is off.
-  if (!isShopEnabled()) {
+  // HitPay checkout only; inert under Shopify or when the shop is disabled.
+  if (!isShopEnabled() || !isHitpayShop()) {
     return new Response('Not found', { status: 404 });
   }
 

@@ -1,6 +1,6 @@
 ---
-import { fetchAllProducts, isShopEnabled } from '../../lib/shopClient';
-import type { ShopProduct } from '../../lib/shopClient';
+import { fetchAllProducts, isShopEnabled } from '../../lib/shop';
+import type { ShopProduct } from '../../lib/shop';
 
 function formatPrice(price: { amount: number; currencyCode: string }): string {
   return new Intl.NumberFormat('en-SG', {
