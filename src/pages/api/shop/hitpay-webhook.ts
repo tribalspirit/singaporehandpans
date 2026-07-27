@@ -16,7 +16,7 @@ export const prerender = false;
  * pointless retries of an already-confirmed payment).
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  const env = locals.runtime?.env ?? {};
+  const env = (locals.runtime?.env ?? {}) as Record<string, string | undefined>;
   const salt = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
 
   if (!salt) {

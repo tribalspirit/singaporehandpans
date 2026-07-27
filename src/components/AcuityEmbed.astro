@@ -107,33 +107,31 @@ const embedId = `acuity-embed-${Math.random().toString(36).substr(2, 9)}`;
   )
 }
 
-<script define:vars={{ embedId }}>
-  // Hide loading spinner once iframe loads
-  const wrapper = document.getElementById(embedId);
-  if (wrapper) {
+<script>
+  // Hide the loading spinner once each embed's iframe loads. Iterates every
+  // wrapper so multiple embeds on one page are handled independently, without
+  // needing a per-instance injected id.
+  document.querySelectorAll('.acuity-embed-wrapper').forEach((wrapper) => {
     const iframe = wrapper.querySelector('.acuity-iframe');
     const loading = wrapper.querySelector('.acuity-loading');
+    if (!iframe || !(loading instanceof HTMLElement)) return;
 
-    if (iframe && loading) {
-      iframe.addEventListener('load', () => {
-        loading.style.display = 'none';
-      });
+    iframe.addEventListener('load', () => {
+      loading.style.display = 'none';
+    });
 
-      // Timeout fallback after 10 seconds
-      setTimeout(() => {
-        if (loading.style.display !== 'none') {
-          loading.innerHTML =
-            '<p>Unable to load booking calendar. Please use the link below.</p>';
-          const fallback = wrapper
-            .closest('.acuity-embed-wrapper')
-            ?.querySelector('.acuity-fallback');
-          if (fallback) {
-            fallback.style.display = 'block';
-          }
+    // Timeout fallback after 10 seconds
+    setTimeout(() => {
+      if (loading.style.display !== 'none') {
+        loading.innerHTML =
+          '<p>Unable to load booking calendar. Please use the link below.</p>';
+        const fallback = wrapper.querySelector('.acuity-fallback');
+        if (fallback instanceof HTMLElement) {
+          fallback.style.display = 'block';
         }
-      }, 10000);
-    }
-  }
+      }
+    }, 10000);
+  });
 </script>
 
 <script

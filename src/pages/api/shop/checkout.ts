@@ -62,7 +62,7 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
     return redirect(productRedirect(slug, 'error'), 303);
   }
 
-  const env = locals.runtime?.env ?? {};
+  const env = (locals.runtime?.env ?? {}) as Record<string, string | undefined>;
   const storyblokToken = env.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
 
   // Price and availability always come from published CMS content —

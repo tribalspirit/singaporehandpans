@@ -22,7 +22,9 @@
       "@/utils/*": ["src/utils/*"]
     }
   },
-  // Never type-check build output or deps — with checkJs enabled, `astro check`
-  // would otherwise scan minified dist/ bundles and crash the typecheck gate.
-  "exclude": ["dist", "node_modules", ".astro"]
+  // Never type-check build output, deps, or standalone Node ops scripts.
+  // With checkJs enabled, `astro check` would otherwise scan minified dist/
+  // bundles (crashing the gate) and the untyped scripts/ CLIs (Storyblok
+  // setup/migration tooling that never ships in the app bundle).
+  "exclude": ["dist", "node_modules", ".astro", "scripts"]
 }
