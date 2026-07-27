@@ -118,8 +118,11 @@ if has_git; then
     else
         echo "[specify] Warning: base branch '$BASE_BRANCH' not found; branching off current HEAD." >&2
     fi
-    git checkout -b "$BRANCH_NAME" >/dev/null 2>&1 || \
-        echo "[specify] Warning: failed to create git branch: $BRANCH_NAME" >&2
+    if ! git checkout -b "$BRANCH_NAME" >/dev/null 2>&1; then
+        echo "[specify] ERROR: failed to create git branch '$BRANCH_NAME' (still on $BASE_BRANCH)." >&2
+        echo "[specify] Refusing to seed a spec on the base branch — resolve the branch conflict and retry." >&2
+        exit 1
+    fi
 else
     echo "[specify] Warning: Git repository not detected; skipped branch creation for $BRANCH_NAME" >&2
 fi

@@ -46,22 +46,33 @@ fi
 
 START_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
+# update_from_origin <branch> <mode>
+#   mode=ff     fast-forward only; abort on divergence (for main — must never diverge).
+#   mode=reset  hard-reset local branch to origin (for dev — origin is canonical, and a
+#               prior sync rebased local dev onto main so it no longer fast-forwards from
+#               origin/dev; reconcile by taking the remote state before re-rebasing).
 update_from_origin() {
-    local br="$1"
+    local br="$1" mode="${2:-ff}"
     git show-ref --verify --quiet "refs/heads/$br" || {
         echo "[sync] Local branch '$br' not found — skipping." >&2; return 0; }
     git checkout "$br" >/dev/null 2>&1 || { echo "ERROR: cannot checkout $br." >&2; return 1; }
     if [ "$HAS_ORIGIN" = true ] && git show-ref --verify --quiet "refs/remotes/origin/$br"; then
-        echo "[sync] Updating $br from origin/$br (fast-forward only)..."
-        git pull --ff-only origin "$br" || {
-            echo "ERROR: $br has diverged from origin/$br and cannot fast-forward. Resolve manually." >&2
-            return 1; }
+        if [ "$mode" = reset ]; then
+            echo "[sync] Resetting $br to origin/$br (canonical remote state)..."
+            git reset --hard "origin/$br" || {
+                echo "ERROR: cannot reset $br to origin/$br." >&2; return 1; }
+        else
+            echo "[sync] Updating $br from origin/$br (fast-forward only)..."
+            git pull --ff-only origin "$br" || {
+                echo "ERROR: $br has diverged from origin/$br and cannot fast-forward. Resolve manually." >&2
+                return 1; }
+        fi
     fi
     return 0
 }
 
-update_from_origin "$MAIN_BRANCH" || exit 1
-update_from_origin "$DEV_BRANCH"  || exit 1
+update_from_origin "$MAIN_BRANCH" ff    || exit 1
+update_from_origin "$DEV_BRANCH"  reset || exit 1
 
 # Rebase dev onto main so dev contains everything in main.
 git checkout "$DEV_BRANCH" >/dev/null 2>&1 || { echo "ERROR: cannot checkout $DEV_BRANCH." >&2; exit 1; }

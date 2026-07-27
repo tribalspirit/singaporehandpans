@@ -32,7 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const payload: AcuityWebhookPayload = await request.json();
-    const { action, appointmentTypeID, classID } = payload;
+    const { appointmentTypeID, classID } = payload;
 
     if (!classID) {
       // Not a class-based appointment, nothing to sync
@@ -41,10 +41,6 @@ export const POST: APIRoute = async ({ request }) => {
         headers: { 'Content-Type': 'application/json' },
       });
     }
-
-    console.log(
-      `Acuity webhook: ${action} for class ${classID} (type ${appointmentTypeID})`
-    );
 
     // Find the matching Storyblok event
     const story = await findEventByAcuityId(String(classID));
@@ -72,10 +68,6 @@ export const POST: APIRoute = async ({ request }) => {
       availability_status: availabilityStatus,
       spots_remaining: slotsAvailable,
     });
-
-    console.log(
-      `Updated event "${story.name}": ${availabilityStatus} (${slotsAvailable} spots)`
-    );
 
     return new Response(
       JSON.stringify({
