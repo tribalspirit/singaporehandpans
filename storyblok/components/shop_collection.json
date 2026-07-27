@@ -1,0 +1,34 @@
+{
+  "name": "shop_collection",
+  "display_name": "Shop Collection",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "required": true,
+      "description": "Collection title (e.g. MAG, Battiloro)"
+    },
+    "description": {
+      "type": "textarea",
+      "pos": 1,
+      "required": false,
+      "description": "Collection description shown on the collection page"
+    },
+    "image": {
+      "type": "asset",
+      "pos": 2,
+      "required": false,
+      "filetypes": ["images"],
+      "description": "Collection card image (brand logo or hero photo)"
+    }
+  },
+  "image": null,
+  "preview_field": "title",
+  "is_root": true,
+  "preview_tmpl": null,
+  "is_nestable": false,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "shop_collection",
+  "component_group_uuid": null
+}

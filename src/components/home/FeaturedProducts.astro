@@ -1,6 +1,6 @@
 ---
-import { fetchAllProducts, isShopEnabled } from '../../lib/shopifyClient';
-import type { ShopProduct } from '../../lib/shopifyClient';
+import { fetchAllProducts, isShopEnabled } from '../../lib/shopClient';
+import type { ShopProduct } from '../../lib/shopClient';
 
 function formatPrice(price: { amount: number; currencyCode: string }): string {
   return new Intl.NumberFormat('en-SG', {
@@ -11,17 +11,24 @@ function formatPrice(price: { amount: number; currencyCode: string }): string {
   }).format(price.amount);
 }
 
+function shuffle(products: ShopProduct[]): ShopProduct[] {
+  const shuffled = [...products];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 function selectFeaturedProducts(
   products: ShopProduct[],
   count = 3
 ): ShopProduct[] {
   const available = products.filter((p) => p.availableForSale);
-  // Shuffle so each page load shows a varied selection
-  for (let i = available.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [available[i], available[j]] = [available[j], available[i]];
-  }
-  return available.slice(0, count);
+  // Editor-flagged featured products first, then a varied random fill
+  const featured = shuffle(available.filter((p) => p.featured));
+  const rest = shuffle(available.filter((p) => !p.featured));
+  return [...featured, ...rest].slice(0, count);
 }
 
 const shopEnabled = isShopEnabled();
@@ -29,7 +36,10 @@ let featuredProducts: ShopProduct[] = [];
 
 if (shopEnabled) {
   try {
-    const allProducts = await fetchAllProducts();
+    const storyblokToken =
+      Astro.locals.runtime?.env?.STORYBLOK_TOKEN ??
+      import.meta.env.STORYBLOK_TOKEN;
+    const allProducts = await fetchAllProducts(storyblokToken);
     featuredProducts = selectFeaturedProducts(allProducts);
   } catch {
     // Fail silently — section will be hidden
@@ -96,9 +106,7 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
                 <a
                   href={product.shopUrl}
                   class="featured-product-card__link"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${product.title} — ${formatPrice(product.priceMin)} — opens in Shopify store`}
+                  aria-label={`${product.title} — ${formatPrice(product.priceMin)}`}
                 >
                   <div class="featured-product-card__image-wrapper">
                     {product.image ? (
