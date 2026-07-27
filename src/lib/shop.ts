@@ -37,6 +37,16 @@ export function isHitpayShop(): boolean {
   return SHOP_IMPL === 'hitpay';
 }
 
+/**
+ * Resolve a product's `shopUrl` to an absolute URL for canonical/structured
+ * data. HitPay product URLs are relative (prefix with the site origin); Shopify
+ * URLs are already absolute external links and must be used verbatim — prefixing
+ * them would produce `https://site.comhttps://store...`.
+ */
+export function toAbsoluteShopUrl(shopUrl: string, siteBase: string): string {
+  return /^https?:\/\//i.test(shopUrl) ? shopUrl : `${siteBase}${shopUrl}`;
+}
+
 type AllCollectionsResult = {
   collections: ShopCollection[];
   allProducts: ShopProduct[];

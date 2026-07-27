@@ -1,7 +1,11 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ShopProductList from '../../components/ShopProductList';
-import { fetchCollectionByHandle, isShopEnabled } from '../../lib/shop';
+import {
+  fetchCollectionByHandle,
+  isShopEnabled,
+  toAbsoluteShopUrl,
+} from '../../lib/shop';
 import { setEdgeCache } from '../../lib/edgeCache';
 import type { ShopProduct, ShopCollection } from '../../lib/shop';
 
@@ -76,7 +80,7 @@ const productListSchema = {
       name: product.title,
       ...(product.description && { description: product.description }),
       ...(product.image && { image: product.image.url }),
-      url: `${siteBase}${product.shopUrl}`,
+      url: toAbsoluteShopUrl(product.shopUrl, siteBase),
       brand: { '@type': 'Brand', name: collection.title },
       offers: {
         '@type': 'Offer',
@@ -85,7 +89,7 @@ const productListSchema = {
         availability: product.availableForSale
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
-        url: `${siteBase}${product.shopUrl}`,
+        url: toAbsoluteShopUrl(product.shopUrl, siteBase),
       },
     },
   })),
