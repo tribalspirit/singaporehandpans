@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { verifyWebhookSignature } from '../../../lib/hitpay';
+import { isShopEnabled } from '../../../lib/shopClient';
 import {
   getOrderEmailConfig,
   sendOwnerNotification,
@@ -16,6 +17,11 @@ export const prerender = false;
  * pointless retries of an already-confirmed payment).
  */
 export const POST: APIRoute = async ({ request, locals }) => {
+  // Keep the whole shop surface inert in production when the flag is off.
+  if (!isShopEnabled()) {
+    return new Response('Not found', { status: 404 });
+  }
+
   const env = (locals.runtime?.env ?? {}) as Record<string, string | undefined>;
   const salt = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
 
