@@ -11,32 +11,9 @@ import { getStoryblokClient } from './storyblok';
  * field must match a collection story slug.
  */
 
-export type ShopProduct = {
-  id: string;
-  title: string;
-  handle: string;
-  productType: string;
-  description: string;
-  availableForSale: boolean;
-  priceMin: { amount: number; currencyCode: string };
-  priceMax?: { amount: number; currencyCode: string };
-  image?: { url: string; altText?: string };
-  images?: { url: string; altText?: string }[];
-  tags: string[];
-  brand: string;
-  featured: boolean;
-  seoDescription?: string;
-  shopUrl: string;
-};
+import type { ShopProduct, ShopCollection } from './shopTypes';
 
-export type ShopCollection = {
-  id: string;
-  title: string;
-  handle: string;
-  description: string;
-  image?: { url: string; altText?: string };
-  productCount: number;
-};
+export type { ShopProduct, ShopCollection } from './shopTypes';
 
 type StoryblokAsset = {
   filename: string;

@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { verifyWebhookSignature } from '../../../lib/hitpay';
-import { isShopEnabled } from '../../../lib/shopClient';
 import {
   getOrderEmailConfig,
   sendOwnerNotification,
@@ -17,11 +16,12 @@ export const prerender = false;
  * pointless retries of an already-confirmed payment).
  */
 export const POST: APIRoute = async ({ request, locals }) => {
-  // Keep the whole shop surface inert in production when the flag is off.
-  if (!isShopEnabled()) {
-    return new Response('Not found', { status: 404 });
-  }
-
+  // Deliberately NOT gated on the shop feature flags: the HMAC signature (below)
+  // is the real authorization, and this endpoint must keep confirming in-flight
+  // HitPay payments even if a deploy has since flipped PUBLIC_SHOP_IMPL away from
+  // 'hitpay' or disabled the shop — otherwise a paid order loses its owner
+  // notification. New checkouts are stopped at the checkout endpoint instead.
+  // Naturally inert without HITPAY_SALT configured (returns 500 below).
   const env = (locals.runtime?.env ?? {}) as Record<string, string | undefined>;
   const salt = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
 
