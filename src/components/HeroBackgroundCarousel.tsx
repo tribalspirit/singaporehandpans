@@ -37,7 +37,7 @@ export default function HeroBackgroundCarousel({
 
   const autoplayPlugin = useMemo(() => {
     if (prefersReducedMotion) return null;
-    return new Autoplay({
+    return Autoplay({
       delay: AUTOPLAY_DELAY,
       stopOnInteraction: false,
       stopOnMouseEnter: false,
@@ -175,7 +175,11 @@ export default function HeroBackgroundCarousel({
         </button>
       </div>
 
-      <div className={styles.carousel__pagination} role="tablist" aria-label="Carousel pagination">
+      <div
+        className={styles.carousel__pagination}
+        role="tablist"
+        aria-label="Carousel pagination"
+      >
         {HERO_IMAGES.map((_, index) => (
           <button
             key={index}
@@ -193,4 +197,3 @@ export default function HeroBackgroundCarousel({
     </div>
   );
 }
-

@@ -20,6 +20,7 @@
     "storyblok:setup": "node scripts/storyblok-setup.js",
     "storyblok:components": "node scripts/create-components.js",
     "storyblok:content": "node scripts/create-sample-content.js",
+    "storyblok:stories": "node scripts/create-stories-content.js",
     "gallery:migrate": "node scripts/migrate-gallery.js",
     "prepare": "husky || true"
   },
@@ -56,6 +57,7 @@
     "yet-another-react-lightbox": "^3.27.0"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.9",
     "@types/node": "^25.0.3",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",

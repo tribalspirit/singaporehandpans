@@ -1,5 +1,6 @@
 ---
 import { storyblokEditable } from '@storyblok/astro';
+import type { SbBlokData } from '@storyblok/astro';
 import AcuityEmbed from '../AcuityEmbed.astro';
 import type { EventContent } from '../../types/event';
 
@@ -55,7 +56,10 @@ const formatDuration = (hours: number) =>
   hours === 1 ? '1 hour' : `${hours} hours`;
 ---
 
-<article class="storyblok-event" {...storyblokEditable(blok)}>
+<article
+  class="storyblok-event"
+  {...storyblokEditable(blok as unknown as SbBlokData)}
+>
   <header class="event-header">
     <div class="event-meta">
       {

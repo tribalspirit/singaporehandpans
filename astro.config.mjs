@@ -26,6 +26,11 @@ export default defineConfig({
         gallery_album: 'src/components/storyblok/GalleryAlbum',
         gallery_media: 'src/components/storyblok/GalleryMedia',
         page: 'src/components/storyblok/Page',
+        story_article: 'src/components/storyblok/StoryArticle',
+        story_text: 'src/components/storyblok/StoryText',
+        story_image: 'src/components/storyblok/StoryImage',
+        story_gallery: 'src/components/storyblok/StoryGallery',
+        story_youtube: 'src/components/storyblok/StoryYouTube',
       }
     })
   ],

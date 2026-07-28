@@ -50,9 +50,11 @@ else
 fi
 
 # --- Hygiene: no debug statements shipped in src/ ---
+# Excludes test/spec files and dev-references/ (manually-run dev CLI scripts
+# that are never bundled into a shipped route).
 echo "── No debug statements in src/ ──────────"
 debug_hits=$(grep -rniE '\b(console\.(log|debug)|debugger)\b' src 2>/dev/null \
-    | grep -viE '\.(test|spec)\.' || true)
+    | grep -viE '\.(test|spec)\.|/dev-references/' || true)
 if [ -n "$debug_hits" ]; then
     echo "$debug_hits"
     results+=("$FAIL No console.log/debugger in src/")

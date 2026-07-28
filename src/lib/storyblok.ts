@@ -30,7 +30,6 @@ export function getStoryblokClient(token: string) {
       query.set('token', token);
 
       const url = `${STORYBLOK_BASE}/${path}?${query}`;
-      console.log('[storyblok] fetching:', url.replace(token, '***'));
 
       const res = await fetch(url);
 
@@ -46,12 +45,6 @@ export function getStoryblokClient(token: string) {
       }
 
       const data = await res.json();
-      console.log(
-        '[storyblok] success:',
-        path,
-        '- stories:',
-        data?.stories?.length ?? 'n/a'
-      );
       return { data, total: Number(res.headers.get('total') ?? 0) };
     },
   };

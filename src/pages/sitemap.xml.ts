@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { getStoryblokClient } from '../lib/storyblok';
-import { fetchAllCollections, isShopEnabled } from '../lib/shopifyClient';
+import { fetchAllStories } from '../lib/storiesApi';
+import { fetchAllCollections, isShopEnabled } from '../lib/shopClient';
+import type { StoryArticleStory } from '../types/stories';
 
 const SITE = 'https://singaporehandpans.com';
 
@@ -15,7 +17,7 @@ const STATIC_PAGES: { path: string; changefreq: string; priority: number }[] = [
   { path: '/events/', changefreq: 'weekly', priority: 0.9 },
   { path: '/academy/', changefreq: 'monthly', priority: 0.8 },
   { path: '/academy/memorization/', changefreq: 'monthly', priority: 0.7 },
-  { path: '/gallery/', changefreq: 'weekly', priority: 0.8 },
+  { path: '/stories/', changefreq: 'weekly', priority: 0.8 },
   { path: '/shop/', changefreq: 'weekly', priority: 0.9 },
   { path: '/contacts/', changefreq: 'monthly', priority: 0.7 },
 ];
@@ -29,7 +31,7 @@ function urlEntry(loc: string, changefreq: string, priority: number): string {
 }
 
 export const GET: APIRoute = async ({ locals }) => {
-  const runtime = (locals as any).runtime;
+  const runtime = locals.runtime;
   const token =
     runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
@@ -61,38 +63,35 @@ export const GET: APIRoute = async ({ locals }) => {
     console.error('[sitemap] Failed to fetch events:', err);
   }
 
-  // Dynamic gallery album pages from Storyblok
+  // Dynamic story article pages from Storyblok (paginated so >100 don't drop)
   try {
     const storyblokApi = getStoryblokClient(token);
-    const { data } = await storyblokApi.get('cdn/stories', {
-      starts_with: 'gallery/albums/',
-      content_type: 'gallery_album',
+    const stories = await fetchAllStories<StoryArticleStory>(storyblokApi, {
+      starts_with: 'stories/',
+      content_type: 'story_article',
       version: storyblokVersion,
-      per_page: 100,
     });
 
-    const albums = data?.stories || [];
-    for (const album of albums) {
-      // Album slug is the folder name, extract from full_slug
-      // e.g. "gallery/albums/workshop-moments/workshop-moments" → "workshop-moments"
-      const parts = album.full_slug.split('/');
-      const albumSlug = parts[2]; // gallery/albums/{slug}/...
-      if (albumSlug) {
+    for (const story of stories) {
+      if (story.slug) {
         entries.push(
-          urlEntry(`${SITE}/gallery/albums/${albumSlug}/`, 'monthly', 0.5)
+          urlEntry(`${SITE}/stories/${story.slug}/`, 'monthly', 0.6)
         );
       }
     }
   } catch (err) {
-    console.error('[sitemap] Failed to fetch gallery albums:', err);
+    console.error('[sitemap] Failed to fetch stories:', err);
   }
 
-  // Dynamic shop collection pages from Shopify
+  // Dynamic shop collection + product pages from Storyblok
   if (isShopEnabled()) {
     try {
-      const { collections } = await fetchAllCollections();
+      const { collections, allProducts } = await fetchAllCollections(token);
       for (const col of collections) {
         entries.push(urlEntry(`${SITE}/shop/${col.handle}/`, 'weekly', 0.7));
+      }
+      for (const product of allProducts) {
+        entries.push(urlEntry(`${SITE}${product.shopUrl}`, 'weekly', 0.6));
       }
     } catch (err) {
       console.error('[sitemap] Failed to fetch shop collections:', err);

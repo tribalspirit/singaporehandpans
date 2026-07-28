@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { assignOctavesToPitchClasses, sortNotesByPitch, deduplicateNotes } from './utils';
+import {
+  assignOctavesToPitchClasses,
+  sortNotesByPitch,
+  deduplicateNotes,
+} from './utils';
 
 describe('utils', () => {
   describe('assignOctavesToPitchClasses', () => {
@@ -79,5 +83,3 @@ describe('utils', () => {
     });
   });
 });
-
-

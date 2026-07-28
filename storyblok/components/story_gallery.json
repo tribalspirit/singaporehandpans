@@ -1,0 +1,28 @@
+{
+  "name": "story_gallery",
+  "display_name": "Story Gallery",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "required": false,
+      "description": "Optional gallery heading"
+    },
+    "images": {
+      "type": "multiasset",
+      "pos": 1,
+      "required": false,
+      "filetypes": ["images"],
+      "description": "Photos shown as a carousel; click opens fullscreen"
+    }
+  },
+  "image": null,
+  "preview_field": "title",
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "story_gallery",
+  "component_group_uuid": null
+}

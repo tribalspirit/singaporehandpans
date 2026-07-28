@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { parseNote, normalizeToPitchClass, getPitchClassSet, hasPitchClass } from './normalize';
+import {
+  parseNote,
+  normalizeToPitchClass,
+  getPitchClassSet,
+  hasPitchClass,
+} from './normalize';
 
 describe('normalize', () => {
   describe('parseNote', () => {
@@ -84,5 +89,3 @@ describe('normalize', () => {
     });
   });
 });
-
-

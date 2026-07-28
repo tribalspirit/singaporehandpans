@@ -7,13 +7,13 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "baseUrl": ".",
-    
+
     // Enable source maps for debugging
     "sourceMap": true,
     "inlineSources": true,
     "declaration": true,
     "declarationMap": true,
-    
+
     "paths": {
       "@/*": ["src/*"],
       "@/components/*": ["src/components/*"],
@@ -21,5 +21,10 @@
       "@/styles/*": ["src/styles/*"],
       "@/utils/*": ["src/utils/*"]
     }
-  }
+  },
+  // Never type-check build output, deps, or standalone Node ops scripts.
+  // With checkJs enabled, `astro check` would otherwise scan minified dist/
+  // bundles (crashing the gate) and the untyped scripts/ CLIs (Storyblok
+  // setup/migration tooling that never ships in the app bundle).
+  "exclude": ["dist", "node_modules", ".astro", "scripts"]
 }

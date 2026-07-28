@@ -1,9 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ShopProductList from '../../components/ShopProductList';
-import { fetchAllCollections, isShopEnabled } from '../../lib/shopifyClient';
+import { fetchAllCollections, isShopEnabled } from '../../lib/shopClient';
 import { setEdgeCache } from '../../lib/edgeCache';
-import type { ShopProduct, ShopCollection } from '../../lib/shopifyClient';
+import type { ShopProduct, ShopCollection } from '../../lib/shopClient';
 
 export const prerender = false;
 setEdgeCache(Astro.response, 'medium');
@@ -12,13 +12,16 @@ if (!isShopEnabled()) {
   return Astro.redirect('/404');
 }
 
+const storyblokToken =
+  Astro.locals.runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+
 let collections: ShopCollection[] = [];
 let products: ShopProduct[] = [];
 let collectionProductMap: Record<string, string[]> = {};
 let error: Error | null = null;
 
 try {
-  const result = await fetchAllCollections();
+  const result = await fetchAllCollections(storyblokToken);
   collections = result.collections;
   products = result.allProducts;
   collectionProductMap = result.collectionProductMap;

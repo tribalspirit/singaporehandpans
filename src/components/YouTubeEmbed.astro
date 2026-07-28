@@ -1,0 +1,167 @@
+---
+import { youTubeEmbedUrl, youTubeThumbnail } from '../lib/youtube';
+
+export interface Props {
+  /** A validated 11-character YouTube video id. */
+  id: string;
+  title?: string;
+}
+
+const { id, title = 'YouTube video player' } = Astro.props;
+const embedUrl = youTubeEmbedUrl(id);
+const posterUrl = youTubeThumbnail(id);
+---
+
+{
+  /* Click-to-load facade: shows the thumbnail and only injects the iframe on
+    interaction, keeping the video off the critical path for Core Web Vitals.
+    Progressive enhancement — a <noscript> iframe covers no-JS visitors. */
+}
+<div class="yt-embed">
+  <div class="yt-embed__frame">
+    <button
+      type="button"
+      class="yt-embed__facade"
+      data-embed-url={embedUrl}
+      data-title={title}
+      aria-label={`Play video: ${title}`}
+      style={`background-image: url('${posterUrl}')`}
+    >
+      <span class="yt-embed__play" aria-hidden="true">
+        <svg viewBox="0 0 68 48" width="68" height="48">
+          <path
+            class="yt-embed__play-bg"
+            d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z"
+          ></path>
+          <path class="yt-embed__play-arrow" d="M45 24 27 14v20z"></path>
+        </svg>
+      </span>
+    </button>
+    <noscript>
+      <iframe
+        class="yt-embed__iframe"
+        src={embedUrl}
+        title={title}
+        loading="lazy"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen></iframe>
+    </noscript>
+  </div>
+</div>
+
+<script>
+  // Swap the facade for the real iframe on click. Delegated so it works for any
+  // number of embeds on the page without per-instance listeners.
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    const facade = target.closest<HTMLButtonElement>('.yt-embed__facade');
+    if (!facade) return;
+
+    const embedUrl = facade.dataset.embedUrl;
+    if (!embedUrl) return;
+    const title = facade.dataset.title ?? 'YouTube video player';
+
+    const iframe = document.createElement('iframe');
+    iframe.className = 'yt-embed__iframe';
+    iframe.src = `${embedUrl}?autoplay=1`;
+    iframe.title = title;
+    iframe.allow =
+      'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+
+    facade.replaceWith(iframe);
+  });
+</script>
+
+<style lang="scss">
+  .yt-embed {
+    margin: var(--spacing-xl) 0;
+  }
+
+  .yt-embed__frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-lg, 12px);
+    overflow: hidden;
+    background: var(--color-gray-900, #111);
+  }
+
+  .yt-embed__facade {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    cursor: pointer;
+    background-color: var(--color-gray-900, #111);
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.1);
+      transition: background var(--transition-fast, 150ms) ease;
+    }
+
+    &:hover::after,
+    &:focus-visible::after {
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--color-accent, #e8a);
+      outline-offset: -3px;
+    }
+  }
+
+  .yt-embed__play {
+    position: relative;
+    z-index: 1;
+    width: 68px;
+    height: 48px;
+    transition: transform var(--transition-fast, 150ms) ease;
+
+    .yt-embed__facade:hover &,
+    .yt-embed__facade:focus-visible & {
+      transform: scale(1.1);
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .yt-embed__play-bg {
+    fill: #212121;
+    fill-opacity: 0.85;
+  }
+
+  .yt-embed__play-arrow {
+    fill: #fff;
+  }
+
+  .yt-embed__iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .yt-embed__facade::after,
+    .yt-embed__play {
+      transition: none;
+    }
+  }
+</style>

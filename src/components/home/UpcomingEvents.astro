@@ -1,8 +1,9 @@
 ---
 import { getStoryblokClient } from '../../lib/storyblok';
 import HomeEventCard from './HomeEventCard.astro';
+import type { EventStory } from '../../types/event';
 
-let allUpcomingEvents: Record<string, unknown>[] = [];
+let allUpcomingEvents: EventStory[] = [];
 let totalUpcoming = 0;
 
 try {

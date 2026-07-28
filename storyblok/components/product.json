@@ -1,0 +1,86 @@
+{
+  "name": "product",
+  "display_name": "Product",
+  "schema": {
+    "name": {
+      "type": "text",
+      "pos": 0,
+      "required": true,
+      "description": "Product name shown in the shop"
+    },
+    "price_sgd": {
+      "type": "number",
+      "pos": 1,
+      "required": true,
+      "description": "Price in Singapore dollars (e.g. 2400)"
+    },
+    "description": {
+      "type": "textarea",
+      "pos": 2,
+      "required": false,
+      "description": "Product description"
+    },
+    "images": {
+      "type": "multiasset",
+      "pos": 3,
+      "required": false,
+      "filetypes": ["images"],
+      "description": "Product photos — first image is the card/cover image"
+    },
+    "brand": {
+      "type": "option",
+      "pos": 4,
+      "required": true,
+      "options": [
+        { "name": "MAG", "value": "mag" },
+        { "name": "Battiloro", "value": "battiloro" },
+        { "name": "Sirvan", "value": "sirvan" },
+        { "name": "SEW", "value": "sew" }
+      ],
+      "description": "Brand — must match a shop collection slug"
+    },
+    "product_type": {
+      "type": "option",
+      "pos": 5,
+      "required": true,
+      "default_value": "Handpan",
+      "options": [
+        { "name": "Handpan", "value": "Handpan" },
+        { "name": "Case", "value": "Case" },
+        { "name": "Stand", "value": "Stand" },
+        { "name": "Accessory", "value": "Accessory" }
+      ],
+      "description": "Category shown on the product card and used for filtering"
+    },
+    "in_stock": {
+      "type": "boolean",
+      "pos": 6,
+      "required": false,
+      "default_value": true,
+      "description": "Uncheck to show the product as sold out (Buy disabled)"
+    },
+    "featured": {
+      "type": "boolean",
+      "pos": 7,
+      "required": false,
+      "default_value": false,
+      "description": "Feature this product on the homepage rail"
+    },
+    "seo_description": {
+      "type": "textarea",
+      "pos": 8,
+      "required": false,
+      "max_length": 160,
+      "description": "SEO meta description override for the product page"
+    }
+  },
+  "image": null,
+  "preview_field": "name",
+  "is_root": true,
+  "preview_tmpl": null,
+  "is_nestable": false,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "product",
+  "component_group_uuid": null
+}

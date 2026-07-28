@@ -4,6 +4,7 @@ import EventCard from '../components/EventCard.astro';
 import CMSFallback from '../components/CMSFallback.astro';
 import { getStoryblokClient } from '../lib/storyblok';
 import { setEdgeCache } from '../lib/edgeCache';
+import type { EventStory } from '../types/event';
 
 export const prerender = false;
 setEdgeCache(Astro.response, 'short');
@@ -52,7 +53,7 @@ const FALLBACK_EVENTS = [
   },
 ];
 
-let events = [];
+let events: EventStory[] = [];
 let cmsError = false;
 
 const runtime = Astro.locals.runtime;
@@ -71,7 +72,7 @@ try {
   });
 
   if (data?.stories && data.stories.length > 0) {
-    events = data.stories;
+    events = data.stories as EventStory[];
     cmsError = false;
   } else {
     cmsError = true;
@@ -89,14 +90,20 @@ const upcomingEvents = events
     const eventDate = new Date(event.content.date);
     return eventDate >= now;
   })
-  .sort((a, b) => new Date(a.content.date) - new Date(b.content.date));
+  .sort(
+    (a, b) =>
+      new Date(a.content.date).getTime() - new Date(b.content.date).getTime()
+  );
 
 const pastEvents = events
   .filter((event) => {
     const eventDate = new Date(event.content.date);
     return eventDate < now;
   })
-  .sort((a, b) => new Date(b.content.date) - new Date(a.content.date));
+  .sort(
+    (a, b) =>
+      new Date(b.content.date).getTime() - new Date(a.content.date).getTime()
+  );
 
 const seoTitle = 'Handpan Classes & Events in Singapore';
 const seoDescription =
