@@ -1,5 +1,9 @@
 import type { APIRoute } from 'astro';
-import { fetchProductBySlug, isShopEnabled } from '../../../lib/shopClient';
+import {
+  fetchProductBySlug,
+  isShopEnabled,
+  isHitpayShop,
+} from '../../../lib/shop';
 import { createPaymentRequest, getHitPayConfig } from '../../../lib/hitpay';
 
 export const prerender = false;
@@ -28,7 +32,7 @@ function readField(
 }
 
 export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
-  if (!isShopEnabled()) {
+  if (!isShopEnabled() || !isHitpayShop()) {
     return new Response('Not found', { status: 404 });
   }
 
@@ -67,7 +71,7 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
 
   // Price and availability always come from published CMS content —
   // client-submitted values are never trusted.
-  const product = await fetchProductBySlug(storyblokToken, slug);
+  const product = await fetchProductBySlug(slug, storyblokToken);
   if (!product || !product.availableForSale || product.priceMin.amount <= 0) {
     return redirect(productRedirect(slug, 'unavailable'), 303);
   }

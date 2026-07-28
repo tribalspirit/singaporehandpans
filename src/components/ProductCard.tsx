@@ -1,4 +1,4 @@
-import type { ShopProduct } from '../lib/shopClient';
+import type { ShopProduct } from '../lib/shopTypes';
 import styles from './ProductCard.module.scss';
 
 interface ProductCardProps {
@@ -29,6 +29,10 @@ export default function ProductCard({ product }: ProductCardProps) {
     availableForSale,
     shopUrl,
   } = product;
+
+  // Shopify links out to its hosted store (absolute URL) — open in a new tab.
+  // HitPay product pages are internal (relative URL) — navigate in place.
+  const isExternalShopUrl = /^https?:\/\//i.test(shopUrl);
 
   return (
     <article className={styles.card}>
@@ -81,10 +85,13 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           <a
             href={shopUrl}
+            {...(isExternalShopUrl
+              ? { target: '_blank', rel: 'noopener noreferrer' }
+              : {})}
             className={`${styles.buyButton} ${!availableForSale ? styles.disabled : ''}`}
             aria-label={
               availableForSale
-                ? `Buy ${title}`
+                ? `Buy ${title}${isExternalShopUrl ? ' — opens store in a new tab' : ''}`
                 : `${title} is sold out — view details`
             }
           >

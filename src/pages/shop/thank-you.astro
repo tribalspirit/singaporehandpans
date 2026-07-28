@@ -1,13 +1,13 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { isShopEnabled } from '../../lib/shopClient';
+import { isShopEnabled, isHitpayShop } from '../../lib/shop';
 
 // Payment-status page — always rendered live, never edge-cached, so each
-// buyer sees their own redirect state.
+// buyer sees their own redirect state. HitPay checkout only.
 export const prerender = false;
 Astro.response.headers.set('Cache-Control', 'no-store');
 
-if (!isShopEnabled()) {
+if (!isShopEnabled() || !isHitpayShop()) {
   return Astro.redirect('/404');
 }
 
