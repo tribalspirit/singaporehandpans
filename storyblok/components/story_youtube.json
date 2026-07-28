@@ -1,0 +1,33 @@
+{
+  "name": "story_youtube",
+  "display_name": "Story YouTube",
+  "schema": {
+    "url": {
+      "type": "text",
+      "pos": 0,
+      "required": true,
+      "description": "YouTube URL (watch, youtu.be, embed or shorts link)"
+    },
+    "title": {
+      "type": "text",
+      "pos": 1,
+      "required": false,
+      "description": "Accessible title for the embedded player"
+    },
+    "caption": {
+      "type": "text",
+      "pos": 2,
+      "required": false,
+      "description": "Optional caption shown beneath the video"
+    }
+  },
+  "image": null,
+  "preview_field": "title",
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "story_youtube",
+  "component_group_uuid": null
+}

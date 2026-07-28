@@ -12,26 +12,39 @@ export interface PlayableScale {
 
 // Only the 7 main modes (Ionian/major, Dorian, Phrygian, Lydian, Mixolydian, Aeolian/minor, Locrian)
 const MAIN_SCALE_TYPES = [
-  'major',      // Ionian
+  'major', // Ionian
   'dorian',
   'phrygian',
   'lydian',
   'mixolydian',
-  'minor',      // Aeolian
+  'minor', // Aeolian
   'locrian',
 ];
 
-const TONICS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const TONICS = [
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
+];
 
 function generateScaleCandidates(): Array<{ tonic: string; type: string }> {
   const candidates: Array<{ tonic: string; type: string }> = [];
-  
+
   for (const tonic of TONICS) {
     for (const type of MAIN_SCALE_TYPES) {
       candidates.push({ tonic, type });
     }
   }
-  
+
   return candidates;
 }
 
@@ -50,17 +63,20 @@ export function findPlayableScales(availableNotes: string[]): PlayableScale[] {
 
   for (const { tonic, type } of candidates) {
     const scalePitchClasses = getScalePitchClasses(tonic, type);
-    
+
     if (scalePitchClasses.length === 0) {
       continue;
     }
 
     // Only include scales where ALL pitch classes are available (exact subset match)
     if (isSubset(scalePitchClasses, availablePitchClasses)) {
-      const mappedNotes = assignOctavesToPitchClasses(scalePitchClasses, availableNotes);
+      const mappedNotes = assignOctavesToPitchClasses(
+        scalePitchClasses,
+        availableNotes
+      );
       const orderedNotes = sortNotesByPitch(mappedNotes);
       const displayName = `${tonic} ${type}`;
-      
+
       playable.push({
         name: `${tonic} ${type}`,
         displayName,
@@ -70,8 +86,10 @@ export function findPlayableScales(availableNotes: string[]): PlayableScale[] {
     }
   }
 
-  const deduplicated = deduplicateBy(playable, (scale) => scale.pitchClasses.join(','));
-  
+  const deduplicated = deduplicateBy(playable, (scale) =>
+    scale.pitchClasses.join(',')
+  );
+
   // Sort: prioritize D minor, then by tonic, then by mode order
   const sorted = stableSort(deduplicated, (scale) => {
     const isDMinor = scale.name === 'D minor';
@@ -81,7 +99,6 @@ export function findPlayableScales(availableNotes: string[]): PlayableScale[] {
     const modeOrder = MAIN_SCALE_TYPES.indexOf(mode);
     return `${isDMinor ? '0' : '1'}_${tonic}_${modeOrder.toString().padStart(2, '0')}`;
   });
-  
+
   return sorted;
 }
-

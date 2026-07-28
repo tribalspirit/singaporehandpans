@@ -1,0 +1,34 @@
+{
+  "name": "story_image",
+  "display_name": "Story Image",
+  "schema": {
+    "image": {
+      "type": "asset",
+      "pos": 0,
+      "required": true,
+      "filetypes": ["images"],
+      "description": "In-text photo"
+    },
+    "caption": {
+      "type": "text",
+      "pos": 1,
+      "required": false,
+      "description": "Optional caption shown beneath the image"
+    },
+    "alt_text": {
+      "type": "text",
+      "pos": 2,
+      "required": false,
+      "description": "Alternative text for accessibility (defaults to the asset alt or caption)"
+    }
+  },
+  "image": null,
+  "preview_field": "caption",
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "story_image",
+  "component_group_uuid": null
+}

@@ -25,12 +25,17 @@ function findDing(pads: HandpanPad[]): HandpanPad | undefined {
   return pads.find((pad) => pad.id === 'ding' || pad.role === 'ding');
 }
 
-function validateLayout(configId: string, pads: HandpanPad[]): { valid: boolean; errors: string[] } {
+function validateLayout(
+  configId: string,
+  pads: HandpanPad[]
+): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   for (const pad of pads) {
     if (pad.x < 0 || pad.x > 1 || pad.y < 0 || pad.y > 1) {
-      errors.push(`Pad ${pad.id}: coordinates out of bounds (x: ${pad.x}, y: ${pad.y})`);
+      errors.push(
+        `Pad ${pad.id}: coordinates out of bounds (x: ${pad.x}, y: ${pad.y})`
+      );
     }
 
     if (pad.r <= 0 || pad.r > 1) {
@@ -75,7 +80,7 @@ export function validateAllLayouts(): void {
 
   for (const config of HANDPAN_CONFIGS) {
     const result = validateLayout(config.id, config.layout);
-    
+
     if (result.valid) {
       console.log(`✓ ${config.name} (${config.id}): Valid`);
     } else {
@@ -90,5 +95,3 @@ export function validateAllLayouts(): void {
 if (require.main === module) {
   validateAllLayouts();
 }
-
-

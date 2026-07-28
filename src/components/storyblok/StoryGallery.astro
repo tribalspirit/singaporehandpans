@@ -1,0 +1,66 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import type { SbBlokData } from '@storyblok/astro';
+import StoryGallery from '../stories/StoryGallery';
+import { multiassetToMediaItems } from '../../lib/storiesApi';
+import { storyblokImageTransform } from '../../lib/galleryApi';
+import type { StoryGalleryBlok } from '../../types/stories';
+
+export interface Props {
+  blok: StoryGalleryBlok;
+}
+
+const { blok } = Astro.props;
+const items = multiassetToMediaItems(blok.images);
+---
+
+{
+  items.length > 0 && (
+    <div
+      class="story-gallery"
+      {...storyblokEditable(blok as unknown as SbBlokData)}
+    >
+      {/* Crawlable, no-JS fallback. The island enhances it for visitors; both
+          render from the same request-time data, so freshness is unchanged. */}
+      <noscript>
+        <ul class="story-gallery__ssr">
+          {items.map((item) => (
+            <li>
+              <img
+                src={storyblokImageTransform(item.src, 800)}
+                alt={item.alt}
+                width={item.width}
+                height={item.height}
+                loading="lazy"
+              />
+            </li>
+          ))}
+        </ul>
+      </noscript>
+      <StoryGallery items={items} title={blok.title} client:visible />
+    </div>
+  )
+}
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .story-gallery__ssr {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--spacing-sm);
+    grid-template-columns: repeat(2, 1fr);
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius-lg, 12px);
+    }
+  }
+</style>

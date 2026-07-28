@@ -9,7 +9,7 @@ export interface ParsedNote {
 
 export function parseNote(noteStr: string): ParsedNote {
   const parsed = note(noteStr);
-  
+
   if (!parsed.name) {
     throw new Error(`Invalid note format: ${noteStr}`);
   }
@@ -31,11 +31,11 @@ const ENHARMONIC_MAP: Record<string, string> = {
 export function normalizeToPitchClass(noteStr: string): PitchClass {
   const parsed = note(noteStr);
   const pc = parsed.pc || parsed.name || noteStr;
-  
+
   if (ENHARMONIC_MAP[pc]) {
     return ENHARMONIC_MAP[pc];
   }
-  
+
   return pc;
 }
 
@@ -46,4 +46,3 @@ export function getPitchClassSet(notes: string[]): Set<PitchClass> {
 export function hasPitchClass(note: string, pitchClass: PitchClass): boolean {
   return normalizeToPitchClass(note) === pitchClass;
 }
-

@@ -1,0 +1,21 @@
+{
+  "name": "story_text",
+  "display_name": "Story Text",
+  "schema": {
+    "content": {
+      "type": "richtext",
+      "pos": 0,
+      "required": true,
+      "description": "One or more paragraphs of text (bold, italic, links, lists, headings)"
+    }
+  },
+  "image": null,
+  "preview_field": "content",
+  "is_root": false,
+  "preview_tmpl": null,
+  "is_nestable": true,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "story_text",
+  "component_group_uuid": null
+}

@@ -5,7 +5,17 @@ import type { PlayableChord } from './chords';
 describe('chords highlight', () => {
   describe('pitch-class-based highlighting', () => {
     it('should highlight all notes with matching pitch classes', () => {
-      const handpanNotes = ['D4', 'A4', 'Bb4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5'];
+      const handpanNotes = [
+        'D4',
+        'A4',
+        'Bb4',
+        'C5',
+        'D5',
+        'E5',
+        'F5',
+        'G5',
+        'A5',
+      ];
       const chord: PlayableChord = {
         name: 'Dm',
         displayName: 'Dm',
@@ -29,7 +39,18 @@ describe('chords highlight', () => {
     });
 
     it('should highlight all octave duplicates for C chord', () => {
-      const handpanNotes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'E5', 'G5'];
+      const handpanNotes = [
+        'C4',
+        'D4',
+        'E4',
+        'F4',
+        'G4',
+        'A4',
+        'B4',
+        'C5',
+        'E5',
+        'G5',
+      ];
       const chord: PlayableChord = {
         name: 'C',
         displayName: 'C',
@@ -53,4 +74,3 @@ describe('chords highlight', () => {
     });
   });
 });
-

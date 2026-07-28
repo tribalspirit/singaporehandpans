@@ -1,0 +1,45 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import type { SbBlokData } from '@storyblok/astro';
+import YouTubeEmbed from '../YouTubeEmbed.astro';
+import { parseYouTubeId } from '../../lib/youtube';
+import type { StoryYouTubeBlok } from '../../types/stories';
+
+export interface Props {
+  blok: StoryYouTubeBlok;
+}
+
+const { blok } = Astro.props;
+// Only render when the URL parses to a valid video id — never interpolate an
+// unvalidated URL into an iframe src.
+const videoId = blok.url ? parseYouTubeId(blok.url) : null;
+const title = blok.title || 'Singapore Handpan Studio video';
+---
+
+{
+  videoId && (
+    <figure
+      class="story-youtube"
+      {...storyblokEditable(blok as unknown as SbBlokData)}
+    >
+      <YouTubeEmbed id={videoId} title={title} />
+      {blok.caption && <figcaption>{blok.caption}</figcaption>}
+    </figure>
+  )
+}
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .story-youtube {
+    margin: 0;
+
+    figcaption {
+      margin-top: var(--spacing-sm);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-tertiary);
+      text-align: center;
+      font-style: italic;
+    }
+  }
+</style>

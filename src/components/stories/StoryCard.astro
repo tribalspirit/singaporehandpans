@@ -1,0 +1,166 @@
+---
+import { storyblokImageTransform } from '../../lib/galleryApi';
+import { HYPHEN_TO_SPACE_REGEX } from '../../utils/tags';
+import type { ArticleSummary } from '../../types/stories';
+
+export interface Props {
+  article: ArticleSummary;
+}
+
+const { article } = Astro.props;
+const coverSrc = article.coverSrc
+  ? storyblokImageTransform(article.coverSrc, 800, 600)
+  : '';
+const dateLabel = article.date
+  ? new Date(article.date).toLocaleDateString('en-SG', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  : '';
+const formatTag = (tag: string): string =>
+  tag.replace(HYPHEN_TO_SPACE_REGEX, ' ');
+---
+
+<a class="story-card" href={`/stories/${article.slug}/`}>
+  <div class="story-card__media">
+    {
+      coverSrc ? (
+        <img
+          class="story-card__image"
+          src={coverSrc}
+          alt={article.coverAlt}
+          width="800"
+          height="600"
+          loading="lazy"
+          decoding="async"
+        />
+      ) : (
+        <div class="story-card__placeholder" aria-hidden="true" />
+      )
+    }
+  </div>
+  <div class="story-card__body">
+    {
+      (dateLabel || article.tags.length > 0) && (
+        <div class="story-card__meta">
+          {dateLabel && <time datetime={article.date}>{dateLabel}</time>}
+          {article.tags[0] && (
+            <span class="story-card__tag">{formatTag(article.tags[0])}</span>
+          )}
+        </div>
+      )
+    }
+    <h2 class="story-card__title">{article.title}</h2>
+    {article.excerpt && <p class="story-card__excerpt">{article.excerpt}</p>}
+    <span class="story-card__cta">Read story →</span>
+  </div>
+</a>
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .story-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface, #fff);
+    border: 1px solid var(--color-border, #e5e0d8);
+    border-radius: var(--radius-lg, 12px);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition:
+      transform var(--transition-normal, 300ms) ease,
+      box-shadow var(--transition-normal, 300ms) ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg, 0 12px 28px rgba(0, 0, 0, 0.12));
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--color-accent, #e8a);
+      outline-offset: 2px;
+    }
+  }
+
+  .story-card__media {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--color-gray-100, #eee);
+  }
+
+  .story-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--transition-normal, 300ms) ease;
+
+    .story-card:hover & {
+      transform: scale(1.05);
+    }
+  }
+
+  .story-card__placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-light, #d8c3a5) 0%,
+      var(--color-accent-light, #f3e9df) 100%
+    );
+  }
+
+  .story-card__body {
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    flex: 1;
+  }
+
+  .story-card__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+  }
+
+  .story-card__tag {
+    background: var(--color-accent-light, #f3e9df);
+    color: var(--color-accent-dark, var(--color-primary));
+    padding: 2px var(--spacing-sm);
+    border-radius: var(--radius-sm, 6px);
+    text-transform: capitalize;
+    font-weight: var(--font-weight-medium);
+  }
+
+  .story-card__title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    line-height: 1.25;
+  }
+
+  .story-card__excerpt {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    font-size: var(--font-size-md);
+  }
+
+  .story-card__cta {
+    margin-top: auto;
+    color: var(--color-primary);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .story-card,
+    .story-card__image {
+      transition: none;
+    }
+  }
+</style>
