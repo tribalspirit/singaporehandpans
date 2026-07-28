@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getStoryblokClient } from '../lib/storyblok';
 import { fetchAllStories } from '../lib/storiesApi';
-import { fetchAllCollections, isShopEnabled } from '../lib/shopClient';
+import { fetchAllCollections, isShopEnabled, isHitpayShop } from '../lib/shop';
 import type { StoryArticleStory } from '../types/stories';
 
 const SITE = 'https://singaporehandpans.com';
@@ -90,8 +90,12 @@ export const GET: APIRoute = async ({ locals }) => {
       for (const col of collections) {
         entries.push(urlEntry(`${SITE}/shop/${col.handle}/`, 'weekly', 0.7));
       }
-      for (const product of allProducts) {
-        entries.push(urlEntry(`${SITE}${product.shopUrl}`, 'weekly', 0.6));
+      // Product detail pages are internal only under the HitPay implementation;
+      // Shopify products link out to the hosted store, so they are not our URLs.
+      if (isHitpayShop()) {
+        for (const product of allProducts) {
+          entries.push(urlEntry(`${SITE}${product.shopUrl}`, 'weekly', 0.6));
+        }
       }
     } catch (err) {
       console.error('[sitemap] Failed to fetch shop collections:', err);

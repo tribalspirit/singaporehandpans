@@ -1,13 +1,18 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import { fetchProductBySlug, isShopEnabled } from '../../../lib/shopClient';
+import {
+  fetchProductBySlug,
+  isShopEnabled,
+  isHitpayShop,
+} from '../../../lib/shop';
 import { setEdgeCache } from '../../../lib/edgeCache';
-import type { ShopProduct } from '../../../lib/shopClient';
+import type { ShopProduct } from '../../../lib/shop';
 
 export const prerender = false;
 setEdgeCache(Astro.response, 'medium');
 
-if (!isShopEnabled()) {
+// Product detail pages exist only in the HitPay implementation.
+if (!isShopEnabled() || !isHitpayShop()) {
   return Astro.redirect('/404');
 }
 
@@ -19,7 +24,7 @@ const storyblokToken =
 let product: ShopProduct | null = null;
 
 try {
-  product = await fetchProductBySlug(storyblokToken, slug!);
+  product = await fetchProductBySlug(slug!, storyblokToken);
 } catch (err) {
   console.error('Failed to fetch product:', err);
 }

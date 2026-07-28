@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import type { ShopProduct, ShopCollection } from '../lib/shopClient';
+import type { ShopProduct, ShopCollection } from '../lib/shopTypes';
 import ProductCard from './ProductCard';
 import styles from './ShopProductList.module.scss';
 
