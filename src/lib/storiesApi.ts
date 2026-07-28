@@ -7,6 +7,47 @@ import type {
   StoryArticleStory,
 } from '../types/stories';
 
+// Storyblok's CDN caps a single page at 100 stories.
+const STORYBLOK_MAX_PER_PAGE = 100;
+
+/** Minimal shape of the Storyblok list client used for pagination. */
+export interface StoryblokListClient {
+  get(
+    path: string,
+    params: Record<string, unknown>
+  ): Promise<{ data: { stories?: unknown[] }; total: number }>;
+}
+
+/**
+ * Fetch every matching story across all pages, so lists never silently truncate
+ * once more than 100 stories exist. The total-count header drives how many pages
+ * to request; sorting/filtering params are applied consistently to every page.
+ */
+export async function fetchAllStories<T = StoryArticleStory>(
+  client: StoryblokListClient,
+  params: Record<string, unknown>
+): Promise<T[]> {
+  const first = await client.get('cdn/stories', {
+    ...params,
+    per_page: STORYBLOK_MAX_PER_PAGE,
+    page: 1,
+  });
+  const collected = [...((first.data.stories as T[] | undefined) ?? [])];
+  const total = first.total || collected.length;
+  const pageCount = Math.ceil(total / STORYBLOK_MAX_PER_PAGE);
+
+  for (let page = 2; page <= pageCount; page += 1) {
+    const res = await client.get('cdn/stories', {
+      ...params,
+      per_page: STORYBLOK_MAX_PER_PAGE,
+      page,
+    });
+    collected.push(...((res.data.stories as T[] | undefined) ?? []));
+  }
+
+  return collected;
+}
+
 /** Convert a Storyblok multiasset (images) into lightbox-ready media items. */
 export function multiassetToMediaItems(
   assets: StoryblokAsset[] | undefined

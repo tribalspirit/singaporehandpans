@@ -3,7 +3,7 @@ import { getStoryblokClient } from '../../lib/storyblok';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import StoryCard from '../../components/stories/StoryCard.astro';
 import CMSFallback from '../../components/CMSFallback.astro';
-import { transformArticleSummary } from '../../lib/storiesApi';
+import { fetchAllStories, transformArticleSummary } from '../../lib/storiesApi';
 import { setEdgeCache } from '../../lib/edgeCache';
 import type { ArticleSummary, StoryArticleStory } from '../../types/stories';
 
@@ -20,16 +20,13 @@ try {
   const storyblokApi = getStoryblokClient(token);
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
 
-  const { data } = await storyblokApi.get('cdn/stories', {
+  const stories = await fetchAllStories<StoryArticleStory>(storyblokApi, {
     version: storyblokVersion,
     starts_with: 'stories/',
     content_type: 'story_article',
-    per_page: 100,
     sort_by: 'content.date:desc',
     resolve_assets: 1,
   });
-
-  const stories: StoryArticleStory[] = data?.stories || [];
   articles = stories.map(transformArticleSummary);
 } catch (err) {
   console.error('Stories index: failed to load from Storyblok', err);

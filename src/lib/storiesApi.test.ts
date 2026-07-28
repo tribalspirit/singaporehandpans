@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'vitest';
 import {
+  fetchAllStories,
   multiassetToMediaItems,
   transformArticle,
   transformArticleSummary,
 } from './storiesApi';
+import type { StoryblokListClient } from './storiesApi';
 import type { StoryArticleStory } from '../types/stories';
 import type { StoryblokAsset } from '../types/gallery';
 
@@ -81,6 +83,51 @@ describe('transformArticleSummary', () => {
       date: '2026-05-20',
       tags: ['workshop', 'community'],
     });
+  });
+});
+
+describe('fetchAllStories', () => {
+  test('fetches every page when total exceeds one page (100)', async () => {
+    const total = 230;
+    const makePage = (page: number, size: number) => ({
+      data: {
+        stories: Array.from({ length: size }, (_, i) => ({
+          slug: `story-${(page - 1) * 100 + i}`,
+        })),
+      },
+      total,
+    });
+    const calls: number[] = [];
+    const client: StoryblokListClient = {
+      get: async (_path, params) => {
+        const page = params.page as number;
+        calls.push(page);
+        const size = page < 3 ? 100 : 30; // 100 + 100 + 30 = 230
+        return makePage(page, size);
+      },
+    };
+
+    const stories = await fetchAllStories<{ slug: string }>(client, {
+      starts_with: 'stories/',
+    });
+
+    expect(stories).toHaveLength(230);
+    expect(calls).toEqual([1, 2, 3]);
+    expect(stories[0].slug).toBe('story-0');
+    expect(stories[229].slug).toBe('story-229');
+  });
+
+  test('makes a single request when total fits in one page', async () => {
+    const calls: number[] = [];
+    const client: StoryblokListClient = {
+      get: async (_path, params) => {
+        calls.push(params.page as number);
+        return { data: { stories: [{ slug: 'a' }, { slug: 'b' }] }, total: 2 };
+      },
+    };
+    const stories = await fetchAllStories<{ slug: string }>(client, {});
+    expect(stories).toHaveLength(2);
+    expect(calls).toEqual([1]);
   });
 });
 

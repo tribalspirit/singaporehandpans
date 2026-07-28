@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { getStoryblokClient } from '../lib/storyblok';
+import { fetchAllStories } from '../lib/storiesApi';
 import { fetchAllCollections, isShopEnabled } from '../lib/shopClient';
+import type { StoryArticleStory } from '../types/stories';
 
 const SITE = 'https://singaporehandpans.com';
 
@@ -61,17 +63,15 @@ export const GET: APIRoute = async ({ locals }) => {
     console.error('[sitemap] Failed to fetch events:', err);
   }
 
-  // Dynamic story article pages from Storyblok
+  // Dynamic story article pages from Storyblok (paginated so >100 don't drop)
   try {
     const storyblokApi = getStoryblokClient(token);
-    const { data } = await storyblokApi.get('cdn/stories', {
+    const stories = await fetchAllStories<StoryArticleStory>(storyblokApi, {
       starts_with: 'stories/',
       content_type: 'story_article',
       version: storyblokVersion,
-      per_page: 100,
     });
 
-    const stories = data?.stories || [];
     for (const story of stories) {
       if (story.slug) {
         entries.push(
