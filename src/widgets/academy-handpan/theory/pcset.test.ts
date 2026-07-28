@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { toPcSet, isSubset, isSuperset, stableSort, deduplicateBy } from './pcset';
+import {
+  toPcSet,
+  isSubset,
+  isSuperset,
+  stableSort,
+  deduplicateBy,
+} from './pcset';
 
 describe('pcset', () => {
   describe('toPcSet', () => {
@@ -24,7 +30,18 @@ describe('pcset', () => {
   describe('isSubset', () => {
     it('should check if candidate is subset of available', () => {
       const candidate = ['C4', 'E4', 'G4'];
-      const available = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'E5', 'G5'];
+      const available = [
+        'C4',
+        'D4',
+        'E4',
+        'F4',
+        'G4',
+        'A4',
+        'B4',
+        'C5',
+        'E5',
+        'G5',
+      ];
       const result = isSubset(candidate, available);
       expect(typeof result).toBe('boolean');
     });
@@ -49,7 +66,18 @@ describe('pcset', () => {
 
   describe('isSuperset', () => {
     it('should check if available is superset of candidate', () => {
-      const available = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'E5', 'G5'];
+      const available = [
+        'C4',
+        'D4',
+        'E4',
+        'F4',
+        'G4',
+        'A4',
+        'B4',
+        'C5',
+        'E5',
+        'G5',
+      ];
       const candidate = ['C4', 'E4', 'G4'];
       const result = isSuperset(available, candidate);
       expect(typeof result).toBe('boolean');
@@ -73,7 +101,11 @@ describe('pcset', () => {
     });
 
     it('should maintain stable sort order', () => {
-      const items = [{ name: 'C', id: 1 }, { name: 'C', id: 2 }, { name: 'A', id: 3 }];
+      const items = [
+        { name: 'C', id: 1 },
+        { name: 'C', id: 2 },
+        { name: 'A', id: 3 },
+      ];
       const sorted = stableSort(items, (item) => item.name);
       expect(sorted[0].name).toBe('A');
       expect(sorted[1].id).toBe(1);
@@ -114,4 +146,3 @@ describe('pcset', () => {
     });
   });
 });
-

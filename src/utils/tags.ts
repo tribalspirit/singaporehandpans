@@ -14,8 +14,9 @@ const normalizeTags = (tags: string | string[] | undefined): string[] => {
   return [];
 };
 
-export { normalizeTags, TAG_SEPARATOR_REGEX, WHITESPACE_TRIM_REGEX, HYPHEN_TO_SPACE_REGEX };
-
-
-
-
+export {
+  normalizeTags,
+  TAG_SEPARATOR_REGEX,
+  WHITESPACE_TRIM_REGEX,
+  HYPHEN_TO_SPACE_REGEX,
+};

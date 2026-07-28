@@ -57,7 +57,9 @@ const captureScreenshot = async (
   const browser = await chromium.launch({ headless: true });
 
   for (const [device, viewport] of Object.entries(VIEWPORTS)) {
-    console.log(`\n📱 Capturing ${device} screenshots (${viewport.width}x${viewport.height})...`);
+    console.log(
+      `\n📱 Capturing ${device} screenshots (${viewport.width}x${viewport.height})...`
+    );
 
     const deviceDir = path.join(SCREENSHOTS_DIR, device);
     fs.mkdirSync(deviceDir, { recursive: true });
@@ -84,8 +86,5 @@ const captureScreenshot = async (
   await browser.close();
 
   console.log('\n✨ Screenshot capture complete!');
-  console.log(
-    `📁 Screenshots saved in: ${path.resolve(SCREENSHOTS_DIR)}\n`
-  );
+  console.log(`📁 Screenshots saved in: ${path.resolve(SCREENSHOTS_DIR)}\n`);
 })();
-

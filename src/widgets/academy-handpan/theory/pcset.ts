@@ -7,23 +7,29 @@ export function toPcSet(notes: string[]): string {
   return chroma;
 }
 
-export function isSubset(candidateNotes: string[], availableNotes: string[]): boolean {
+export function isSubset(
+  candidateNotes: string[],
+  availableNotes: string[]
+): boolean {
   if (candidateNotes.length === 0) {
     return true;
   }
   if (availableNotes.length === 0) {
     return false;
   }
-  
+
   const candidateChroma = toPcSet(candidateNotes);
   const availableChroma = toPcSet(availableNotes);
-  
+
   const isSubsetFn = Pcset.isSubsetOf(availableChroma);
   const result = isSubsetFn(candidateChroma);
   return Boolean(result);
 }
 
-export function isSuperset(availableNotes: string[], candidateNotes: string[]): boolean {
+export function isSuperset(
+  availableNotes: string[],
+  candidateNotes: string[]
+): boolean {
   return isSubset(candidateNotes, availableNotes);
 }
 
@@ -46,4 +52,3 @@ export function deduplicateBy<T>(items: T[], keyFn: (item: T) => string): T[] {
     return true;
   });
 }
-
