@@ -1,0 +1,82 @@
+{
+  "name": "story_article",
+  "display_name": "Story Article",
+  "schema": {
+    "title": {
+      "type": "text",
+      "pos": 0,
+      "required": true,
+      "description": "Article title (used as the H1 and SEO title fallback)"
+    },
+    "excerpt": {
+      "type": "textarea",
+      "pos": 1,
+      "required": false,
+      "max_length": 200,
+      "description": "Short summary shown on the Stories index and used as the meta description fallback"
+    },
+    "cover_image": {
+      "type": "asset",
+      "pos": 2,
+      "required": false,
+      "filetypes": ["images"],
+      "description": "Cover image (index card + social share image)"
+    },
+    "date": {
+      "type": "datetime",
+      "pos": 3,
+      "required": false,
+      "description": "Event / publish date (drives ordering and datePublished)"
+    },
+    "tags": {
+      "type": "options",
+      "pos": 4,
+      "required": false,
+      "options": [
+        { "name": "Workshop", "value": "workshop" },
+        { "name": "Instruments", "value": "instruments" },
+        { "name": "Studio", "value": "studio" },
+        { "name": "Performance", "value": "performance" },
+        { "name": "Community", "value": "community" },
+        { "name": "Behind the Scenes", "value": "behind-scenes" },
+        { "name": "Students", "value": "students" }
+      ],
+      "description": "Article categories (multiple allowed)"
+    },
+    "body": {
+      "type": "bloks",
+      "pos": 5,
+      "required": false,
+      "restrict_components": true,
+      "component_whitelist": [
+        "story_text",
+        "story_image",
+        "story_gallery",
+        "story_youtube"
+      ],
+      "description": "Article body — add Text, Image, Gallery and YouTube blocks in any order"
+    },
+    "seo_title": {
+      "type": "text",
+      "pos": 6,
+      "required": false,
+      "description": "SEO title override (defaults to the article title)"
+    },
+    "seo_description": {
+      "type": "textarea",
+      "pos": 7,
+      "required": false,
+      "max_length": 160,
+      "description": "SEO meta description override (defaults to the excerpt)"
+    }
+  },
+  "image": null,
+  "preview_field": "title",
+  "is_root": true,
+  "preview_tmpl": null,
+  "is_nestable": false,
+  "all_presets": [],
+  "preset_id": null,
+  "real_name": "story_article",
+  "component_group_uuid": null
+}

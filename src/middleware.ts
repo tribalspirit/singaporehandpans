@@ -1,5 +1,6 @@
 import { defineMiddleware } from 'astro:middleware';
 import { canonicalRedirectTarget } from './lib/trailingSlash';
+import { legacyRedirectTarget } from './lib/legacyRedirects';
 
 /**
  * Edge HTML caching middleware for Cloudflare Pages.
@@ -55,6 +56,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   const url = new URL(context.request.url);
+
+  // Legacy /gallery* URLs were replaced by /stories/. Redirect them first, with
+  // a cacheable 301, before the canonical/SSR path. Relative Location keeps the
+  // hop on the current host (dev + prod); a www request folds to the apex on the
+  // follow-up canonical redirect. See `src/lib/legacyRedirects.ts`.
+  const legacyTarget = legacyRedirectTarget(url.pathname);
+  if (legacyTarget) {
+    return new Response(null, {
+      status: 301,
+      headers: {
+        Location: legacyTarget,
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  }
 
   // Enforce the canonical host + trailing-slash form with a single 301 before
   // anything else, so the redirect itself is cached at the edge and never hits

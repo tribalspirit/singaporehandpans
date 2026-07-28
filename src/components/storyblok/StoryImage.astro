@@ -1,0 +1,63 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import type { SbBlokData } from '@storyblok/astro';
+import {
+  extractDimensions,
+  storyblokImageTransform,
+} from '../../lib/galleryApi';
+import type { StoryImageBlok } from '../../types/stories';
+
+export interface Props {
+  blok: StoryImageBlok;
+}
+
+const { blok } = Astro.props;
+const image = blok.image;
+const { width, height } = extractDimensions(image);
+const src = image?.filename
+  ? storyblokImageTransform(image.filename, 1200)
+  : '';
+const alt = blok.alt_text || image?.alt || blok.caption || '';
+---
+
+{
+  src && (
+    <figure
+      class="story-image"
+      {...storyblokEditable(blok as unknown as SbBlokData)}
+    >
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        loading="lazy"
+        decoding="async"
+      />
+      {blok.caption && <figcaption>{blok.caption}</figcaption>}
+    </figure>
+  )
+}
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .story-image {
+    margin: var(--spacing-xl) 0;
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius-lg, 12px);
+    }
+
+    figcaption {
+      margin-top: var(--spacing-sm);
+      font-size: var(--font-size-sm);
+      color: var(--color-text-tertiary);
+      text-align: center;
+      font-style: italic;
+    }
+  }
+</style>

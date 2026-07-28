@@ -1,0 +1,195 @@
+---
+import { getStoryblokClient } from '../../lib/storyblok';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StoryCard from '../../components/stories/StoryCard.astro';
+import CMSFallback from '../../components/CMSFallback.astro';
+import { transformArticleSummary } from '../../lib/storiesApi';
+import { setEdgeCache } from '../../lib/edgeCache';
+import type { ArticleSummary, StoryArticleStory } from '../../types/stories';
+
+export const prerender = false;
+setEdgeCache(Astro.response, 'medium');
+
+let articles: ArticleSummary[] = [];
+let hasError = false;
+
+const runtime = Astro.locals.runtime;
+const token = runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+
+try {
+  const storyblokApi = getStoryblokClient(token);
+  const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
+
+  const { data } = await storyblokApi.get('cdn/stories', {
+    version: storyblokVersion,
+    starts_with: 'stories/',
+    content_type: 'story_article',
+    per_page: 100,
+    sort_by: 'content.date:desc',
+    resolve_assets: 1,
+  });
+
+  const stories: StoryArticleStory[] = data?.stories || [];
+  articles = stories.map(transformArticleSummary);
+} catch (err) {
+  console.error('Stories index: failed to load from Storyblok', err);
+  hasError = true;
+}
+
+const siteUrl =
+  Astro.site?.toString().replace(/\/$/, '') || 'https://singaporehandpans.com';
+
+const pageTitle = 'Stories — Handpan Events, Workshops & Community';
+const pageDescription =
+  'Stories from Singapore Handpan Studio: recaps of our handpan workshops, performances, jam sessions and community gatherings, with photos and videos.';
+
+// CollectionPage + ItemList structured data for the index.
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Stories',
+  url: `${siteUrl}/stories/`,
+  description: pageDescription,
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: articles.map((article, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `${siteUrl}/stories/${article.slug}/`,
+      name: article.title,
+    })),
+  },
+};
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={`${Astro.site}stories/`}
+>
+  {
+    articles.length > 0 && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(collectionSchema)}
+        slot="head"
+      />
+    )
+  }
+
+  <main class="stories-page">
+    <section class="stories-hero">
+      <div class="container">
+        <h1 class="stories-hero__title">Stories</h1>
+        <p class="stories-hero__subtitle">
+          Moments from our handpan studio — workshops, performances, jam
+          sessions and community gatherings in Singapore.
+        </p>
+      </div>
+    </section>
+
+    <section class="stories-list">
+      <div class="container">
+        {
+          hasError ? (
+            <CMSFallback
+              message="Unable to load stories right now. Please try again later."
+              showRetry={true}
+            />
+          ) : articles.length === 0 ? (
+            <div class="stories-empty">
+              <p>No stories published yet. Check back soon!</p>
+            </div>
+          ) : (
+            <div class="stories-grid">
+              {articles.map((article) => (
+                <StoryCard article={article} />
+              ))}
+            </div>
+          )
+        }
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  .stories-page {
+    min-height: 100vh;
+  }
+
+  .stories-hero {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-light) 0%,
+      var(--color-accent-light) 100%
+    );
+    padding: var(--space-16) 0 var(--space-12);
+    text-align: center;
+
+    @media (max-width: 768px) {
+      padding: var(--space-12) 0 var(--space-8);
+    }
+  }
+
+  .stories-hero__title {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+    margin-bottom: var(--space-4);
+    line-height: var(--line-height-tight);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-5xl);
+    }
+  }
+
+  .stories-hero__subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--color-gray-700);
+    max-width: 620px;
+    margin: 0 auto;
+    line-height: var(--line-height-relaxed);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-xl);
+    }
+  }
+
+  .stories-list {
+    padding: var(--space-16) 0;
+    background: var(--color-gray-50);
+
+    @media (max-width: 768px) {
+      padding: var(--space-12) 0;
+    }
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+
+    @media (max-width: 768px) {
+      padding: 0 var(--space-4);
+    }
+  }
+
+  .stories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md);
+    }
+  }
+
+  .stories-empty {
+    text-align: center;
+    padding: var(--space-16);
+    color: var(--color-gray-600);
+    font-size: var(--font-size-lg);
+  }
+</style>

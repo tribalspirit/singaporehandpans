@@ -1,0 +1,138 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StoryArticle from '../../components/storyblok/StoryArticle.astro';
+import { getStoryblokClient } from '../../lib/storyblok';
+import { transformArticle } from '../../lib/storiesApi';
+import { storyblokImageTransform } from '../../lib/galleryApi';
+import {
+  buildArticleSchema,
+  buildStoriesBreadcrumb,
+} from '../../lib/articleSchema';
+import { setEdgeCache } from '../../lib/edgeCache';
+import type { StoryArticleStory } from '../../types/stories';
+
+export const prerender = false;
+// Must run before any Astro.redirect() below.
+setEdgeCache(Astro.response, 'medium');
+
+const { slug } = Astro.params;
+
+let story: StoryArticleStory | undefined;
+
+try {
+  const runtime = Astro.locals.runtime;
+  const token =
+    runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+  const storyblokApi = getStoryblokClient(token);
+  const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
+
+  const { data } = await storyblokApi.get(`cdn/stories/stories/${slug}`, {
+    version: storyblokVersion,
+    resolve_assets: 1,
+  });
+  story = data?.story;
+} catch (err) {
+  console.error(`Stories [slug]: failed to load "${slug}" from Storyblok`, err);
+}
+
+if (!story || story.content?.component !== 'story_article') {
+  return Astro.redirect('/stories/');
+}
+
+const article = transformArticle(story);
+
+const siteUrl =
+  Astro.site?.toString().replace(/\/$/, '') || 'https://singaporehandpans.com';
+const canonicalUrl = `${siteUrl}/stories/${article.slug}/`;
+
+const seoTitle = article.seoTitle || article.title;
+const seoDescription =
+  article.seoDescription ||
+  article.excerpt ||
+  `Read "${article.title}" from Singapore Handpan Studio.`;
+const ogImage = article.coverSrc
+  ? storyblokImageTransform(article.coverSrc, 1200, 630)
+  : undefined;
+
+const articleSchema = buildArticleSchema(article, canonicalUrl, siteUrl);
+const breadcrumbSchema = buildStoriesBreadcrumb(article, siteUrl);
+---
+
+<BaseLayout
+  title={seoTitle}
+  description={seoDescription}
+  canonical={canonicalUrl}
+  type="article"
+  publishedTime={article.date}
+  modifiedTime={article.publishedAt}
+  image={ogImage}
+  imageAlt={article.coverAlt}
+>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(articleSchema)}
+    slot="head"
+  />
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbSchema)}
+    slot="head"
+  />
+
+  <div class="story-detail">
+    <nav class="story-detail__breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="separator" aria-hidden="true">›</span>
+      <a href="/stories/">Stories</a>
+      <span class="separator" aria-hidden="true">›</span>
+      <span class="current">{article.title}</span>
+    </nav>
+
+    <StoryArticle blok={story.content} />
+  </div>
+</BaseLayout>
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .story-detail {
+    padding: var(--spacing-lg) 0 var(--spacing-2xl);
+    background: var(--color-surface, #fff);
+  }
+
+  .story-detail__inner {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+  }
+
+  .story-detail__breadcrumb {
+    max-width: 820px;
+    margin: 0 auto var(--spacing-xl);
+    padding: 0 var(--spacing-md);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .separator {
+      color: var(--color-text-tertiary);
+    }
+
+    .current {
+      color: var(--color-text-primary);
+      font-weight: var(--font-weight-medium);
+    }
+  }
+</style>

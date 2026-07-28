@@ -15,7 +15,7 @@ const STATIC_PAGES: { path: string; changefreq: string; priority: number }[] = [
   { path: '/events/', changefreq: 'weekly', priority: 0.9 },
   { path: '/academy/', changefreq: 'monthly', priority: 0.8 },
   { path: '/academy/memorization/', changefreq: 'monthly', priority: 0.7 },
-  { path: '/gallery/', changefreq: 'weekly', priority: 0.8 },
+  { path: '/stories/', changefreq: 'weekly', priority: 0.8 },
   { path: '/shop/', changefreq: 'weekly', priority: 0.9 },
   { path: '/contacts/', changefreq: 'monthly', priority: 0.7 },
 ];
@@ -61,30 +61,26 @@ export const GET: APIRoute = async ({ locals }) => {
     console.error('[sitemap] Failed to fetch events:', err);
   }
 
-  // Dynamic gallery album pages from Storyblok
+  // Dynamic story article pages from Storyblok
   try {
     const storyblokApi = getStoryblokClient(token);
     const { data } = await storyblokApi.get('cdn/stories', {
-      starts_with: 'gallery/albums/',
-      content_type: 'gallery_album',
+      starts_with: 'stories/',
+      content_type: 'story_article',
       version: storyblokVersion,
       per_page: 100,
     });
 
-    const albums = data?.stories || [];
-    for (const album of albums) {
-      // Album slug is the folder name, extract from full_slug
-      // e.g. "gallery/albums/workshop-moments/workshop-moments" → "workshop-moments"
-      const parts = album.full_slug.split('/');
-      const albumSlug = parts[2]; // gallery/albums/{slug}/...
-      if (albumSlug) {
+    const stories = data?.stories || [];
+    for (const story of stories) {
+      if (story.slug) {
         entries.push(
-          urlEntry(`${SITE}/gallery/albums/${albumSlug}/`, 'monthly', 0.5)
+          urlEntry(`${SITE}/stories/${story.slug}/`, 'monthly', 0.6)
         );
       }
     }
   } catch (err) {
-    console.error('[sitemap] Failed to fetch gallery albums:', err);
+    console.error('[sitemap] Failed to fetch stories:', err);
   }
 
   // Dynamic shop collection + product pages from Storyblok

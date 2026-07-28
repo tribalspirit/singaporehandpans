@@ -1,0 +1,160 @@
+---
+import { storyblokEditable } from '@storyblok/astro';
+import type { SbBlokData } from '@storyblok/astro';
+import StoryText from './StoryText.astro';
+import StoryImage from './StoryImage.astro';
+import StoryGallery from './StoryGallery.astro';
+import StoryYouTube from './StoryYouTube.astro';
+import {
+  storyblokImageTransform,
+  extractDimensions,
+} from '../../lib/galleryApi';
+import { normalizeTags, HYPHEN_TO_SPACE_REGEX } from '../../utils/tags';
+import type { StoryArticleContent } from '../../types/stories';
+
+export interface Props {
+  blok: StoryArticleContent;
+}
+
+const { blok } = Astro.props;
+const cover = blok.cover_image;
+const { width, height } = extractDimensions(cover);
+const coverSrc = cover?.filename
+  ? storyblokImageTransform(cover.filename, 1600)
+  : '';
+const coverAlt = cover?.alt || blok.title;
+const tags = normalizeTags(blok.tags);
+const dateLabel = blok.date
+  ? new Date(blok.date).toLocaleDateString('en-SG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : '';
+const formatTag = (tag: string): string =>
+  tag.replace(HYPHEN_TO_SPACE_REGEX, ' ');
+---
+
+<article
+  class="story-article"
+  {...storyblokEditable(blok as unknown as SbBlokData)}
+>
+  <header class="story-article__header">
+    {
+      (dateLabel || tags.length > 0) && (
+        <div class="story-article__meta">
+          {dateLabel && <time datetime={blok.date}>{dateLabel}</time>}
+          {tags.map((tag) => (
+            <span class="story-article__tag">{formatTag(tag)}</span>
+          ))}
+        </div>
+      )
+    }
+    <h1 class="story-article__title">{blok.title}</h1>
+    {blok.excerpt && <p class="story-article__excerpt">{blok.excerpt}</p>}
+  </header>
+
+  {
+    coverSrc && (
+      <img
+        class="story-article__cover"
+        src={coverSrc}
+        alt={coverAlt}
+        width={width}
+        height={height}
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+      />
+    )
+  }
+
+  <div class="story-article__body">
+    {
+      (blok.body ?? []).map((item) => {
+        // Explicit, type-safe dispatch on the discriminated `component` union.
+        // Avoids @storyblok/astro's virtual component registry (which resolves
+        // the shared component-path map at build time).
+        switch (item.component) {
+          case 'story_text':
+            return <StoryText blok={item} />;
+          case 'story_image':
+            return <StoryImage blok={item} />;
+          case 'story_gallery':
+            return <StoryGallery blok={item} />;
+          case 'story_youtube':
+            return <StoryYouTube blok={item} />;
+          default:
+            return null;
+        }
+      })
+    }
+  </div>
+</article>
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .story-article {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-md);
+  }
+
+  .story-article__header {
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .story-article__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-tertiary);
+
+    time {
+      font-weight: var(--font-weight-medium);
+    }
+  }
+
+  .story-article__tag {
+    background: var(--color-accent-light, #f3e9df);
+    color: var(--color-accent-dark, var(--color-primary));
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm, 6px);
+    text-transform: capitalize;
+    font-weight: var(--font-weight-medium);
+  }
+
+  .story-article__title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    line-height: 1.15;
+    margin-bottom: var(--spacing-md);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-4xl);
+    }
+  }
+
+  .story-article__excerpt {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+  }
+
+  .story-article__cover {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg, 12px);
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .story-article__body {
+    // Bloks manage their own vertical rhythm.
+  }
+</style>
