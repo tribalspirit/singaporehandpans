@@ -27,7 +27,7 @@ body {
   font-weight: var(--font-weight-normal);
   line-height: var(--line-height-normal);
   color: var(--color-gray-900);
-  background-color: var(--color-white);
+  background-color: var(--color-gray-50);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -42,15 +42,17 @@ h4,
 h5,
 h6 {
   font-family: var(--font-family-heading);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-light);
   line-height: var(--line-height-tight);
   color: var(--color-gray-900);
   margin-bottom: var(--space-4);
+  letter-spacing: -0.015em;
+  text-wrap: pretty;
 }
 
 h1 {
   font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-light);
 
   @media (min-width: 768px) {
     font-size: var(--font-size-5xl);
@@ -73,8 +75,10 @@ h3 {
   }
 }
 
+// Newsreader at 300 gets thin below ~22px, so the small headings step up to 400
 h4 {
   font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-normal);
 
   @media (min-width: 768px) {
     font-size: var(--font-size-2xl);
@@ -83,6 +87,7 @@ h4 {
 
 h5 {
   font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-normal);
 
   @media (min-width: 768px) {
     font-size: var(--font-size-xl);
@@ -91,6 +96,7 @@ h5 {
 
 h6 {
   font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
 
   @media (min-width: 768px) {
     font-size: var(--font-size-lg);
@@ -106,17 +112,33 @@ p {
 a {
   color: var(--color-primary);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
 
   &:hover {
     color: var(--color-primary-dark);
-    text-decoration: underline;
   }
 
   &:focus {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-gray-900);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
+  }
+}
+
+// Hairline underline for prose links only, replacing the browser underline on
+// hover. Deliberately an allowlist rather than a denylist: nav, button and card
+// links live across 40 scoped-style files and would each grow a stray
+// underline, and `a.btn` is not a descendant of `.btn` so it cannot be excluded
+// by ancestor selector.
+:where(p, li, dd, blockquote, [class*='__description'], [class*='rich-text'])
+  a {
+  border-bottom: 1px solid rgba(138, 90, 51, 0.35);
+  padding-bottom: 1px;
+
+  &:hover {
+    border-bottom-color: var(--color-primary-dark);
   }
 }
 
@@ -182,11 +204,16 @@ select {
 }
 
 .section {
-  padding: var(--space-16) 0;
+  padding: var(--space-16) 0; // 64px mobile
 
   @media (min-width: 768px) {
-    padding: var(--space-24) 0;
+    padding: var(--space-32) 0; // 128px desktop
   }
+}
+
+// Anchor targets clear the sticky header
+[id] {
+  scroll-margin-top: calc(var(--header-height) + var(--space-4));
 }
 
 // Accessibility
@@ -244,10 +271,11 @@ select {
   }
 }
 
-// High contrast mode support
+// High contrast mode support. Navy inside a warm brown site was worse than
+// doing nothing; these are the same hues pushed to a higher contrast.
 @media (prefers-contrast: high) {
   :root {
-    --color-primary: #000080;
-    --color-secondary: #000000;
+    --color-primary: #3a2513;
+    --color-secondary: #14100c;
   }
 }
