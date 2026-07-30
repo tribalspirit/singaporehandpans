@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState, useMemo } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
+import Fade from 'embla-carousel-fade';
 import styles from './HeroBackgroundCarousel.module.scss';
 
 const HERO_IMAGES = [
@@ -11,7 +12,8 @@ const HERO_IMAGES = [
   '/images/hero/hero-placeholder-5.jpg',
 ];
 
-const AUTOPLAY_DELAY = 5000;
+// A background that moves every five seconds fights the calm brief
+const AUTOPLAY_DELAY = 9000;
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 interface HeroBackgroundCarouselProps {
@@ -44,12 +46,22 @@ export default function HeroBackgroundCarousel({
     });
   }, [prefersReducedMotion]);
 
+  // Cross-fade rather than slide: a photograph sliding under the headline
+  // pulls the eye sideways, a dissolve does not. Fade is skipped entirely
+  // under reduced motion, leaving an instant cut.
+  const plugins = useMemo(() => {
+    const active = [];
+    if (autoplayPlugin) active.push(autoplayPlugin);
+    if (!prefersReducedMotion) active.push(Fade());
+    return active;
+  }, [autoplayPlugin, prefersReducedMotion]);
+
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
       loop: true,
-      duration: prefersReducedMotion ? 0 : 20,
+      duration: prefersReducedMotion ? 0 : 40,
     },
-    autoplayPlugin ? [autoplayPlugin] : []
+    plugins
   );
 
   useEffect(() => {
@@ -91,14 +103,6 @@ export default function HeroBackgroundCarousel({
     };
   }, [emblaApi, autoplayPlugin, prefersReducedMotion]);
 
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
-
   const scrollTo = useCallback(
     (index: number) => {
       if (emblaApi) emblaApi.scrollTo(index);
@@ -139,42 +143,12 @@ export default function HeroBackgroundCarousel({
         ))}
       </div>
 
-      <div className={styles.carousel__controls}>
-        <button
-          type="button"
-          className={styles.carousel__button}
-          onClick={scrollPrev}
-          aria-label="Previous slide"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-        </button>
-
-        <button
-          type="button"
-          className={styles.carousel__button}
-          onClick={scrollNext}
-          aria-label="Next slide"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </button>
-      </div>
-
+      {/*
+        Prev/next arrows are deliberately not rendered — they competed with the
+        hero CTA. The pagination dots stay: autoplay is still running, so
+        removing every control would leave no way to pause or advance
+        (WCAG 2.2.2).
+      */}
       <div
         className={styles.carousel__pagination}
         role="tablist"
