@@ -40,7 +40,19 @@ export default defineConfig({
     define: {
       'import.meta.env.STORYBLOK_TOKEN': JSON.stringify(storyblokToken),
     },
-    
+
+    ssr: {
+      // @tonaljs/* ships dual CJS/ESM the old way: `main` + `module`, with no
+      // `exports` map and no `type`. Left external, Vite's dev SSR resolves it
+      // through `main` to the CJS build, and `import * as Scale` does not hoist
+      // the named exports off it — so `Scale.get` is undefined and
+      // /academy/memorization/ dies with "__vite_ssr_import_0__.get is not a
+      // function". Bundling it applies the interop and fixes dev; the
+      // production build already bundled it, which is why only dev was broken.
+      noExternal: ['@tonaljs/*'],
+    },
+
+
     css: {
       devSourcemap: true,
       preprocessorOptions: {
