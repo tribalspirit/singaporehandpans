@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useMemo } from 'react';
+import { useEffect, useCallback, useRef, useState, useMemo } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import Fade from 'embla-carousel-fade';
@@ -37,12 +37,20 @@ export default function HeroBackgroundCarousel({
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
+  // Set once the visitor has deliberately stopped the rotation, so the
+  // visibility/intersection handlers below never restart it behind their back.
+  const userStoppedRef = useRef(false);
+
   const autoplayPlugin = useMemo(() => {
     if (prefersReducedMotion) return null;
     return Autoplay({
       delay: AUTOPLAY_DELAY,
-      stopOnInteraction: false,
-      stopOnMouseEnter: false,
+      // Both of these were previously forced to false, which removed every way
+      // to stop the rotation. The plugin's defaults are what satisfy WCAG
+      // 2.2.2: pointer interaction stops it, and stopOnFocusIn (also default
+      // true) stops it for keyboard users the moment a dot takes focus.
+      stopOnInteraction: true,
+      stopOnFocusIn: true,
     });
   }, [prefersReducedMotion]);
 
@@ -67,11 +75,19 @@ export default function HeroBackgroundCarousel({
   useEffect(() => {
     if (!emblaApi || !autoplayPlugin) return;
 
+    // A stop the visitor asked for outranks these automatic resumes — without
+    // this guard, tabbing away or scrolling the hero out of view and back would
+    // silently restart rotation the visitor had deliberately stopped.
+    const resumeAutoplay = () => {
+      if (prefersReducedMotion || userStoppedRef.current) return;
+      autoplayPlugin.play();
+    };
+
     const handleVisibilityChange = () => {
       if (document.hidden) {
         autoplayPlugin.stop();
-      } else if (!prefersReducedMotion) {
-        autoplayPlugin.play();
+      } else {
+        resumeAutoplay();
       }
     };
 
@@ -81,9 +97,7 @@ export default function HeroBackgroundCarousel({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            if (!prefersReducedMotion) {
-              autoplayPlugin.play();
-            }
+            resumeAutoplay();
           } else {
             autoplayPlugin.stop();
           }
@@ -103,11 +117,18 @@ export default function HeroBackgroundCarousel({
     };
   }, [emblaApi, autoplayPlugin, prefersReducedMotion]);
 
+  // Choosing a slide is an explicit "I'll take it from here": stop the
+  // rotation outright rather than only jumping. This is the pagination's
+  // WCAG 2.2.2 stop mechanism, so it must not depend on the plugin's own
+  // pointer heuristics — keyboard activation never fires pointerDown.
   const scrollTo = useCallback(
     (index: number) => {
-      if (emblaApi) emblaApi.scrollTo(index);
+      if (!emblaApi) return;
+      userStoppedRef.current = true;
+      autoplayPlugin?.stop();
+      emblaApi.scrollTo(index);
     },
-    [emblaApi]
+    [emblaApi, autoplayPlugin]
   );
 
   const [selectedIndex, setSelectedIndex] = useState(0);
