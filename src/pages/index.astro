@@ -343,12 +343,11 @@ const description =
     border-radius: var(--radius-lg);
     padding: var(--space-8);
     text-align: center;
-    box-shadow: var(--shadow-md);
-    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
 
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
   }
 
