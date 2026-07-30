@@ -86,11 +86,11 @@
   }
   &::-webkit-scrollbar-track {
     background: var(--color-gray-100);
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
   }
   &::-webkit-scrollbar-thumb {
     background: var(--color-gray-400);
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     &:hover {
       background: var(--color-gray-500);
     }
