@@ -255,7 +255,6 @@ const embedId = `acuity-embed-${Math.random().toString(36).substr(2, 9)}`;
 
       &:hover {
         background: var(--color-primary-dark);
-        transform: translateY(-2px);
       }
     }
   }
@@ -292,8 +291,8 @@ const embedId = `acuity-embed-${Math.random().toString(36).substr(2, 9)}`;
   /* Dark mode support */
   @media (prefers-color-scheme: dark) {
     .acuity-inline-widget {
-      background: var(--color-surface-dark, #1a1a1a);
-      border-color: var(--color-border-dark, #333);
+      background: var(--color-secondary-dark);
+      border-color: var(--color-gray-800);
     }
   }
 </style>
