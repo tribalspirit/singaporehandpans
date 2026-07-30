@@ -134,13 +134,20 @@
 .triadTileSelected {
   border-color: var(--color-primary);
   background: var(--color-primary-light);
-  color: var(--color-white);
+  color: var(--color-gray-900);
   .triadName,
   .triadNotes {
-    color: var(--color-white);
+    color: var(--color-gray-900);
   }
   &:hover {
     background: var(--color-gray-900);
+    color: var(--color-white);
+    .triadName,
+    .triadNotes,
+    .chordName,
+    .chordNotes {
+      color: var(--color-white);
+    }
   }
 }
 .triadTileTonic {
@@ -178,16 +185,23 @@
   &.triadTileSelected {
     border-color: var(--color-primary);
     background: var(--color-primary-light);
-    color: var(--color-white);
+    color: var(--color-gray-900);
     &::before {
       display: none;
     }
     .triadName,
     .triadNotes {
-      color: var(--color-white);
+      color: var(--color-gray-900);
     }
     &:hover {
       background: var(--color-gray-900);
+      color: var(--color-white);
+      .triadName,
+      .triadNotes,
+      .chordName,
+      .chordNotes {
+        color: var(--color-white);
+      }
     }
   }
 }
@@ -225,16 +239,23 @@
   &.triadTileSelected {
     border-color: var(--color-primary);
     background: var(--color-primary-light);
-    color: var(--color-white);
+    color: var(--color-gray-900);
     &::before {
       display: none;
     }
     .triadName,
     .triadNotes {
-      color: var(--color-white);
+      color: var(--color-gray-900);
     }
     &:hover {
       background: var(--color-gray-900);
+      color: var(--color-white);
+      .triadName,
+      .triadNotes,
+      .chordName,
+      .chordNotes {
+        color: var(--color-white);
+      }
     }
   }
   &.triadTileTonic {
@@ -348,13 +369,20 @@
 .chordItemSelected {
   border-color: var(--color-primary);
   background: var(--color-primary-light);
-  color: var(--color-white);
+  color: var(--color-gray-900);
   .chordName,
   .chordNotes {
-    color: var(--color-white);
+    color: var(--color-gray-900);
   }
   &:hover {
     background: var(--color-gray-900);
+    color: var(--color-white);
+    .triadName,
+    .triadNotes,
+    .chordName,
+    .chordNotes {
+      color: var(--color-white);
+    }
   }
 }
 .chordName {
