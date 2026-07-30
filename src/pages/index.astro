@@ -314,6 +314,13 @@ const description =
   }
 
   // About Preview Section
+  // Homepage bands alternate paper / paper-deep so no two adjacent sections
+  // share a ground: FeaturedProducts paper, OurPartners deep, UpcomingEvents
+  // paper, about-preview deep, services-preview paper, CTA deep.
+  .about-preview {
+    background-color: var(--color-gray-100);
+  }
+
   .about-preview__grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -338,6 +345,12 @@ const description =
     height: auto;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
+  }
+
+  // Paper band, stated explicitly rather than inherited from the body so the
+  // alternation survives a change to the page ground
+  .services-preview {
+    background-color: var(--color-gray-50);
   }
 
   // Services Grid
@@ -414,7 +427,7 @@ const description =
 
   // CTA Section
   .cta-section {
-    background-color: var(--color-gray-50);
+    background-color: var(--color-gray-100);
     text-align: center;
   }
 

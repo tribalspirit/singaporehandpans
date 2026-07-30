@@ -111,6 +111,12 @@ const hasMoreEvents = totalUpcoming > 3;
 <script src="../../scripts/availability-hydration.ts"></script>
 
 <style lang="scss">
+  // Paper band. The homepage alternates paper / paper-deep down the page so no
+  // two adjacent sections share a ground; see index.astro.
+  .upcoming-events {
+    background-color: var(--color-gray-50);
+  }
+
   .upcoming-events__header {
     text-align: center;
     margin-bottom: var(--space-12);

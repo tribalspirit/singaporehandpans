@@ -47,9 +47,9 @@
   }
 
   &:focus {
-    outline: none;
+    outline: 2px solid var(--color-gray-900);
+    outline-offset: 2px;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 59, 130, 246), 0.1);
   }
 }
 
@@ -102,9 +102,9 @@
     box-shadow var(--transition-fast);
 
   &:focus {
-    outline: none;
+    outline: 2px solid var(--color-gray-900);
+    outline-offset: 2px;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 59, 130, 246), 0.1);
   }
 }
 
