@@ -302,23 +302,61 @@ const imageUrl = event.content.image?.filename
     color: var(--color-gray-600);
   }
 
+  // Each availability state carries a distinct shape, not only a hue, so the
+  // status stays legible without colour vision. Shapes are built from
+  // backgrounds and empty pseudo-elements rather than text glyphs: the dot is a
+  // decorative empty span, and CSS generated content is announced by some
+  // screen readers — which cannot be suppressed here without changing markup.
+  // The --available|--few_spots|--sold_out class fragments must survive: they
+  // are what availability-hydration.ts rewrites at runtime.
   .home-event-card__availability-dot {
+    position: relative;
     width: 8px;
     height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
 
+    // Filled disc
     .home-event-card__availability--available & {
       background-color: var(--color-success);
-      outline: 2px solid var(--color-gray-400);
     }
 
+    // Half-filled disc inside a ring
     .home-event-card__availability--few_spots & {
-      background-color: var(--color-warning);
+      background-color: transparent;
+      box-shadow: inset 0 0 0 1px var(--color-warning);
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0 50% 0 0;
+        background-color: var(--color-warning);
+      }
     }
 
+    // Cross
     .home-event-card__availability--sold_out & {
-      background-color: var(--color-error);
+      background-color: transparent;
+
+      &::before,
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -1px;
+        width: 10px;
+        height: 1px;
+        background-color: var(--color-gray-500);
+      }
+
+      &::before {
+        transform: rotate(45deg);
+      }
+
+      &::after {
+        transform: rotate(-45deg);
+      }
     }
   }
 
