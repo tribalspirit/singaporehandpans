@@ -212,4 +212,12 @@
   // New — hairline, used by the patches in PATCHES.md
   --color-hairline: rgba(33, 27, 22, 0.14);
   --color-hairline-strong: rgba(33, 27, 22, 0.24);
+
+  // Focus rings. Ink reads clearly on paper, sand and photography, and is the
+  // default. It is invisible on the ink footer and weak on the deep-bronze
+  // bands, which share its hue — those surfaces must opt into the inverse.
+  // Retiring coral removed the one thing that used to be visible on both, so
+  // the light/dark pair has to be explicit.
+  --color-focus: var(--color-gray-900);
+  --color-focus-inverse: var(--color-white);
 }

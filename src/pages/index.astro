@@ -278,6 +278,11 @@ const description =
     gap: var(--space-4);
     align-items: flex-start;
 
+    // The hero sits on a dark scrim, so the default ink ring would barely read
+    .btn:focus {
+      outline-color: var(--color-focus-inverse);
+    }
+
     // Paper on photography reads as the primary action far more clearly than
     // brown on photography
     .btn--primary {

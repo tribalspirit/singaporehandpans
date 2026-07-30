@@ -480,6 +480,12 @@ const description =
   .cta-section {
     background: var(--color-gray-800);
     color: var(--color-white);
+
+    // Dark band: the default ink focus ring shares this hue and would not read
+    .btn:focus,
+    a:focus {
+      outline-color: var(--color-focus-inverse);
+    }
   }
 
   .cta {

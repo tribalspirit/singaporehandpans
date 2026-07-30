@@ -197,13 +197,15 @@ const footerLinks = [
     color: var(--color-gray-300);
     transition: all var(--transition-fast);
 
+    // Inverts on hover. Filling with ink would match the footer ground exactly
+    // and make the chip disappear rather than highlight.
     &:hover {
-      background-color: var(--color-gray-900);
-      color: var(--color-white);
+      background-color: var(--color-white);
+      color: var(--color-gray-900);
     }
 
     &:focus {
-      outline: 2px solid var(--color-accent);
+      outline: 2px solid var(--color-focus-inverse);
       outline-offset: 2px;
     }
   }
@@ -260,7 +262,7 @@ const footerLinks = [
     }
 
     &:focus {
-      outline: 2px solid var(--color-accent);
+      outline: 2px solid var(--color-focus-inverse);
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }
@@ -312,7 +314,7 @@ const footerLinks = [
     }
 
     &:focus {
-      outline: 2px solid var(--color-accent);
+      outline: 2px solid var(--color-focus-inverse);
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }
