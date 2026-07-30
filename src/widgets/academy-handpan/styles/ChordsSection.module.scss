@@ -124,7 +124,6 @@
   &:hover {
     border-color: var(--color-primary);
     background: var(--color-gray-50);
-    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
   }
   &:focus {
@@ -339,7 +338,6 @@
   &:hover {
     border-color: var(--color-primary);
     background: var(--color-gray-50);
-    transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
   }
   &:focus {

@@ -69,7 +69,6 @@
 
   &:hover {
     background: var(--color-primary-dark);
-    transform: translateY(-1px);
   }
   &:focus {
     outline: 2px solid var(--color-primary);
@@ -232,14 +231,10 @@
   &:hover {
     background: var(--color-primary-light);
     color: var(--color-primary-dark);
-    transform: translateY(-1px);
   }
   &:focus {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
-  }
-  &:active {
-    transform: translateY(0);
   }
 }
 .noteBadgeActive {
