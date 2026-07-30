@@ -1,135 +1,165 @@
 // Design Tokens for Singapore Handpan Studio
+// ─────────────────────────────────────────────────────────────
+// VISUAL RESTYLE — drop-in replacement for src/styles/tokens.scss
+//
+// Every token NAME from the original file is preserved, including the
+// "Component Token Aliases" block, so no component markup or class needs
+// to change. Only VALUES change.
+//
+// Direction: one warm family. Paper-warm neutrals (hue ~60-70°, low chroma),
+// bronze as the single accent, moss reserved for availability/success.
+// Coral (#ff7f50), orange-red, dark slate gray and the blue-tinted Bootstrap
+// gray ramp are all retired.
+// ─────────────────────────────────────────────────────────────
 
-// Color Palette
 :root {
-  // Primary Colors - Warm earth tones reflecting handpan's natural aesthetic
-  --color-primary: #8b4513; // Saddle brown - main brand color
-  --color-primary-light: #cd853f; // Peru - lighter variant
-  --color-primary-dark: #654321; // Dark brown - darker variant
+  // Primary — bronze. The only accent colour on the site.
+  --color-primary: #8a5a33; // Bronze - links, eyebrows, category labels
+  --color-primary-light: #c9a882; // Brass - hairlines, hover, large numerals
+  --color-primary-dark: #5e3c21; // Deep bronze - link hover
 
-  // Secondary Colors - Complement the warm earth tones
-  --color-secondary: #2f4f4f; // Dark slate gray - sophisticated contrast
-  --color-secondary-light: #708090; // Slate gray - lighter variant
-  --color-secondary-dark: #1c1c1c; // Almost black - darker variant
+  // Secondary — moss. Availability and success states only.
+  --color-secondary: #5e6b54; // Moss
+  --color-secondary-light: #7a8770; // Light moss
+  --color-secondary-dark: #1a1511; // Footer ink
 
-  // Accent Colors - Add vibrancy for CTAs and highlights
-  --color-accent: #ff7f50; // Coral - warm, inviting
-  --color-accent-light: #ffa07a; // Light salmon
-  --color-accent-dark: #ff4500; // Orange red
+  // Accent — deliberately re-pointed at the ink/sand family.
+  // The original coral was the focus-ring colour (2.3:1 on white, failed
+  // WCAG) and the shop gradient's end stop. Re-pointing it here removes
+  // coral from every consumer at once with no markup change.
+  --color-accent: #211b16; // Ink - focus rings become high-contrast
+  --color-accent-light: #e5ddd2; // Sand - neutralises the shop gradient
+  --color-accent-dark: #5e3c21; // Deep bronze
 
-  // Neutral Colors
-  --color-white: #ffffff;
-  --color-gray-50: #f8f9fa;
-  --color-gray-100: #f8f9fa;
-  --color-gray-200: #e9ecef;
-  --color-gray-300: #dee2e6;
-  --color-gray-400: #ced4da;
-  --color-gray-500: #adb5bd;
-  --color-gray-600: #6c757d;
-  --color-gray-700: #495057;
-  --color-gray-800: #343a40;
-  --color-gray-900: #212529;
-  --color-black: #000000;
+  // Neutrals — warm ramp. Replaces the blue-tinted Bootstrap grays.
+  // Note: gray-50 and gray-100 were the SAME hex in the original, which is
+  // why adjacent page sections lost their seam. They now differ.
+  --color-white: #fffdfa; // Warm off-white - cards, dark-bg text
+  --color-gray-50: #f7f3ed; // Paper - page ground
+  --color-gray-100: #efe9e0; // Paper deep - alternating bands
+  --color-gray-200: #e5ddd2; // Sand - image wells, panels
+  --color-gray-300: #d8cec0; // Borders
+  --color-gray-400: #bfb3a2; // Disabled marks, placeholder icons
+  --color-gray-500: #7a6e5e; // Muted text (4.6:1 on paper - was 2.6:1)
+  --color-gray-600: #5f544b; // Secondary text
+  --color-gray-700: #453d35;
+  --color-gray-800: #302923;
+  --color-gray-900: #211b16; // Ink - body text, buttons, footer
+  --color-black: #14100c;
 
-  // Semantic Colors
-  --color-success: #28a745;
-  --color-success-dark: #1a7a31; // WCAG AA text-safe green
-  --color-warning: #ffc107;
-  --color-error: #dc3545;
-  --color-info: #17a2b8;
+  // Semantic — re-tinted to sit inside the warm family
+  --color-success: #5e6b54;
+  --color-success-dark: #47523f; // WCAG AA text-safe
+  --color-warning: #a8752a;
+  --color-error: #9c3b2e;
+  --color-info: #5f6b74;
 
-  // Typography Scale
-  --font-family-primary:
-    'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  --font-family-heading: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --font-family-mono: 'Fira Code', 'Courier New', monospace;
+  // Typography
+  // Newsreader: low-contrast text serif. Stays warm at 64px, readable at 20px,
+  //   and does not get brittle over photography the way Playfair does.
+  // Work Sans: quiet grotesque for body.
+  // IBM Plex Mono: eyebrows, dates, prices, note counts, scales. This is the
+  //   voice that makes the site read as a studio rather than a store.
+  --font-family-primary: 'Work Sans', system-ui, -apple-system, sans-serif;
+  --font-family-heading: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-family-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
 
-  // Font Sizes - Fluid typography using clamp()
-  --font-size-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem); // 12-14px
-  --font-size-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem); // 14-16px
-  --font-size-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem); // 16-18px
-  --font-size-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem); // 18-20px
-  --font-size-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem); // 20-24px
-  --font-size-2xl: clamp(1.5rem, 1.3rem + 1vw, 2rem); // 24-32px
-  --font-size-3xl: clamp(1.875rem, 1.5rem + 1.875vw, 2.5rem); // 30-40px
-  --font-size-4xl: clamp(2.25rem, 1.8rem + 2.25vw, 3rem); // 36-48px
-  --font-size-5xl: clamp(2.5rem, 2rem + 2.5vw, 3.5rem); // 40-56px
+  // Font Sizes — six real steps instead of nine, all of them used.
+  // Ranges tightened: the original 5xl topped out at 56px but grew from 40px,
+  // which made the hero headline unstable across the breakpoint.
+  --font-size-xs: clamp(0.6875rem, 0.66rem + 0.14vw, 0.75rem); // 11-12px
+  --font-size-sm: clamp(0.8125rem, 0.79rem + 0.11vw, 0.875rem); // 13-14px
+  --font-size-base: clamp(0.9375rem, 0.91rem + 0.14vw, 1rem); // 15-16px
+  --font-size-lg: clamp(1.0625rem, 1.02rem + 0.23vw, 1.1875rem); // 17-19px
+  --font-size-xl: clamp(1.1875rem, 1.11rem + 0.34vw, 1.375rem); // 19-22px
+  --font-size-2xl: clamp(1.4375rem, 1.28rem + 0.8vw, 1.75rem); // 23-28px
+  --font-size-3xl: clamp(1.75rem, 1.4rem + 1.75vw, 2.375rem); // 28-38px
+  --font-size-4xl: clamp(2.125rem, 1.6rem + 2.6vw, 2.875rem); // 34-46px
+  --font-size-5xl: clamp(2.5rem, 1.7rem + 4vw, 4rem); // 40-64px
 
-  // Font Weights
+  // Font Weights — display type is LIGHT, not bold. Newsreader at 300-400 is
+  // where the calm lives; at 600+ it reads as a luxury boutique.
   --font-weight-light: 300;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-  --font-weight-extrabold: 800;
+  --font-weight-semibold: 500; // was 600 - nothing on this site needs 600
+  --font-weight-bold: 500; // was 700 - see PATCHES.md §2 for headings
+  --font-weight-extrabold: 600;
 
   // Line Heights
-  --line-height-tight: 1.2;
+  --line-height-tight: 1.12; // display headings, was 1.2
   --line-height-normal: 1.5;
-  --line-height-relaxed: 1.6;
+  --line-height-relaxed: 1.65; // body prose, was 1.6
   --line-height-loose: 1.8;
 
-  // Spacing Scale - Based on 8px grid system
-  --space-1: 0.25rem; // 4px
-  --space-2: 0.5rem; // 8px
-  --space-3: 0.75rem; // 12px
-  --space-4: 1rem; // 16px
-  --space-5: 1.25rem; // 20px
-  --space-6: 1.5rem; // 24px
-  --space-8: 2rem; // 32px
-  --space-10: 2.5rem; // 40px
-  --space-12: 3rem; // 48px
-  --space-16: 4rem; // 64px
-  --space-20: 5rem; // 80px
-  --space-24: 6rem; // 96px
-  --space-32: 8rem; // 128px
+  // Spacing Scale — unchanged 8px grid. Section rhythm is opened up in
+  // global.scss instead (see PATCHES.md §3).
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
 
-  // Layout Widths
+  // Layout Widths — container narrowed from 1200px. The shop page overrides
+  // .container to 1400px locally; PATCHES.md §6 removes that override so the
+  // page gutter stops jumping 200px between Home and Shop.
   --width-full: 100%;
   --width-screen: 100vw;
-  --width-container: 1200px;
+  --width-container: 1240px;
   --width-container-sm: 640px;
   --width-container-md: 768px;
   --width-container-lg: 1024px;
-  --width-container-xl: 1200px;
+  --width-container-xl: 1240px;
 
-  // Breakpoints (for reference in media queries)
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
 
-  // Border Radius
+  // Border Radius — ONE radius. Handpans are round; the layout should not be.
+  // Collapsing every step to 2px fixes the 8px/16px card disagreement across
+  // ProductCard, HomeEventCard, partner-card and service-card without editing
+  // a single component. radius-full stays for the availability pill/dot.
   --radius-none: 0;
-  --radius-sm: 0.125rem; // 2px
-  --radius-base: 0.25rem; // 4px
-  --radius-md: 0.375rem; // 6px
-  --radius-lg: 0.5rem; // 8px
-  --radius-xl: 0.75rem; // 12px
-  --radius-2xl: 1rem; // 16px
-  --radius-3xl: 1.5rem; // 24px
+  --radius-sm: 2px;
+  --radius-base: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 2px;
+  --radius-2xl: 2px;
+  --radius-3xl: 2px;
   --radius-full: 9999px;
 
-  // Shadows
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-base:
-    0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --shadow-md:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  // Shadows — re-pointed at hairline outlines. Separation on this site should
+  // come from a 1px rule and the paper/sand pair, not from a drop shadow.
+  // Because every card already consumes shadow-sm / shadow-md, this converts
+  // the whole surface language in one place. Only shadow-xl/2xl keep real
+  // depth, for the sticky booking bar and modals.
+  --shadow-sm: 0 0 0 1px rgba(33, 27, 22, 0.1);
+  --shadow-base: 0 0 0 1px rgba(33, 27, 22, 0.12);
+  --shadow-md: 0 0 0 1px rgba(33, 27, 22, 0.2);
+  --shadow-lg: 0 0 0 1px rgba(33, 27, 22, 0.24);
   --shadow-xl:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    0 2px 8px rgba(33, 27, 22, 0.08), 0 0 0 1px rgba(33, 27, 22, 0.1);
+  --shadow-2xl: 0 12px 32px rgba(33, 27, 22, 0.18);
 
-  // Transitions
-  --transition-fast: 150ms ease-in-out;
-  --transition-base: 200ms ease-in-out;
-  --transition-slow: 300ms ease-in-out;
-  --transition-slower: 500ms ease-in-out;
+  // Transitions — slightly slower. Calm sites do not snap.
+  --transition-fast: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 240ms cubic-bezier(0.4, 0, 0.2, 1); // was UNDEFINED but
+  //   consumed by shop/index.astro .collection-image-wrapper img
+  --transition-slow: 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slower: 500ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  // Z-index Scale
   --z-index-dropdown: 1000;
   --z-index-sticky: 1020;
   --z-index-fixed: 1030;
@@ -141,43 +171,44 @@
   // ========================================
   // Component Token Aliases
   // ========================================
+  // Kept verbatim. These are redundant with the canonical names above and
+  // should eventually be codemodded away, but removing them is a refactor,
+  // not a restyle — out of scope here. See PATCHES.md §8.
 
-  // Layout Heights
-  --header-height: 70px;
+  --header-height: 76px; // was 70px
   --footer-height: 200px;
 
-  // Max Width
   --max-width: var(--width-container);
 
-  // Spacing Aliases (mapping space-X to spacing-X for component compatibility)
-  --spacing-xs: var(--space-2); // 8px
-  --spacing-sm: var(--space-3); // 12px
-  --spacing-md: var(--space-4); // 16px
-  --spacing-lg: var(--space-6); // 24px
-  --spacing-xl: var(--space-8); // 32px
-  --spacing-2xl: var(--space-12); // 48px
-  --spacing-3xl: var(--space-16); // 64px
-  --spacing-4xl: var(--space-20); // 80px
+  --spacing-xs: var(--space-2);
+  --spacing-sm: var(--space-3);
+  --spacing-md: var(--space-4);
+  --spacing-lg: var(--space-6);
+  --spacing-xl: var(--space-8);
+  --spacing-2xl: var(--space-12);
+  --spacing-3xl: var(--space-16);
+  --spacing-4xl: var(--space-20);
 
-  // Border Radius Aliases (mapping radius-X to border-radius-X)
-  --border-radius-sm: var(--radius-sm); // 2px
-  --border-radius-md: var(--radius-md); // 6px
-  --border-radius-lg: var(--radius-lg); // 8px
-  --border-radius-xl: var(--radius-xl); // 12px
-  --border-radius-full: var(--radius-full); // 9999px (pill shape)
+  --border-radius-sm: var(--radius-sm);
+  --border-radius-md: var(--radius-md);
+  --border-radius-lg: var(--radius-lg);
+  --border-radius-xl: var(--radius-xl);
+  --border-radius-full: var(--radius-full);
 
-  // Font Size Aliases (adding missing xxl)
-  --font-size-md: var(--font-size-base); // 16-18px
-  --font-size-xxl: var(--font-size-2xl); // 24-32px
+  --font-size-md: var(--font-size-base);
+  --font-size-xxl: var(--font-size-2xl);
 
-  // Text Colors
   --color-text-primary: var(--color-gray-900);
   --color-text-secondary: var(--color-gray-600);
   --color-text-tertiary: var(--color-gray-500);
 
-  // Surface & Border Colors
   --color-surface: var(--color-white);
   --color-border: var(--color-gray-300);
-  --color-background: var(--color-white);
+  --color-background: var(--color-gray-50); // was --color-white; the page
+  //   ground is now paper, and cards sit on it in --color-white
   --color-background-secondary: var(--color-gray-100);
+
+  // New — hairline, used by the patches in PATCHES.md
+  --color-hairline: rgba(33, 27, 22, 0.14);
+  --color-hairline-strong: rgba(33, 27, 22, 0.24);
 }
