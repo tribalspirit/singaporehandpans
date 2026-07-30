@@ -388,38 +388,25 @@ const ACUITY_PRIVATE_URL =
 </BaseLayout>
 
 <style lang="scss">
+  // Page Hero — the shared masthead treatment from handoff §3: paper band,
+  // hairline rule, left-set light display type. The old dark scrim and the
+  // text-shadows existed only to keep white text legible over a gradient, and
+  // are unnecessary now the band is paper.
   .page-hero {
-    position: relative;
-    background: var(--color-gray-900);
-    color: var(--color-white);
+    background: var(--color-gray-50);
+    border-bottom: 1px solid var(--color-hairline);
     padding: var(--space-20) 0 var(--space-16);
-    text-align: center;
-
-    // Dark overlay for WCAG contrast on white text
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.35);
-      pointer-events: none;
-    }
-
-    // Ensure content sits above overlay
-    .container {
-      position: relative;
-      z-index: 1;
-    }
+    text-align: left;
 
     @media (min-width: 768px) {
-      padding: var(--space-24) 0 var(--space-20);
+      padding: var(--space-24) 0 var(--space-16);
     }
   }
 
   .page-hero__title {
     font-size: var(--font-size-4xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     margin-bottom: var(--space-6);
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 
     @media (min-width: 768px) {
       font-size: var(--font-size-5xl);
@@ -429,9 +416,8 @@ const ACUITY_PRIVATE_URL =
   .page-hero__subtitle {
     font-size: var(--font-size-lg);
     line-height: var(--line-height-relaxed);
-    max-width: 600px;
-    margin: 0 auto;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    max-width: 56ch;
+    color: var(--color-gray-600);
 
     @media (min-width: 768px) {
       font-size: var(--font-size-xl);
@@ -802,7 +788,7 @@ const ACUITY_PRIVATE_URL =
 
   .section__title {
     font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     margin-bottom: var(--space-8);
     color: var(--color-gray-900);
 
