@@ -474,7 +474,13 @@ const description =
     border-radius: var(--radius-md);
     font-weight: var(--font-weight-medium);
     text-decoration: none;
-    transition: all var(--transition-fast);
+    // Named properties rather than `all`: outline-width is animatable, so
+    // `transition: all` made the focus ring fade in over 180ms instead of
+    // appearing on keypress.
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
     cursor: pointer;
     border: none;
     font-size: var(--font-size-base);
