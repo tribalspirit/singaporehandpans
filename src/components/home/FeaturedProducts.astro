@@ -238,11 +238,12 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
 
   .featured-products__eyebrow {
     display: block;
+    font-family: var(--font-family-mono);
     font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     color: var(--color-primary);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.14em;
     margin-bottom: var(--space-2);
   }
 
@@ -288,7 +289,7 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
     &:focus-visible {
       outline: 2px solid var(--color-primary);
       outline-offset: 4px;
-      border-radius: 2px;
+      border-radius: var(--radius-sm);
     }
 
     svg {
@@ -372,24 +373,15 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
     text-decoration: none;
     color: inherit;
     height: 100%;
-    transition:
-      box-shadow var(--transition-fast),
-      transform var(--transition-fast);
+    transition: box-shadow var(--transition-fast);
 
     &:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-3px);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-gray-900);
       outline-offset: 3px;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      &:hover {
-        transform: none;
-      }
     }
   }
 
@@ -431,15 +423,15 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
     position: absolute;
     top: var(--space-3);
     left: var(--space-3);
-    background: rgba(33, 37, 41, 0.85);
+    background: rgba(33, 27, 22, 0.85);
     color: var(--color-white);
+    font-family: var(--font-family-mono);
     font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     padding: var(--space-1) var(--space-3);
     border-radius: var(--radius-sm);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    backdrop-filter: blur(4px);
   }
 
   .featured-product-card__content {
@@ -454,11 +446,12 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
   }
 
   .featured-product-card__tag {
+    font-family: var(--font-family-mono);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
     color: var(--color-primary);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.14em;
   }
 
   .featured-product-card__title {
@@ -482,8 +475,9 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
   }
 
   .featured-product-card__price {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     line-height: 1;
   }
@@ -530,7 +524,7 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
     min-height: 44px;
 
     &:hover {
-      background-color: var(--color-primary);
+      background-color: var(--color-gray-900);
       color: var(--color-white);
     }
 

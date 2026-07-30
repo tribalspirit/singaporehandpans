@@ -47,9 +47,9 @@
   }
 
   &:focus {
-    outline: none;
+    outline: 2px solid var(--color-gray-900);
+    outline-offset: 2px;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 59, 130, 246), 0.1);
   }
 }
 
@@ -102,9 +102,9 @@
     box-shadow var(--transition-fast);
 
   &:focus {
-    outline: none;
+    outline: 2px solid var(--color-gray-900);
+    outline-offset: 2px;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 59, 130, 246), 0.1);
   }
 }
 
@@ -173,7 +173,7 @@
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
   color: var(--color-white);
-  background: var(--color-primary);
+  background: var(--color-gray-900);
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -233,7 +233,7 @@
 }
 
 .active {
-  background: var(--color-primary);
+  background: var(--color-gray-900);
   color: var(--color-white);
   border-color: var(--color-primary);
 

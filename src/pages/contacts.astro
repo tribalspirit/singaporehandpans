@@ -390,11 +390,7 @@ const ACUITY_PRIVATE_URL =
 <style lang="scss">
   .page-hero {
     position: relative;
-    background: linear-gradient(
-      135deg,
-      var(--color-accent) 0%,
-      var(--color-accent-dark) 100%
-    );
+    background: var(--color-gray-900);
     color: var(--color-white);
     padding: var(--space-20) 0 var(--space-16);
     text-align: center;
@@ -497,8 +493,7 @@ const ACUITY_PRIVATE_URL =
     }
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
   }
 
@@ -617,13 +612,14 @@ const ACUITY_PRIVATE_URL =
 
   .section--accent {
     position: relative;
-    background-color: #654321;
-    background: linear-gradient(
-      135deg,
-      var(--color-primary) 0%,
-      var(--color-primary-dark) 100%
-    );
+    background: var(--color-gray-800);
     color: var(--color-white);
+
+    // Dark band: the default ink focus ring shares this hue and would not read
+    .btn:focus,
+    a:focus {
+      outline-color: var(--color-focus-inverse);
+    }
 
     // Dark overlay for WCAG contrast on white text
     &::before {
@@ -756,11 +752,11 @@ const ACUITY_PRIVATE_URL =
     }
 
     &--primary {
-      background-color: var(--color-primary);
+      background-color: var(--color-gray-900);
       color: var(--color-white);
 
       &:hover {
-        background-color: var(--color-primary-dark);
+        background-color: var(--color-gray-800);
       }
     }
 

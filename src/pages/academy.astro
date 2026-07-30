@@ -121,17 +121,7 @@ const seoDescription =
   .academy-page {
     min-height: calc(100vh - var(--header-height) - var(--footer-height));
     padding: var(--spacing-2xl) 0;
-    background: linear-gradient(
-      135deg,
-      var(--color-gray-50) 0%,
-      var(--color-white) 100%
-    );
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 var(--spacing-md);
-    }
+    background: var(--color-gray-50);
   }
 
   .academy-hero {
@@ -173,8 +163,7 @@ const seoDescription =
     flex-direction: column;
 
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
 
     &__icon {
@@ -203,7 +192,7 @@ const seoDescription =
       align-items: center;
       gap: var(--spacing-sm);
       padding: var(--spacing-md) var(--spacing-lg);
-      background: var(--color-primary);
+      background: var(--color-gray-900);
       color: var(--color-white);
       text-decoration: none;
       border-radius: var(--border-radius-md);
@@ -212,7 +201,7 @@ const seoDescription =
       width: fit-content;
 
       &:hover {
-        background: var(--color-primary-dark);
+        background: var(--color-gray-800);
         transform: translateX(4px);
       }
 
@@ -258,7 +247,7 @@ const seoDescription =
       display: inline-flex;
       align-items: center;
       padding: var(--spacing-md) var(--spacing-lg);
-      background: var(--color-primary);
+      background: var(--color-gray-900);
       color: var(--color-white);
       text-decoration: none;
       border-radius: var(--border-radius-md);
@@ -266,7 +255,7 @@ const seoDescription =
       transition: all var(--transition-base);
 
       &:hover {
-        background: var(--color-primary-dark);
+        background: var(--color-gray-800);
       }
 
       &--secondary {
@@ -275,7 +264,7 @@ const seoDescription =
         border: 2px solid var(--color-primary);
 
         &:hover {
-          background: var(--color-primary);
+          background: var(--color-gray-900);
           color: var(--color-white);
         }
       }

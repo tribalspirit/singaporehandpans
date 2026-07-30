@@ -274,11 +274,7 @@ const description =
 <style lang="scss">
   // Page Hero
   .page-hero {
-    background: linear-gradient(
-      135deg,
-      var(--color-primary) 0%,
-      var(--color-primary-dark) 100%
-    );
+    background: var(--color-gray-900);
     color: var(--color-white);
     padding: var(--space-20) 0 var(--space-16);
     text-align: center;
@@ -407,8 +403,7 @@ const description =
     transition: all var(--transition-fast);
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
   }
 
@@ -483,12 +478,14 @@ const description =
 
   // CTA Section
   .cta-section {
-    background: linear-gradient(
-      135deg,
-      var(--color-primary) 0%,
-      var(--color-primary-dark) 100%
-    );
+    background: var(--color-gray-800);
     color: var(--color-white);
+
+    // Dark band: the default ink focus ring shares this hue and would not read
+    .btn:focus,
+    a:focus {
+      outline-color: var(--color-focus-inverse);
+    }
   }
 
   .cta {

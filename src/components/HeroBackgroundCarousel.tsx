@@ -1,6 +1,7 @@
-import { useEffect, useCallback, useState, useMemo } from 'react';
+import { useEffect, useCallback, useRef, useState, useMemo } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
+import Fade from 'embla-carousel-fade';
 import styles from './HeroBackgroundCarousel.module.scss';
 
 const HERO_IMAGES = [
@@ -11,7 +12,8 @@ const HERO_IMAGES = [
   '/images/hero/hero-placeholder-5.jpg',
 ];
 
-const AUTOPLAY_DELAY = 5000;
+// A background that moves every five seconds fights the calm brief
+const AUTOPLAY_DELAY = 9000;
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 interface HeroBackgroundCarouselProps {
@@ -35,31 +37,74 @@ export default function HeroBackgroundCarousel({
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
+  // Set once the visitor has deliberately stopped the rotation, so the
+  // visibility/intersection handlers below never restart it behind their back.
+  const userStoppedRef = useRef(false);
+
   const autoplayPlugin = useMemo(() => {
     if (prefersReducedMotion) return null;
     return Autoplay({
       delay: AUTOPLAY_DELAY,
-      stopOnInteraction: false,
-      stopOnMouseEnter: false,
+      // Both of these were previously forced to false, which removed every way
+      // to stop the rotation. The plugin's defaults are what satisfy WCAG
+      // 2.2.2: pointer interaction stops it, and stopOnFocusIn (also default
+      // true) stops it for keyboard users the moment a dot takes focus.
+      stopOnInteraction: true,
+      stopOnFocusIn: true,
     });
   }, [prefersReducedMotion]);
+
+  // Cross-fade rather than slide: a photograph sliding under the headline
+  // pulls the eye sideways, a dissolve does not. Fade is skipped entirely
+  // under reduced motion, leaving an instant cut.
+  const plugins = useMemo(() => {
+    const active = [];
+    if (autoplayPlugin) active.push(autoplayPlugin);
+    if (!prefersReducedMotion) active.push(Fade());
+    return active;
+  }, [autoplayPlugin, prefersReducedMotion]);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
       loop: true,
-      duration: prefersReducedMotion ? 0 : 20,
+      duration: prefersReducedMotion ? 0 : 40,
     },
-    autoplayPlugin ? [autoplayPlugin] : []
+    plugins
   );
 
   useEffect(() => {
     if (!emblaApi || !autoplayPlugin) return;
 
+    // A stop the visitor asked for outranks these automatic resumes — without
+    // this guard, tabbing away or scrolling the hero out of view and back would
+    // silently restart rotation the visitor had deliberately stopped.
+    const resumeAutoplay = () => {
+      if (prefersReducedMotion || userStoppedRef.current) return;
+      autoplayPlugin.play();
+    };
+
+    // Any deliberate contact with the carousel — dragging it, or tabbing into
+    // the pagination — stops the rotation and is recorded, so the resume guard
+    // above will not undo it later. These are plain DOM listeners on the root
+    // rather than Embla events on purpose: the plugin only subscribes to
+    // pointerDown when the carousel is draggable, and its stopOnFocusIn hangs
+    // off slideFocusStart, which never fires here because the slides hold only
+    // images and the dots sit outside the container. Listening on the root
+    // covers both gestures without depending on that plumbing.
+    const stopForUser = () => {
+      userStoppedRef.current = true;
+      autoplayPlugin.stop();
+    };
+
+    const rootNode = emblaApi.rootNode();
+    rootNode?.addEventListener('pointerdown', stopForUser);
+    rootNode?.addEventListener('focusin', stopForUser);
+
     const handleVisibilityChange = () => {
       if (document.hidden) {
         autoplayPlugin.stop();
-      } else if (!prefersReducedMotion) {
-        autoplayPlugin.play();
+      } else {
+        resumeAutoplay();
       }
     };
 
@@ -69,9 +114,7 @@ export default function HeroBackgroundCarousel({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            if (!prefersReducedMotion) {
-              autoplayPlugin.play();
-            }
+            resumeAutoplay();
           } else {
             autoplayPlugin.stop();
           }
@@ -88,22 +131,23 @@ export default function HeroBackgroundCarousel({
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       observer.disconnect();
+      rootNode?.removeEventListener('pointerdown', stopForUser);
+      rootNode?.removeEventListener('focusin', stopForUser);
     };
   }, [emblaApi, autoplayPlugin, prefersReducedMotion]);
 
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
-
+  // Choosing a slide is an explicit "I'll take it from here": stop the
+  // rotation outright rather than only jumping. This is the pagination's
+  // WCAG 2.2.2 stop mechanism, so it must not depend on the plugin's own
+  // pointer heuristics — keyboard activation never fires pointerDown.
   const scrollTo = useCallback(
     (index: number) => {
-      if (emblaApi) emblaApi.scrollTo(index);
+      if (!emblaApi) return;
+      userStoppedRef.current = true;
+      autoplayPlugin?.stop();
+      emblaApi.scrollTo(index);
     },
-    [emblaApi]
+    [emblaApi, autoplayPlugin]
   );
 
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -139,42 +183,12 @@ export default function HeroBackgroundCarousel({
         ))}
       </div>
 
-      <div className={styles.carousel__controls}>
-        <button
-          type="button"
-          className={styles.carousel__button}
-          onClick={scrollPrev}
-          aria-label="Previous slide"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-        </button>
-
-        <button
-          type="button"
-          className={styles.carousel__button}
-          onClick={scrollNext}
-          aria-label="Next slide"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </button>
-      </div>
-
+      {/*
+        Prev/next arrows are deliberately not rendered — they competed with the
+        hero CTA. The pagination dots stay: autoplay is still running, so
+        removing every control would leave no way to pause or advance
+        (WCAG 2.2.2).
+      */}
       <div
         className={styles.carousel__pagination}
         role="tablist"

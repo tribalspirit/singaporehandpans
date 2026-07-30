@@ -205,20 +205,24 @@ const description =
     min-height: 60vh;
     display: flex;
     align-items: center;
-    justify-content: center;
-    text-align: center;
+    text-align: left;
     color: var(--color-white);
     overflow: hidden;
 
     @media (min-width: 768px) {
-      min-height: 80vh;
+      min-height: 70vh;
     }
 
+    // Stops short of the fold so the next section peeks and the page reads as
+    // continuous rather than as a full-bleed splash
     @media (min-width: 1024px) {
-      min-height: 100vh;
+      min-height: 78vh;
     }
   }
 
+  // Directional scrim: heaviest behind the text block, clearing towards the
+  // right so the photograph stays legible. Carries the headline contrast that
+  // the per-element text-shadows used to.
   .hero__overlay {
     position: absolute;
     top: 0;
@@ -226,9 +230,10 @@ const description =
     right: 0;
     bottom: 0;
     background: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.3) 0%,
-      rgba(0, 0, 0, 0.5) 100%
+      100deg,
+      rgba(20, 15, 11, 0.78) 0%,
+      rgba(20, 15, 11, 0.45) 48%,
+      rgba(20, 15, 11, 0.18) 100%
     );
     z-index: 2;
     pointer-events: none;
@@ -237,18 +242,16 @@ const description =
   .hero__content {
     position: relative;
     z-index: 3;
-    max-width: 800px;
-    margin: 0 auto;
+    max-width: 700px;
     padding: var(--space-8);
   }
 
   .hero__title {
     font-size: var(--font-size-4xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     margin-bottom: var(--space-6);
     line-height: var(--line-height-tight);
     color: var(--color-white);
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 
     @media (min-width: 768px) {
       font-size: var(--font-size-5xl);
@@ -256,15 +259,13 @@ const description =
   }
 
   .hero__highlight {
-    color: var(--color-accent);
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    color: var(--color-primary-light);
   }
 
   .hero__subtitle {
     font-size: var(--font-size-lg);
     line-height: var(--line-height-relaxed);
     margin-bottom: var(--space-8);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 
     @media (min-width: 768px) {
       font-size: var(--font-size-xl);
@@ -275,27 +276,56 @@ const description =
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-    align-items: center;
+    align-items: flex-start;
 
-    .btn--outline {
-      color: var(--color-white);
-      border-color: var(--color-white);
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    // The hero sits on a dark scrim, so the default ink ring would barely read
+    .btn:focus {
+      outline-color: var(--color-focus-inverse);
+    }
+
+    // Paper on photography reads as the primary action far more clearly than
+    // brown on photography
+    .btn--primary {
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-900);
 
       &:hover {
         background-color: var(--color-white);
-        color: var(--color-primary);
-        text-shadow: none;
+        color: var(--color-gray-900);
+      }
+    }
+
+    // Secondary is text plus a hairline — no fill, no border
+    .btn--outline {
+      color: var(--color-white);
+      background-color: transparent;
+      border: none;
+      border-bottom: 1px solid rgba(255, 253, 250, 0.5);
+      border-radius: var(--radius-none);
+      padding-left: 0;
+      padding-right: 0;
+
+      &:hover {
+        background-color: transparent;
+        color: var(--color-white);
+        border-bottom-color: var(--color-white);
       }
     }
 
     @media (min-width: 640px) {
       flex-direction: row;
-      justify-content: center;
+      align-items: center;
     }
   }
 
   // About Preview Section
+  // Homepage bands alternate paper / paper-deep so no two adjacent sections
+  // share a ground: FeaturedProducts paper, OurPartners deep, UpcomingEvents
+  // paper, about-preview deep, services-preview paper, CTA deep.
+  .about-preview {
+    background-color: var(--color-gray-100);
+  }
+
   .about-preview__grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -322,6 +352,12 @@ const description =
     box-shadow: var(--shadow-lg);
   }
 
+  // Paper band, stated explicitly rather than inherited from the body so the
+  // alternation survives a change to the page ground
+  .services-preview {
+    background-color: var(--color-gray-50);
+  }
+
   // Services Grid
   .services-grid {
     display: grid;
@@ -343,12 +379,11 @@ const description =
     border-radius: var(--radius-lg);
     padding: var(--space-8);
     text-align: center;
-    box-shadow: var(--shadow-md);
-    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-fast);
 
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
   }
 
@@ -397,7 +432,7 @@ const description =
 
   // CTA Section
   .cta-section {
-    background-color: var(--color-gray-50);
+    background-color: var(--color-gray-100);
     text-align: center;
   }
 
@@ -444,7 +479,13 @@ const description =
     border-radius: var(--radius-md);
     font-weight: var(--font-weight-medium);
     text-decoration: none;
-    transition: all var(--transition-fast);
+    // Named properties rather than `all`: outline-width is animatable, so
+    // `transition: all` made the focus ring fade in over 180ms instead of
+    // appearing on keypress.
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
     cursor: pointer;
     border: none;
     font-size: var(--font-size-base);
@@ -455,11 +496,11 @@ const description =
     }
 
     &--primary {
-      background-color: var(--color-primary);
+      background-color: var(--color-gray-900);
       color: var(--color-white);
 
       &:hover {
-        background-color: var(--color-primary-dark);
+        background-color: var(--color-gray-800);
       }
     }
 
@@ -469,7 +510,7 @@ const description =
       border: 2px solid var(--color-primary);
 
       &:hover {
-        background-color: var(--color-primary);
+        background-color: var(--color-gray-900);
         color: var(--color-white);
       }
     }

@@ -86,11 +86,11 @@
   }
   &::-webkit-scrollbar-track {
     background: var(--color-gray-100);
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
   }
   &::-webkit-scrollbar-thumb {
     background: var(--color-gray-400);
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     &:hover {
       background: var(--color-gray-500);
     }
@@ -124,7 +124,6 @@
   &:hover {
     border-color: var(--color-primary);
     background: var(--color-gray-50);
-    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
   }
   &:focus {
@@ -135,13 +134,20 @@
 .triadTileSelected {
   border-color: var(--color-primary);
   background: var(--color-primary-light);
-  color: var(--color-white);
+  color: var(--color-gray-900);
   .triadName,
   .triadNotes {
-    color: var(--color-white);
+    color: var(--color-gray-900);
   }
   &:hover {
-    background: var(--color-primary);
+    background: var(--color-gray-900);
+    color: var(--color-white);
+    .triadName,
+    .triadNotes,
+    .chordName,
+    .chordNotes {
+      color: var(--color-white);
+    }
   }
 }
 .triadTileTonic {
@@ -179,16 +185,23 @@
   &.triadTileSelected {
     border-color: var(--color-primary);
     background: var(--color-primary-light);
-    color: var(--color-white);
+    color: var(--color-gray-900);
     &::before {
       display: none;
     }
     .triadName,
     .triadNotes {
-      color: var(--color-white);
+      color: var(--color-gray-900);
     }
     &:hover {
-      background: var(--color-primary);
+      background: var(--color-gray-900);
+      color: var(--color-white);
+      .triadName,
+      .triadNotes,
+      .chordName,
+      .chordNotes {
+        color: var(--color-white);
+      }
     }
   }
 }
@@ -226,16 +239,23 @@
   &.triadTileSelected {
     border-color: var(--color-primary);
     background: var(--color-primary-light);
-    color: var(--color-white);
+    color: var(--color-gray-900);
     &::before {
       display: none;
     }
     .triadName,
     .triadNotes {
-      color: var(--color-white);
+      color: var(--color-gray-900);
     }
     &:hover {
-      background: var(--color-primary);
+      background: var(--color-gray-900);
+      color: var(--color-white);
+      .triadName,
+      .triadNotes,
+      .chordName,
+      .chordNotes {
+        color: var(--color-white);
+      }
     }
   }
   &.triadTileTonic {
@@ -339,7 +359,6 @@
   &:hover {
     border-color: var(--color-primary);
     background: var(--color-gray-50);
-    transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
   }
   &:focus {
@@ -350,13 +369,20 @@
 .chordItemSelected {
   border-color: var(--color-primary);
   background: var(--color-primary-light);
-  color: var(--color-white);
+  color: var(--color-gray-900);
   .chordName,
   .chordNotes {
-    color: var(--color-white);
+    color: var(--color-gray-900);
   }
   &:hover {
-    background: var(--color-primary);
+    background: var(--color-gray-900);
+    color: var(--color-white);
+    .triadName,
+    .triadNotes,
+    .chordName,
+    .chordNotes {
+      color: var(--color-white);
+    }
   }
 }
 .chordName {
