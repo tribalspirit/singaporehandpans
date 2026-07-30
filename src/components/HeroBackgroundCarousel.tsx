@@ -83,6 +83,23 @@ export default function HeroBackgroundCarousel({
       autoplayPlugin.play();
     };
 
+    // Any deliberate contact with the carousel — dragging it, or tabbing into
+    // the pagination — stops the rotation and is recorded, so the resume guard
+    // above will not undo it later. These are plain DOM listeners on the root
+    // rather than Embla events on purpose: the plugin only subscribes to
+    // pointerDown when the carousel is draggable, and its stopOnFocusIn hangs
+    // off slideFocusStart, which never fires here because the slides hold only
+    // images and the dots sit outside the container. Listening on the root
+    // covers both gestures without depending on that plumbing.
+    const stopForUser = () => {
+      userStoppedRef.current = true;
+      autoplayPlugin.stop();
+    };
+
+    const rootNode = emblaApi.rootNode();
+    rootNode?.addEventListener('pointerdown', stopForUser);
+    rootNode?.addEventListener('focusin', stopForUser);
+
     const handleVisibilityChange = () => {
       if (document.hidden) {
         autoplayPlugin.stop();
@@ -114,6 +131,8 @@ export default function HeroBackgroundCarousel({
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       observer.disconnect();
+      rootNode?.removeEventListener('pointerdown', stopForUser);
+      rootNode?.removeEventListener('focusin', stopForUser);
     };
   }, [emblaApi, autoplayPlugin, prefersReducedMotion]);
 
