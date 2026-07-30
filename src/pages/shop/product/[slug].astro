@@ -433,7 +433,7 @@ const mainImage = galleryImages[0];
 
   .product-title {
     font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     line-height: var(--line-height-tight);
     margin: 0 0 var(--space-3);
@@ -443,9 +443,11 @@ const mainImage = galleryImages[0];
     }
   }
 
+  // Prices set in Newsreader light, matching ProductCard and FeaturedProducts
   .product-price {
+    font-family: var(--font-family-heading);
     font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     margin: 0 0 var(--space-5);
   }

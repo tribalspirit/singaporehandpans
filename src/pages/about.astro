@@ -272,21 +272,22 @@ const description =
 </BaseLayout>
 
 <style lang="scss">
-  // Page Hero
+  // Page Hero — the shared masthead treatment from handoff §3: paper band,
+  // hairline rule, left-set light display type.
   .page-hero {
-    background: var(--color-gray-900);
-    color: var(--color-white);
+    background: var(--color-gray-50);
+    border-bottom: 1px solid var(--color-hairline);
     padding: var(--space-20) 0 var(--space-16);
-    text-align: center;
+    text-align: left;
 
     @media (min-width: 768px) {
-      padding: var(--space-24) 0 var(--space-20);
+      padding: var(--space-24) 0 var(--space-16);
     }
   }
 
   .page-hero__title {
     font-size: var(--font-size-4xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     margin-bottom: var(--space-6);
 
     @media (min-width: 768px) {
@@ -297,10 +298,9 @@ const description =
   .page-hero__subtitle {
     font-size: var(--font-size-lg);
     line-height: var(--line-height-relaxed);
-    max-width: 600px;
-    margin: 0 auto;
+    max-width: 56ch;
+    color: var(--color-gray-600);
     font-style: italic;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 
     @media (min-width: 768px) {
       font-size: var(--font-size-xl);
@@ -322,7 +322,7 @@ const description =
 
   .section__title {
     font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     margin-bottom: var(--space-8);
     color: var(--color-gray-900);
 
