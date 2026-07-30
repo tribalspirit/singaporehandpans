@@ -133,7 +133,19 @@ a {
 // links live across 40 scoped-style files and would each grow a stray
 // underline, and `a.btn` is not a descendant of `.btn` so it cannot be excluded
 // by ancestor selector.
-:where(p, li, dd, blockquote, [class*='__description'], [class*='rich-text'])
+//
+// Note there is no bare `li` here on purpose — the header nav, mobile nav and
+// footer link columns are all <ul>/<li>, so including it underlined every
+// navigation link on the site. Links in genuine prose lists are still covered,
+// because the prose/rich-text container selectors match any <a> inside them.
+:where(
+    p,
+    dd,
+    blockquote,
+    [class*='__description'],
+    [class*='rich-text'],
+    [class*='prose']
+  )
   a {
   border-bottom: 1px solid rgba(138, 90, 51, 0.35);
   padding-bottom: 1px;
@@ -234,7 +246,7 @@ select {
   position: absolute;
   top: -44px;
   left: 6px;
-  background: var(--color-primary);
+  background: var(--color-gray-900);
   color: var(--color-white);
   padding: var(--space-3) var(--space-4);
   min-height: 44px;
