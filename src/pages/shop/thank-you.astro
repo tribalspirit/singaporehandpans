@@ -107,17 +107,12 @@ const isCompleted = status === 'completed';
     padding: var(--space-16) 0;
   }
 
-  .container {
+  // The narrow measure belongs to the card, not to `.container` — that class is
+  // shared site-wide and is defined once, in global.scss. Overriding it here
+  // changed the page gutter on a route the buyer reaches mid-checkout.
+  .status-card {
     max-width: 640px;
     margin: 0 auto;
-    padding: 0 var(--space-6);
-
-    @media (max-width: 768px) {
-      padding: 0 var(--space-4);
-    }
-  }
-
-  .status-card {
     background: var(--color-white);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);

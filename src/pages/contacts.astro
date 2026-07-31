@@ -778,22 +778,8 @@ const ACUITY_PRIVATE_URL =
     }
   }
 
-  .section {
-    padding: var(--space-16) 0;
-
-    @media (min-width: 768px) {
-      padding: var(--space-24) 0;
-    }
-  }
-
-  .section__title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-light);
-    margin-bottom: var(--space-8);
-    color: var(--color-gray-900);
-
-    &--center {
-      text-align: center;
-    }
-  }
+  // Section rhythm and titles come from global.scss — see index.astro. The
+  // scoped copies that used to live here shadowed the global 128px desktop
+  // rhythm at 96px. `.section__title--white` above survives: it is a separate
+  // top-level selector, and a class still beats the `h2` element rule.
 </style>

@@ -243,7 +243,9 @@ const description =
     position: relative;
     z-index: 3;
     max-width: 700px;
-    padding: var(--space-8);
+    // No horizontal padding: the hero is left-aligned now, and 32px of it
+    // pushed the h1 inside the container gutter so it lined up with nothing.
+    padding: var(--space-8) 0;
   }
 
   .hero__title {
@@ -537,23 +539,10 @@ const description =
     stroke-width: 2;
   }
 
-  // Section Styles
-  .section {
-    padding: var(--space-16) 0;
-
-    @media (min-width: 768px) {
-      padding: var(--space-24) 0;
-    }
-  }
-
-  .section__title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-light);
-    margin-bottom: var(--space-8);
-    color: var(--color-gray-900);
-
-    &--center {
-      text-align: center;
-    }
-  }
+  // Section rhythm and titles are defined once, in global.scss. The scoped
+  // copies that used to live here shadowed it at 64/96px against the global
+  // 64/128px, so Home read at a different proportion from every other route.
+  // `h2` in global.scss already gives 3xl→4xl at light weight, and
+  // `section__title--center` is now inert — the class stays in the markup but
+  // styles nothing, which is what §D2 wants.
 </style>

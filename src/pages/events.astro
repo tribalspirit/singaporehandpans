@@ -176,13 +176,10 @@ const seoDescription =
   .events-page {
     min-height: calc(100vh - var(--header-height) - var(--footer-height));
     padding: var(--spacing-xl) 0;
-
-    .container {
-      max-width: var(--max-width);
-      margin: 0 auto;
-      padding: 0 var(--spacing-md);
-    }
   }
+  // `.container` comes from global.scss. The override that used to live here
+  // matched the global max-width but flattened the padding to 16px, dropping
+  // the 640/1024px gutter steps every other route uses.
 
   // Shared masthead treatment (handoff §3): left-set, light display type, ink
   // not bronze — bronze is reserved for eyebrows, links and hairlines.

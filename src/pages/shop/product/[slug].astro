@@ -310,15 +310,9 @@ const mainImage = galleryImages[0];
     }
   }
 
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 var(--space-6);
-
-    @media (max-width: 768px) {
-      padding: 0 var(--space-4);
-    }
-  }
+  // `.container` is defined once, in global.scss. The 1100px override that used
+  // to live here made the page gutter jump 140px on click-through from Shop,
+  // and its flat padding dropped the global 640/1024px gutter steps.
 
   .breadcrumb {
     margin-bottom: var(--space-8);
