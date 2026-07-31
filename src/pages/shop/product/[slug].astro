@@ -478,10 +478,13 @@ const mainImage = galleryImages[0];
     background: var(--color-white);
     transition: border-color var(--transition-fast);
 
+    // Brass on white is ~1.6:1 — it is a hairline and hover colour and was
+    // never meant to carry contrast. This is the checkout field, so the ring
+    // is the ink one every other focusable element on the site uses.
     &:focus {
-      outline: none;
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 2px var(--color-primary-light);
     }
   }
 
@@ -517,7 +520,7 @@ const mainImage = galleryImages[0];
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-focus);
       outline-offset: 3px;
     }
 
@@ -584,7 +587,7 @@ const mainImage = galleryImages[0];
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }
