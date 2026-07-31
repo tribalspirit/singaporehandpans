@@ -377,28 +377,27 @@ const description =
     }
   }
 
+  // Editorial columns under a hairline rule, not three floating white cards.
+  // Every other section on this page is left-aligned with a mono eyebrow and a
+  // rule; this block was the last thing that read as a theme.
   .service-card {
-    background: var(--color-white);
-    border-radius: var(--radius-lg);
-    padding: var(--space-8);
-    text-align: center;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow var(--transition-fast);
-
-    &:hover {
-      box-shadow: 0 0 0 1px var(--color-primary-light);
-    }
+    border-top: 1px solid var(--color-hairline-strong);
+    padding: var(--space-6) 0 0;
+    text-align: left;
   }
 
+  // 24px at 1.5 stroke, left-set. A 64px stroked icon centred over centred
+  // text is the most generic device in the layout.
   .service-card__icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto var(--space-4);
+    width: 24px;
+    height: 24px;
+    margin: 0 0 var(--space-4);
     color: var(--color-primary);
 
     svg {
       width: 100%;
       height: 100%;
+      stroke-width: 1.5;
     }
   }
 
@@ -416,16 +415,29 @@ const description =
     margin-bottom: var(--space-6);
   }
 
+  // Mono, like every other label on the site. The hairline hover is the site's
+  // link pattern — see FeaturedProducts `__view-all`.
   .service-card__link {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     color: var(--color-primary);
-    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     text-decoration: none;
+    // Padding, not just min-height: the rule hangs off the bottom of the box,
+    // so without it the 44px touch target strands the underline below the text.
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
-      text-decoration: underline;
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
     }
 
     @media (min-width: 1280px) {

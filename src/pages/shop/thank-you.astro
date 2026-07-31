@@ -177,9 +177,16 @@ const isCompleted = status === 'completed';
     font-weight: var(--font-weight-medium);
     color: var(--color-primary);
     text-decoration: none;
+    // The site's link pattern: a 1px rule that fades in, not a browser
+    // underline that snaps. See FeaturedProducts `__view-all`.
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
-      text-decoration: underline;
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
     }
 
     &:focus-visible {

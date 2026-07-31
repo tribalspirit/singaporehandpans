@@ -231,11 +231,16 @@ const formatPrice = (p: { amount: number; currencyCode: string }) =>
     a {
       color: var(--color-gray-600);
       text-decoration: none;
-      transition: color var(--transition-fast);
+      // The site's link pattern: a 1px rule that fades in, not a browser
+      // underline that snaps. See FeaturedProducts `__view-all`.
+      border-bottom: 1px solid transparent;
+      transition:
+        color var(--transition-fast),
+        border-color var(--transition-fast);
 
       &:hover {
         color: var(--color-primary);
-        text-decoration: underline;
+        border-bottom-color: var(--color-primary);
       }
     }
 
@@ -307,11 +312,16 @@ const formatPrice = (p: { amount: number; currencyCode: string }) =>
     font-weight: var(--font-weight-medium);
     color: var(--color-primary);
     text-decoration: none;
-    transition: color var(--transition-fast);
+    // The site's link pattern: a 1px rule that fades in, not a browser
+    // underline that snaps. See FeaturedProducts `__view-all`.
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
-      color: var(--color-primary-dark, var(--color-gray-800));
-      text-decoration: underline;
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
     }
 
     &:focus-visible {
