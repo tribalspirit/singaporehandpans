@@ -239,6 +239,19 @@ const description =
     pointer-events: none;
   }
 
+  // The hero centres its content vertically with flex, which makes `.container`
+  // a flex item. Auto inline margins take precedence over stretch alignment, so
+  // the item stayed at its 764px fit-content width and `margin: 0 auto` then
+  // centred *that* — putting the hero h1 at x=370 while every section title
+  // below it sits at x=132, which is the misalignment §A3 is about.
+  //
+  // This restores the width a block-level div has everywhere else on the site.
+  // It is deliberately NOT a redefinition of the shared measure: max-width and
+  // the gutter still come from global.scss, untouched.
+  .hero > .container {
+    width: 100%;
+  }
+
   .hero__content {
     position: relative;
     z-index: 3;
