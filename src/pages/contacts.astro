@@ -471,7 +471,9 @@ const ACUITY_PRIVATE_URL =
     padding: var(--space-4);
     background: var(--color-gray-50);
     border-radius: var(--radius-lg);
-    transition: all var(--transition-fast);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 180ms instead of appearing on keypress.
+    transition: box-shadow var(--transition-fast);
 
     @media (min-width: 640px) {
       gap: var(--space-4);
@@ -715,7 +717,12 @@ const ACUITY_PRIVATE_URL =
     border-radius: var(--radius-md);
     font-weight: var(--font-weight-medium);
     text-decoration: none;
-    transition: all var(--transition-fast);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 180ms instead of appearing on keypress.
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
     cursor: pointer;
     border: none;
     font-size: var(--font-size-base);

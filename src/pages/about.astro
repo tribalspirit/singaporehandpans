@@ -387,7 +387,9 @@ const description =
     border-radius: var(--radius-lg);
     text-align: center;
     box-shadow: var(--shadow-sm);
-    transition: all var(--transition-fast);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 180ms instead of appearing on keypress.
+    transition: box-shadow var(--transition-fast);
 
     &:hover {
       box-shadow: 0 0 0 1px var(--color-primary-light);

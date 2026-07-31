@@ -343,11 +343,16 @@ const mainImage = galleryImages[0];
     a {
       color: var(--color-gray-600);
       text-decoration: none;
-      transition: color var(--transition-fast);
+      // The site's link pattern: a 1px rule that fades in, not a browser
+      // underline that snaps. See FeaturedProducts `__view-all`.
+      border-bottom: 1px solid transparent;
+      transition:
+        color var(--transition-fast),
+        border-color var(--transition-fast);
 
       &:hover {
         color: var(--color-primary);
-        text-decoration: underline;
+        border-bottom-color: var(--color-primary);
       }
     }
 
@@ -357,9 +362,13 @@ const mainImage = galleryImages[0];
     }
   }
 
+  // --color-accent-light is sand now, so this read as a warm decorative panel
+  // and colour alone carried the meaning. The rule gives it a second channel,
+  // and the body text goes to ink so the alert is legible rather than alarming.
   .checkout-alert {
     background: var(--color-accent-light);
-    color: var(--color-error);
+    color: var(--color-gray-900);
+    border-left: 2px solid var(--color-error);
     border-radius: var(--radius-md);
     padding: var(--space-4) var(--space-5);
     margin-bottom: var(--space-6);
@@ -581,11 +590,16 @@ const mainImage = galleryImages[0];
     font-weight: var(--font-weight-medium);
     color: var(--color-primary);
     text-decoration: none;
-    transition: color var(--transition-fast);
+    // The site's link pattern: a 1px rule that fades in, not a browser
+    // underline that snaps. See FeaturedProducts `__view-all`.
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
-      color: var(--color-primary-dark, var(--color-gray-800));
-      text-decoration: underline;
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
     }
 
     &:focus-visible {

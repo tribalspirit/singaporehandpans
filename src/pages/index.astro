@@ -507,14 +507,22 @@ const description =
       }
     }
 
+    // Filled buttons are all ink, so a bronze outline made a *secondary*
+    // action carry more colour weight than the primary — and there are three
+    // of them against one ink primary.
+    //
+    // NOTE: duplicated verbatim in UpcomingEvents.astro. Astro scopes styles
+    // per component and there is no `.btn` in global.scss, so that copy cannot
+    // reach this rule. Edit both or neither.
     &--outline {
       background-color: transparent;
-      color: var(--color-primary);
-      border: 2px solid var(--color-primary);
+      color: var(--color-gray-900);
+      border: 1px solid var(--color-hairline-strong);
 
       &:hover {
         background-color: var(--color-gray-900);
         color: var(--color-white);
+        border-color: var(--color-gray-900);
       }
     }
 

@@ -164,7 +164,9 @@ const seoDescription =
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-xl);
     box-shadow: var(--shadow-base);
-    transition: all var(--transition-base);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 240ms instead of appearing on keypress.
+    transition: box-shadow var(--transition-base);
     display: flex;
     flex-direction: column;
 
@@ -203,7 +205,12 @@ const seoDescription =
       text-decoration: none;
       border-radius: var(--border-radius-md);
       font-weight: var(--font-weight-semibold);
-      transition: all var(--transition-base);
+      // Named properties, not `all`. `transform` is listed because the hover
+      // nudges the link; `outline-width` deliberately is not.
+      transition:
+        background-color var(--transition-base),
+        color var(--transition-base),
+        transform var(--transition-base);
       width: fit-content;
 
       &:hover {
@@ -258,7 +265,12 @@ const seoDescription =
       text-decoration: none;
       border-radius: var(--border-radius-md);
       font-weight: var(--font-weight-semibold);
-      transition: all var(--transition-base);
+      // Named properties, not `all`: outline-width is animatable, so `all`
+      // made the 2px focus ring grow in instead of appearing on keypress.
+      transition:
+        background-color var(--transition-base),
+        color var(--transition-base),
+        border-color var(--transition-base);
 
       &:hover {
         background: var(--color-gray-800);

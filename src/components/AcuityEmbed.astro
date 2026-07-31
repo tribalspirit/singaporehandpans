@@ -233,7 +233,7 @@ const embedId = `acuity-embed-${Math.random().toString(36).substr(2, 9)}`;
       text-decoration: none;
       border-radius: var(--border-radius-md);
       font-weight: var(--font-weight-semibold);
-      transition: background-color 0.2s ease;
+      transition: background-color var(--transition-fast);
 
       &:hover {
         background: var(--color-gray-800);
@@ -250,7 +250,10 @@ const embedId = `acuity-embed-${Math.random().toString(36).substr(2, 9)}`;
       text-decoration: none;
       border-radius: var(--border-radius-md);
       font-weight: var(--font-weight-semibold);
-      transition: all 0.2s ease;
+      transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast),
+        border-color var(--transition-fast);
       border: 1px solid transparent;
 
       &:hover {

@@ -517,20 +517,24 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-6);
-    border: 1.5px solid var(--color-primary);
+    // Was 1.5px bronze — the only non-integer border on the site, and the same
+    // over-weighted secondary action as `.btn--outline`.
+    border: 1px solid var(--color-hairline-strong);
     border-radius: var(--radius-md);
-    color: var(--color-primary);
+    color: var(--color-gray-900);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
     text-decoration: none;
     transition:
       background-color var(--transition-fast),
-      color var(--transition-fast);
+      color var(--transition-fast),
+      border-color var(--transition-fast);
     min-height: 44px;
 
     &:hover {
       background-color: var(--color-gray-900);
       color: var(--color-white);
+      border-color: var(--color-gray-900);
     }
 
     &:focus-visible {

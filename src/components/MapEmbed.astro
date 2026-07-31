@@ -96,7 +96,11 @@ import {
     font-size: var(--font-size-sm);
     padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 180ms instead of appearing on keypress.
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast);
 
     &:hover {
       background: var(--color-gray-50);

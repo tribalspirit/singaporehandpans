@@ -267,10 +267,16 @@ const shouldRender = shopEnabled && partners.length > 0;
     font-size: var(--font-size-base);
     text-decoration: none;
     min-height: 44px;
+    // The site's link pattern: a 1px rule that fades in, not a browser
+    // underline that snaps. See FeaturedProducts `__view-all`.
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
       color: var(--color-primary-dark);
-      text-decoration: underline;
+      border-bottom-color: var(--color-primary-dark);
     }
 
     &:focus-visible {
