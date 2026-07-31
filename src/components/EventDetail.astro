@@ -466,10 +466,12 @@ const formatDuration = (hours: number) =>
       }
     }
 
+    // Ink, not bronze. Round 1 put every page title in ink — bronze is
+    // reserved for eyebrows, links and hairlines — but this one was missed.
     .event-title {
       font-size: var(--font-size-xxl);
       font-weight: var(--font-weight-light);
-      color: var(--color-primary);
+      color: var(--color-gray-900);
       margin-bottom: var(--spacing-lg);
       line-height: 1.2;
     }
@@ -734,14 +736,16 @@ const formatDuration = (hours: number) =>
         }
       }
 
+      // Ink and a hairline — see the note in EventCard.astro.
       &.btn-outline {
-        color: var(--color-primary);
-        border-color: var(--color-primary);
+        color: var(--color-gray-900);
+        border-color: var(--color-hairline-strong);
         background: transparent;
 
         &:hover {
           background: var(--color-gray-900);
-          color: white;
+          color: var(--color-white);
+          border-color: var(--color-gray-900);
         }
       }
     }

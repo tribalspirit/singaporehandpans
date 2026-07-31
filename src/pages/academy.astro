@@ -118,19 +118,28 @@ const seoDescription =
 <style lang="scss">
   @use 'src/styles/tokens.scss';
 
+  // No top padding: the masthead below owns the space above the title, the
+  // same way `.page-hero` does on about and contacts.
   .academy-page {
     min-height: calc(100vh - var(--header-height) - var(--footer-height));
-    padding: var(--spacing-2xl) 0;
+    padding: 0 0 var(--spacing-2xl);
     background: var(--color-gray-50);
   }
 
   // Shared masthead treatment (handoff §3): left-set, light display type, ink
   // not bronze — bronze is reserved for eyebrows, links and hairlines.
+  // Vertical rhythm matches `.page-hero` on about and contacts — see the note
+  // in events.astro. This masthead also sits inside `.container`, so it gets no
+  // background and its hairline rule stays inset.
   .academy-hero {
     text-align: left;
-    padding: var(--spacing-2xl) 0 var(--spacing-xl);
+    padding: var(--space-20) 0 var(--space-16);
     margin-bottom: var(--spacing-2xl);
     border-bottom: 1px solid var(--color-hairline);
+
+    @media (min-width: 768px) {
+      padding: var(--space-24) 0 var(--space-16);
+    }
   }
 
   .academy-hero__title {
