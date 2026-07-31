@@ -347,11 +347,12 @@ const description =
     margin-bottom: var(--space-4);
   }
 
+  // No box-shadow: --shadow-* are hairline outlines now, and a 1px rule around
+  // a full-bleed photograph reads as an unstyled border, not as depth.
   .about-preview__img {
     width: 100%;
     height: auto;
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
   }
 
   // Paper band, stated explicitly rather than inherited from the body so the

@@ -377,14 +377,16 @@ const mainImage = galleryImages[0];
     }
   }
 
+  // Sand, not paper-deep: gray-200 is the image-well colour site-wide, while
+  // gray-100 is a section band. No box-shadow — --shadow-* are hairlines now,
+  // and a 1px rule around a photograph reads as an unstyled border.
   .product-main-image {
     width: 100%;
     height: auto;
     aspect-ratio: 4 / 3;
     object-fit: cover;
     border-radius: var(--radius-lg);
-    background: var(--color-gray-100);
-    box-shadow: var(--shadow-sm);
+    background: var(--color-gray-200);
   }
 
   .product-image-placeholder {
@@ -393,7 +395,7 @@ const mainImage = galleryImages[0];
     align-items: center;
     justify-content: center;
     color: var(--color-gray-400);
-    background: var(--color-gray-100);
+    background: var(--color-gray-200);
     border-radius: var(--radius-lg);
   }
 
@@ -411,7 +413,7 @@ const mainImage = galleryImages[0];
       aspect-ratio: 4 / 3;
       object-fit: cover;
       border-radius: var(--radius-md);
-      background: var(--color-gray-100);
+      background: var(--color-gray-200);
     }
   }
 

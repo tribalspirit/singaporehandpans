@@ -596,8 +596,12 @@ const ACUITY_PRIVATE_URL =
     }
   }
 
+  // Flat band, matching about.astro's .cta-section exactly. The 30% black
+  // scrim that used to sit on top was there for the photographic version of
+  // this section; over a flat colour it only shifted the band off-tone from
+  // its twin. White on --color-gray-800 measures 14.3:1 unaided, so the scrim
+  // was carrying no contrast duty.
   .section--accent {
-    position: relative;
     background: var(--color-gray-800);
     color: var(--color-white);
 
@@ -606,26 +610,12 @@ const ACUITY_PRIVATE_URL =
     a:focus {
       outline-color: var(--color-focus-inverse);
     }
-
-    // Dark overlay for WCAG contrast on white text
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.3);
-      pointer-events: none;
-    }
-
-    // Ensure content sits above overlay
-    > .container {
-      position: relative;
-      z-index: 1;
-    }
   }
 
+  // No text-shadow: .section--accent is a flat band, not photography, so the
+  // shadow only smeared Newsreader's thin strokes.
   .section__title--white {
     color: var(--color-white);
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   }
 
   .booking-section {
@@ -644,7 +634,6 @@ const ACUITY_PRIVATE_URL =
     font-size: var(--font-size-base);
     line-height: var(--line-height-relaxed);
     margin-bottom: var(--space-8);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   }
 
   .booking-features {
@@ -658,7 +647,6 @@ const ACUITY_PRIVATE_URL =
     align-items: center;
     gap: var(--space-3);
     font-size: var(--font-size-base);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   }
 
   .booking-feature__icon {
@@ -759,12 +747,10 @@ const ACUITY_PRIVATE_URL =
       background-color: transparent;
       color: var(--color-white);
       border: 2px solid var(--color-white);
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 
       &:hover {
         background-color: var(--color-white);
         color: var(--color-primary);
-        text-shadow: none;
       }
     }
 

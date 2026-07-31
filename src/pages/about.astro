@@ -339,11 +339,12 @@ const description =
     }
   }
 
+  // No box-shadow: --shadow-* are hairline outlines now, and a 1px rule around
+  // a full-bleed photograph reads as an unstyled border, not as depth.
   .story__img {
     width: 100%;
     height: auto;
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
   }
 
   .story__text p {
@@ -363,7 +364,7 @@ const description =
 
   .story__highlight {
     color: var(--color-primary);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-normal);
     font-style: italic;
   }
 
@@ -431,13 +432,14 @@ const description =
     margin-bottom: var(--space-6);
   }
 
+  // A hairline ring on the one circle in a site committed to 2px corners read
+  // as a bug rather than as a device.
   .team-member__img {
     width: 200px;
     height: 200px;
     border-radius: 50%;
     object-fit: cover;
     margin: 0 auto;
-    box-shadow: var(--shadow-md);
   }
 
   .team-member__name {
@@ -480,12 +482,14 @@ const description =
     margin: 0 auto;
   }
 
+  // No text-shadow: .cta-section is a flat band, not the old gradient, so the
+  // shadow only smeared Newsreader's thin strokes — the exact failure the
+  // low-contrast serif was chosen to avoid.
   .cta__line {
     font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-normal);
     line-height: var(--line-height-relaxed);
     margin-bottom: var(--space-2);
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 
     @media (min-width: 768px) {
       font-size: var(--font-size-3xl);
