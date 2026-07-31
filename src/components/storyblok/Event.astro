@@ -564,14 +564,16 @@ const formatDuration = (hours: number) =>
           }
         }
 
+        // Ink and a hairline — see the note in EventCard.astro.
         &.btn-outline {
-          color: var(--color-primary);
-          border-color: var(--color-primary);
+          color: var(--color-gray-900);
+          border-color: var(--color-hairline-strong);
           background: transparent;
 
           &:hover {
             background: var(--color-gray-900);
-            color: white;
+            color: var(--color-white);
+            border-color: var(--color-gray-900);
           }
         }
       }

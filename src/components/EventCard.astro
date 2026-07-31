@@ -471,14 +471,20 @@ const formatDuration = (hours: number) =>
         border-color var(--transition-fast);
       border: 1px solid transparent;
 
+      // Ink and a hairline, matching `.btn--outline` on the homepage. Bronze
+      // here made a secondary action carry more colour weight than the ink
+      // primary sitting next to it. Note the single-hyphen class name — this
+      // is a separate variant from the BEM `.btn--outline`, which is why the
+      // round-2 sweep did not reach it.
       &.btn-outline {
-        color: var(--color-primary);
-        border-color: var(--color-primary);
+        color: var(--color-gray-900);
+        border-color: var(--color-hairline-strong);
         background: transparent;
 
         &:hover {
           background: var(--color-gray-900);
-          color: white;
+          color: var(--color-white);
+          border-color: var(--color-gray-900);
         }
       }
 

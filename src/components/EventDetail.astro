@@ -466,10 +466,12 @@ const formatDuration = (hours: number) =>
       }
     }
 
+    // Ink, not bronze. Round 1 put every page title in ink — bronze is
+    // reserved for eyebrows, links and hairlines — but this one was missed.
     .event-title {
       font-size: var(--font-size-xxl);
       font-weight: var(--font-weight-light);
-      color: var(--color-primary);
+      color: var(--color-gray-900);
       margin-bottom: var(--spacing-lg);
       line-height: 1.2;
     }
@@ -734,14 +736,16 @@ const formatDuration = (hours: number) =>
         }
       }
 
+      // Ink and a hairline — see the note in EventCard.astro.
       &.btn-outline {
-        color: var(--color-primary);
-        border-color: var(--color-primary);
+        color: var(--color-gray-900);
+        border-color: var(--color-hairline-strong);
         background: transparent;
 
         &:hover {
           background: var(--color-gray-900);
-          color: white;
+          color: var(--color-white);
+          border-color: var(--color-gray-900);
         }
       }
     }
@@ -783,13 +787,17 @@ const formatDuration = (hours: number) =>
         background-color var(--transition-fast),
         color var(--transition-fast),
         border-color var(--transition-fast);
-      color: var(--color-primary);
-      border: 1px solid var(--color-primary);
+      // Ink and a hairline — see the note in EventCard.astro. This card has its
+      // own `.btn` block, outside the `.booking-card, .past-event-card,
+      // .contact-card` group, so the shared rule never reached it.
+      color: var(--color-gray-900);
+      border: 1px solid var(--color-hairline-strong);
       background: transparent;
 
       &:hover {
         background: var(--color-gray-900);
-        color: white;
+        color: var(--color-white);
+        border-color: var(--color-gray-900);
       }
     }
   }
@@ -862,13 +870,17 @@ const formatDuration = (hours: number) =>
         background-color var(--transition-fast),
         color var(--transition-fast),
         border-color var(--transition-fast);
-      border: 1px solid var(--color-primary);
-      color: var(--color-primary);
+      // Ink and a hairline — see the note in EventCard.astro. This governs the
+      // "Back to All Classes" link, which sits in `.event-actions` rather than
+      // in one of the cards, so the shared rule never reached it either.
+      border: 1px solid var(--color-hairline-strong);
+      color: var(--color-gray-900);
       background: transparent;
 
       &:hover {
         background: var(--color-gray-900);
-        color: white;
+        color: var(--color-white);
+        border-color: var(--color-gray-900);
       }
     }
 
