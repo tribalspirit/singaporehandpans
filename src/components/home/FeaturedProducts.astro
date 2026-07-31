@@ -209,8 +209,10 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
     background-color: var(--color-gray-50);
     overflow-x: clip;
 
+    // Matches the global `.section` rhythm (64/128px). This component does not
+    // carry the `.section` class, so the global rule cannot reach it.
     @media (min-width: 768px) {
-      padding: var(--space-24) 0;
+      padding: var(--space-32) 0;
     }
   }
 
@@ -287,7 +289,7 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-focus);
       outline-offset: 4px;
       border-radius: var(--radius-sm);
     }
@@ -385,10 +387,13 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
     }
   }
 
+  // Sand is the image-well colour; paper-deep is a section band. On this rail
+  // an off-white card on a paper section with a paper-deep well made a missing
+  // image render as a blank card rather than a deliberate empty frame.
   .featured-product-card__image-wrapper {
     position: relative;
     aspect-ratio: 4 / 3;
-    background: var(--color-gray-100);
+    background: var(--color-gray-200);
     overflow: hidden;
   }
 
@@ -512,24 +517,28 @@ const shouldRender = shopEnabled && featuredProducts.length > 0;
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-6);
-    border: 1.5px solid var(--color-primary);
+    // Was 1.5px bronze — the only non-integer border on the site, and the same
+    // over-weighted secondary action as `.btn--outline`.
+    border: 1px solid var(--color-hairline-strong);
     border-radius: var(--radius-md);
-    color: var(--color-primary);
+    color: var(--color-gray-900);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
     text-decoration: none;
     transition:
       background-color var(--transition-fast),
-      color var(--transition-fast);
+      color var(--transition-fast),
+      border-color var(--transition-fast);
     min-height: 44px;
 
     &:hover {
       background-color: var(--color-gray-900);
       color: var(--color-white);
+      border-color: var(--color-gray-900);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-focus);
       outline-offset: 3px;
     }
 

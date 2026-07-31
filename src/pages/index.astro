@@ -239,11 +239,26 @@ const description =
     pointer-events: none;
   }
 
+  // The hero centres its content vertically with flex, which makes `.container`
+  // a flex item. Auto inline margins take precedence over stretch alignment, so
+  // the item stayed at its 764px fit-content width and `margin: 0 auto` then
+  // centred *that* — putting the hero h1 at x=370 while every section title
+  // below it sits at x=132, which is the misalignment §A3 is about.
+  //
+  // This restores the width a block-level div has everywhere else on the site.
+  // It is deliberately NOT a redefinition of the shared measure: max-width and
+  // the gutter still come from global.scss, untouched.
+  .hero > .container {
+    width: 100%;
+  }
+
   .hero__content {
     position: relative;
     z-index: 3;
     max-width: 700px;
-    padding: var(--space-8);
+    // No horizontal padding: the hero is left-aligned now, and 32px of it
+    // pushed the h1 inside the container gutter so it lined up with nothing.
+    padding: var(--space-8) 0;
   }
 
   .hero__title {
@@ -345,11 +360,12 @@ const description =
     margin-bottom: var(--space-4);
   }
 
+  // No box-shadow: --shadow-* are hairline outlines now, and a 1px rule around
+  // a full-bleed photograph reads as an unstyled border, not as depth.
   .about-preview__img {
     width: 100%;
     height: auto;
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
   }
 
   // Paper band, stated explicitly rather than inherited from the body so the
@@ -374,28 +390,27 @@ const description =
     }
   }
 
+  // Editorial columns under a hairline rule, not three floating white cards.
+  // Every other section on this page is left-aligned with a mono eyebrow and a
+  // rule; this block was the last thing that read as a theme.
   .service-card {
-    background: var(--color-white);
-    border-radius: var(--radius-lg);
-    padding: var(--space-8);
-    text-align: center;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow var(--transition-fast);
-
-    &:hover {
-      box-shadow: 0 0 0 1px var(--color-primary-light);
-    }
+    border-top: 1px solid var(--color-hairline-strong);
+    padding: var(--space-6) 0 0;
+    text-align: left;
   }
 
+  // 24px at 1.5 stroke, left-set. A 64px stroked icon centred over centred
+  // text is the most generic device in the layout.
   .service-card__icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto var(--space-4);
+    width: 24px;
+    height: 24px;
+    margin: 0 0 var(--space-4);
     color: var(--color-primary);
 
     svg {
       width: 100%;
       height: 100%;
+      stroke-width: 1.5;
     }
   }
 
@@ -413,16 +428,29 @@ const description =
     margin-bottom: var(--space-6);
   }
 
+  // Mono, like every other label on the site. The hairline hover is the site's
+  // link pattern — see FeaturedProducts `__view-all`.
   .service-card__link {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     color: var(--color-primary);
-    font-weight: var(--font-weight-medium);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     text-decoration: none;
+    // Padding, not just min-height: the rule hangs off the bottom of the box,
+    // so without it the 44px touch target strands the underline below the text.
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
-      text-decoration: underline;
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
     }
 
     @media (min-width: 1280px) {
@@ -491,7 +519,7 @@ const description =
     font-size: var(--font-size-base);
 
     &:focus {
-      outline: 2px solid var(--color-accent);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
     }
 
@@ -504,14 +532,22 @@ const description =
       }
     }
 
+    // Filled buttons are all ink, so a bronze outline made a *secondary*
+    // action carry more colour weight than the primary — and there are three
+    // of them against one ink primary.
+    //
+    // NOTE: duplicated verbatim in UpcomingEvents.astro. Astro scopes styles
+    // per component and there is no `.btn` in global.scss, so that copy cannot
+    // reach this rule. Edit both or neither.
     &--outline {
       background-color: transparent;
-      color: var(--color-primary);
-      border: 2px solid var(--color-primary);
+      color: var(--color-gray-900);
+      border: 1px solid var(--color-hairline-strong);
 
       &:hover {
         background-color: var(--color-gray-900);
         color: var(--color-white);
+        border-color: var(--color-gray-900);
       }
     }
 
@@ -537,23 +573,10 @@ const description =
     stroke-width: 2;
   }
 
-  // Section Styles
-  .section {
-    padding: var(--space-16) 0;
-
-    @media (min-width: 768px) {
-      padding: var(--space-24) 0;
-    }
-  }
-
-  .section__title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-light);
-    margin-bottom: var(--space-8);
-    color: var(--color-gray-900);
-
-    &--center {
-      text-align: center;
-    }
-  }
+  // Section rhythm and titles are defined once, in global.scss. The scoped
+  // copies that used to live here shadowed it at 64/96px against the global
+  // 64/128px, so Home read at a different proportion from every other route.
+  // `h2` in global.scss already gives 3xl→4xl at light weight, and
+  // `section__title--center` is now inert — the class stays in the markup but
+  // styles nothing, which is what §D2 wants.
 </style>

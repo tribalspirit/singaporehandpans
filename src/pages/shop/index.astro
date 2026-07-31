@@ -169,12 +169,14 @@ const pageDescription =
     }
   }
 
+  // A catalogue may sit tighter than an editorial page, but not at a third of
+  // the site rhythm — these are a floor, not the global 64/128px.
   .collections-section {
-    padding: var(--space-12) 0 var(--space-8);
+    padding: var(--space-24) 0 var(--space-12);
     background: var(--color-white);
 
     @media (max-width: 768px) {
-      padding: var(--space-8) 0 var(--space-6);
+      padding: var(--space-12) 0 var(--space-8);
     }
   }
 
@@ -265,11 +267,11 @@ const pageDescription =
   }
 
   .shop-section {
-    padding: var(--space-12) 0 var(--space-16);
+    padding: var(--space-24) 0 var(--space-32);
     background: var(--color-gray-100);
 
     @media (max-width: 768px) {
-      padding: var(--space-8) 0 var(--space-12);
+      padding: var(--space-12) 0 var(--space-16);
     }
   }
 

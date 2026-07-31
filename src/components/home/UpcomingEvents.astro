@@ -117,16 +117,16 @@ const hasMoreEvents = totalUpcoming > 3;
     background-color: var(--color-gray-50);
   }
 
+  // Left-set, matching FeaturedProducts. Centring is a good accent and a weak
+  // default; used in four of six homepage sections it flattened the page.
   .upcoming-events__header {
-    text-align: center;
     margin-bottom: var(--space-12);
   }
 
   .upcoming-events__subtitle {
     font-size: var(--font-size-lg);
     color: var(--color-gray-700);
-    max-width: 480px;
-    margin: 0 auto;
+    max-width: 56ch;
     line-height: var(--line-height-relaxed);
   }
 
@@ -149,6 +149,11 @@ const hasMoreEvents = totalUpcoming > 3;
     margin-top: var(--space-10);
   }
 
+  // NOTE: duplicated verbatim from index.astro `.btn--outline`. Astro scopes
+  // styles per component and there is no `.btn` in global.scss, so index's
+  // rule cannot reach this button — deleting this block would leave it
+  // unstyled. Edit both or neither. Lifting `.btn` into global.scss is the
+  // real fix, but that is a refactor rather than a restyle.
   .btn.btn--outline {
     min-height: 44px;
     display: inline-flex;
@@ -161,14 +166,20 @@ const hasMoreEvents = totalUpcoming > 3;
     text-decoration: none;
     font-size: var(--font-size-base);
     background-color: transparent;
-    color: var(--color-primary);
-    border: 2px solid var(--color-primary);
-    transition: all var(--transition-fast);
+    color: var(--color-gray-900);
+    border: 1px solid var(--color-hairline-strong);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 180ms instead of appearing on keypress.
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
     cursor: pointer;
 
     &:hover {
       background-color: var(--color-gray-900);
       color: var(--color-white);
+      border-color: var(--color-gray-900);
     }
 
     @media (min-width: 1280px) {
@@ -187,8 +198,10 @@ const hasMoreEvents = totalUpcoming > 3;
     padding: var(--space-16) var(--space-8);
   }
 
+  // gray-400 is the placeholder-mark token; gray-300 is a border colour and at
+  // 64px it rendered as a faint smudge on paper.
   .upcoming-events__empty-icon {
-    color: var(--color-gray-300);
+    color: var(--color-gray-400);
     margin-bottom: var(--space-4);
   }
 

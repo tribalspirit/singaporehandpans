@@ -199,7 +199,9 @@ const imageUrl = event.content.image?.filename
     border-radius: var(--radius-lg);
     padding: var(--space-1) var(--space-3);
     text-align: center;
-    box-shadow: var(--shadow-md);
+    // The one place a real drop shadow does structural work: an off-white chip
+    // floating on a photograph. --shadow-xl deliberately kept depth for this.
+    box-shadow: var(--shadow-xl);
     line-height: 1.1;
     min-width: 52px;
   }
@@ -371,7 +373,7 @@ const imageUrl = event.content.image?.filename
     text-decoration: none;
     background-color: var(--color-gray-900);
     color: var(--color-white);
-    transition: background-color 0.2s ease;
+    transition: background-color var(--transition-fast);
 
     &:hover {
       background-color: var(--color-gray-800);

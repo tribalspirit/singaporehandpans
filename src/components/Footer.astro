@@ -193,9 +193,16 @@ const footerLinks = [
     min-width: 44px;
     min-height: 44px;
     background-color: var(--color-gray-800);
-    border-radius: var(--radius-lg);
+    // These were radius-lg back when that meant 8px. At 2px a 44px near-square
+    // icon tile just looks unstyled, and circles are already sanctioned —
+    // radius-full survives for the availability dot.
+    border-radius: var(--radius-full);
     color: var(--color-gray-300);
-    transition: all var(--transition-fast);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 180ms instead of appearing on keypress.
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast);
 
     // Inverts on hover. Filling with ink would match the footer ground exactly
     // and make the chip disappear rather than highlight.
@@ -309,8 +316,10 @@ const footerLinks = [
     text-decoration: none;
     transition: color var(--transition-fast);
 
+    // Brass is the footer hover everywhere else — the one warm colour that
+    // reads on ink. The legal row was the only place that missed it.
     &:hover {
-      color: var(--color-gray-200);
+      color: var(--color-primary-light);
     }
 
     &:focus {

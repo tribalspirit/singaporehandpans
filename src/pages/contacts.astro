@@ -471,7 +471,9 @@ const ACUITY_PRIVATE_URL =
     padding: var(--space-4);
     background: var(--color-gray-50);
     border-radius: var(--radius-lg);
-    transition: all var(--transition-fast);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 180ms instead of appearing on keypress.
+    transition: box-shadow var(--transition-fast);
 
     @media (min-width: 640px) {
       gap: var(--space-4);
@@ -523,7 +525,7 @@ const ACUITY_PRIVATE_URL =
       }
 
       &:focus {
-        outline: 2px solid var(--color-accent);
+        outline: 2px solid var(--color-focus);
         outline-offset: 2px;
         border-radius: var(--radius-sm);
       }
@@ -555,7 +557,7 @@ const ACUITY_PRIVATE_URL =
     }
 
     &:focus {
-      outline: 2px solid var(--color-accent);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }
@@ -585,7 +587,7 @@ const ACUITY_PRIVATE_URL =
       }
 
       &:focus {
-        outline: 2px solid var(--color-accent);
+        outline: 2px solid var(--color-focus);
         outline-offset: 2px;
         border-radius: var(--radius-sm);
       }
@@ -596,8 +598,12 @@ const ACUITY_PRIVATE_URL =
     }
   }
 
+  // Flat band, matching about.astro's .cta-section exactly. The 30% black
+  // scrim that used to sit on top was there for the photographic version of
+  // this section; over a flat colour it only shifted the band off-tone from
+  // its twin. White on --color-gray-800 measures 14.3:1 unaided, so the scrim
+  // was carrying no contrast duty.
   .section--accent {
-    position: relative;
     background: var(--color-gray-800);
     color: var(--color-white);
 
@@ -606,26 +612,12 @@ const ACUITY_PRIVATE_URL =
     a:focus {
       outline-color: var(--color-focus-inverse);
     }
-
-    // Dark overlay for WCAG contrast on white text
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.3);
-      pointer-events: none;
-    }
-
-    // Ensure content sits above overlay
-    > .container {
-      position: relative;
-      z-index: 1;
-    }
   }
 
+  // No text-shadow: .section--accent is a flat band, not photography, so the
+  // shadow only smeared Newsreader's thin strokes.
   .section__title--white {
     color: var(--color-white);
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   }
 
   .booking-section {
@@ -644,7 +636,6 @@ const ACUITY_PRIVATE_URL =
     font-size: var(--font-size-base);
     line-height: var(--line-height-relaxed);
     margin-bottom: var(--space-8);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   }
 
   .booking-features {
@@ -658,7 +649,6 @@ const ACUITY_PRIVATE_URL =
     align-items: center;
     gap: var(--space-3);
     font-size: var(--font-size-base);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   }
 
   .booking-feature__icon {
@@ -727,13 +717,18 @@ const ACUITY_PRIVATE_URL =
     border-radius: var(--radius-md);
     font-weight: var(--font-weight-medium);
     text-decoration: none;
-    transition: all var(--transition-fast);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 180ms instead of appearing on keypress.
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
     cursor: pointer;
     border: none;
     font-size: var(--font-size-base);
 
     &:focus {
-      outline: 2px solid var(--color-accent);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
     }
 
@@ -759,12 +754,10 @@ const ACUITY_PRIVATE_URL =
       background-color: transparent;
       color: var(--color-white);
       border: 2px solid var(--color-white);
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 
       &:hover {
         background-color: var(--color-white);
         color: var(--color-primary);
-        text-shadow: none;
       }
     }
 
@@ -778,22 +771,8 @@ const ACUITY_PRIVATE_URL =
     }
   }
 
-  .section {
-    padding: var(--space-16) 0;
-
-    @media (min-width: 768px) {
-      padding: var(--space-24) 0;
-    }
-  }
-
-  .section__title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-light);
-    margin-bottom: var(--space-8);
-    color: var(--color-gray-900);
-
-    &--center {
-      text-align: center;
-    }
-  }
+  // Section rhythm and titles come from global.scss — see index.astro. The
+  // scoped copies that used to live here shadowed the global 128px desktop
+  // rhythm at 96px. `.section__title--white` above survives: it is a separate
+  // top-level selector, and a class still beats the `h2` element rule.
 </style>

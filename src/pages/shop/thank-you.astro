@@ -107,17 +107,12 @@ const isCompleted = status === 'completed';
     padding: var(--space-16) 0;
   }
 
-  .container {
+  // The narrow measure belongs to the card, not to `.container` — that class is
+  // shared site-wide and is defined once, in global.scss. Overriding it here
+  // changed the page gutter on a route the buyer reaches mid-checkout.
+  .status-card {
     max-width: 640px;
     margin: 0 auto;
-    padding: 0 var(--space-6);
-
-    @media (max-width: 768px) {
-      padding: 0 var(--space-4);
-    }
-  }
-
-  .status-card {
     background: var(--color-white);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
@@ -182,13 +177,20 @@ const isCompleted = status === 'completed';
     font-weight: var(--font-weight-medium);
     color: var(--color-primary);
     text-decoration: none;
+    // The site's link pattern: a 1px rule that fades in, not a browser
+    // underline that snaps. See FeaturedProducts `__view-all`.
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
-      text-decoration: underline;
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }

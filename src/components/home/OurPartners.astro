@@ -105,13 +105,16 @@ const shouldRender = shopEnabled && partners.length > 0;
     padding: var(--space-16) 0;
     background-color: var(--color-gray-100);
 
+    // Matches the global `.section` rhythm (64/128px). This component does not
+    // carry the `.section` class, so the global rule cannot reach it.
     @media (min-width: 768px) {
-      padding: var(--space-24) 0;
+      padding: var(--space-32) 0;
     }
   }
 
+  // Left-set, matching FeaturedProducts. Centring is a good accent and a weak
+  // default; used in four of six homepage sections it flattened the page.
   .partners__header {
-    text-align: center;
     margin-bottom: var(--space-12);
   }
 
@@ -137,8 +140,7 @@ const shouldRender = shopEnabled && partners.length > 0;
   .partners__subtitle {
     font-size: var(--font-size-lg);
     color: var(--color-gray-600);
-    max-width: 600px;
-    margin: 0 auto;
+    max-width: 56ch;
     line-height: var(--line-height-relaxed);
   }
 
@@ -265,14 +267,20 @@ const shouldRender = shopEnabled && partners.length > 0;
     font-size: var(--font-size-base);
     text-decoration: none;
     min-height: 44px;
+    // The site's link pattern: a 1px rule that fades in, not a browser
+    // underline that snaps. See FeaturedProducts `__view-all`.
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
       color: var(--color-primary-dark);
-      text-decoration: underline;
+      border-bottom-color: var(--color-primary-dark);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }
