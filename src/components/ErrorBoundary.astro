@@ -117,7 +117,7 @@ const {
   }
 
   .error-boundary__retry-btn {
-    background-color: var(--color-primary);
+    background-color: var(--color-gray-900);
     color: var(--color-white);
     border: none;
     padding: var(--space-3) var(--space-6);
@@ -127,11 +127,11 @@ const {
     transition: background-color var(--transition-fast);
 
     &:hover {
-      background-color: var(--color-primary-dark);
+      background-color: var(--color-gray-800);
     }
 
     &:focus {
-      outline: 2px solid var(--color-accent);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
     }
   }
@@ -143,7 +143,12 @@ const {
     border: 1px solid var(--color-gray-300);
     border-radius: var(--radius-md);
     font-weight: var(--font-weight-medium);
-    transition: all var(--transition-fast);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 180ms instead of appearing on keypress.
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast),
+      color var(--transition-fast);
 
     &:hover {
       background-color: var(--color-gray-50);
@@ -151,7 +156,7 @@ const {
     }
 
     &:focus {
-      outline: 2px solid var(--color-accent);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
     }
   }

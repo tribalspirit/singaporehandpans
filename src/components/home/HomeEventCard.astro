@@ -152,13 +152,10 @@ const imageUrl = event.content.image?.filename
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition:
-      transform 0.3s ease,
-      box-shadow 0.3s ease;
+    transition: box-shadow var(--transition-fast);
 
     &:hover {
-      transform: translateY(-6px);
-      box-shadow: var(--shadow-xl);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
   }
 
@@ -171,17 +168,17 @@ const imageUrl = event.content.image?.filename
     position: relative;
     height: 220px;
     overflow: hidden;
-    background: var(--color-gray-100);
+    background: var(--color-gray-200);
   }
 
   .home-event-card__image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform var(--transition-base);
 
     .home-event-card:hover & {
-      transform: scale(1.05);
+      transform: scale(1.02);
     }
   }
 
@@ -191,11 +188,7 @@ const imageUrl = event.content.image?.filename
     justify-content: center;
     height: 100%;
     color: var(--color-gray-400);
-    background: linear-gradient(
-      135deg,
-      var(--color-gray-100),
-      var(--color-gray-200)
-    );
+    background: var(--color-gray-200);
   }
 
   .home-event-card__date-badge {
@@ -206,23 +199,28 @@ const imageUrl = event.content.image?.filename
     border-radius: var(--radius-lg);
     padding: var(--space-1) var(--space-3);
     text-align: center;
-    box-shadow: var(--shadow-md);
+    // The one place a real drop shadow does structural work: an off-white chip
+    // floating on a photograph. --shadow-xl deliberately kept depth for this.
+    box-shadow: var(--shadow-xl);
     line-height: 1.1;
     min-width: 52px;
   }
 
   .home-event-card__date-month {
     display: block;
+    font-family: var(--font-family-mono);
     font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     color: var(--color-primary);
-    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
   }
 
   .home-event-card__date-day {
     display: block;
+    font-family: var(--font-family-mono);
     font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-normal);
     color: var(--color-gray-900);
   }
 
@@ -251,8 +249,11 @@ const imageUrl = event.content.image?.filename
     display: flex;
     align-items: center;
     gap: var(--space-1);
-    font-size: var(--font-size-sm);
-    color: var(--color-gray-700);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-gray-600);
     margin-bottom: var(--space-3);
 
     svg {
@@ -273,8 +274,11 @@ const imageUrl = event.content.image?.filename
   }
 
   .home-event-card__spots {
-    font-size: var(--font-size-sm);
-    color: var(--color-warning, #f39c12);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-warning);
     font-weight: var(--font-weight-medium);
     margin: var(--space-2) 0 0;
   }
@@ -285,35 +289,76 @@ const imageUrl = event.content.image?.filename
     justify-content: space-between;
     padding: var(--space-4) var(--space-5);
     margin-top: auto;
-    border-top: 1px solid var(--color-gray-100);
+    border-top: 1px solid var(--color-hairline);
   }
 
   .home-event-card__availability {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: var(--font-size-sm);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     font-weight: var(--font-weight-medium);
     color: var(--color-gray-600);
   }
 
+  // Each availability state carries a distinct shape, not only a hue, so the
+  // status stays legible without colour vision. Shapes are built from
+  // backgrounds and empty pseudo-elements rather than text glyphs: the dot is a
+  // decorative empty span, and CSS generated content is announced by some
+  // screen readers — which cannot be suppressed here without changing markup.
+  // The --available|--few_spots|--sold_out class fragments must survive: they
+  // are what availability-hydration.ts rewrites at runtime.
   .home-event-card__availability-dot {
+    position: relative;
     width: 8px;
     height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
 
+    // Filled disc
     .home-event-card__availability--available & {
       background-color: var(--color-success);
-      outline: 2px solid var(--color-gray-400);
     }
 
+    // Half-filled disc inside a ring
     .home-event-card__availability--few_spots & {
-      background-color: var(--color-warning);
+      background-color: transparent;
+      box-shadow: inset 0 0 0 1px var(--color-warning);
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 0 50% 0 0;
+        background-color: var(--color-warning);
+      }
     }
 
+    // Cross
     .home-event-card__availability--sold_out & {
-      background-color: var(--color-error);
+      background-color: transparent;
+
+      &::before,
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -1px;
+        width: 10px;
+        height: 1px;
+        background-color: var(--color-gray-500);
+      }
+
+      &::before {
+        transform: rotate(45deg);
+      }
+
+      &::after {
+        transform: rotate(-45deg);
+      }
     }
   }
 
@@ -326,12 +371,12 @@ const imageUrl = event.content.image?.filename
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
     text-decoration: none;
-    background-color: var(--color-primary);
+    background-color: var(--color-gray-900);
     color: var(--color-white);
-    transition: background-color 0.2s ease;
+    transition: background-color var(--transition-fast);
 
     &:hover {
-      background-color: var(--color-primary-dark);
+      background-color: var(--color-gray-800);
     }
 
     &--disabled {

@@ -310,15 +310,9 @@ const mainImage = galleryImages[0];
     }
   }
 
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 var(--space-6);
-
-    @media (max-width: 768px) {
-      padding: 0 var(--space-4);
-    }
-  }
+  // `.container` is defined once, in global.scss. The 1100px override that used
+  // to live here made the page gutter jump 140px on click-through from Shop,
+  // and its flat padding dropped the global 640/1024px gutter steps.
 
   .breadcrumb {
     margin-bottom: var(--space-8);
@@ -349,11 +343,16 @@ const mainImage = galleryImages[0];
     a {
       color: var(--color-gray-600);
       text-decoration: none;
-      transition: color var(--transition-fast);
+      // The site's link pattern: a 1px rule that fades in, not a browser
+      // underline that snaps. See FeaturedProducts `__view-all`.
+      border-bottom: 1px solid transparent;
+      transition:
+        color var(--transition-fast),
+        border-color var(--transition-fast);
 
       &:hover {
         color: var(--color-primary);
-        text-decoration: underline;
+        border-bottom-color: var(--color-primary);
       }
     }
 
@@ -363,9 +362,13 @@ const mainImage = galleryImages[0];
     }
   }
 
+  // --color-accent-light is sand now, so this read as a warm decorative panel
+  // and colour alone carried the meaning. The rule gives it a second channel,
+  // and the body text goes to ink so the alert is legible rather than alarming.
   .checkout-alert {
-    background: var(--color-error-light, #fdecea);
-    color: var(--color-error, #b3261e);
+    background: var(--color-accent-light);
+    color: var(--color-gray-900);
+    border-left: 2px solid var(--color-error);
     border-radius: var(--radius-md);
     padding: var(--space-4) var(--space-5);
     margin-bottom: var(--space-6);
@@ -383,14 +386,16 @@ const mainImage = galleryImages[0];
     }
   }
 
+  // Sand, not paper-deep: gray-200 is the image-well colour site-wide, while
+  // gray-100 is a section band. No box-shadow — --shadow-* are hairlines now,
+  // and a 1px rule around a photograph reads as an unstyled border.
   .product-main-image {
     width: 100%;
     height: auto;
     aspect-ratio: 4 / 3;
     object-fit: cover;
     border-radius: var(--radius-lg);
-    background: var(--color-gray-100);
-    box-shadow: var(--shadow-sm);
+    background: var(--color-gray-200);
   }
 
   .product-image-placeholder {
@@ -399,7 +404,7 @@ const mainImage = galleryImages[0];
     align-items: center;
     justify-content: center;
     color: var(--color-gray-400);
-    background: var(--color-gray-100);
+    background: var(--color-gray-200);
     border-radius: var(--radius-lg);
   }
 
@@ -417,7 +422,7 @@ const mainImage = galleryImages[0];
       aspect-ratio: 4 / 3;
       object-fit: cover;
       border-radius: var(--radius-md);
-      background: var(--color-gray-100);
+      background: var(--color-gray-200);
     }
   }
 
@@ -433,7 +438,7 @@ const mainImage = galleryImages[0];
 
   .product-title {
     font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     line-height: var(--line-height-tight);
     margin: 0 0 var(--space-3);
@@ -443,9 +448,11 @@ const mainImage = galleryImages[0];
     }
   }
 
+  // Prices set in Newsreader light, matching ProductCard and FeaturedProducts
   .product-price {
+    font-family: var(--font-family-heading);
     font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     margin: 0 0 var(--space-5);
   }
@@ -482,10 +489,13 @@ const mainImage = galleryImages[0];
     background: var(--color-white);
     transition: border-color var(--transition-fast);
 
+    // Brass on white is ~1.6:1 — it is a hairline and hover colour and was
+    // never meant to carry contrast. This is the checkout field, so the ring
+    // is the ink one every other focusable element on the site uses.
     &:focus {
-      outline: none;
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 2px var(--color-primary-light);
     }
   }
 
@@ -505,7 +515,7 @@ const mainImage = galleryImages[0];
     width: 100%;
     min-height: 48px;
     padding: var(--space-3) var(--space-6);
-    background: var(--color-primary);
+    background: var(--color-gray-900);
     color: var(--color-white);
     border: none;
     border-radius: var(--radius-md);
@@ -517,12 +527,11 @@ const mainImage = galleryImages[0];
       transform var(--transition-fast);
 
     &:hover {
-      background: var(--color-primary-dark, var(--color-primary));
-      transform: translateY(-1px);
+      background: var(--color-gray-800);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-focus);
       outline-offset: 3px;
     }
 
@@ -581,15 +590,20 @@ const mainImage = galleryImages[0];
     font-weight: var(--font-weight-medium);
     color: var(--color-primary);
     text-decoration: none;
-    transition: color var(--transition-fast);
+    // The site's link pattern: a 1px rule that fades in, not a browser
+    // underline that snaps. See FeaturedProducts `__view-all`.
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
-      color: var(--color-primary-dark, var(--color-gray-800));
-      text-decoration: underline;
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }

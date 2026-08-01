@@ -191,13 +191,10 @@ const formatPrice = (p: { amount: number; currencyCode: string }) =>
   }
 
   .hero-section {
-    background: linear-gradient(
-      135deg,
-      var(--color-primary-light) 0%,
-      var(--color-accent-light) 100%
-    );
-    padding: var(--space-12) 0 var(--space-10);
-    text-align: center;
+    background: var(--color-gray-50);
+    border-bottom: 1px solid var(--color-hairline);
+    padding: var(--space-16) 0 var(--space-10);
+    text-align: left;
 
     @media (max-width: 768px) {
       padding: var(--space-10) 0 var(--space-8);
@@ -234,11 +231,16 @@ const formatPrice = (p: { amount: number; currencyCode: string }) =>
     a {
       color: var(--color-gray-600);
       text-decoration: none;
-      transition: color var(--transition-fast);
+      // The site's link pattern: a 1px rule that fades in, not a browser
+      // underline that snaps. See FeaturedProducts `__view-all`.
+      border-bottom: 1px solid transparent;
+      transition:
+        color var(--transition-fast),
+        border-color var(--transition-fast);
 
       &:hover {
         color: var(--color-primary);
-        text-decoration: underline;
+        border-bottom-color: var(--color-primary);
       }
     }
 
@@ -250,7 +252,7 @@ const formatPrice = (p: { amount: number; currencyCode: string }) =>
 
   .page-title {
     font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     margin-bottom: var(--space-4);
     line-height: var(--line-height-tight);
@@ -286,16 +288,6 @@ const formatPrice = (p: { amount: number; currencyCode: string }) =>
     }
   }
 
-  .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 var(--space-6);
-
-    @media (max-width: 768px) {
-      padding: 0 var(--space-4);
-    }
-  }
-
   .empty-state {
     text-align: center;
     padding: var(--space-16);
@@ -320,15 +312,20 @@ const formatPrice = (p: { amount: number; currencyCode: string }) =>
     font-weight: var(--font-weight-medium);
     color: var(--color-primary);
     text-decoration: none;
-    transition: color var(--transition-fast);
+    // The site's link pattern: a 1px rule that fades in, not a browser
+    // underline that snaps. See FeaturedProducts `__view-all`.
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
-      color: var(--color-primary-dark, var(--color-gray-800));
-      text-decoration: underline;
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }

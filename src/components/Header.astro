@@ -190,7 +190,7 @@ const navigation = shopEnabled
         left: 0;
         right: 0;
         height: 2px;
-        background-color: var(--color-primary);
+        background-color: var(--color-gray-900);
         border-radius: var(--radius-full);
       }
     }
@@ -224,7 +224,11 @@ const navigation = shopEnabled
     height: 2px;
     width: 100%;
     background-color: var(--color-gray-900);
-    transition: all var(--transition-fast);
+    // Named properties, not `all`. These two are the ones the open/closed
+    // state actually animates into the X.
+    transition:
+      transform var(--transition-fast),
+      opacity var(--transition-fast);
     transform-origin: center;
   }
 
@@ -277,7 +281,12 @@ const navigation = shopEnabled
     color: var(--color-gray-700);
     text-decoration: none;
     font-weight: var(--font-weight-medium);
-    transition: all var(--transition-fast);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 180ms instead of appearing on keypress.
+    // This is the first thing a keyboard user tabs into on mobile.
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast);
 
     &:hover {
       background-color: var(--color-gray-50);

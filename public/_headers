@@ -3,3 +3,18 @@
 
 /robots.txt
   Content-Type: text/plain; charset=utf-8
+
+# These filenames carry no content hash (newsreader-latin-300-normal.woff2 and
+# friends are copied verbatim from @fontsource), so the URL stays the same when a
+# face is corrected, re-subset or upgraded. `immutable` on a stable URL would let
+# caches keep the old binary for the full year without ever revalidating, and a
+# later fix could not reach repeat visitors.
+#
+# stale-while-revalidate keeps the performance: a cached face is still served
+# instantly for a year, but after 30 days the browser refreshes it in the
+# background, so an update propagates without a cold request on the render path.
+#
+# If fonts ever need true immutability, fingerprint the filenames first — then
+# `immutable` becomes correct because the URL changes with the bytes.
+/fonts/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=31536000

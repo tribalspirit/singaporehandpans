@@ -350,7 +350,7 @@ const lastUpdated = 'January 5, 2026';
 
   .legal-title {
     font-size: var(--font-size-4xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     margin-bottom: var(--space-4);
     line-height: var(--line-height-tight);
@@ -360,17 +360,22 @@ const lastUpdated = 'January 5, 2026';
     }
   }
 
+  // Date metadata in mono per §5, closed with the same hairline rule the page
+  // mastheads use, so the legal pages share their title rhythm.
   .legal-meta {
-    font-size: var(--font-size-sm);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--color-gray-600);
+    padding-bottom: var(--space-6);
     margin-bottom: var(--space-8);
-    font-style: italic;
+    border-bottom: 1px solid var(--color-hairline);
   }
 
   .legal-intro {
     padding: var(--space-6);
-    background-color: var(--color-primary-light);
-    background-color: rgba(var(--color-primary-rgb, 190, 160, 110), 0.1);
+    background-color: var(--color-accent-light);
     border-left: 4px solid var(--color-primary);
     border-radius: var(--radius-md);
     margin-bottom: var(--space-12);
@@ -388,7 +393,7 @@ const lastUpdated = 'January 5, 2026';
 
     h2 {
       font-size: var(--font-size-2xl);
-      font-weight: var(--font-weight-bold);
+      font-weight: var(--font-weight-light);
       color: var(--color-gray-900);
       margin-bottom: var(--space-6);
       padding-top: var(--space-4);
@@ -444,7 +449,7 @@ const lastUpdated = 'January 5, 2026';
       }
 
       &:focus {
-        outline: 2px solid var(--color-accent);
+        outline: 2px solid var(--color-focus);
         outline-offset: 2px;
         border-radius: var(--radius-sm);
       }

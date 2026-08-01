@@ -103,41 +103,35 @@ const shouldRender = shopEnabled && partners.length > 0;
 <style lang="scss">
   .partners {
     padding: var(--space-16) 0;
-    background-color: var(--color-white);
+    background-color: var(--color-gray-100);
 
+    // Matches the global `.section` rhythm (64/128px). This component does not
+    // carry the `.section` class, so the global rule cannot reach it.
     @media (min-width: 768px) {
-      padding: var(--space-24) 0;
+      padding: var(--space-32) 0;
     }
   }
 
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 var(--space-6);
-
-    @media (max-width: 768px) {
-      padding: 0 var(--space-4);
-    }
-  }
-
+  // Left-set, matching FeaturedProducts. Centring is a good accent and a weak
+  // default; used in four of six homepage sections it flattened the page.
   .partners__header {
-    text-align: center;
     margin-bottom: var(--space-12);
   }
 
   .partners__eyebrow {
     display: block;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.14em;
     color: var(--color-primary);
     margin-bottom: var(--space-3);
   }
 
   .partners__title {
     font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     margin-bottom: var(--space-4);
     line-height: var(--line-height-tight);
@@ -146,8 +140,7 @@ const shouldRender = shopEnabled && partners.length > 0;
   .partners__subtitle {
     font-size: var(--font-size-lg);
     color: var(--color-gray-600);
-    max-width: 600px;
-    margin: 0 auto;
+    max-width: 56ch;
     line-height: var(--line-height-relaxed);
   }
 
@@ -178,18 +171,15 @@ const shouldRender = shopEnabled && partners.length > 0;
     overflow: hidden;
     text-decoration: none;
     color: inherit;
-    transition:
-      transform var(--transition-fast),
-      box-shadow var(--transition-fast);
+    transition: box-shadow var(--transition-fast);
     height: 100%;
 
     &:hover {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-gray-900);
       outline-offset: 2px;
     }
 
@@ -200,7 +190,7 @@ const shouldRender = shopEnabled && partners.length > 0;
 
   .partner-card__logo-wrapper {
     aspect-ratio: 1;
-    background: var(--color-gray-100);
+    background: var(--color-gray-200);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -256,8 +246,11 @@ const shouldRender = shopEnabled && partners.length > 0;
   }
 
   .partner-card__count {
+    font-family: var(--font-family-mono);
     font-size: var(--font-size-xs);
-    color: var(--color-gray-500);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-gray-600);
   }
 
   .partners__cta {
@@ -274,14 +267,20 @@ const shouldRender = shopEnabled && partners.length > 0;
     font-size: var(--font-size-base);
     text-decoration: none;
     min-height: 44px;
+    // The site's link pattern: a 1px rule that fades in, not a browser
+    // underline that snaps. See FeaturedProducts `__view-all`.
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
 
     &:hover {
       color: var(--color-primary-dark);
-      text-decoration: underline;
+      border-bottom-color: var(--color-primary-dark);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
       border-radius: var(--radius-sm);
     }

@@ -94,18 +94,23 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID;
 <link rel="manifest" href="/manifest.json" />
 
 <!-- Theme color for mobile browsers -->
-<meta name="theme-color" content="#8B4513" />
-<meta name="msapplication-TileColor" content="#8B4513" />
+<meta name="theme-color" content="#8a5a33" />
+<meta name="msapplication-TileColor" content="#8a5a33" />
 
 <!-- Preconnect to external domains for performance -->
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="preconnect" href="https://api.storyblok.com" />
 
-<!-- Google Fonts -->
+<!--
+  Fonts are self-hosted from public/fonts and declared in src/styles/fonts.scss.
+  Only the weight the hero h1 renders in is preloaded; the rest arrive with the
+  stylesheet and swap in.
+-->
 <link
-  href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap"
-  rel="stylesheet"
+  rel="preload"
+  href="/fonts/newsreader-latin-300-normal.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin
 />
 
 <!-- JSON-LD Schema for Organization -->

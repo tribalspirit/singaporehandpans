@@ -12,16 +12,20 @@ const seoDescription =
   canonical={`${Astro.site}academy/`}
 >
   <main class="academy-page">
-    <div class="container">
-      <section class="academy-hero">
+    <!-- Masthead band wraps the container, matching about/contacts/shop/stories,
+         so its ground and hairline rule run the full width of the viewport. -->
+    <section class="academy-hero">
+      <div class="container">
         <h1 class="academy-hero__title">Handpan Academy</h1>
         <p class="academy-hero__description">
           Welcome to our comprehensive handpan learning center. Explore
           interactive tools, tutorials, and resources designed to help you
           master the handpan at every level.
         </p>
-      </section>
+      </div>
+    </section>
 
+    <div class="container">
       <section class="academy-tools">
         <div class="tool-card">
           <div class="tool-card__icon">
@@ -118,41 +122,47 @@ const seoDescription =
 <style lang="scss">
   @use 'src/styles/tokens.scss';
 
+  // No top padding: the masthead below owns the space above the title, the
+  // same way `.page-hero` does on about and contacts.
   .academy-page {
     min-height: calc(100vh - var(--header-height) - var(--footer-height));
-    padding: var(--spacing-2xl) 0;
-    background: linear-gradient(
-      135deg,
-      var(--color-gray-50) 0%,
-      var(--color-white) 100%
-    );
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 var(--spacing-md);
-    }
+    padding: 0 0 var(--spacing-2xl);
+    background: var(--color-gray-50);
   }
 
+  // Shared masthead treatment (handoff §3): left-set, light display type, ink
+  // not bronze — bronze is reserved for eyebrows, links and hairlines.
+  // Structurally identical to `.page-hero` on about and contacts now: the band
+  // wraps `.container`, so the ground and the hairline rule run full-bleed
+  // rather than stopping at the 1176px content box.
   .academy-hero {
-    text-align: center;
-    padding: var(--spacing-2xl) 0 var(--spacing-xl);
+    text-align: left;
+    background: var(--color-gray-50);
+    padding: var(--space-20) 0 var(--space-16);
     margin-bottom: var(--spacing-2xl);
+    border-bottom: 1px solid var(--color-hairline);
+
+    @media (min-width: 768px) {
+      padding: var(--space-24) 0 var(--space-16);
+    }
   }
 
   .academy-hero__title {
     font-size: var(--font-size-4xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-primary);
+    font-weight: var(--font-weight-light);
+    color: var(--color-gray-900);
     margin-bottom: var(--spacing-lg);
     font-family: var(--font-family-heading);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-5xl);
+    }
   }
 
   .academy-hero__description {
-    font-size: var(--font-size-xl);
-    color: var(--color-text-secondary);
-    max-width: 800px;
-    margin: 0 auto;
+    font-size: var(--font-size-lg);
+    color: var(--color-gray-600);
+    max-width: 56ch;
     line-height: var(--line-height-relaxed);
   }
 
@@ -168,13 +178,14 @@ const seoDescription =
     border-radius: var(--border-radius-lg);
     padding: var(--spacing-xl);
     box-shadow: var(--shadow-base);
-    transition: all var(--transition-base);
+    // Named properties, not `all`: outline-width is animatable, so `all` made
+    // the 2px focus ring grow in over 240ms instead of appearing on keypress.
+    transition: box-shadow var(--transition-base);
     display: flex;
     flex-direction: column;
 
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
 
     &__icon {
@@ -184,7 +195,7 @@ const seoDescription =
 
     &__title {
       font-size: var(--font-size-2xl);
-      font-weight: var(--font-weight-bold);
+      font-weight: var(--font-weight-light);
       color: var(--color-text-primary);
       margin-bottom: var(--spacing-md);
       font-family: var(--font-family-heading);
@@ -203,16 +214,21 @@ const seoDescription =
       align-items: center;
       gap: var(--spacing-sm);
       padding: var(--spacing-md) var(--spacing-lg);
-      background: var(--color-primary);
+      background: var(--color-gray-900);
       color: var(--color-white);
       text-decoration: none;
       border-radius: var(--border-radius-md);
       font-weight: var(--font-weight-semibold);
-      transition: all var(--transition-base);
+      // Named properties, not `all`. `transform` is listed because the hover
+      // nudges the link; `outline-width` deliberately is not.
+      transition:
+        background-color var(--transition-base),
+        color var(--transition-base),
+        transform var(--transition-base);
       width: fit-content;
 
       &:hover {
-        background: var(--color-primary-dark);
+        background: var(--color-gray-800);
         transform: translateX(4px);
       }
 
@@ -233,7 +249,7 @@ const seoDescription =
 
     &__title {
       font-size: var(--font-size-3xl);
-      font-weight: var(--font-weight-bold);
+      font-weight: var(--font-weight-light);
       color: var(--color-text-primary);
       margin-bottom: var(--spacing-lg);
       font-family: var(--font-family-heading);
@@ -258,15 +274,20 @@ const seoDescription =
       display: inline-flex;
       align-items: center;
       padding: var(--spacing-md) var(--spacing-lg);
-      background: var(--color-primary);
+      background: var(--color-gray-900);
       color: var(--color-white);
       text-decoration: none;
       border-radius: var(--border-radius-md);
       font-weight: var(--font-weight-semibold);
-      transition: all var(--transition-base);
+      // Named properties, not `all`: outline-width is animatable, so `all`
+      // made the 2px focus ring grow in instead of appearing on keypress.
+      transition:
+        background-color var(--transition-base),
+        color var(--transition-base),
+        border-color var(--transition-base);
 
       &:hover {
-        background: var(--color-primary-dark);
+        background: var(--color-gray-800);
       }
 
       &--secondary {
@@ -275,7 +296,7 @@ const seoDescription =
         border: 2px solid var(--color-primary);
 
         &:hover {
-          background: var(--color-primary);
+          background: var(--color-gray-900);
           color: var(--color-white);
         }
       }
@@ -299,7 +320,7 @@ const seoDescription =
 
     &__title {
       font-size: var(--font-size-2xl);
-      font-weight: var(--font-weight-bold);
+      font-weight: var(--font-weight-light);
       color: var(--color-text-secondary);
       margin-bottom: var(--spacing-md);
       font-family: var(--font-family-heading);

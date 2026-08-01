@@ -24,7 +24,7 @@
 
 .chordName {
   font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-medium);
   color: var(--color-primary);
   white-space: nowrap;
 }
@@ -82,13 +82,13 @@
 }
 
 .modeToggleArpeggio {
-  background: var(--color-primary);
+  background: var(--color-gray-900);
   color: var(--color-white);
   border-color: var(--color-primary);
   font-weight: var(--font-weight-semibold);
 
   &:hover {
-    background: var(--color-primary-dark);
+    background: var(--color-gray-800);
     border-color: var(--color-primary-dark);
   }
 }
@@ -118,7 +118,7 @@
 .slider {
   flex: 1;
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: var(--color-gray-200);
   outline: none;
   cursor: pointer;
@@ -135,12 +135,12 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--color-primary);
+    background: var(--color-gray-900);
     cursor: pointer;
     transition: all var(--transition-base);
 
     &:hover {
-      background: var(--color-primary-dark);
+      background: var(--color-gray-800);
       transform: scale(1.1);
     }
   }
@@ -149,13 +149,13 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--color-primary);
+    background: var(--color-gray-900);
     cursor: pointer;
     border: none;
     transition: all var(--transition-base);
 
     &:hover {
-      background: var(--color-primary-dark);
+      background: var(--color-gray-800);
       transform: scale(1.1);
     }
   }
@@ -177,7 +177,7 @@
   align-items: center;
   gap: var(--spacing-xs);
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-primary);
+  background: var(--color-gray-900);
   color: var(--color-white);
   border: none;
   border-radius: var(--border-radius-md);
@@ -195,8 +195,7 @@
   }
 
   &:hover {
-    background: var(--color-primary-dark);
-    transform: translateY(-1px);
+    background: var(--color-gray-800);
   }
 
   &:focus {

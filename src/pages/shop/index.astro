@@ -135,23 +135,22 @@ const pageDescription =
     min-height: 100vh;
   }
 
+  // Same rhythm as `.page-hero` on about and contacts, at every breakpoint —
+  // see the note in stories/index.astro.
   .hero-section {
-    background: linear-gradient(
-      135deg,
-      var(--color-primary-light) 0%,
-      var(--color-accent-light) 100%
-    );
-    padding: var(--space-16) 0 var(--space-12);
-    text-align: center;
+    background: var(--color-gray-50);
+    border-bottom: 1px solid var(--color-hairline);
+    padding: var(--space-20) 0 var(--space-16);
+    text-align: left;
 
-    @media (max-width: 768px) {
-      padding: var(--space-12) 0 var(--space-8);
+    @media (min-width: 768px) {
+      padding: var(--space-24) 0 var(--space-16);
     }
   }
 
   .page-title {
     font-size: var(--font-size-4xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     margin-bottom: var(--space-4);
     line-height: var(--line-height-tight);
@@ -164,8 +163,7 @@ const pageDescription =
   .page-subtitle {
     font-size: var(--font-size-lg);
     color: var(--color-gray-700);
-    max-width: 600px;
-    margin: 0 auto;
+    max-width: 56ch;
     line-height: var(--line-height-relaxed);
 
     @media (min-width: 768px) {
@@ -173,18 +171,20 @@ const pageDescription =
     }
   }
 
+  // A catalogue may sit tighter than an editorial page, but not at a third of
+  // the site rhythm — these are a floor, not the global 64/128px.
   .collections-section {
-    padding: var(--space-12) 0 var(--space-8);
+    padding: var(--space-24) 0 var(--space-12);
     background: var(--color-white);
 
     @media (max-width: 768px) {
-      padding: var(--space-8) 0 var(--space-6);
+      padding: var(--space-12) 0 var(--space-8);
     }
   }
 
   .section-title {
     font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     margin-bottom: var(--space-8);
 
@@ -208,17 +208,14 @@ const pageDescription =
     overflow: hidden;
     text-decoration: none;
     color: inherit;
-    transition:
-      transform var(--transition-fast),
-      box-shadow var(--transition-fast);
+    transition: box-shadow var(--transition-fast);
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 0 0 1px var(--color-primary-light);
     }
 
     &:focus-visible {
-      outline: 2px solid var(--color-primary);
+      outline: 2px solid var(--color-gray-900);
       outline-offset: 2px;
     }
   }
@@ -227,7 +224,7 @@ const pageDescription =
     position: relative;
     aspect-ratio: 16 / 9;
     overflow: hidden;
-    background: var(--color-gray-100);
+    background: var(--color-gray-200);
     padding: var(--space-4);
 
     img {
@@ -238,7 +235,7 @@ const pageDescription =
     }
 
     .collection-card:hover & img {
-      transform: scale(1.05);
+      transform: scale(1.02);
     }
   }
 
@@ -264,26 +261,19 @@ const pageDescription =
   }
 
   .collection-count {
-    font-size: var(--font-size-sm);
-    color: var(--color-gray-500);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-gray-600);
   }
 
   .shop-section {
-    padding: var(--space-12) 0 var(--space-16);
-    background: var(--color-gray-50);
+    padding: var(--space-24) 0 var(--space-32);
+    background: var(--color-gray-100);
 
     @media (max-width: 768px) {
-      padding: var(--space-8) 0 var(--space-12);
-    }
-  }
-
-  .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 var(--space-6);
-
-    @media (max-width: 768px) {
-      padding: 0 var(--space-4);
+      padding: var(--space-12) 0 var(--space-16);
     }
   }
 

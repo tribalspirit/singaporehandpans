@@ -3,22 +3,20 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  transition:
-    box-shadow var(--transition-fast),
-    transform var(--transition-fast);
+  transition: box-shadow var(--transition-fast);
   display: flex;
   flex-direction: column;
 
+  // Hairline warms to brass instead of the card lifting
   &:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+    box-shadow: 0 0 0 1px var(--color-primary-light);
   }
 }
 
 .imageWrapper {
   position: relative;
   aspect-ratio: 1;
-  background: var(--color-gray-100);
+  background: var(--color-gray-200);
   overflow: hidden;
 }
 
@@ -29,7 +27,7 @@
   transition: transform var(--transition-base);
 
   .card:hover & {
-    transform: scale(1.05);
+    transform: scale(1.02);
   }
 }
 
@@ -39,7 +37,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-gray-100);
+  background: var(--color-gray-200);
 }
 
 .placeholderIcon {
@@ -52,12 +50,13 @@
   right: var(--space-3);
   background: var(--color-gray-900);
   color: var(--color-white);
+  font-family: var(--font-family-mono);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.14em;
 }
 
 .content {
@@ -76,11 +75,12 @@
 }
 
 .category {
+  font-family: var(--font-family-mono);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   color: var(--color-primary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.14em;
 }
 
 .title {
@@ -108,8 +108,9 @@
 }
 
 .price {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-light);
   color: var(--color-gray-900);
 }
 
@@ -119,23 +120,20 @@
   justify-content: center;
   min-height: 44px;
   padding: var(--space-2) var(--space-5);
-  background: var(--color-primary);
+  background: var(--color-gray-900);
   color: var(--color-white);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   text-decoration: none;
   border-radius: var(--radius-md);
-  transition:
-    background-color var(--transition-fast),
-    transform var(--transition-fast);
+  transition: background-color var(--transition-fast);
 
   &:hover:not(.disabled) {
-    background: var(--color-primary-dark, var(--color-gray-800));
-    transform: scale(1.02);
+    background: var(--color-gray-800);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--color-primary);
+    outline: 2px solid var(--color-gray-900);
     outline-offset: 2px;
   }
 
