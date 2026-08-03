@@ -3,12 +3,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import EventDetail from '../../components/EventDetail.astro';
 import { getStoryblokClient } from '../../lib/storyblok';
 import { setEdgeCache } from '../../lib/edgeCache';
+import {
+  getEventTiming,
+  getNextOccurrence,
+  getSingaporeParts,
+  toSingaporeIso,
+} from '../../lib/eventDates';
 import type { EventStory } from '../../types/event';
 
 export const prerender = false;
 setEdgeCache(Astro.response, 'medium');
 
-const EVENT_DURATION_MS = 2 * 60 * 60 * 1000;
 const PRICE_SANITIZE_REGEX = /[^0-9.]/g;
 const FREE_LABEL = 'Free';
 const PRICE_CURRENCY = 'SGD';
@@ -37,8 +42,46 @@ if (!event) {
   return Astro.redirect('/events');
 }
 
-const eventDate = new Date(event.content.date);
-const eventEndDate = new Date(eventDate.getTime() + EVENT_DURATION_MS);
+const now = new Date();
+// Anchored to Singapore rather than the runtime zone. `event.content.date` is a
+// naive 'YYYY-MM-DD HH:mm' string, so it used to be emitted verbatim as
+// `startDate` — not valid ISO-8601, which schema.org silently rejects.
+const timing = getEventTiming(event.content);
+// A series advertises its next session; a finished one falls back to its first.
+const occurrence = timing
+  ? (getNextOccurrence(timing, now) ?? { start: timing.start, end: timing.end })
+  : null;
+
+const RECURRENCE_FREQUENCY: Record<string, string> = {
+  weekly: 'P1W',
+  biweekly: 'P2W',
+  monthly: 'P1M',
+};
+const SCHEMA_WEEKDAYS = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
+
+const eventSchedule =
+  timing && timing.recurrence !== 'none'
+    ? {
+        '@type': 'Schedule',
+        repeatFrequency: RECURRENCE_FREQUENCY[timing.recurrence],
+        byDay: `https://schema.org/${SCHEMA_WEEKDAYS[getSingaporeParts(timing.start).weekday]}`,
+        startDate: toSingaporeIso(timing.start).slice(0, 10),
+        ...(timing.recurrenceUntil
+          ? { endDate: toSingaporeIso(timing.recurrenceUntil).slice(0, 10) }
+          : {}),
+        startTime: toSingaporeIso(timing.start).slice(11, 16),
+        endTime: toSingaporeIso(timing.end).slice(11, 16),
+        scheduleTimezone: 'Asia/Singapore',
+      }
+    : undefined;
 
 const priceValue =
   event.content.price && event.content.price !== FREE_LABEL
@@ -50,8 +93,11 @@ const structuredData = {
   '@type': 'Event',
   name: event.content.title,
   description: event.content.description,
-  startDate: event.content.date,
-  endDate: eventEndDate.toISOString(),
+  startDate: occurrence ? toSingaporeIso(occurrence.start) : undefined,
+  // Previously a hardcoded start + 2h, which ignored both `duration` and any
+  // multi-day span.
+  endDate: occurrence ? toSingaporeIso(occurrence.end) : undefined,
+  ...(eventSchedule ? { eventSchedule } : {}),
   location: {
     '@type': 'Place',
     name: event.content.location,
@@ -82,7 +128,12 @@ const structuredData = {
       }
     : undefined,
   image: event.content.image?.filename,
-  eventStatus: 'https://schema.org/EventScheduled',
+  // `status` is otherwise unmaintained (every story reads 'upcoming'), so only
+  // the explicit 'cancelled' value is honoured here.
+  eventStatus:
+    event.content.status === 'cancelled'
+      ? 'https://schema.org/EventCancelled'
+      : 'https://schema.org/EventScheduled',
   eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
 };
 

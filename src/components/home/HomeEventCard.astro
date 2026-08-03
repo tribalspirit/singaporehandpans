@@ -1,21 +1,54 @@
 ---
 import type { EventStory } from '../../types/event';
+import {
+  getEventTiming,
+  getMonthLabel,
+  getNextOccurrence,
+  getSingaporeParts,
+  type EventOccurrence,
+  type EventTiming,
+} from '../../lib/eventDates';
+import { formatRecurrenceLabel } from '../../lib/eventFormat';
 
 export interface Props {
   event: EventStory;
+  /** Precomputed by `partitionEvents`; derived here for standalone callers. */
+  timing?: EventTiming | null;
+  next?: EventOccurrence | null;
 }
 
-const { event } = Astro.props;
+const { event, timing, next } = Astro.props;
 const status = event.content.sold_out_override
   ? 'sold_out'
   : event.content.availability_status || 'available';
 const isSoldOut = status === 'sold_out';
 
-const eventDate = new Date(event.content.date);
-const month = eventDate
-  .toLocaleDateString('en-SG', { month: 'short' })
-  .toUpperCase();
-const day = eventDate.getDate();
+const eventTiming = timing ?? getEventTiming(event.content);
+const nextOccurrence =
+  next ?? (eventTiming ? getNextOccurrence(eventTiming, new Date()) : null);
+
+// The badge shows the session you can actually attend — for a series that is
+// the next occurrence, not the first one, which may be months in the past.
+// Parts are read in Singapore time; `getDate()` read the runtime's zone, so on
+// Workers (UTC) a morning class showed the previous day.
+const badgeDate = nextOccurrence?.start ?? eventTiming?.start ?? null;
+const badgeParts = badgeDate ? getSingaporeParts(badgeDate) : null;
+const month = badgeParts
+  ? getMonthLabel(badgeParts.month).slice(0, 3).toUpperCase()
+  : '';
+// A multi-day event reads "14–15" rather than pretending to be a single date.
+const endParts =
+  eventTiming?.isMultiDay && !nextOccurrence
+    ? getSingaporeParts(eventTiming.end)
+    : eventTiming?.isMultiDay && nextOccurrence
+      ? getSingaporeParts(nextOccurrence.end)
+      : null;
+const day =
+  badgeParts && endParts && endParts.day !== badgeParts.day
+    ? `${badgeParts.day}–${endParts.day}`
+    : (badgeParts?.day ?? '');
+
+const recurrenceLabel = eventTiming ? formatRecurrenceLabel(eventTiming) : null;
 
 const eventUrl = `/events/${event.slug}/`;
 
@@ -93,6 +126,12 @@ const imageUrl = event.content.image?.filename
       </svg>
       <span>{event.content.location}</span>
     </div>
+
+    {
+      recurrenceLabel && (
+        <p class="home-event-card__recurrence">{recurrenceLabel}</p>
+      )
+    }
 
     <p class="home-event-card__description">{event.content.description}</p>
 
@@ -243,6 +282,17 @@ const imageUrl = event.content.image?.filename
         color: var(--color-primary);
       }
     }
+  }
+
+  // Shares the location line's mono-caps treatment, but in bronze so a repeating
+  // class reads as a standing fixture rather than another metadata row.
+  .home-event-card__recurrence {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin: calc(var(--space-3) * -1) 0 var(--space-3);
   }
 
   .home-event-card__location {

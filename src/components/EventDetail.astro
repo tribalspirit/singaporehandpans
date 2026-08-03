@@ -1,6 +1,15 @@
 ---
 import AcuityEmbed from './AcuityEmbed.astro';
 import type { EventStory } from '../types/event';
+import { normalizeTags } from '../utils/tags';
+import { getEventTiming, getNextOccurrence } from '../lib/eventDates';
+import {
+  formatDurationLabel,
+  formatEventDateRange,
+  formatEventTimeRange,
+  formatOccurrenceLabel,
+  formatRecurrenceLabel,
+} from '../lib/eventFormat';
 
 export interface Props {
   event: EventStory;
@@ -8,42 +17,25 @@ export interface Props {
 
 const { event } = Astro.props;
 
-// Normalize tags to always be an array (handles string from Storyblok or array from fallback)
-const normalizeTags = (tags: string | string[] | undefined): string[] => {
-  if (!tags) return [];
-  if (Array.isArray(tags)) return tags;
-  if (typeof tags === 'string')
-    return tags
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-  return [];
-};
-
 const eventTags = normalizeTags(event.content.tags);
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-SG', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
+const now = new Date();
+const timing = getEventTiming(event.content);
+const nextOccurrence = timing ? getNextOccurrence(timing, now) : null;
 
-const formatTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-SG', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
-};
+// Upcoming means "has a session that has not finished yet" — a class in
+// progress, a multi-day event mid-span, and a series with sessions left all
+// qualify. This used to compare against the start time only.
+const isUpcoming = Boolean(nextOccurrence);
+const isPast = !isUpcoming;
 
-const eventDate = new Date(event.content.date);
-const isUpcoming = eventDate >= new Date();
-const isPast = eventDate < new Date();
+const dateLabel = timing ? formatEventDateRange(timing) : '';
+const timeLabel = timing ? formatEventTimeRange(timing) : '';
+const recurrenceLabel = timing ? formatRecurrenceLabel(timing) : null;
+const nextSessionLabel =
+  recurrenceLabel && nextOccurrence
+    ? formatOccurrenceLabel(nextOccurrence)
+    : null;
 
 const isSoldOut =
   event.content.sold_out_override ||
@@ -51,8 +43,7 @@ const isSoldOut =
 const hasAcuity = !!event.content.acuity_appointment_type_id;
 const acuityOwnerId = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
 
-const formatDuration = (hours: number) =>
-  hours === 1 ? '1 hour' : `${hours} hours`;
+const durationLabel = formatDurationLabel(event.content.duration);
 ---
 
 <article class="event-detail">
@@ -92,8 +83,21 @@ const formatDuration = (hours: number) =>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
         <div>
-          <div class="date">{formatDate(event.content.date)}</div>
-          <div class="time">{formatTime(event.content.date)}</div>
+          {
+            recurrenceLabel ? (
+              <>
+                <div class="date">{recurrenceLabel}</div>
+                {nextSessionLabel && (
+                  <div class="time">Next session: {nextSessionLabel}</div>
+                )}
+              </>
+            ) : (
+              <>
+                <div class="date">{dateLabel}</div>
+                <div class="time">{timeLabel}</div>
+              </>
+            )
+          }
         </div>
       </div>
 
@@ -140,7 +144,7 @@ const formatDuration = (hours: number) =>
       }
 
       {
-        event.content.duration && (
+        durationLabel && (
           <div class="event-duration">
             <svg
               width="20"
@@ -153,7 +157,7 @@ const formatDuration = (hours: number) =>
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            <span>{formatDuration(event.content.duration)}</span>
+            <span>{durationLabel}</span>
             <button
               type="button"
               class="info-tooltip-wrapper"
@@ -236,9 +240,16 @@ const formatDuration = (hours: number) =>
         <h2>Event Details</h2>
         <dl class="details-list">
           <dt>Date & Time</dt>
-          <dd>
-            {formatDate(event.content.date)} at {formatTime(event.content.date)}
-          </dd>
+          <dd>{dateLabel}, {timeLabel}</dd>
+
+          {
+            recurrenceLabel && (
+              <>
+                <dt>Repeats</dt>
+                <dd>{recurrenceLabel}</dd>
+              </>
+            )
+          }
 
           <dt>Location</dt>
           <dd>{event.content.location}</dd>
@@ -261,10 +272,10 @@ const formatDuration = (hours: number) =>
           }
 
           {
-            event.content.duration && (
+            durationLabel && (
               <>
                 <dt>Duration</dt>
-                <dd>~{formatDuration(event.content.duration)}</dd>
+                <dd>~{durationLabel}</dd>
               </>
             )
           }

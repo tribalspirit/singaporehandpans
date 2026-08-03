@@ -1,49 +1,73 @@
 ---
 import type { EventStory } from '../types/event';
+import { normalizeTags } from '../utils/tags';
+import {
+  getEventTiming,
+  getNextOccurrence,
+  getSingaporeParts,
+  type EventOccurrence,
+  type EventTiming,
+} from '../lib/eventDates';
+import {
+  formatDurationLabel,
+  formatEventDateRange,
+  formatEventTimeRange,
+  formatOccurrenceLabel,
+  formatRecurrenceLabel,
+  formatSeriesSpanLabel,
+} from '../lib/eventFormat';
 
 export interface Props {
   event: EventStory;
   isPast?: boolean;
+  /** Precomputed by `partitionEvents`; derived here for standalone callers. */
+  timing?: EventTiming | null;
+  next?: EventOccurrence | null;
 }
 
-const { event, isPast = false } = Astro.props;
-
-// Normalize tags to always be an array (handles string from Storyblok or array from fallback)
-const normalizeTags = (tags: string | string[] | undefined): string[] => {
-  if (!tags) return [];
-  if (Array.isArray(tags)) return tags;
-  if (typeof tags === 'string')
-    return tags
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-  return [];
-};
+const { event, isPast = false, timing, next } = Astro.props;
 
 const eventTags = normalizeTags(event.content.tags);
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-SG', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
-
-const formatTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-SG', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
-};
-
 const eventUrl = `/events/${event.slug}/`;
-const eventDate = new Date(event.content.date);
-const isUpcoming = eventDate >= new Date();
+
+const now = new Date();
+const eventTiming = timing ?? getEventTiming(event.content);
+const nextOccurrence =
+  next ?? (eventTiming ? getNextOccurrence(eventTiming, now) : null);
+
+// A recurring class shows its cadence rather than one specific date; past ones
+// show the span they ran for, since they appear once in the archive, not once
+// per session.
+const recurrenceLabel = eventTiming ? formatRecurrenceLabel(eventTiming) : null;
+const seriesSpanLabel =
+  isPast && eventTiming ? formatSeriesSpanLabel(eventTiming) : null;
+
+// For a live series the headline date is the next session, not the first one
+// (which may be months ago). For a one-off it is the event's own span.
+const showNextSession = Boolean(recurrenceLabel && nextOccurrence && !isPast);
+const dateLabel = eventTiming ? formatEventDateRange(eventTiming) : '';
+const timeLabel = eventTiming ? formatEventTimeRange(eventTiming) : '';
+
+const isSameSingaporeDay = (a: Date, b: Date) => {
+  const left = getSingaporeParts(a);
+  const right = getSingaporeParts(b);
+  return (
+    left.year === right.year &&
+    left.month === right.month &&
+    left.day === right.day
+  );
+};
+
+// Past cards carry no badge at all. Otherwise: a session under way says so
+// (previously these read "Upcoming" right up until they were dropped from the
+// page mid-class), then today, then everything else.
+const statusBadge = (() => {
+  if (isPast || !nextOccurrence) return null;
+  if (nextOccurrence.start <= now && now <= nextOccurrence.end) {
+    return 'Happening now';
+  }
+  return isSameSingaporeDay(nextOccurrence.start, now) ? 'Today' : 'Upcoming';
+})();
 
 const isSoldOut =
   event.content.sold_out_override ||
@@ -55,8 +79,7 @@ const availabilityLabel: Record<string, string> = {
   sold_out: 'Sold Out',
 };
 
-const formatDuration = (hours: number) =>
-  hours === 1 ? '1 hour' : `${hours} hours`;
+const durationLabel = formatDurationLabel(event.content.duration);
 ---
 
 <article
@@ -91,11 +114,7 @@ const formatDuration = (hours: number) =>
       )
     }
 
-    {
-      !isPast && (
-        <div class="event-status">{isUpcoming ? 'Upcoming' : 'Today'}</div>
-      )
-    }
+    {statusBadge && <div class="event-status">{statusBadge}</div>}
 
     {
       !isPast && availabilityStatus !== 'available' && (
@@ -142,8 +161,24 @@ const formatDuration = (hours: number) =>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
         <div>
-          <div class="date">{formatDate(event.content.date)}</div>
-          <div class="time">{formatTime(event.content.date)}</div>
+          {
+            recurrenceLabel ? (
+              <>
+                <div class="date">{recurrenceLabel}</div>
+                {showNextSession && nextOccurrence && (
+                  <div class="time">
+                    Next: {formatOccurrenceLabel(nextOccurrence)}
+                  </div>
+                )}
+                {seriesSpanLabel && <div class="time">{seriesSpanLabel}</div>}
+              </>
+            ) : (
+              <>
+                <div class="date">{dateLabel}</div>
+                <div class="time">{timeLabel}</div>
+              </>
+            )
+          }
         </div>
       </div>
 
@@ -188,7 +223,7 @@ const formatDuration = (hours: number) =>
       }
 
       {
-        event.content.duration && (
+        durationLabel && (
           <div class="event-duration">
             <svg
               width="16"
@@ -201,7 +236,7 @@ const formatDuration = (hours: number) =>
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            <span>~{formatDuration(event.content.duration)}</span>
+            <span>~{durationLabel}</span>
           </div>
         )
       }

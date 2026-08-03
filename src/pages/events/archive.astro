@@ -1,0 +1,402 @@
+---
+/**
+ * Past classes and events, grouped by year and month.
+ *
+ * `/events/` used to render upcoming and past together, so the page grew
+ * without bound — 34 of its 43 cards were finished classes. Nothing is
+ * unpublished or deleted here: every past event keeps its detail page, its own
+ * Event JSON-LD and its copy, it just lives on its own URL now.
+ *
+ * A recurring series appears once, filed under its final session, rather than
+ * once per occurrence — N identical cards linking to one URL would be noise for
+ * readers and duplicate links for crawlers.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EventCard from '../../components/EventCard.astro';
+import CMSFallback from '../../components/CMSFallback.astro';
+import { getStoryblokClient } from '../../lib/storyblok';
+import { setEdgeCache } from '../../lib/edgeCache';
+import { fetchEventStories, partitionEvents } from '../../lib/eventsApi';
+import { groupByYearMonth } from '../../lib/eventDates';
+import type { EventListItem } from '../../lib/eventsApi';
+
+export const prerender = false;
+// Long profile: the only thing that changes here is an event crossing the
+// upcoming/past boundary, which happens at most once a day.
+setEdgeCache(Astro.response, 'long');
+
+/** Cap on how many entries the ItemList advertises; the page still shows all. */
+const SCHEMA_ITEM_LIMIT = 100;
+
+const now = new Date();
+
+let pastEvents: EventListItem[] = [];
+let cmsError = false;
+
+const runtime = Astro.locals.runtime;
+const token = runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+
+try {
+  const storyblokApi = getStoryblokClient(token);
+  const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
+
+  const events = await fetchEventStories(storyblokApi, storyblokVersion);
+  pastEvents = partitionEvents(events, now).past;
+} catch (error) {
+  console.error('Events archive: Failed to load from Storyblok', error);
+  cmsError = true;
+}
+
+// Grouped on the LAST occurrence, so a multi-day event files under the month it
+// finished in and a series under the month its final session ran.
+const years = groupByYearMonth(pastEvents, (item) => item.last!.start);
+
+// The jump nav lists years once there is more than one. With a single year that
+// would be one useless chip, so it lists that year's months instead — which is
+// the level a reader actually navigates at when everything is one season.
+const jumpTargets =
+  years.length > 1
+    ? years.map((year) => ({
+        anchor: year.anchor,
+        label: String(year.year),
+        count: year.total,
+      }))
+    : (years[0]?.months ?? []).map((month) => ({
+        anchor: month.anchor,
+        label: month.label,
+        count: month.items.length,
+      }));
+
+const siteUrl =
+  Astro.site?.toString().replace(/\/$/, '') || 'https://singaporehandpans.com';
+
+const seoTitle = 'Past Handpan Classes & Events in Singapore';
+const seoDescription =
+  'An archive of every handpan workshop, masterclass, concert and community gathering held at Singapore Handpan Studio, grouped by year and month.';
+
+const collectionSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Past Classes & Events',
+  url: `${siteUrl}/events/archive/`,
+  description: seoDescription,
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: pastEvents
+      .slice(0, SCHEMA_ITEM_LIMIT)
+      .map((item, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: `${siteUrl}/events/${item.story.slug}/`,
+        name: item.story.content.title,
+      })),
+  },
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/` },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Classes',
+      item: `${siteUrl}/events/`,
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: 'Past Classes',
+      item: `${siteUrl}/events/archive/`,
+    },
+  ],
+};
+---
+
+<BaseLayout
+  title={seoTitle}
+  description={seoDescription}
+  canonical={`${Astro.site}events/archive/`}
+>
+  {
+    pastEvents.length > 0 && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(collectionSchema)}
+        slot="head"
+      />
+    )
+  }
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbSchema)}
+    slot="head"
+  />
+
+  <main class="archive-page">
+    {cmsError && <CMSFallback type="events" />}
+
+    <!-- Masthead band wraps the container so its ground and hairline run the
+         full width, matching /events/, about, contacts, shop and stories. -->
+    <header class="page-header">
+      <div class="container">
+        <p class="page-eyebrow">
+          <a href="/events/">Classes &amp; Events</a>
+        </p>
+        <h1>Past Classes &amp; Events</h1>
+        <p class="page-subtitle">
+          Everything we've run at the studio, newest first. Nothing is taken
+          down — browse by month to see what a season at Singapore Handpan
+          Studio looks like.
+        </p>
+      </div>
+    </header>
+
+    <div class="container">
+      {
+        jumpTargets.length > 1 && (
+          <nav
+            class="year-nav"
+            aria-label={years.length > 1 ? 'Jump to year' : 'Jump to month'}
+          >
+            <ul>
+              {jumpTargets.map((target) => (
+                <li>
+                  <a href={`#${target.anchor}`}>
+                    {target.label}
+                    <span class="year-nav__count">{target.count}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )
+      }
+
+      {
+        years.map((year) => (
+          <section class="archive-year" id={year.anchor}>
+            <h2 class="archive-year__heading">
+              {year.year}
+              <span class="archive-year__count">
+                {year.total} {year.total === 1 ? 'event' : 'events'}
+              </span>
+            </h2>
+
+            {year.months.map((month) => (
+              <section class="archive-month" id={month.anchor}>
+                <h3 class="archive-month__heading">
+                  {month.label} {year.year}
+                </h3>
+                <div class="events-grid">
+                  {month.items.map((item) => (
+                    <EventCard
+                      event={item.story}
+                      timing={item.timing}
+                      next={item.next}
+                      isPast={true}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </section>
+        ))
+      }
+
+      {
+        !cmsError && pastEvents.length === 0 && (
+          <section class="no-events">
+            <h2>Nothing in the archive yet</h2>
+            <p>
+              Once our current classes have run, they'll be listed here. See
+              what's <a href="/events/">coming up next</a>.
+            </p>
+          </section>
+        )
+      }
+    </div>
+  </main>
+</BaseLayout>
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .archive-page {
+    min-height: calc(100vh - var(--header-height) - var(--footer-height));
+    padding: 0 0 var(--spacing-xl);
+  }
+
+  // Shared masthead treatment, structurally identical to `/events/`: the band
+  // wraps `.container` so the ground and hairline run full-bleed.
+  .page-header {
+    text-align: left;
+    background: var(--color-gray-50);
+    padding: var(--space-20) 0 var(--space-16);
+    margin-bottom: var(--spacing-2xl);
+    border-bottom: 1px solid var(--color-hairline);
+
+    @media (min-width: 768px) {
+      padding: var(--space-24) 0 var(--space-16);
+    }
+
+    h1 {
+      font-size: var(--font-size-4xl);
+      font-weight: var(--font-weight-light);
+      color: var(--color-gray-900);
+      margin-bottom: var(--spacing-md);
+
+      @media (min-width: 768px) {
+        font-size: var(--font-size-5xl);
+      }
+    }
+
+    .page-subtitle {
+      font-size: var(--font-size-lg);
+      color: var(--color-gray-600);
+      max-width: 56ch;
+      line-height: var(--line-height-relaxed);
+    }
+  }
+
+  // Bronze is reserved for eyebrows, links and hairlines.
+  .page-eyebrow {
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // Sticky so the year you are reading is always one tap away on a long scroll.
+  .year-nav {
+    position: sticky;
+    top: var(--header-height);
+    z-index: 2;
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-sm) 0;
+    background: var(--color-background);
+    border-bottom: 1px solid var(--color-hairline);
+
+    ul {
+      display: flex;
+      gap: var(--spacing-md);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: baseline;
+      gap: var(--spacing-xs);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border: 1px solid var(--color-border);
+      border-radius: var(--border-radius-sm);
+      color: var(--color-text-primary);
+      text-decoration: none;
+      white-space: nowrap;
+      transition:
+        border-color var(--transition-fast),
+        color var(--transition-fast);
+
+      &:hover,
+      &:focus-visible {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+      }
+    }
+  }
+
+  .year-nav__count {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .archive-year {
+    margin-bottom: var(--spacing-2xl);
+    // Clears the sticky header + year nav when jumped to via an anchor.
+    scroll-margin-top: calc(var(--header-height) + var(--space-16));
+  }
+
+  .archive-year__heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-light);
+    color: var(--color-gray-900);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--color-accent);
+  }
+
+  .archive-year__count {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+
+  .archive-month {
+    margin-bottom: var(--spacing-xl);
+    scroll-margin-top: calc(var(--header-height) + var(--space-16));
+  }
+
+  .archive-month__heading {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--spacing-lg);
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md);
+    }
+  }
+
+  .no-events {
+    text-align: center;
+    padding: var(--spacing-2xl) var(--spacing-lg);
+    background: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--color-border);
+
+    h2 {
+      font-size: var(--font-size-xl);
+      color: var(--color-text-primary);
+      margin-bottom: var(--spacing-md);
+    }
+
+    p {
+      color: var(--color-text-secondary);
+
+      a {
+        color: var(--color-primary);
+        font-weight: var(--font-weight-semibold);
+      }
+    }
+  }
+</style>
