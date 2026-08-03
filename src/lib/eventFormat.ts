@@ -100,10 +100,26 @@ export function formatEventTimeRange(timing: EventTiming): string {
   return `${formatTime(timing.start)}${SPACED_RANGE}${formatTime(timing.end)}`;
 }
 
-/** `Sat, 8 Aug, 10:30 am` — the compact "next session" line on a card. */
+/**
+ * `Sat, 8 Aug, 10:30 am – 12:00 pm` — the "next session" line on a card.
+ *
+ * The end is included because nothing else shows it for a series:
+ * `resolveDurationLabel` suppresses the duration once an explicit `end_date`
+ * exists, so dropping it here left the session with no stated finish at all.
+ * A session spanning days states its end date too.
+ */
 export function formatOccurrenceLabel(occurrence: EventOccurrence): string {
   const { weekday, day, month } = getSingaporeParts(occurrence.start);
-  return `${WEEKDAYS_SHORT[weekday]}, ${day} ${shortMonth(month)}, ${formatTime(occurrence.start)}`;
+  const opening = `${WEEKDAYS_SHORT[weekday]}, ${day} ${shortMonth(month)}, ${formatTime(occurrence.start)}`;
+
+  const from = getSingaporeParts(occurrence.start);
+  const to = getSingaporeParts(occurrence.end);
+  const sameDay =
+    from.year === to.year && from.month === to.month && from.day === to.day;
+
+  return sameDay
+    ? `${opening}${SPACED_RANGE}${formatTime(occurrence.end)}`
+    : `${opening}${SPACED_RANGE}${to.day} ${shortMonth(to.month)}, ${formatTime(occurrence.end)}`;
 }
 
 /** `1st`, `2nd`, `3rd`, `11th`, `22nd` — for monthly recurrence copy. */

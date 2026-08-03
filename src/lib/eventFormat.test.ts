@@ -172,14 +172,24 @@ describe('formatRecurrenceLabel', () => {
 });
 
 describe('formatOccurrenceLabel', () => {
-  it('renders a compact next-session line', () => {
+  it('states when the session ends, not just when it starts', () => {
+    // resolveDurationLabel hides the duration once end_date exists, so without
+    // the end here a series session showed no finish time anywhere.
     const start = parseSingaporeDate('2026-08-08 10:30') as Date;
     expect(
       formatOccurrenceLabel({
         start,
         end: new Date(start.getTime() + 90 * 60 * 1000),
       })
-    ).toBe('Sat, 8 Aug, 10:30 am');
+    ).toBe('Sat, 8 Aug, 10:30 am – 12:00 pm');
+  });
+
+  it('includes the end date when a session runs past midnight', () => {
+    const start = parseSingaporeDate('2026-08-08 22:00') as Date;
+    const end = parseSingaporeDate('2026-08-09 01:00') as Date;
+    expect(formatOccurrenceLabel({ start, end })).toBe(
+      'Sat, 8 Aug, 10:00 pm – 9 Aug, 1:00 am'
+    );
   });
 });
 
