@@ -10,6 +10,7 @@ import { getAcuityHooks } from '../../lib/eventsApi';
 import {
   formatDateBadge,
   formatEventDateRange,
+  formatOccurrenceLabel,
   formatRecurrenceLabel,
 } from '../../lib/eventFormat';
 
@@ -38,11 +39,14 @@ const { month, day } = formatDateBadge(eventTiming, nextOccurrence);
 
 const recurrenceLabel = eventTiming ? formatRecurrenceLabel(eventTiming) : null;
 // A span crossing a month cannot fit the chip, so the full range is spelled out
-// here instead of being mangled into "APR 30–2".
-const dateRangeLabel =
-  eventTiming?.isMultiDay && !recurrenceLabel
-    ? formatEventDateRange(eventTiming)
-    : null;
+// here instead of being mangled into "APR 30–2". Recurring spans need this just
+// as much — excluding them left a 30 Apr–2 May session showing only "APR 30" —
+// and for those the range comes from the advertised occurrence, not the first.
+const dateRangeLabel = !eventTiming?.isMultiDay
+  ? null
+  : recurrenceLabel && nextOccurrence
+    ? formatOccurrenceLabel(nextOccurrence)
+    : formatEventDateRange(eventTiming);
 
 // A series must not advertise its first class instance — see `getAcuityHooks`.
 const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
