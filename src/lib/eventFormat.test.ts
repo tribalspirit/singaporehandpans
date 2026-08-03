@@ -8,6 +8,8 @@ import {
   formatDurationLabel,
   formatSeriesSpanLabel,
   formatShortDate,
+  formatDateBadge,
+  resolveDurationLabel,
 } from './eventFormat';
 
 /**
@@ -175,6 +177,42 @@ describe('formatDurationLabel', () => {
   });
 });
 
+describe('resolveDurationLabel', () => {
+  it('shows the duration when it is what defines the end', () => {
+    const t = timing({ date: '2026-03-14 13:00', duration: 1.5 });
+    expect(resolveDurationLabel(t, 1.5)).toBe('1.5 hours');
+  });
+
+  it('suppresses a stale duration once end_date takes over', () => {
+    // The migration sets end_date on events that already carry a duration.
+    // getEventTiming ignores it, so displaying it would contradict the dates:
+    // "14–15 Mar 2026" beside "~3 hours".
+    const t = timing({
+      date: '2026-03-14 13:00',
+      end_date: '2026-03-15 16:00',
+      duration: 3,
+    });
+    expect(t.hasExplicitEnd).toBe(true);
+    expect(resolveDurationLabel(t, 3)).toBeNull();
+  });
+
+  it('still shows the duration when end_date was rejected as invalid', () => {
+    const t = timing({
+      date: '2026-03-14 13:00',
+      end_date: '2026-03-14 09:00',
+      duration: 3,
+    });
+    expect(t.hasExplicitEnd).toBe(false);
+    expect(resolveDurationLabel(t, 3)).toBe('3 hours');
+  });
+
+  it('returns null for unset durations regardless of timing', () => {
+    const t = timing({ date: '2026-03-14 13:00' });
+    expect(resolveDurationLabel(t, 0)).toBeNull();
+    expect(resolveDurationLabel(null, 2)).toBe('2 hours');
+  });
+});
+
 describe('formatSeriesSpanLabel', () => {
   it('summarises a finished weekly series for the archive', () => {
     const t = timing({
@@ -200,6 +238,54 @@ describe('formatSeriesSpanLabel', () => {
     expect(
       formatSeriesSpanLabel(timing({ date: '2026-03-14 13:00' }))
     ).toBeNull();
+  });
+});
+
+describe('formatDateBadge', () => {
+  it('gives month and day for a single-day event', () => {
+    expect(formatDateBadge(timing({ date: '2026-08-08 10:30' }))).toEqual({
+      month: 'AUG',
+      day: '8',
+    });
+  });
+
+  it('combines days for a multi-day event inside one month', () => {
+    expect(
+      formatDateBadge(
+        timing({ date: '2026-03-14 13:00', end_date: '2026-03-15 16:00' })
+      )
+    ).toEqual({ month: 'MAR', day: '14–15' });
+  });
+
+  it('does not render a bare day range across a month boundary', () => {
+    // 'APR' + '30–2' reads as 30-2 April, which is nonsense. The badge is a
+    // single-date marker, so it falls back to the start date and the full span
+    // is carried by the date line beneath it.
+    expect(
+      formatDateBadge(
+        timing({ date: '2026-04-30 10:00', end_date: '2026-05-02 16:00' })
+      )
+    ).toEqual({ month: 'APR', day: '30' });
+  });
+
+  it('does not render a bare day range across a year boundary', () => {
+    expect(
+      formatDateBadge(
+        timing({ date: '2026-12-28 10:00', end_date: '2027-01-03 16:00' })
+      )
+    ).toEqual({ month: 'DEC', day: '28' });
+  });
+
+  it('uses the given occurrence for a series rather than the first session', () => {
+    const t = timing({
+      date: '2026-02-07 10:30',
+      recurrence: 'weekly',
+      recurrence_until: '2026-12-26 12:00',
+    });
+    const start = parseSingaporeDate('2026-08-08 10:30') as Date;
+    expect(
+      formatDateBadge(t, { start, end: new Date(start.getTime() + 3600000) })
+    ).toEqual({ month: 'AUG', day: '8' });
   });
 });
 

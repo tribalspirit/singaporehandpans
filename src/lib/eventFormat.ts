@@ -159,6 +159,50 @@ export function formatSeriesSpanLabel(timing: EventTiming): string | null {
   return `${noun} · ${span}`;
 }
 
+/**
+ * The compact date chip on the home card: `{ month: 'AUG', day: '8' }`.
+ *
+ * Days are only combined when the span stays inside one month — `APR` over
+ * `30–2` would read as "30-2 April". Across a month or year boundary the badge
+ * falls back to the start date, since a chip cannot carry two months; the full
+ * span is rendered by `formatEventDateRange` on the line beneath it.
+ */
+export function formatDateBadge(
+  timing: EventTiming | null,
+  occurrence?: EventOccurrence | null
+): { month: string; day: string } {
+  if (!timing) return { month: '', day: '' };
+
+  const start = occurrence?.start ?? timing.start;
+  const end = occurrence?.end ?? timing.end;
+  const from = getSingaporeParts(start);
+  const to = getSingaporeParts(end);
+  const month = shortMonth(from.month).toUpperCase();
+
+  const spansOneMonth = from.year === to.year && from.month === to.month;
+  const day =
+    spansOneMonth && to.day !== from.day
+      ? `${from.day}${TIGHT_RANGE}${to.day}`
+      : String(from.day);
+
+  return { month, day };
+}
+
+/**
+ * The duration to display, or `null` when it must be hidden.
+ *
+ * `getEventTiming` ignores `duration` once a valid `end_date` is present, so
+ * showing the raw field would contradict the dates — a migrated two-day event
+ * still carrying `duration: 3` would read "~3 hours" beside "14–15 Mar 2026".
+ */
+export function resolveDurationLabel(
+  timing: EventTiming | null,
+  duration: number | string | null | undefined
+): string | null {
+  if (timing?.hasExplicitEnd) return null;
+  return formatDurationLabel(duration);
+}
+
 /** `1 hour` / `1.5 hours`, or `null` for the unset values the CMS holds. */
 export function formatDurationLabel(
   duration: number | string | null | undefined

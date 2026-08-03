@@ -4,7 +4,7 @@ import type { EventStory } from '../types/event';
 import { normalizeTags } from '../utils/tags';
 import { getEventTiming, getNextOccurrence } from '../lib/eventDates';
 import {
-  formatDurationLabel,
+  resolveDurationLabel,
   formatEventDateRange,
   formatEventTimeRange,
   formatOccurrenceLabel,
@@ -43,7 +43,7 @@ const isSoldOut =
 const hasAcuity = !!event.content.acuity_appointment_type_id;
 const acuityOwnerId = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
 
-const durationLabel = formatDurationLabel(event.content.duration);
+const durationLabel = resolveDurationLabel(timing, event.content.duration);
 ---
 
 <article class="event-detail">

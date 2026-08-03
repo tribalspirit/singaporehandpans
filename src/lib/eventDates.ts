@@ -76,6 +76,12 @@ export interface EventTiming {
   start: Date;
   /** End of the first (or only) occurrence. */
   end: Date;
+  /**
+   * True when `end_date` supplied the end. `duration` is then ignored, and UI
+   * must not display it — a migrated two-day event can still carry a stale
+   * `duration: 3` that would read "~3 hours" beside "14–15 Mar 2026".
+   */
+  hasExplicitEnd: boolean;
   /** True when the first occurrence spans more than one Singapore calendar day. */
   isMultiDay: boolean;
   recurrence: RecurrenceRule;
@@ -182,6 +188,18 @@ function singaporeDayStart(date: Date): number {
 }
 
 /**
+ * The last instant of the Singapore day containing `date`.
+ *
+ * "Repeat until" is a *date* in the editor's head, but Storyblok's picker
+ * defaults the time to 00:00. Comparing raw instants therefore dropped any
+ * session falling on that very day — a 10:30 class set to run until
+ * `2026-08-23 00:00` lost its 23 August session and retired a week early.
+ */
+function endOfSingaporeDay(date: Date): Date {
+  return new Date(singaporeDayStart(date) + MS_PER_DAY - 1);
+}
+
+/**
  * A duration in hours, if the CMS holds a usable one. Real archive rows carry
  * `null`, `''` and `0` for "not set", so all three fall through to the default.
  */
@@ -211,11 +229,17 @@ export function getEventTiming(input: EventTimingInput): EventTiming | null {
 
   const explicitEnd = parseSingaporeDate(input.end_date);
   const hours = parseDurationHours(input.duration);
+  // Only an end_date that actually beats the start wins; anything else is bad
+  // content and falls through to the duration.
+  const hasExplicitEnd = Boolean(
+    explicitEnd && explicitEnd.getTime() > start.getTime()
+  );
+  const recurrenceUntil = parseSingaporeDate(input.recurrence_until);
 
   // An end_date that is not after the start is bad content, not a zero-length
   // event — fall back to the duration rather than rendering a negative span.
   const end =
-    explicitEnd && explicitEnd.getTime() > start.getTime()
+    hasExplicitEnd && explicitEnd
       ? explicitEnd
       : new Date(
           start.getTime() + (hours ?? DEFAULT_DURATION_HOURS) * 60 * 60 * 1000
@@ -224,11 +248,15 @@ export function getEventTiming(input: EventTimingInput): EventTiming | null {
   return {
     start,
     end,
+    hasExplicitEnd,
     // Compared by calendar day, not elapsed hours: a 22:00–01:00 session spans
     // two days, while a 10:00–16:00 one does not.
     isMultiDay: singaporeDayStart(start) !== singaporeDayStart(end),
     recurrence: normalizeRecurrence(input.recurrence),
-    recurrenceUntil: parseSingaporeDate(input.recurrence_until),
+    // Inclusive of the whole configured day — see `endOfSingaporeDay`.
+    recurrenceUntil: recurrenceUntil
+      ? endOfSingaporeDay(recurrenceUntil)
+      : null,
     durationMs: end.getTime() - start.getTime(),
   };
 }

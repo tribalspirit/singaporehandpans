@@ -9,7 +9,7 @@ import {
   type EventTiming,
 } from '../lib/eventDates';
 import {
-  formatDurationLabel,
+  resolveDurationLabel,
   formatEventDateRange,
   formatEventTimeRange,
   formatOccurrenceLabel,
@@ -79,7 +79,7 @@ const availabilityLabel: Record<string, string> = {
   sold_out: 'Sold Out',
 };
 
-const durationLabel = formatDurationLabel(event.content.duration);
+const durationLabel = resolveDurationLabel(eventTiming, event.content.duration);
 ---
 
 <article

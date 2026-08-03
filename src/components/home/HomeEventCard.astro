@@ -2,13 +2,15 @@
 import type { EventStory } from '../../types/event';
 import {
   getEventTiming,
-  getMonthLabel,
   getNextOccurrence,
-  getSingaporeParts,
   type EventOccurrence,
   type EventTiming,
 } from '../../lib/eventDates';
-import { formatRecurrenceLabel } from '../../lib/eventFormat';
+import {
+  formatDateBadge,
+  formatEventDateRange,
+  formatRecurrenceLabel,
+} from '../../lib/eventFormat';
 
 export interface Props {
   event: EventStory;
@@ -31,24 +33,15 @@ const nextOccurrence =
 // the next occurrence, not the first one, which may be months in the past.
 // Parts are read in Singapore time; `getDate()` read the runtime's zone, so on
 // Workers (UTC) a morning class showed the previous day.
-const badgeDate = nextOccurrence?.start ?? eventTiming?.start ?? null;
-const badgeParts = badgeDate ? getSingaporeParts(badgeDate) : null;
-const month = badgeParts
-  ? getMonthLabel(badgeParts.month).slice(0, 3).toUpperCase()
-  : '';
-// A multi-day event reads "14–15" rather than pretending to be a single date.
-const endParts =
-  eventTiming?.isMultiDay && !nextOccurrence
-    ? getSingaporeParts(eventTiming.end)
-    : eventTiming?.isMultiDay && nextOccurrence
-      ? getSingaporeParts(nextOccurrence.end)
-      : null;
-const day =
-  badgeParts && endParts && endParts.day !== badgeParts.day
-    ? `${badgeParts.day}–${endParts.day}`
-    : (badgeParts?.day ?? '');
+const { month, day } = formatDateBadge(eventTiming, nextOccurrence);
 
 const recurrenceLabel = eventTiming ? formatRecurrenceLabel(eventTiming) : null;
+// A span crossing a month cannot fit the chip, so the full range is spelled out
+// here instead of being mangled into "APR 30–2".
+const dateRangeLabel =
+  eventTiming?.isMultiDay && !recurrenceLabel
+    ? formatEventDateRange(eventTiming)
+    : null;
 
 const eventUrl = `/events/${event.slug}/`;
 
@@ -130,6 +123,11 @@ const imageUrl = event.content.image?.filename
     {
       recurrenceLabel && (
         <p class="home-event-card__recurrence">{recurrenceLabel}</p>
+      )
+    }
+    {
+      dateRangeLabel && (
+        <p class="home-event-card__recurrence">{dateRangeLabel}</p>
       )
     }
 

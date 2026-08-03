@@ -269,6 +269,51 @@ describe('expandOccurrences', () => {
     expect(expandOccurrences(t!).length).toBeLessThanOrEqual(MAX_OCCURRENCES);
   });
 
+  it('includes the final session when recurrence_until is a bare date', () => {
+    // Storyblok's datetime picker defaults the time to 00:00, so an editor who
+    // means "runs until 27 Dec" sets exactly this. Comparing instants dropped
+    // that day's 10:30 session, retiring the series a week early.
+    const t = getEventTiming({
+      date: '2026-08-01 10:30',
+      duration: 1.5,
+      recurrence: 'weekly',
+      recurrence_until: '2026-12-27 00:00',
+    });
+    const occ = expandOccurrences(t!);
+    expect(toSingaporeIso(occ[occ.length - 1].start)).toBe(
+      '2026-12-26T10:30:00+08:00'
+    );
+    // 26 Dec is the last Saturday on/before 27 Dec, so the series is intact.
+    expect(occ).toHaveLength(22);
+  });
+
+  it('treats recurrence_until as inclusive of its whole Singapore day', () => {
+    // A Sunday series ending on its own final session date.
+    const t = getEventTiming({
+      date: '2026-08-02 10:30',
+      duration: 1.5,
+      recurrence: 'weekly',
+      recurrence_until: '2026-08-23 00:00',
+    });
+    expect(expandOccurrences(t!).map((o) => toSingaporeIso(o.start))).toEqual([
+      '2026-08-02T10:30:00+08:00',
+      '2026-08-09T10:30:00+08:00',
+      '2026-08-16T10:30:00+08:00',
+      '2026-08-23T10:30:00+08:00',
+    ]);
+  });
+
+  it('keeps a series upcoming through the whole of its final day', () => {
+    const t = getEventTiming({
+      date: '2026-08-02 10:30',
+      duration: 1.5,
+      recurrence: 'weekly',
+      recurrence_until: '2026-08-23 00:00',
+    })!;
+    // 09:00 SGT on the final day — the last session has not run yet.
+    expect(isUpcomingEvent(t, new Date('2026-08-23T01:00:00Z'))).toBe(true);
+  });
+
   it('yields the first occurrence even when recurrence_until precedes it', () => {
     const t = getEventTiming({
       date: '2026-08-01 10:30',
