@@ -57,6 +57,9 @@ const RECURRENCE_FREQUENCY: Record<string, string> = {
   biweekly: 'P2W',
   monthly: 'P1M',
 };
+/** Highest day-of-month present in every month, so `byMonthDay` never lies. */
+const SAFE_MONTH_DAY = 28;
+
 const SCHEMA_WEEKDAYS = [
   'Sunday',
   'Monday',
@@ -72,11 +75,19 @@ const eventSchedule =
     ? {
         '@type': 'Schedule',
         repeatFrequency: RECURRENCE_FREQUENCY[timing.recurrence],
-        // A monthly series repeats on the calendar day (the 31st), not the
-        // weekday. Emitting byDay for it advertised a different rule than the
-        // one the site actually applies, so monthly uses byMonthDay instead.
+        // A monthly series repeats on the calendar day, not the weekday, so
+        // byDay would advertise a different rule than the site applies.
+        //
+        // byMonthDay is only emitted for days 1-28, which exist in every month.
+        // From the 29th on, `expandOccurrences` clamps to the month's last day
+        // (31 Jan -> 28 Feb), and `byMonthDay: 31` cannot express that — it
+        // would claim a February session that the rule itself excludes. Those
+        // series fall back to repeatFrequency plus the start/end window, which
+        // is less precise but true.
         ...(timing.recurrence === 'monthly'
-          ? { byMonthDay: getSingaporeParts(timing.start).day }
+          ? getSingaporeParts(timing.start).day <= SAFE_MONTH_DAY
+            ? { byMonthDay: getSingaporeParts(timing.start).day }
+            : {}
           : {
               byDay: `https://schema.org/${SCHEMA_WEEKDAYS[getSingaporeParts(timing.start).weekday]}`,
             }),

@@ -3,8 +3,13 @@
  * Fetches live availability from /api/acuity/availability and updates badges + CTAs
  */
 document.addEventListener('DOMContentLoaded', () => {
+  // Selected by appointment type, not class id: a recurring series carries no
+  // class id (its first instance has already run), so selecting on that would
+  // skip exactly the cards that need the live lookup. The appointment type is
+  // present whenever Acuity is configured at all, and the per-element guard
+  // below still requires it.
   const elements = document.querySelectorAll<HTMLElement>(
-    '[data-acuity-class-id]'
+    '[data-acuity-appointment-type-id]'
   );
   if (!elements.length) return;
 

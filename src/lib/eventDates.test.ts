@@ -314,6 +314,30 @@ describe('expandOccurrences', () => {
     expect(isUpcomingEvent(t, new Date('2026-08-23T01:00:00Z'))).toBe(true);
   });
 
+  it('includes a session falling on the repeat-until date at any time of day', () => {
+    // Codex's exact example: a 10:30 weekly class with repeat-until left at
+    // midnight. Every time-of-day on that date must keep the session, since
+    // "until 26 Dec" means through the whole of 26 Dec.
+    for (const until of [
+      '2026-12-26 00:00',
+      '2026-12-26 09:00',
+      '2026-12-26 10:30',
+      '2026-12-26 23:59',
+    ]) {
+      const t = getEventTiming({
+        date: '2026-08-01 10:30',
+        duration: 1.5,
+        recurrence: 'weekly',
+        recurrence_until: until,
+      })!;
+      const occ = expandOccurrences(t);
+      expect(toSingaporeIso(occ[occ.length - 1].start)).toBe(
+        '2026-12-26T10:30:00+08:00'
+      );
+      expect(isUpcomingEvent(t, new Date('2026-12-26T01:00:00Z'))).toBe(true);
+    }
+  });
+
   it('yields the first occurrence even when recurrence_until precedes it', () => {
     const t = getEventTiming({
       date: '2026-08-01 10:30',
