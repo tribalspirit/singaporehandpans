@@ -28,15 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams({ appointmentTypeId });
       if (classId) params.set('classId', classId);
       // A recurring series sends no classId (its first instance has long since
-      // run) but does send the month of its next session, so the API aggregates
-      // that month rather than defaulting to the current one.
+      // run). It sends the exact start of its next session instead, so the API
+      // resolves that one slot rather than summing the month — which would
+      // report a later open session's seats against a sold-out "Next".
       if (el.dataset.acuityMonth) params.set('month', el.dataset.acuityMonth);
+      if (el.dataset.acuityTime) params.set('time', el.dataset.acuityTime);
 
       const res = await fetch(`/api/acuity/availability?${params}`);
       if (!res.ok) return;
 
       const data = await res.json();
       const { status, slotsAvailable } = data;
+      // null means the session could not be resolved — unknown, not empty.
+      // Leave the CMS-authored badge and booking link untouched.
+      if (!status) return;
 
       // Update badge
       const badge = el.querySelector<HTMLElement>('[data-availability-badge]');

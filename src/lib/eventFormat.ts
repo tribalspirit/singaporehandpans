@@ -34,6 +34,9 @@ const WEEKDAYS_LONG = [
   'Saturday',
 ] as const;
 
+/** Highest day-of-month present in every month; above it, repeats clamp. */
+const SAFE_MONTH_DAY = 28;
+
 /** En dash for a same-unit range, spaced en dash when the units differ. */
 const TIGHT_RANGE = '–';
 const SPACED_RANGE = ' – ';
@@ -119,7 +122,12 @@ function recurrenceCadence(timing: EventTiming): string | null {
     case 'biweekly':
       return `Every 2 weeks on ${WEEKDAYS_LONG[weekday]}`;
     case 'monthly':
-      return `Every month on the ${ordinal(day)}`;
+      // From the 29th on, `expandOccurrences` clamps to the month's last day
+      // (31 Jan -> 28 Feb), so a bare "on the 31st" would describe a schedule
+      // the site does not actually run.
+      return day > SAFE_MONTH_DAY
+        ? `Every month on the ${ordinal(day)}, or the last day of shorter months`
+        : `Every month on the ${ordinal(day)}`;
     default:
       return null;
   }

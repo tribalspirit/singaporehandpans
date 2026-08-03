@@ -32,6 +32,15 @@ const isPast = !isUpcoming;
 const dateLabel = timing ? formatEventDateRange(timing) : '';
 const timeLabel = timing ? formatEventTimeRange(timing) : '';
 const recurrenceLabel = timing ? formatRecurrenceLabel(timing) : null;
+
+// The "Date & Time" row must name the session a reader can still attend. For a
+// running series that is the next occurrence — showing timing.start there
+// advertised the series' historical opening (February) while the header above
+// it said the next session was in August.
+const detailDateLabel =
+  recurrenceLabel && nextOccurrence
+    ? formatOccurrenceLabel(nextOccurrence)
+    : `${dateLabel}, ${timeLabel}`;
 const nextSessionLabel =
   recurrenceLabel && nextOccurrence
     ? formatOccurrenceLabel(nextOccurrence)
@@ -239,8 +248,10 @@ const durationLabel = resolveDurationLabel(timing, event.content.duration);
       <div class="event-details-section">
         <h2>Event Details</h2>
         <dl class="details-list">
-          <dt>Date & Time</dt>
-          <dd>{dateLabel}, {timeLabel}</dd>
+          <dt>
+            {recurrenceLabel && nextOccurrence ? 'Next session' : 'Date & Time'}
+          </dt>
+          <dd>{detailDateLabel}</dd>
 
           {
             recurrenceLabel && (

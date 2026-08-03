@@ -2,15 +2,31 @@ import type { APIRoute } from 'astro';
 import {
   getClassAvailability,
   computeAvailabilityStatus,
+  resolveSlotAvailability,
 } from '../../../lib/acuity-client';
 
 export const prerender = false;
+
+function jsonResponse(body: Record<string, unknown>): Response {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=30',
+    },
+  });
+}
 
 export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url);
   const classId = url.searchParams.get('classId');
   const appointmentTypeId = url.searchParams.get('appointmentTypeId');
   const month = url.searchParams.get('month');
+  // Start of the specific session a recurring card advertises. A series cannot
+  // use classId (that names its first instance, long since run), and summing
+  // the month would report a later open session's seats against a sold-out
+  // "Next" — so the session is resolved by its start instant instead.
+  const time = url.searchParams.get('time');
 
   if (!appointmentTypeId) {
     return new Response(
@@ -26,35 +42,28 @@ export const GET: APIRoute = async ({ request }) => {
 
   try {
     const slots = await getClassAvailability(appointmentTypeId, targetMonth);
+    const slotsAvailable = resolveSlotAvailability(slots, { classId, time });
 
-    // Find the specific class slot if classId is provided, otherwise aggregate
-    let slotsAvailable = 0;
-    if (classId) {
-      const matchingSlot = slots.find((s) => String(s.id) === classId);
-      slotsAvailable = matchingSlot?.slotsAvailable ?? 0;
-    } else {
-      // Sum available slots across all instances this month
-      slotsAvailable = slots.reduce((sum, s) => sum + s.slotsAvailable, 0);
-    }
-
-    const status = computeAvailabilityStatus(slotsAvailable);
-
-    return new Response(
-      JSON.stringify({
+    // An unresolved session is unknown, not empty. Reporting zero here is what
+    // made a recurring series advertise itself as sold out; a null status tells
+    // the client to leave the CMS-authored availability alone.
+    if (slotsAvailable === null) {
+      return jsonResponse({
         classId: classId || null,
         appointmentTypeId,
         month: targetMonth,
-        slotsAvailable,
-        status,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=30',
-        },
-      }
-    );
+        slotsAvailable: null,
+        status: null,
+      });
+    }
+
+    return jsonResponse({
+      classId: classId || null,
+      appointmentTypeId,
+      month: targetMonth,
+      slotsAvailable,
+      status: computeAvailabilityStatus(slotsAvailable),
+    });
   } catch (error) {
     console.error('Acuity availability error:', error);
     return new Response(

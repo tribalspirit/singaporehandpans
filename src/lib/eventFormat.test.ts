@@ -144,6 +144,31 @@ describe('formatRecurrenceLabel', () => {
       )
     ).toBe('Every month on the 11th, 7:00 pm');
   });
+
+  it('says so when a month-end series will clamp in shorter months', () => {
+    // expandOccurrences schedules 31 Jan -> 28 Feb, so a bare "on the 31st"
+    // would describe a schedule the site does not run.
+    expect(
+      formatRecurrenceLabel(
+        timing({ date: '2026-01-31 19:00', recurrence: 'monthly' })
+      )
+    ).toBe(
+      'Every month on the 31st, or the last day of shorter months, 7:00 pm'
+    );
+    expect(
+      formatRecurrenceLabel(
+        timing({ date: '2026-01-29 19:00', recurrence: 'monthly' })
+      )
+    ).toContain('or the last day of shorter months');
+  });
+
+  it('keeps the plain wording for days that exist in every month', () => {
+    expect(
+      formatRecurrenceLabel(
+        timing({ date: '2026-01-28 19:00', recurrence: 'monthly' })
+      )
+    ).toBe('Every month on the 28th, 7:00 pm');
+  });
 });
 
 describe('formatOccurrenceLabel', () => {

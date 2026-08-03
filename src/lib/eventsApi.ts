@@ -45,6 +45,8 @@ export interface AcuityHooks {
   appointmentTypeId?: string;
   /** `YYYY-MM` of the advertised session, so the API queries the right month. */
   month?: string;
+  /** Exact start of the advertised session, resolved to a single Acuity slot. */
+  time?: string;
 }
 
 /**
@@ -57,9 +59,9 @@ export interface AcuityHooks {
  * turns into a stripped booking link. A live series would have become
  * unbookable from its second session onward.
  *
- * So a series advertises only its appointment type plus the month of the next
- * session; the API then aggregates that month's instances instead of hunting
- * for an instance that has already run.
+ * So a series advertises its appointment type plus the exact start of its next
+ * session. The API resolves that one slot by time — not a monthly total, which
+ * would report a later open session's seats against a sold-out "Next".
  */
 export function getAcuityHooks(
   content: { acuity_class_id?: string; acuity_appointment_type_id?: string },
@@ -73,9 +75,13 @@ export function getAcuityHooks(
     return { classId: content.acuity_class_id || undefined, appointmentTypeId };
   }
 
+  if (!next) return { appointmentTypeId };
+
+  const startIso = toSingaporeIso(next.start);
   return {
     appointmentTypeId,
-    month: next ? toSingaporeIso(next.start).slice(0, 7) : undefined,
+    month: startIso.slice(0, 7),
+    time: startIso,
   };
 }
 

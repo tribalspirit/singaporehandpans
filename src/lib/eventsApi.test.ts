@@ -118,10 +118,13 @@ describe('getAcuityHooks', () => {
     });
   });
 
-  test('a series drops the instance id and targets the next session month', () => {
+  test('a series drops the instance id and names its next session exactly', () => {
     // acuity_class_id names ONE class instance. A series outlives it, and the
     // availability API resolves an unknown instance to zero slots -> sold_out
     // -> hydration strips the booking link, making the series unbookable.
+    // The exact time (not just the month) is sent so one slot resolves: an
+    // appointment type can run several classes a month, and summing them would
+    // report a later open session's seats against a sold-out "Next".
     const t = getEventTiming({
       date: '2026-02-07 10:30',
       recurrence: 'weekly',
@@ -130,10 +133,11 @@ describe('getAcuityHooks', () => {
     expect(getAcuityHooks(acuity, t, getNextOccurrence(t!, now))).toEqual({
       appointmentTypeId: '9001',
       month: '2026-08',
+      time: '2026-08-08T10:30:00+08:00',
     });
   });
 
-  test('omits the month for a series with no session left', () => {
+  test('sends no session pointer for a series with nothing left to run', () => {
     const t = getEventTiming({
       date: '2026-01-03 10:30',
       recurrence: 'weekly',
@@ -141,7 +145,6 @@ describe('getAcuityHooks', () => {
     });
     expect(getAcuityHooks(acuity, t, null)).toEqual({
       appointmentTypeId: '9001',
-      month: undefined,
     });
   });
 
