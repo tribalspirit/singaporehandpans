@@ -304,6 +304,28 @@ function defaultHorizon(timing: EventTiming, now?: Date): Date {
   return addSingaporeMonths(anchor, OPEN_ENDED_HORIZON_MONTHS);
 }
 
+/**
+ * Index of the last occurrence at or before `now`, so enumeration can start in
+ * the window that matters instead of at the series' first-ever session. Kept
+ * one step back so `getLastOccurrence` still sees a finished occurrence.
+ */
+function firstRelevantIndex(timing: EventTiming, now: Date): number {
+  const elapsed = now.getTime() - timing.start.getTime();
+  if (elapsed <= 0) return 0;
+
+  let index: number;
+  if (timing.recurrence === 'monthly') {
+    const from = getSingaporeParts(timing.start);
+    const to = getSingaporeParts(now);
+    index = (to.year - from.year) * 12 + (to.month - from.month);
+  } else {
+    const step = timing.recurrence === 'biweekly' ? 14 : 7;
+    index = Math.floor(elapsed / (step * MS_PER_DAY));
+  }
+
+  return Math.max(0, index - 1);
+}
+
 export interface ExpandOptions {
   /** Last start date to include. Defaults to `recurrence_until`, else 12 months. */
   horizon?: Date;
@@ -330,16 +352,37 @@ export function expandOccurrences(
     defaultHorizon(timing, options.now);
   const limit = Math.min(options.limit ?? MAX_OCCURRENCES, MAX_OCCURRENCES);
 
-  const occurrences: EventOccurrence[] = [first];
-  for (let index = 1; index < limit; index += 1) {
-    const start = occurrenceStart(timing, index);
+  // The cap bounds the *window we care about*, not the series' lifetime. An
+  // open-ended weekly class running longer than MAX_OCCURRENCES (~7.7 years)
+  // would otherwise enumerate indices 0-399 from its original start, stop years
+  // short of today, and report no next session — archiving a series that is
+  // still running. So enumeration begins just before `now` for open-ended
+  // series, keeping the cap over the relevant window.
+  // Clamped to the horizon as well as to `now`: a series that finished months
+  // ago must still enumerate its closing sessions, not start past its own end
+  // and come back empty.
+  const from = options.now
+    ? Math.max(
+        0,
+        Math.min(
+          firstRelevantIndex(timing, options.now),
+          firstRelevantIndex(timing, horizon)
+        )
+      )
+    : 0;
+
+  const occurrences: EventOccurrence[] = from === 0 ? [first] : [];
+  for (let step = from === 0 ? 1 : from; step < from + limit; step += 1) {
+    const start = occurrenceStart(timing, step);
     if (start.getTime() > horizon.getTime()) break;
     occurrences.push({
       start,
       end: new Date(start.getTime() + timing.durationMs),
     });
   }
-  return occurrences;
+  // Always keep the opening session reachable, so a finished series still
+  // resolves a last occurrence and formatting has something to describe.
+  return occurrences.length ? occurrences : [first];
 }
 
 /**

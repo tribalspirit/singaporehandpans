@@ -70,12 +70,19 @@ export function getAcuityHooks(
 ): AcuityHooks {
   const appointmentTypeId = content.acuity_appointment_type_id || undefined;
   const isSeries = Boolean(timing && timing.recurrence !== 'none');
+  // A one-off keeps its exact instance id when it has one; a series must not,
+  // since that id names a session that has already run.
+  const classId = isSeries ? undefined : content.acuity_class_id || undefined;
 
-  if (!isSeries) {
-    return { classId: content.acuity_class_id || undefined, appointmentTypeId };
-  }
+  // Hydration needs an appointment type to query at all, so without one there
+  // is nothing useful to advertise.
+  if (!appointmentTypeId || !next) return { classId, appointmentTypeId };
 
-  if (!next) return { appointmentTypeId };
+  // The session time is sent whenever there is no class id to resolve by —
+  // `acuity_class_id` and `acuity_appointment_type_id` are independently
+  // optional, so a one-off can have a type but no instance id, and without a
+  // time the endpoint has nothing to match on and returns "unknown".
+  if (classId) return { classId, appointmentTypeId };
 
   const startIso = toSingaporeIso(next.start);
   return {

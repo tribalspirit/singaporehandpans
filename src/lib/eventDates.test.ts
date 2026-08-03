@@ -338,6 +338,36 @@ describe('expandOccurrences', () => {
     }
   });
 
+  it('still resolves a next session for a very old open-ended series', () => {
+    // A weekly class running longer than MAX_OCCURRENCES (~7.7 years). Counting
+    // indices 0-399 from the original start stopped years short of today and
+    // reported no next session, archiving a class that still runs every week.
+    const t = getEventTiming({
+      date: '2010-01-02 10:30',
+      duration: 1.5,
+      recurrence: 'weekly',
+    })!;
+    const now = sgt('2026-08-03T02:00:00Z');
+
+    const next = getNextOccurrence(t, now);
+    expect(next).not.toBeNull();
+    expect(next!.start.getTime()).toBeGreaterThan(now.getTime() - 7 * 86400000);
+    expect(getSingaporeParts(next!.start).weekday).toBe(6); // still a Saturday
+    expect(isUpcomingEvent(t, now)).toBe(true);
+    expect(getLastOccurrence(t, now)).not.toBeNull();
+  });
+
+  it('keeps a long-running monthly series current too', () => {
+    const t = getEventTiming({
+      date: '2010-01-15 19:00',
+      recurrence: 'monthly',
+    })!;
+    const now = sgt('2026-08-03T02:00:00Z');
+    expect(toSingaporeIso(getNextOccurrence(t, now)!.start)).toBe(
+      '2026-08-15T19:00:00+08:00'
+    );
+  });
+
   it('yields the first occurrence even when recurrence_until precedes it', () => {
     const t = getEventTiming({
       date: '2026-08-01 10:30',
