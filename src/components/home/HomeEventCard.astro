@@ -66,6 +66,8 @@ const imageUrl = event.content.image?.filename
   data-acuity-appointment-type-id={acuityHooks.appointmentTypeId}
   data-acuity-month={acuityHooks.month}
   data-acuity-time={acuityHooks.time}
+  data-booking-url={event.content.booking_url || undefined}
+  data-sold-out-override={event.content.sold_out_override ? 'true' : undefined}
 >
   <a href={eventUrl} class="home-event-card__image-link">
     <div class="home-event-card__image-wrapper">
@@ -160,10 +162,15 @@ const imageUrl = event.content.image?.filename
     </div>
 
     {
+      /* A sold-out CTA stays a <span>, not an href-less <a>, which would not be
+         keyboard accessible. Hydration swaps the element outright when live
+         availability disagrees — see availability-hydration.ts. */
       isSoldOut ? (
         <span
           class="home-event-card__cta home-event-card__cta--disabled"
           data-booking-cta
+          data-cta-class="home-event-card__cta"
+          data-cta-disabled-class="home-event-card__cta--disabled"
         >
           Sold Out
         </span>
@@ -174,11 +181,13 @@ const imageUrl = event.content.image?.filename
           target="_blank"
           rel="noopener noreferrer"
           data-booking-cta
+          data-cta-class="home-event-card__cta"
+          data-cta-disabled-class="home-event-card__cta--disabled"
         >
           Book Now
         </a>
       ) : (
-        <a href={eventUrl} class="home-event-card__cta" data-booking-cta>
+        <a href={eventUrl} class="home-event-card__cta">
           Learn More
         </a>
       )

@@ -92,6 +92,8 @@ const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
   data-acuity-appointment-type-id={acuityHooks.appointmentTypeId}
   data-acuity-month={acuityHooks.month}
   data-acuity-time={acuityHooks.time}
+  data-booking-url={event.content.booking_url || undefined}
+  data-sold-out-override={event.content.sold_out_override ? 'true' : undefined}
 >
   <div class="event-image">
     {
@@ -280,8 +282,17 @@ const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
       <a href={eventUrl} class="btn btn-outline"> Learn More</a>
 
       {
+        /* Sold out stays a <span> for keyboard accessibility; hydration swaps
+           the element when live availability disagrees. */
         !isPast && isSoldOut ? (
-          <span class="btn btn-primary btn-disabled">Sold Out</span>
+          <span
+            class="btn btn-primary btn-disabled"
+            data-booking-cta
+            data-cta-class="btn btn-primary"
+            data-cta-disabled-class="btn-disabled"
+          >
+            Sold Out
+          </span>
         ) : !isPast && event.content.booking_url ? (
           <a
             href={event.content.booking_url}
@@ -289,6 +300,8 @@ const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
             target="_blank"
             rel="noopener noreferrer"
             data-booking-cta
+            data-cta-class="btn btn-primary"
+            data-cta-disabled-class="btn-disabled"
           >
             Book Now
           </a>

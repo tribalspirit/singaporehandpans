@@ -46,9 +46,16 @@ const nextSessionLabel =
     ? formatOccurrenceLabel(nextOccurrence)
     : null;
 
+const isSeries = Boolean(timing && timing.recurrence !== 'none');
+
+// `availability_status` is only ever refreshed by a webhook carrying the FIRST
+// instance's Acuity class id, which later sessions of a series never match. So
+// for a series it describes a session that has already run, and honouring it
+// would show "Sold Out" — hiding the booking embed — on every later session.
+// An editor's explicit sold_out_override still wins, since that is deliberate.
 const isSoldOut =
   event.content.sold_out_override ||
-  event.content.availability_status === 'sold_out';
+  (!isSeries && event.content.availability_status === 'sold_out');
 const hasAcuity = !!event.content.acuity_appointment_type_id;
 const acuityOwnerId = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
 

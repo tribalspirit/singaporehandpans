@@ -68,14 +68,41 @@ document.addEventListener('DOMContentLoaded', () => {
         spotsEl.textContent = `${slotsAvailable} spot${slotsAvailable === 1 ? '' : 's'} left`;
       }
 
-      // Disable CTA if sold out
-      if (status === 'sold_out') {
-        const cta = el.querySelector<HTMLElement>('[data-booking-cta]');
-        if (cta) {
-          cta.classList.add('home-event-card__cta--disabled');
-          cta.setAttribute('aria-disabled', 'true');
-          cta.removeAttribute('href');
-          cta.textContent = 'Sold Out';
+      // Reconcile the CTA in BOTH directions. It used to only ever disable, so
+      // a card rendered sold-out from a stale CMS value stayed unbookable even
+      // when the live lookup found seats. That could not happen while every
+      // occurrence was its own story, but a series keeps one story — and its
+      // availability_status is only ever refreshed by a webhook carrying the
+      // first instance's class id, which later sessions never match.
+      const cta = el.querySelector<HTMLElement>('[data-booking-cta]');
+      const bookingUrl = el.dataset.bookingUrl;
+      // An explicit editorial sold-out always wins over live data.
+      const forcedSoldOut = el.dataset.soldOutOverride === 'true';
+
+      if (cta) {
+        const baseClass = cta.dataset.ctaClass || '';
+        const disabledClass = cta.dataset.ctaDisabledClass || '';
+        const shouldDisable = status === 'sold_out' || forcedSoldOut;
+        const isDisabled = cta.tagName === 'SPAN';
+
+        // The element is swapped rather than mutated: a bookable CTA must be a
+        // real <a href>, and an href-less <a> is not keyboard accessible, so
+        // the two states cannot be the same tag.
+        if (shouldDisable !== isDisabled && (shouldDisable || bookingUrl)) {
+          const next = document.createElement(shouldDisable ? 'span' : 'a');
+          next.className = shouldDisable
+            ? `${baseClass} ${disabledClass}`.trim()
+            : baseClass;
+          next.textContent = shouldDisable ? 'Sold Out' : 'Book Now';
+          next.dataset.bookingCta = '';
+          if (baseClass) next.dataset.ctaClass = baseClass;
+          if (disabledClass) next.dataset.ctaDisabledClass = disabledClass;
+          if (!shouldDisable && bookingUrl) {
+            next.setAttribute('href', bookingUrl);
+            next.setAttribute('target', '_blank');
+            next.setAttribute('rel', 'noopener noreferrer');
+          }
+          cta.replaceWith(next);
         }
       }
     } catch {
