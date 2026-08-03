@@ -19,6 +19,7 @@ import {
   getEventTiming,
   getLastOccurrence,
   getNextOccurrence,
+  toSingaporeIso,
   type EventOccurrence,
   type EventTiming,
 } from './eventDates';
@@ -36,6 +37,46 @@ export interface EventListItem {
 export interface PartitionedEvents {
   upcoming: EventListItem[];
   past: EventListItem[];
+}
+
+/** The `data-acuity-*` attributes a card exposes to availability hydration. */
+export interface AcuityHooks {
+  classId?: string;
+  appointmentTypeId?: string;
+  /** `YYYY-MM` of the advertised session, so the API queries the right month. */
+  month?: string;
+}
+
+/**
+ * Decide which Acuity identifiers a card should advertise.
+ *
+ * `acuity_class_id` identifies **one** class instance. That was fine when every
+ * occurrence was its own story, but a recurring series outlives its first
+ * session — and `/api/acuity/availability` resolves an unknown instance to zero
+ * slots, which `computeAvailabilityStatus` reports as `sold_out` and hydration
+ * turns into a stripped booking link. A live series would have become
+ * unbookable from its second session onward.
+ *
+ * So a series advertises only its appointment type plus the month of the next
+ * session; the API then aggregates that month's instances instead of hunting
+ * for an instance that has already run.
+ */
+export function getAcuityHooks(
+  content: { acuity_class_id?: string; acuity_appointment_type_id?: string },
+  timing: EventTiming | null,
+  next: EventOccurrence | null
+): AcuityHooks {
+  const appointmentTypeId = content.acuity_appointment_type_id || undefined;
+  const isSeries = Boolean(timing && timing.recurrence !== 'none');
+
+  if (!isSeries) {
+    return { classId: content.acuity_class_id || undefined, appointmentTypeId };
+  }
+
+  return {
+    appointmentTypeId,
+    month: next ? toSingaporeIso(next.start).slice(0, 7) : undefined,
+  };
 }
 
 const EVENT_QUERY = {

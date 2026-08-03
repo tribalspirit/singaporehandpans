@@ -72,7 +72,14 @@ const eventSchedule =
     ? {
         '@type': 'Schedule',
         repeatFrequency: RECURRENCE_FREQUENCY[timing.recurrence],
-        byDay: `https://schema.org/${SCHEMA_WEEKDAYS[getSingaporeParts(timing.start).weekday]}`,
+        // A monthly series repeats on the calendar day (the 31st), not the
+        // weekday. Emitting byDay for it advertised a different rule than the
+        // one the site actually applies, so monthly uses byMonthDay instead.
+        ...(timing.recurrence === 'monthly'
+          ? { byMonthDay: getSingaporeParts(timing.start).day }
+          : {
+              byDay: `https://schema.org/${SCHEMA_WEEKDAYS[getSingaporeParts(timing.start).weekday]}`,
+            }),
         startDate: toSingaporeIso(timing.start).slice(0, 10),
         ...(timing.recurrenceUntil
           ? { endDate: toSingaporeIso(timing.recurrenceUntil).slice(0, 10) }

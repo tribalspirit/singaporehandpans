@@ -6,6 +6,7 @@ import {
   type EventOccurrence,
   type EventTiming,
 } from '../../lib/eventDates';
+import { getAcuityHooks } from '../../lib/eventsApi';
 import {
   formatDateBadge,
   formatEventDateRange,
@@ -43,6 +44,9 @@ const dateRangeLabel =
     ? formatEventDateRange(eventTiming)
     : null;
 
+// A series must not advertise its first class instance — see `getAcuityHooks`.
+const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
+
 const eventUrl = `/events/${event.slug}/`;
 
 const availabilityLabel: Record<string, string> = {
@@ -58,9 +62,9 @@ const imageUrl = event.content.image?.filename
 
 <article
   class="home-event-card"
-  data-acuity-class-id={event.content.acuity_class_id || undefined}
-  data-acuity-appointment-type-id={event.content.acuity_appointment_type_id ||
-    undefined}
+  data-acuity-class-id={acuityHooks.classId}
+  data-acuity-appointment-type-id={acuityHooks.appointmentTypeId}
+  data-acuity-month={acuityHooks.month}
 >
   <a href={eventUrl} class="home-event-card__image-link">
     <div class="home-event-card__image-wrapper">

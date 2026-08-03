@@ -3,7 +3,9 @@ import {
   fetchEventStories,
   partitionEvents,
   toEventListItem,
+  getAcuityHooks,
 } from './eventsApi';
+import { getEventTiming, getNextOccurrence } from './eventDates';
 import type { StoryblokListClient } from './storiesApi';
 import type { EventStory } from '../types/event';
 
@@ -99,6 +101,56 @@ describe('toEventListItem', () => {
     expect(item?.next?.start.toISOString()).toBe('2026-08-08T02:30:00.000Z');
     expect(item?.last).toBeNull();
     expect(item?.timing.durationMs).toBe(90 * 60 * 1000);
+  });
+});
+
+describe('getAcuityHooks', () => {
+  const acuity = {
+    acuity_class_id: '55501',
+    acuity_appointment_type_id: '9001',
+  };
+
+  test('a one-off advertises its specific class instance', () => {
+    const t = getEventTiming({ date: '2026-08-08 10:30' });
+    expect(getAcuityHooks(acuity, t, getNextOccurrence(t!, now))).toEqual({
+      classId: '55501',
+      appointmentTypeId: '9001',
+    });
+  });
+
+  test('a series drops the instance id and targets the next session month', () => {
+    // acuity_class_id names ONE class instance. A series outlives it, and the
+    // availability API resolves an unknown instance to zero slots -> sold_out
+    // -> hydration strips the booking link, making the series unbookable.
+    const t = getEventTiming({
+      date: '2026-02-07 10:30',
+      recurrence: 'weekly',
+      recurrence_until: '2026-12-26 12:00',
+    });
+    expect(getAcuityHooks(acuity, t, getNextOccurrence(t!, now))).toEqual({
+      appointmentTypeId: '9001',
+      month: '2026-08',
+    });
+  });
+
+  test('omits the month for a series with no session left', () => {
+    const t = getEventTiming({
+      date: '2026-01-03 10:30',
+      recurrence: 'weekly',
+      recurrence_until: '2026-06-27 12:00',
+    });
+    expect(getAcuityHooks(acuity, t, null)).toEqual({
+      appointmentTypeId: '9001',
+      month: undefined,
+    });
+  });
+
+  test('yields no hooks when the story has no Acuity ids', () => {
+    const t = getEventTiming({ date: '2026-08-08 10:30' });
+    expect(getAcuityHooks({}, t, getNextOccurrence(t!, now))).toEqual({
+      classId: undefined,
+      appointmentTypeId: undefined,
+    });
   });
 });
 

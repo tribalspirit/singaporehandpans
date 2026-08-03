@@ -47,9 +47,11 @@ try {
   cmsError = true;
 }
 
-// Grouped on the LAST occurrence, so a multi-day event files under the month it
-// finished in and a series under the month its final session ran.
-const years = groupByYearMonth(pastEvents, (item) => item.last!.start);
+// Grouped on the last occurrence's END, so a multi-day event files under the
+// month it finished in and a series under the month its final session ran.
+// Using `.start` filed a 30 Apr - 2 May event under April, contradicting the
+// finish-month behaviour stated above.
+const years = groupByYearMonth(pastEvents, (item) => item.last!.end);
 
 // The jump nav lists years once there is more than one. With a single year that
 // would be one useless chip, so it lists that year's months instead — which is

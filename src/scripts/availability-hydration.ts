@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const params = new URLSearchParams({ appointmentTypeId });
       if (classId) params.set('classId', classId);
+      // A recurring series sends no classId (its first instance has long since
+      // run) but does send the month of its next session, so the API aggregates
+      // that month rather than defaulting to the current one.
+      if (el.dataset.acuityMonth) params.set('month', el.dataset.acuityMonth);
 
       const res = await fetch(`/api/acuity/availability?${params}`);
       if (!res.ok) return;

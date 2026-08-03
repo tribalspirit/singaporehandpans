@@ -1,6 +1,7 @@
 ---
 import type { EventStory } from '../types/event';
 import { normalizeTags } from '../utils/tags';
+import { getAcuityHooks } from '../lib/eventsApi';
 import {
   getEventTiming,
   getNextOccurrence,
@@ -80,13 +81,16 @@ const availabilityLabel: Record<string, string> = {
 };
 
 const durationLabel = resolveDurationLabel(eventTiming, event.content.duration);
+
+// A series must not advertise its first class instance — see `getAcuityHooks`.
+const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
 ---
 
 <article
   class={`event-card ${isPast ? 'past-event' : ''}`}
-  data-acuity-class-id={event.content.acuity_class_id || undefined}
-  data-acuity-appointment-type-id={event.content.acuity_appointment_type_id ||
-    undefined}
+  data-acuity-class-id={acuityHooks.classId}
+  data-acuity-appointment-type-id={acuityHooks.appointmentTypeId}
+  data-acuity-month={acuityHooks.month}
 >
   <div class="event-image">
     {
