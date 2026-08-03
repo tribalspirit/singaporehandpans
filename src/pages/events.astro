@@ -4,12 +4,24 @@ import EventCard from '../components/EventCard.astro';
 import CMSFallback from '../components/CMSFallback.astro';
 import { getStoryblokClient } from '../lib/storyblok';
 import { setEdgeCache } from '../lib/edgeCache';
+import { fetchEventStories, partitionEvents } from '../lib/eventsApi';
+import { toSingaporeIso } from '../lib/eventDates';
 import type { EventStory } from '../types/event';
 
 export const prerender = false;
 setEdgeCache(Astro.response, 'short');
 
-const FALLBACK_EVENTS = [
+const now = new Date();
+
+/**
+ * Shown only when Storyblok is unreachable. Dates are relative to now so the
+ * fallback always renders as genuinely upcoming — hardcoded 2024 dates would
+ * now be partitioned into the archive, leaving the outage page empty.
+ */
+const inDays = (days: number, time: string) =>
+  `${toSingaporeIso(new Date(now.getTime() + days * 86400000)).slice(0, 10)} ${time}`;
+
+const FALLBACK_EVENTS: EventStory[] = [
   {
     id: 'fallback-1',
     name: 'Beginner Handpan Workshop',
@@ -18,7 +30,8 @@ const FALLBACK_EVENTS = [
       title: 'Beginner Handpan Workshop',
       description:
         'Join us for an introduction to the beautiful world of handpan music. Perfect for complete beginners who want to learn the basics in a supportive environment.',
-      date: '2024-03-15T19:00:00Z',
+      date: inDays(7, '19:00'),
+      duration: 2,
       location: 'Singapore Handpan Studio',
       price: 'S$120',
       booking_url:
@@ -40,7 +53,8 @@ const FALLBACK_EVENTS = [
       title: 'Community Handpan Gathering',
       description:
         'A relaxed gathering for handpan enthusiasts to play together, share music, and connect with fellow musicians in Singapore.',
-      date: '2024-03-22T15:00:00Z',
+      date: inDays(14, '15:00'),
+      duration: 2,
       location: 'Singapore Handpan Studio',
       price: 'Free',
       tags: ['community', 'gathering'],
@@ -63,18 +77,9 @@ try {
   const storyblokApi = getStoryblokClient(token);
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
 
-  const { data } = await storyblokApi.get('cdn/stories', {
-    starts_with: 'events/',
-    content_type: 'event',
-    sort_by: 'content.date:desc',
-    version: storyblokVersion,
-    resolve_assets: 1,
-  });
+  events = await fetchEventStories(storyblokApi, storyblokVersion);
 
-  if (data?.stories && data.stories.length > 0) {
-    events = data.stories as EventStory[];
-    cmsError = false;
-  } else {
+  if (events.length === 0) {
     cmsError = true;
     events = FALLBACK_EVENTS;
   }
@@ -84,26 +89,13 @@ try {
   events = FALLBACK_EVENTS;
 }
 
-const now = new Date();
-const upcomingEvents = events
-  .filter((event) => {
-    const eventDate = new Date(event.content.date);
-    return eventDate >= now;
-  })
-  .sort(
-    (a, b) =>
-      new Date(a.content.date).getTime() - new Date(b.content.date).getTime()
-  );
-
-const pastEvents = events
-  .filter((event) => {
-    const eventDate = new Date(event.content.date);
-    return eventDate < now;
-  })
-  .sort(
-    (a, b) =>
-      new Date(b.content.date).getTime() - new Date(a.content.date).getTime()
-  );
+// Past events live on /events/archive/ now. Keeping them here meant the page
+// grew without bound — 34 of 43 cards were finished classes.
+const { upcoming: upcomingEvents, past: pastEvents } = partitionEvents(
+  events,
+  now
+);
+const hasArchive = pastEvents.length > 0;
 
 const seoTitle = 'Handpan Classes & Events in Singapore';
 const seoDescription =
@@ -136,8 +128,12 @@ const seoDescription =
           <section class="events-section">
             <h2>Upcoming Classes & Events</h2>
             <div class="events-grid">
-              {upcomingEvents.map((event) => (
-                <EventCard event={event} />
+              {upcomingEvents.map((item) => (
+                <EventCard
+                  event={item.story}
+                  timing={item.timing}
+                  next={item.next}
+                />
               ))}
             </div>
           </section>
@@ -145,20 +141,7 @@ const seoDescription =
       }
 
       {
-        pastEvents.length > 0 && (
-          <section class="events-section">
-            <h2>Past Classes & Events</h2>
-            <div class="events-grid">
-              {pastEvents.map((event) => (
-                <EventCard event={event} isPast={true} />
-              ))}
-            </div>
-          </section>
-        )
-      }
-
-      {
-        events.length === 0 && (
+        upcomingEvents.length === 0 && (
           <section class="no-events">
             <h2>No Classes Available Right Now</h2>
             <p>
@@ -166,6 +149,21 @@ const seoDescription =
               soon or <a href="/contacts/">contact us</a> to stay updated!
             </p>
           </section>
+        )
+      }
+
+      {
+        hasArchive && (
+          <aside class="archive-link">
+            <p>
+              Looking for something we've already run? Every past class and
+              event stays online, grouped by month.
+            </p>
+            <a href="/events/archive/" class="archive-link__cta">
+              Browse past classes
+              <span aria-hidden="true">&rarr;</span>
+            </a>
+          </aside>
         )
       }
     </div>
@@ -251,6 +249,54 @@ const seoDescription =
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
       gap: var(--spacing-md);
+    }
+  }
+
+  // Sits below the upcoming grid rather than in the primary nav: the archive is
+  // a destination you look for, not one of the six things the site is about.
+  .archive-link {
+    margin-top: var(--spacing-2xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-hairline);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+
+    p {
+      color: var(--color-text-secondary);
+      max-width: 48ch;
+      margin: 0;
+    }
+  }
+
+  .archive-link__cta {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+    white-space: nowrap;
+
+    span {
+      display: inline-block;
+      margin-left: var(--spacing-xs);
+      transition: transform var(--transition-fast);
+    }
+
+    &:hover span,
+    &:focus-visible span {
+      transform: translateX(3px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      span {
+        transition: none;
+      }
+
+      &:hover span,
+      &:focus-visible span {
+        transform: none;
+      }
     }
   }
 

@@ -1,58 +1,78 @@
 ---
 import AcuityEmbed from './AcuityEmbed.astro';
 import type { EventStory } from '../types/event';
+import { normalizeTags } from '../utils/tags';
+import { getEventTiming, getNextOccurrence } from '../lib/eventDates';
+import {
+  resolveDurationLabel,
+  formatEventDateRange,
+  formatEventTimeRange,
+  formatOccurrenceLabel,
+  formatRecurrenceLabel,
+} from '../lib/eventFormat';
 
 export interface Props {
   event: EventStory;
+  /**
+   * Availability for the session actually being advertised, resolved server-
+   * side by the route. `undefined` means "not looked up"; `null` means "looked
+   * up and unresolved", and both fall back to the story's own value.
+   */
+  liveAvailability?: 'available' | 'few_spots' | 'sold_out' | null;
 }
 
-const { event } = Astro.props;
-
-// Normalize tags to always be an array (handles string from Storyblok or array from fallback)
-const normalizeTags = (tags: string | string[] | undefined): string[] => {
-  if (!tags) return [];
-  if (Array.isArray(tags)) return tags;
-  if (typeof tags === 'string')
-    return tags
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-  return [];
-};
+const { event, liveAvailability } = Astro.props;
 
 const eventTags = normalizeTags(event.content.tags);
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-SG', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
+const now = new Date();
+const timing = getEventTiming(event.content);
+const nextOccurrence = timing ? getNextOccurrence(timing, now) : null;
 
-const formatTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-SG', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
-};
+// Upcoming means "has a session that has not finished yet" — a class in
+// progress, a multi-day event mid-span, and a series with sessions left all
+// qualify. This used to compare against the start time only.
+const isUpcoming = Boolean(nextOccurrence);
+const isPast = !isUpcoming;
 
-const eventDate = new Date(event.content.date);
-const isUpcoming = eventDate >= new Date();
-const isPast = eventDate < new Date();
+const dateLabel = timing ? formatEventDateRange(timing) : '';
+const timeLabel = timing ? formatEventTimeRange(timing) : '';
+const recurrenceLabel = timing ? formatRecurrenceLabel(timing) : null;
+
+// The "Date & Time" row must name the session a reader can still attend. For a
+// running series that is the next occurrence — showing timing.start there
+// advertised the series' historical opening (February) while the header above
+// it said the next session was in August.
+const detailDateLabel =
+  recurrenceLabel && nextOccurrence
+    ? formatOccurrenceLabel(nextOccurrence)
+    : `${dateLabel}, ${timeLabel}`;
+const nextSessionLabel =
+  recurrenceLabel && nextOccurrence
+    ? formatOccurrenceLabel(nextOccurrence)
+    : null;
+
+const isSeries = Boolean(timing && timing.recurrence !== 'none');
+
+// Which availability actually describes the session on offer:
+//   1. an editor's explicit override — always wins, it is deliberate
+//   2. a live lookup for the advertised session, when the route resolved one
+//   3. the story's own value — but NOT for a series, where it is only ever
+//      refreshed by a webhook carrying the FIRST instance's class id and so
+//      describes a session that has already run
+//
+// Discarding (3) for series without (2) was its own bug: it replaced a stale
+// "Sold Out" with an unconditional "Reserve Your Spot", offering a full class.
+const effectiveAvailability =
+  liveAvailability ??
+  (isSeries ? undefined : event.content.availability_status);
 
 const isSoldOut =
-  event.content.sold_out_override ||
-  event.content.availability_status === 'sold_out';
+  event.content.sold_out_override || effectiveAvailability === 'sold_out';
 const hasAcuity = !!event.content.acuity_appointment_type_id;
 const acuityOwnerId = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
 
-const formatDuration = (hours: number) =>
-  hours === 1 ? '1 hour' : `${hours} hours`;
+const durationLabel = resolveDurationLabel(timing, event.content.duration);
 ---
 
 <article class="event-detail">
@@ -92,8 +112,21 @@ const formatDuration = (hours: number) =>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
         <div>
-          <div class="date">{formatDate(event.content.date)}</div>
-          <div class="time">{formatTime(event.content.date)}</div>
+          {
+            recurrenceLabel ? (
+              <>
+                <div class="date">{recurrenceLabel}</div>
+                {nextSessionLabel && (
+                  <div class="time">Next session: {nextSessionLabel}</div>
+                )}
+              </>
+            ) : (
+              <>
+                <div class="date">{dateLabel}</div>
+                <div class="time">{timeLabel}</div>
+              </>
+            )
+          }
         </div>
       </div>
 
@@ -140,7 +173,7 @@ const formatDuration = (hours: number) =>
       }
 
       {
-        event.content.duration && (
+        durationLabel && (
           <div class="event-duration">
             <svg
               width="20"
@@ -153,7 +186,7 @@ const formatDuration = (hours: number) =>
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            <span>{formatDuration(event.content.duration)}</span>
+            <span>{durationLabel}</span>
             <button
               type="button"
               class="info-tooltip-wrapper"
@@ -235,10 +268,19 @@ const formatDuration = (hours: number) =>
       <div class="event-details-section">
         <h2>Event Details</h2>
         <dl class="details-list">
-          <dt>Date & Time</dt>
-          <dd>
-            {formatDate(event.content.date)} at {formatTime(event.content.date)}
-          </dd>
+          <dt>
+            {recurrenceLabel && nextOccurrence ? 'Next session' : 'Date & Time'}
+          </dt>
+          <dd>{detailDateLabel}</dd>
+
+          {
+            recurrenceLabel && (
+              <>
+                <dt>Repeats</dt>
+                <dd>{recurrenceLabel}</dd>
+              </>
+            )
+          }
 
           <dt>Location</dt>
           <dd>{event.content.location}</dd>
@@ -261,10 +303,10 @@ const formatDuration = (hours: number) =>
           }
 
           {
-            event.content.duration && (
+            durationLabel && (
               <>
                 <dt>Duration</dt>
-                <dd>~{formatDuration(event.content.duration)}</dd>
+                <dd>~{durationLabel}</dd>
               </>
             )
           }

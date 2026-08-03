@@ -77,22 +77,72 @@ Component definitions are in `/storyblok/components/`:
 
 - Title
 - Description
-- Date & Time
+- Date (start date and time)
 - Location
-- Status (upcoming/past)
 
 **Optional Fields**:
 
+- End date — see _Multi-day events_ below
+- Recurrence / Repeat until — see _Repeating classes_ below
+- Duration (hours; ignored when End date is set)
 - Price
 - Booking URL (Acuity Scheduling link)
 - Image
-- Tags (workshop, community, performance)
+- Tags (workshop, community, performance, beginner, intermediate, advanced, private)
 - Max Participants
+- SEO title / SEO description
+
+#### Multi-day events
+
+Set **Date** to when it starts and **End date** to when it finishes. One
+story, not one per day.
+
+> A Saturday–Sunday masterclass is `Date = Sat 14 Mar 13:00`,
+> `End date = Sun 15 Mar 16:00`. The card reads "14–15 Mar 2026".
+
+Do **not** create a second story with a `-day-2` slug, and do not put the
+date range in the title or the slug — the site works it out from the fields.
+
+#### Repeating classes
+
+For a class that runs on a schedule, create **one** story and set:
+
+- **Date** — the first session (its weekday and time drive every repeat)
+- **Recurrence** — Every week / Every 2 weeks / Every month
+- **Repeat until** — the last date it runs
+
+> Yana's Saturday class is `Date = Sat 1 Aug 10:30`, `Recurrence = Every week`,
+> `Repeat until = 27 Dec`. The card reads "Every Saturday, 10:30 am — until
+> 27 Dec 2026" and shows the next session automatically.
+
+You never need to re-create it week to week. Leaving **Repeat until** blank
+works, but the site only shows 12 months ahead, so set it where you can.
+
+If a single session in a series is cancelled or moved, the schedule has no
+per-session exceptions — take the date out of the series and add a one-off
+story for the replacement.
+
+#### Upcoming vs past
+
+**Nothing to do — this is automatic.** Upcoming and past are worked out from
+the dates:
+
+- `/events/` shows anything that has not finished yet
+- `/events/archive/` shows everything else, grouped by year and month
+
+An event stays on `/events/` until its session actually **ends**, so a class
+does not vanish halfway through. A multi-day event stays up for its whole
+span, and a repeating class stays up until its final session.
+
+Past events are **never** unpublished or deleted. Every one keeps its page
+and its text so it continues to earn search traffic.
+
+The **Status** field is legacy. Only `Cancelled` does anything (it marks the
+event cancelled for search engines) — you never need to set anything to
+"past".
 
 **Important**:
 
-- Set status to "upcoming" for future events
-- Set status to "past" for completed events
 - Add booking URL to enable "Book Now" button
 - Always click **Save** and **Publish** after changes
 

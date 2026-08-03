@@ -3,12 +3,22 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import EventDetail from '../../components/EventDetail.astro';
 import { getStoryblokClient } from '../../lib/storyblok';
 import { setEdgeCache } from '../../lib/edgeCache';
+import {
+  getClassAvailability,
+  computeAvailabilityStatus,
+  resolveSlotAvailability,
+} from '../../lib/acuity-client';
+import {
+  getEventTiming,
+  getNextOccurrence,
+  getSingaporeParts,
+  toSingaporeIso,
+} from '../../lib/eventDates';
 import type { EventStory } from '../../types/event';
 
 export const prerender = false;
 setEdgeCache(Astro.response, 'medium');
 
-const EVENT_DURATION_MS = 2 * 60 * 60 * 1000;
 const PRICE_SANITIZE_REGEX = /[^0-9.]/g;
 const FREE_LABEL = 'Free';
 const PRICE_CURRENCY = 'SGD';
@@ -37,8 +47,109 @@ if (!event) {
   return Astro.redirect('/events');
 }
 
-const eventDate = new Date(event.content.date);
-const eventEndDate = new Date(eventDate.getTime() + EVENT_DURATION_MS);
+const now = new Date();
+// Anchored to Singapore rather than the runtime zone. `event.content.date` is a
+// naive 'YYYY-MM-DD HH:mm' string, so it used to be emitted verbatim as
+// `startDate` — not valid ISO-8601, which schema.org silently rejects.
+const timing = getEventTiming(event.content);
+// A series advertises its next session; a finished one falls back to its first.
+const occurrence = timing
+  ? (getNextOccurrence(timing, now) ?? { start: timing.start, end: timing.end })
+  : null;
+
+/**
+ * Live availability for the session this page advertises.
+ *
+ * The story's own `availability_status` is refreshed by a webhook keyed on the
+ * first instance's Acuity class id, so for a recurring series it describes a
+ * session that has already run. Resolving the advertised occurrence here means
+ * the page neither hides booking for an open class nor offers a full one.
+ *
+ * Best-effort: any failure returns null and the component falls back.
+ */
+async function resolveLiveAvailability(
+  content: EventStory['content']
+): Promise<'available' | 'few_spots' | 'sold_out' | null> {
+  const appointmentTypeId = content.acuity_appointment_type_id;
+  if (!appointmentTypeId || !occurrence) return null;
+
+  try {
+    const startIso = toSingaporeIso(occurrence.start);
+    const slots = await getClassAvailability(
+      appointmentTypeId,
+      startIso.slice(0, 7)
+    );
+    const seats = resolveSlotAvailability(slots, {
+      // Only a one-off can trust its stored instance id.
+      classId:
+        timing?.recurrence === 'none' ? content.acuity_class_id : undefined,
+      time: startIso,
+    });
+    return seats === null ? null : computeAvailabilityStatus(seats);
+  } catch (error) {
+    console.error('Event [slug]: availability lookup failed', error);
+    return null;
+  }
+}
+
+const liveAvailability = await resolveLiveAvailability(event.content);
+
+// Same precedence the detail component applies, so the page and its structured
+// data can never disagree about whether the session is bookable.
+const offerAvailability =
+  liveAvailability ??
+  (timing && timing.recurrence !== 'none'
+    ? undefined
+    : event.content.availability_status);
+
+const RECURRENCE_FREQUENCY: Record<string, string> = {
+  weekly: 'P1W',
+  biweekly: 'P2W',
+  monthly: 'P1M',
+};
+/** Highest day-of-month present in every month, so `byMonthDay` never lies. */
+const SAFE_MONTH_DAY = 28;
+
+const SCHEMA_WEEKDAYS = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
+
+const eventSchedule =
+  timing && timing.recurrence !== 'none'
+    ? {
+        '@type': 'Schedule',
+        repeatFrequency: RECURRENCE_FREQUENCY[timing.recurrence],
+        // A monthly series repeats on the calendar day, not the weekday, so
+        // byDay would advertise a different rule than the site applies.
+        //
+        // byMonthDay is only emitted for days 1-28, which exist in every month.
+        // From the 29th on, `expandOccurrences` clamps to the month's last day
+        // (31 Jan -> 28 Feb), and `byMonthDay: 31` cannot express that — it
+        // would claim a February session that the rule itself excludes. Those
+        // series fall back to repeatFrequency plus the start/end window, which
+        // is less precise but true.
+        ...(timing.recurrence === 'monthly'
+          ? getSingaporeParts(timing.start).day <= SAFE_MONTH_DAY
+            ? { byMonthDay: getSingaporeParts(timing.start).day }
+            : {}
+          : {
+              byDay: `https://schema.org/${SCHEMA_WEEKDAYS[getSingaporeParts(timing.start).weekday]}`,
+            }),
+        startDate: toSingaporeIso(timing.start).slice(0, 10),
+        ...(timing.recurrenceUntil
+          ? { endDate: toSingaporeIso(timing.recurrenceUntil).slice(0, 10) }
+          : {}),
+        startTime: toSingaporeIso(timing.start).slice(11, 16),
+        endTime: toSingaporeIso(timing.end).slice(11, 16),
+        scheduleTimezone: 'Asia/Singapore',
+      }
+    : undefined;
 
 const priceValue =
   event.content.price && event.content.price !== FREE_LABEL
@@ -50,8 +161,11 @@ const structuredData = {
   '@type': 'Event',
   name: event.content.title,
   description: event.content.description,
-  startDate: event.content.date,
-  endDate: eventEndDate.toISOString(),
+  startDate: occurrence ? toSingaporeIso(occurrence.start) : undefined,
+  // Previously a hardcoded start + 2h, which ignored both `duration` and any
+  // multi-day span.
+  endDate: occurrence ? toSingaporeIso(occurrence.end) : undefined,
+  ...(eventSchedule ? { eventSchedule } : {}),
   location: {
     '@type': 'Place',
     name: event.content.location,
@@ -71,18 +185,26 @@ const structuredData = {
         '@type': 'Offer',
         price: priceValue,
         priceCurrency: PRICE_CURRENCY,
+        // Describes the advertised session, matching what the page renders: the
+        // live lookup when there is one, otherwise the story's own value —
+        // except for a series, where that value refers to a session that has
+        // already run.
         availability:
-          event.content.sold_out_override ||
-          event.content.availability_status === 'sold_out'
+          event.content.sold_out_override || offerAvailability === 'sold_out'
             ? 'https://schema.org/SoldOut'
-            : event.content.availability_status === 'few_spots'
+            : offerAvailability === 'few_spots'
               ? 'https://schema.org/LimitedAvailability'
               : 'https://schema.org/InStock',
         url: event.content.booking_url || `${Astro.site}events/${event.slug}`,
       }
     : undefined,
   image: event.content.image?.filename,
-  eventStatus: 'https://schema.org/EventScheduled',
+  // `status` is otherwise unmaintained (every story reads 'upcoming'), so only
+  // the explicit 'cancelled' value is honoured here.
+  eventStatus:
+    event.content.status === 'cancelled'
+      ? 'https://schema.org/EventCancelled'
+      : 'https://schema.org/EventScheduled',
   eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
 };
 
@@ -140,7 +262,7 @@ const breadcrumbData = {
         <span class="current">{event.content.title}</span>
       </nav>
 
-      <EventDetail event={event} />
+      <EventDetail event={event} liveAvailability={liveAvailability} />
     </div>
   </main>
 </BaseLayout>
