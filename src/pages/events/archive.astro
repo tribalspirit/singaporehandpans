@@ -226,6 +226,10 @@ const breadcrumbSchema = {
   .archive-page {
     min-height: calc(100vh - var(--header-height) - var(--footer-height));
     padding: 0 0 var(--spacing-xl);
+
+    // Height of the sticky jump nav. Anchor targets clear this, so the two
+    // cannot drift apart the way a duplicated magic number would.
+    --archive-nav-height: 4.5rem;
   }
 
   // Shared masthead treatment, structurally identical to `/events/`: the band
@@ -278,10 +282,14 @@ const breadcrumbSchema = {
     }
   }
 
-  // Sticky so the year you are reading is always one tap away on a long scroll.
+  // Sticky so the month you are reading is always one tap away on a long
+  // scroll. Pinned to 0, not to --header-height: the site header is declared
+  // sticky but sits inside .page-wrapper, where sticky never engages, so it
+  // scrolls away. Offsetting by its height would leave a 76px window of page
+  // content scrolling above this bar.
   .year-nav {
     position: sticky;
-    top: var(--header-height);
+    top: 0;
     z-index: 2;
     margin-bottom: var(--spacing-xl);
     padding: var(--spacing-sm) 0;
@@ -329,7 +337,7 @@ const breadcrumbSchema = {
   .archive-year {
     margin-bottom: var(--spacing-2xl);
     // Clears the sticky header + year nav when jumped to via an anchor.
-    scroll-margin-top: calc(var(--header-height) + var(--space-16));
+    scroll-margin-top: calc(var(--archive-nav-height) + var(--spacing-md));
   }
 
   .archive-year__heading {
@@ -354,7 +362,7 @@ const breadcrumbSchema = {
 
   .archive-month {
     margin-bottom: var(--spacing-xl);
-    scroll-margin-top: calc(var(--header-height) + var(--space-16));
+    scroll-margin-top: calc(var(--archive-nav-height) + var(--spacing-md));
   }
 
   .archive-month__heading {
@@ -368,7 +376,10 @@ const breadcrumbSchema = {
 
   .events-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    // auto-FILL, not auto-fit: grouping by month means a one-event month is
+    // common, and auto-fit collapses the empty tracks so that lone card
+    // stretches to the full 1176px content width.
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: var(--spacing-lg);
 
     @media (max-width: 768px) {
