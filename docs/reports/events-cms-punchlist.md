@@ -21,7 +21,9 @@ Where the critique was wrong, that is noted.
 | 5   | Schema fields (`excerpt`, `teacher`, `price_max`, `series_id`) | Open                                           |
 | 6   | Multi-day duplicates                                           | Open — blocked on `series_id` (§5)             |
 | 7   | Redirects for changed slugs                                    | **Done** — in `_redirects`                     |
-| —   | Two remaining recurring classes (Tue, Sat)                     | **Blocked** — see §8                           |
+| —   | Sat weekly class                                               | **Done** — owner confirmed, applied 2026-08-04 |
+| —   | Tue weekly class                                               | **Blocked** — no story exists, see §8          |
+| —   | Duplicate Saturday 10:30 stories                               | **Open** — surfaced by the above, see §8       |
 
 ---
 
@@ -145,38 +147,46 @@ search equity survive the renames.
 Do **not** add trailing-slash rules there — that policy lives in
 `src/middleware.ts` and the two would conflict. The file says so already.
 
-## 8 — The other two recurring classes — BLOCKED, needs a decision
+## 8 — The three weekly classes
 
-The owner states there are **three** weekly classes:
+The owner states there are three weekly classes. Two are now live:
 
-| Slot            | Story                                                   |
-| --------------- | ------------------------------------------------------- |
-| Thu 10:30–12:00 | `handpan-for-beginners-on-thursday-mornings` — **done** |
-| Tue 19:00–20:30 | **no story exists**                                     |
-| Sat 10:30–12:00 | **ambiguous — three candidates**                        |
+| Slot            | Story                                                              | State    |
+| --------------- | ------------------------------------------------------------------ | -------- |
+| Thu 10:30–12:00 | `handpan-for-beginners-on-thursday-mornings`                       | **Done** |
+| Sat 10:30–12:00 | `handpan-first-touch-workshop-start-learning-handpan-with-yana-an` | **Done** |
+| Tue 19:00–20:30 | none                                                               | Blocked  |
 
-**Tuesday.** No event in the space starts at 19:00 on a Tuesday. The only 19:00
-starts are Fri, Sat, Sun and Mon, all one-off past events. This class needs a
-story creating from scratch — title, description, price, image, booking URL —
-which is authoring, not a data fix.
+The Saturday story needed its `duration` corrected from 2h to 1.5h as well as
+`recurrence: weekly` — at 2h the card rendered "10:30 am – 12:30 pm", which
+contradicted the stated schedule. It has moved from the archive to the upcoming
+list, since a weekly series always has a next occurrence.
 
-**Saturday.** Three stories sit at Sat 10:30 and any of them could be the
-weekly class:
+**Tuesday — still blocked.** No event in the space starts at 19:00 on a
+Tuesday; the only 19:00 starts are Fri, Sat, Sun and Mon, all one-off past
+events. This class needs a story creating from scratch — title, description,
+price, image, booking URL — which is authoring, not a data fix.
 
-| Story                       | Date  | Duration | Title                                                                  |
-| --------------------------- | ----- | -------- | ---------------------------------------------------------------------- |
-| `…-handpan-with-yana-an`    | 1 Aug | 2h       | Handpan First Touch Workshop with Yana An — **Every Saturday Morning** |
-| `…-with-singapore-handpans` | 8 Aug | 1.5h     | Handpan First Touch Workshop with Yana An                              |
-| `handpan-beginner-course`   | 8 Aug | 1.5h     | HANDPAN COURSE FOR BEGINNERS — 4 LESSONS JOURNEY                       |
+### Duplicate Saturday 10:30 stories — needs an owner decision
 
-The first says "Every Saturday Morning" in its title, which points at it — but
-its duration is 2h, not the 1.5h implied by 10:30–12:00, and the second matches
-the duration while the third is a fixed four-lesson course rather than an
-open weekly drop-in.
+Making the Yana An story recurring exposed a collision. Saturday 8 August now
+shows three cards in the same slot:
 
-Marking the wrong one recurring would put a permanent weekly class on the site
-that does not run, so this was left alone. Naming the story (or confirming the
-first, and whether its duration should become 1.5h) is all that is needed.
+| Story                                 | Renders as                      |
+| ------------------------------------- | ------------------------------- |
+| `…-handpan-with-yana-an` (now weekly) | Every Saturday · next Sat 8 Aug |
+| `…-with-singapore-handpans`           | Sat 8 Aug 10:30–12:00           |
+| `handpan-beginner-course`             | Sat 8 Aug 10:30–12:00           |
+
+The first two are **the same class under two stories** — one now recurring, one
+a one-off in the identical slot — so a visitor sees the same workshop twice with
+two Book Now buttons. The third is a different product (a fixed four-lesson
+course) that happens to share the slot.
+
+The likely fix is unpublishing `…-with-singapore-handpans` now the recurring
+story covers that slot, but unpublishing is destructive and was left for the
+owner. This is the same modelling problem as §6, surfaced on the upcoming page
+rather than the archive.
 
 ---
 
