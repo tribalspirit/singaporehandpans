@@ -15,7 +15,7 @@
  */
 import type { EventStory } from '../types/event';
 import { getEventCategory, getLevelLabel, UNCATEGORISED } from '../utils/tags';
-import { storyblokImage } from '../lib/storyblokImage';
+import { storyblokImage, storyblokSrcSet } from '../lib/storyblokImage';
 import { extractTeacherName } from '../lib/eventMatching';
 import { formatRowDate, formatShortDate } from '../lib/eventFormat';
 
@@ -31,9 +31,17 @@ export interface Props {
 
 const { event, ranFrom, ranTo, runsAgain = null } = Astro.props;
 
-/** The thumbnail paints at 68×51; 160×120 covers a 2× display. */
-const THUMB_WIDTH = 160;
-const THUMB_HEIGHT = 120;
+/**
+ * The **1× CSS size** of the thumbnail well — 52px tall at 4/3. As in
+ * `EventCard`, this must not be pre-doubled: `storyblokSrcSet` derives the 2×
+ * and 3× candidates, and passing an already-doubled base makes every display
+ * fetch twice the resolution it can show.
+ */
+const THUMB_WIDTH = 68;
+const THUMB_HEIGHT = 51;
+
+/** Fallback for browsers without `srcset`. */
+const FALLBACK_DENSITY = 2;
 
 const eventUrl = `/events/${event.slug}/`;
 
@@ -53,8 +61,17 @@ const meta = [
 ].filter(Boolean);
 
 const thumbnail = event.content.image
-  ? storyblokImage(event.content.image.filename, THUMB_WIDTH, THUMB_HEIGHT)
+  ? storyblokImage(
+      event.content.image.filename,
+      THUMB_WIDTH * FALLBACK_DENSITY,
+      THUMB_HEIGHT * FALLBACK_DENSITY
+    )
   : null;
+const thumbnailSrcSet = storyblokSrcSet(
+  event.content.image?.filename,
+  THUMB_WIDTH,
+  THUMB_HEIGHT
+);
 ---
 
 <li class="past-row" data-past-row data-category={category ?? UNCATEGORISED}>
@@ -69,9 +86,11 @@ const thumbnail = event.content.image
         thumbnail && (
           <img
             src={thumbnail}
+            srcset={thumbnailSrcSet ?? undefined}
+            sizes={`${THUMB_WIDTH}px`}
             alt=""
-            width={THUMB_WIDTH}
-            height={THUMB_HEIGHT}
+            width={THUMB_WIDTH * FALLBACK_DENSITY}
+            height={THUMB_HEIGHT * FALLBACK_DENSITY}
             loading="lazy"
             decoding="async"
           />

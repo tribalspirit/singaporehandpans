@@ -26,6 +26,14 @@ export interface StoryblokImageOptions {
   smart?: boolean;
 }
 
+export interface StoryblokSrcSetOptions extends StoryblokImageOptions {
+  /** Multiples of the base size to offer. Defaults to 1×, 2× and 3×. */
+  densities?: readonly number[];
+}
+
+/** Covers a 1× desktop well, a 2× display, and a 3× phone at full width. */
+const DEFAULT_DENSITIES = [1, 2, 3] as const;
+
 function isTransformable(filename: string): boolean {
   if (!filename.includes(STORYBLOK_ASSET_HOST)) return false;
   if (SVG_EXTENSION_REGEX.test(filename)) return false;
@@ -52,19 +60,34 @@ export function storyblokImage(
 }
 
 /**
- * A `1x, 2x` candidate pair for the same crop, or `null` when the asset cannot
- * be transformed — callers should then omit `srcset` entirely rather than emit
- * one pointing at an untransformed original twice.
+ * Candidates for one crop at several densities, described in **width units**,
+ * or `null` when the asset cannot be transformed — callers should then omit
+ * `srcset` rather than point it at an untransformed original.
+ *
+ * `w` rather than `x` descriptors, because `x` makes the browser ignore the
+ * accompanying `sizes` and choose on device pixel ratio alone. With `x`, a
+ * card whose well paints at 350 CSS px but whose base was written as 700
+ * served 700px to a 1× display and 1400px to a 2× one — twice the linear
+ * resolution, four times the pixels, on every card. Pass the **1× CSS size**
+ * of the well as `width`/`height` and let `sizes` do the selecting.
  */
 export function storyblokSrcSet(
   filename: string | undefined | null,
   width: number,
   height: number,
-  options: StoryblokImageOptions = {}
+  options: StoryblokSrcSetOptions = {}
 ): string | null {
-  const single = storyblokImage(filename, width, height, options);
-  if (!single || single === filename) return null;
+  const densities = options.densities ?? DEFAULT_DENSITIES;
 
-  const double = storyblokImage(filename, width * 2, height * 2, options);
-  return `${single} 1x, ${double} 2x`;
+  const candidates = densities
+    .map((density) => {
+      // Rounded: the image service rejects fractional dimensions.
+      const w = Math.round(width * density);
+      const h = Math.round(height * density);
+      const url = storyblokImage(filename, w, h, options);
+      return url && url !== filename ? `${url} ${w}w` : null;
+    })
+    .filter((candidate): candidate is string => candidate !== null);
+
+  return candidates.length > 0 ? candidates.join(', ') : null;
 }

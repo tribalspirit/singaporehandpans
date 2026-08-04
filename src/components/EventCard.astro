@@ -37,9 +37,19 @@ export interface Props {
 
 const { event, isPast = false, timing, next, eager = false } = Astro.props;
 
-/** The well paints at roughly 350×200; 16/10 at 700 covers a 2× display. */
-const IMAGE_WIDTH = 700;
-const IMAGE_HEIGHT = 400;
+/**
+ * The **1× CSS size** of the image well, which is what `srcset`'s `w`
+ * descriptors and `sizes` are measured against — not a pre-doubled value.
+ * Doubling here instead would have the browser fetch 2× of an already-2×
+ * asset. `storyblokSrcSet` derives the 2× and 3× candidates.
+ */
+const WELL_WIDTH = 350;
+const WELL_HEIGHT = 200;
+
+/** Fallback for browsers without `srcset`; also sets the intrinsic ratio. */
+const FALLBACK_DENSITY = 2;
+const IMAGE_WIDTH = WELL_WIDTH * FALLBACK_DENSITY;
+const IMAGE_HEIGHT = WELL_HEIGHT * FALLBACK_DENSITY;
 
 /** Fallback excerpt length, cut on a word boundary rather than mid-word. */
 const EXCERPT_LIMIT = 160;
@@ -124,8 +134,8 @@ const imageSrc = storyblokImage(
 );
 const imageSrcSet = storyblokSrcSet(
   event.content.image?.filename,
-  IMAGE_WIDTH,
-  IMAGE_HEIGHT
+  WELL_WIDTH,
+  WELL_HEIGHT
 );
 
 /**
