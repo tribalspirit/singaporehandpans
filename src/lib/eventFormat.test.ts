@@ -12,6 +12,8 @@ import {
   resolveDurationLabel,
   formatPrice,
   formatRowDate,
+  parsePrice,
+  formatDayMonth,
 } from './eventFormat';
 
 /**
@@ -396,5 +398,49 @@ describe('formatRowDate', () => {
     expect(
       formatRowDate(parseSingaporeDate('2026-01-01 00:30') as Date)
     ).toEqual({ date: 'THU 1 JAN', time: '00:30' });
+  });
+});
+
+describe('parsePrice', () => {
+  it('reads a single amount', () => {
+    expect(parsePrice('$88')).toEqual({ min: 88, max: null });
+    expect(parsePrice('88')).toEqual({ min: 88, max: null });
+    expect(parsePrice('S$120')).toEqual({ min: 120, max: null });
+    expect(parsePrice('$88.50')).toEqual({ min: 88.5, max: null });
+  });
+
+  it('reads both ends of a range', () => {
+    // The old schema sanitiser stripped non-digits and emitted "38138".
+    expect(parsePrice('$38-$138')).toEqual({ min: 38, max: 138 });
+    expect(parsePrice('38 - 138')).toEqual({ min: 38, max: 138 });
+  });
+
+  it('reads free as zero', () => {
+    expect(parsePrice('Free')).toEqual({ min: 0, max: null });
+    expect(parsePrice('FREE')).toEqual({ min: 0, max: null });
+  });
+
+  it('returns null when there is no price to state', () => {
+    expect(parsePrice('Pay what you feel')).toBeNull();
+    expect(parsePrice('$88 per person')).toBeNull();
+    expect(parsePrice(undefined)).toBeNull();
+    expect(parsePrice('')).toBeNull();
+  });
+});
+
+describe('formatDayMonth', () => {
+  it('drops the year, for a near date that does not need one', () => {
+    expect(formatDayMonth(parseSingaporeDate('2026-08-08 10:30') as Date)).toBe(
+      '8 Aug'
+    );
+    expect(formatDayMonth(parseSingaporeDate('2026-12-01 09:00') as Date)).toBe(
+      '1 Dec'
+    );
+  });
+
+  it('reads the calendar date in Singapore time', () => {
+    expect(formatDayMonth(parseSingaporeDate('2026-01-01 00:30') as Date)).toBe(
+      '1 Jan'
+    );
   });
 });

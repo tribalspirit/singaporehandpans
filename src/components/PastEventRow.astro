@@ -17,7 +17,7 @@ import type { EventStory } from '../types/event';
 import { getEventCategory, getLevelLabel, UNCATEGORISED } from '../utils/tags';
 import { storyblokImage, storyblokSrcSet } from '../lib/storyblokImage';
 import { extractTeacherName } from '../lib/eventMatching';
-import { formatRowDate, formatShortDate } from '../lib/eventFormat';
+import { formatRowDate, formatDayMonth } from '../lib/eventFormat';
 
 export interface Props {
   event: EventStory;
@@ -126,7 +126,7 @@ const thumbnailSrcSet = storyblokSrcSet(
        remain reachable. */
     runsAgain ? (
       <a class="past-row__action is-recurring" href={runsAgain.url}>
-        Runs again {formatShortDate(runsAgain.at)}
+        Runs again {formatDayMonth(runsAgain.at)}
         <span aria-hidden="true"> →</span>
       </a>
     ) : (

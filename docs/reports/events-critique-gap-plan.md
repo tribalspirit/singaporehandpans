@@ -51,7 +51,7 @@ and re-verified by measuring `getBoundingClientRect().height` and
 The other JS-hidden elements (`.archive-month`, `.archive-year`,
 `.archive-empty`, the jump-nav `li`) set no `display` and were never affected.
 
-### G2 — Card has no click target, so the title's tap area regressed · P1
+### G2 — Card has no click target, so the title's tap area regressed · P1 · **FIXED**
 
 Finding 16b removed `min-height: 44px` / `inline-flex` from the title anchor,
 justified in a comment by "the card being clickable". **The card is not
@@ -64,7 +64,7 @@ the whole card is the target and the buttons still sit above it via
 `position: relative; z-index: 1`. Verify the hit box measures ≥44px and that
 Learn More / Book Now remain independently clickable.
 
-### G3 — Detail page still contradicts the card · P1
+### G3 — Detail page still contradicts the card · P1 · **FIXED**
 
 `EventDetail.astro:309` prints `~{durationLabel}` beside a full date+time
 block, and `:169`/`:299` render `event.content.price` raw — so `/events/<slug>/`
@@ -79,7 +79,7 @@ Fix: route both through `formatPrice`, drop the tilde, and emit a valid
 `priceSpecification` (or omit the offer) for ranges rather than a mangled
 number. Add a test for the range case.
 
-### G4 — Jump-nav active state is invisible on pointer devices · P2
+### G4 — Jump-nav active state is invisible on pointer devices · P2 · **FIXED**
 
 The `aria-current="true"` style is byte-identical to `:hover` — same
 `border-color` and `color`. The critique's point was that the bar should tell
@@ -98,34 +98,34 @@ Finding 4 asked for the scale to be stated at the entry point.
 Fix: show both on `/events/` — the studio line and a short archive teaser — or
 move the teaser onto the Past tab itself.
 
-### G6 — Category is whichever tag the author listed first · P2
+### G6 — Category is whichever tag the author listed first · P2 · **FIXED**
 
 `getEventCategory` returns the first match in author order, so an event tagged
 both `workshop` and `masterclass` renders either. Fix: define an explicit
 precedence and pick the highest-ranked tag present. Extend `tags.test.ts`.
 
-### G7 — "Runs again" prints the year · P3
+### G7 — "Runs again" prints the year · P3 · **FIXED**
 
 Renders "Runs again 8 Aug 2026"; the spec asked for "Runs again → 8 Aug". Use a
 year-less short format for near dates.
 
-### G8 — Residual naming drift · P3
+### G8 — Residual naming drift · P3 · **FIXED**
 
 `CollectionPage.name` is "Past Classes & Events" and `seoTitle` is "Past Handpan
 Classes & Events" (`archive.astro`). Not user-visible on the page but they are
 the names search engines index.
 
-### G9 — Tab hit box and focus ring · P3
+### G9 — Tab hit box and focus ring · P3 · **FIXED**
 
 Tabs measure ~43px against the 44px used elsewhere, and focus shows only a
 border change with no `:focus-visible` outline.
 
-### G10 — Observer never clears above the first section · P3
+### G10 — Observer never clears above the first section · P3 · **FIXED**
 
 The `IntersectionObserver` callback only acts on `isIntersecting`, so scrolling
 above the first target leaves the previous chip marked current.
 
-### G11 — Slug redirects are in a file that will not fire · P1
+### G11 — Slug redirects are in a file that will not fire · P1 · **FIXED**
 
 The three 301s were added to `_redirects`, but `/events/[slug]` is
 `prerender = false`, so those URLs are served by the Worker and never reach the
@@ -155,3 +155,22 @@ G1 is the cautionary case. For anything involving visibility, measure
 `getBoundingClientRect()` or `getComputedStyle().display`; for anything
 involving hit targets, measure the rendered box; for anything involving images,
 measure what the browser actually fetched.
+
+---
+
+## Status after the gap pass
+
+Fixed: G1, G2, G3, G4, G6, G7, G8, G9, G10, G11. Also added a guard so
+`extractTeacherName` stops reading techniques as people — the live archive read
+"masterclasses with Dany Rud, Kirill Osherov, **Konnakol**".
+
+Still open, all requiring CMS work rather than code: **G5** (the archive's value
+line belongs on `/events/`, which currently shows the studio address in that
+slot — a copy decision), **G12** / finding 21 (numeric price field), finding 13
+(authored `excerpt`), finding 19 (title conventions), finding 20 (`series_id`
+for multi-day events).
+
+447 tests pass under both timezones. Every behavioural fix was verified by
+observed behaviour: the card target by clicking its whitespace and reading the
+resulting URL, the active chip by comparing computed styles against an idle
+chip, the tab by measuring its box.

@@ -81,11 +81,38 @@ const WORD_SPLIT_REGEX = /[^\p{L}\p{N}]+/u;
  * A best-effort read of free text, not a data field. Callers must render
  * without it. A `teacher` field in Storyblok would replace this outright.
  */
+/**
+ * Words that follow "with" but name a thing, not a person. Capitalised in
+ * titles, so the pattern alone cannot tell them apart — "masterclasses with
+ * Dany Rud, Kirill Osherov, Konnakol" shipped to the live archive.
+ */
+const NOT_A_TEACHER = new Set([
+  'konnakol',
+  'handpan',
+  'handpans',
+  'frame',
+  'drum',
+  'drums',
+  'voice',
+  'guitar',
+  'friends',
+  'us',
+]);
+
 export function extractTeacherName(
   title: string | undefined | null
 ): string | null {
   if (!title) return null;
-  return TEACHER_REGEX.exec(title)?.[1] ?? null;
+
+  const name = TEACHER_REGEX.exec(title)?.[1];
+  if (!name) return null;
+
+  // Reject when every word names a thing. A real name alongside one of these
+  // ("Handpan with Dany Rud") still reads correctly.
+  const words = name.toLowerCase().split(WORD_SPLIT_REGEX).filter(Boolean);
+  if (words.every((word) => NOT_A_TEACHER.has(word))) return null;
+
+  return name;
 }
 
 /** Significant lowercased words in a title, minus the teacher's name. */

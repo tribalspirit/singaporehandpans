@@ -9,6 +9,7 @@ import {
   formatEventTimeRange,
   formatOccurrenceLabel,
   formatRecurrenceLabel,
+  formatPrice,
 } from '../lib/eventFormat';
 
 export interface Props {
@@ -73,6 +74,11 @@ const hasAcuity = !!event.content.acuity_appointment_type_id;
 const acuityOwnerId = import.meta.env.PUBLIC_ACUITY_OWNER_ID || '';
 
 const durationLabel = resolveDurationLabel(timing, event.content.duration);
+
+// Normalised in one place, matching the cards. `price` is free text in the
+// CMS and drifts ($88 / 88 / $38-$138 / S$120); rendering it raw here meant
+// the detail page contradicted the card it was reached from.
+const priceLabel = formatPrice(event.content.price);
 ---
 
 <article class="event-detail">
@@ -146,7 +152,7 @@ const durationLabel = resolveDurationLabel(timing, event.content.duration);
       </div>
 
       {
-        event.content.price && (
+        priceLabel && (
           <div class="event-price">
             <svg
               width="20"
@@ -159,14 +165,8 @@ const durationLabel = resolveDurationLabel(timing, event.content.duration);
               <line x1="12" y1="1" x2="12" y2="23" />
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
-            <span
-              class={
-                event.content.price.toLowerCase() === 'free'
-                  ? 'free-price'
-                  : 'paid-price'
-              }
-            >
-              {event.content.price}
+            <span class={priceLabel === 'Free' ? 'free-price' : 'paid-price'}>
+              {priceLabel}
             </span>
           </div>
         )
@@ -286,17 +286,11 @@ const durationLabel = resolveDurationLabel(timing, event.content.duration);
           <dd>{event.content.location}</dd>
 
           {
-            event.content.price && (
+            priceLabel && (
               <>
                 <dt>Price</dt>
-                <dd
-                  class={
-                    event.content.price.toLowerCase() === 'free'
-                      ? 'free-price'
-                      : ''
-                  }
-                >
-                  {event.content.price}
+                <dd class={priceLabel === 'Free' ? 'free-price' : ''}>
+                  {priceLabel}
                 </dd>
               </>
             )
@@ -306,7 +300,7 @@ const durationLabel = resolveDurationLabel(timing, event.content.duration);
             durationLabel && (
               <>
                 <dt>Duration</dt>
-                <dd>~{durationLabel}</dd>
+                <dd>{durationLabel}</dd>
               </>
             )
           }

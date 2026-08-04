@@ -388,6 +388,9 @@ const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
   @use 'src/styles/tokens.scss';
 
   .event-card {
+    // Anchors the title's stretched link below, which turns the whole card
+    // into the click target.
+    position: relative;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-lg);
@@ -489,9 +492,10 @@ const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
     h3 {
       margin: 0 0 var(--spacing-sm) 0;
 
-      // No min-height here. The 44px target comes from the card being
-      // clickable, not from padding a heading — forcing it opened a pocket of
-      // dead space under every one-line title.
+      // No min-height on the anchor: padding a heading to 44px opened a pocket
+      // of dead space under every one-line title. The target comes from the
+      // stretched link below, which makes the whole card clickable — so the
+      // touch area is the card, not the text line.
       a {
         color: var(--color-text-primary);
         text-decoration: none;
@@ -501,6 +505,20 @@ const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
 
         &:hover {
           color: var(--color-primary);
+        }
+
+        // Covers the card. Sits under the buttons, which are lifted by their
+        // own stacking context, so Book Now and Learn More stay clickable.
+        &::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--color-primary);
+          outline-offset: 2px;
         }
       }
     }
@@ -594,6 +612,10 @@ const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
     display: flex;
     gap: var(--spacing-sm);
     margin-top: auto;
+    // Above the title's stretched link, so the buttons remain independently
+    // clickable rather than being swallowed by the card-wide target.
+    position: relative;
+    z-index: 1;
 
     // The primary action takes twice the width of the secondary. Equal halves
     // read as two equally-weighted choices, so booking carried only half the
