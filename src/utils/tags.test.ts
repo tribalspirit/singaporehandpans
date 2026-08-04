@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeTags, getEventCategory, getLevelLabel } from './tags';
+import {
+  normalizeTags,
+  getEventCategory,
+  getLevelLabel,
+  getCategoryPlural,
+} from './tags';
 
 describe('normalizeTags', () => {
   it('returns an empty array for missing tags', () => {
@@ -53,6 +58,25 @@ describe('getEventCategory', () => {
     expect(getEventCategory(['beginner'])).toBeNull();
     expect(getEventCategory([])).toBeNull();
     expect(getEventCategory(undefined)).toBeNull();
+  });
+});
+
+describe('getCategoryPlural', () => {
+  it('pluralises the regular categories', () => {
+    expect(getCategoryPlural('Workshop')).toBe('Workshops');
+    expect(getCategoryPlural('Concert')).toBe('Concerts');
+    expect(getCategoryPlural('Course')).toBe('Courses');
+  });
+
+  it('handles the ones a trailing "s" would mangle', () => {
+    // "Masterclasss", "Communitys" and "Privates" all shipped from appending s.
+    expect(getCategoryPlural('Masterclass')).toBe('Masterclasses');
+    expect(getCategoryPlural('Community')).toBe('Community');
+    expect(getCategoryPlural('Private')).toBe('Private');
+  });
+
+  it('returns an unknown category unchanged rather than guessing', () => {
+    expect(getCategoryPlural('Retreat')).toBe('Retreat');
   });
 });
 

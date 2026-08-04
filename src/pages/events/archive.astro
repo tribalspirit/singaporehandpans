@@ -20,7 +20,11 @@ import { getStoryblokClient } from '../../lib/storyblok';
 import { setEdgeCache } from '../../lib/edgeCache';
 import { fetchEventStories, partitionEvents } from '../../lib/eventsApi';
 import { groupByYearMonth, getMonthLabel } from '../../lib/eventDates';
-import { getEventCategory, UNCATEGORISED } from '../../utils/tags';
+import {
+  getEventCategory,
+  getCategoryPlural,
+  UNCATEGORISED,
+} from '../../utils/tags';
 import {
   extractTeacherName,
   findRunsAgainMatch,
@@ -97,7 +101,7 @@ const filters = [
   ...[...categoryCounts.entries()]
     .filter(([key]) => key !== UNCATEGORISED)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([key, count]) => ({ key, label: `${key}s`, count })),
+    .map(([key, count]) => ({ key, label: getCategoryPlural(key), count })),
 ];
 
 /**
@@ -256,7 +260,9 @@ const breadcrumbSchema = {
                 <li>
                   <a href={`#${target.anchor}`} data-jump-link>
                     {target.label}
-                    <span class="year-nav__count">({target.count})</span>
+                    <span class="year-nav__count" data-jump-count>
+                      ({target.count})
+                    </span>
                   </a>
                 </li>
               ))}
@@ -437,18 +443,28 @@ const breadcrumbSchema = {
           }
         }
 
-        // Jump chips lose their meaning once their section is filtered away.
-        // The active mark has to be cleared with them: the observer below only
-        // ever *sets* aria-current, so a chip whose section was hidden while it
-        // was current would otherwise keep the mark indefinitely.
+        // Jump chips lose their meaning once their section is filtered away,
+        // and their counts are baked in server-side — left alone, a chip reads
+        // "(20)" beside a heading that now says "3 events".
+        //
+        // The active mark has to be cleared with the chip: the observer below
+        // only ever *sets* aria-current, so a chip whose section was hidden
+        // while it was current would otherwise keep the mark indefinitely.
         for (const link of jumpLinks) {
           const target = document.querySelector<HTMLElement>(
             link.getAttribute('href') ?? ''
           );
-          const hidden = Boolean(target?.hidden);
+          const shown = target
+            ? target.querySelectorAll('[data-past-row]:not([hidden])').length
+            : 0;
+
           const listItem = link.closest('li');
-          if (listItem) listItem.hidden = hidden;
-          if (hidden) link.removeAttribute('aria-current');
+          if (listItem) listItem.hidden = shown === 0;
+          if (shown === 0) link.removeAttribute('aria-current');
+
+          const chipCount =
+            link.querySelector<HTMLElement>('[data-jump-count]');
+          if (chipCount) chipCount.textContent = `(${shown})`;
         }
 
         if (emptyNote) emptyNote.hidden = rows.some(visible);

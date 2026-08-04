@@ -285,7 +285,12 @@ const seoDescription =
 
   .events-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    // auto-FILL, not auto-fit — the same reason as the archive. Now that this
+    // page is grouped by month, a one- or two-event group is common, and
+    // auto-fit collapses the empty tracks so a lone card stretches across the
+    // full 1176px content width. Ungrouped, the single grid was always full
+    // enough for the difference not to show.
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: var(--spacing-lg);
 
     @media (max-width: 768px) {

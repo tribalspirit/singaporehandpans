@@ -45,6 +45,20 @@ const CATEGORY_BY_TAG: Record<string, string> = {
  */
 export const UNCATEGORISED = 'other';
 
+/**
+ * Plural display names, stated rather than derived. Appending an `s` produced
+ * "Masterclasss", "Communitys" and "Privates" — the last two are a mass noun
+ * and an adjective, so they read correctly unchanged.
+ */
+const CATEGORY_PLURAL: Record<string, string> = {
+  Workshop: 'Workshops',
+  Concert: 'Concerts',
+  Course: 'Courses',
+  Masterclass: 'Masterclasses',
+  Community: 'Community',
+  Private: 'Private',
+};
+
 /** Ascending, so a two-level span can be named after its lower bound. */
 const LEVEL_ORDER = ['beginner', 'intermediate', 'advanced'] as const;
 
@@ -66,6 +80,14 @@ export function getEventCategory(
     if (category) return category;
   }
   return null;
+}
+
+/**
+ * A category's plural, for filter chips and counts. An unrecognised category
+ * is returned unchanged rather than guessed at.
+ */
+export function getCategoryPlural(category: string): string {
+  return CATEGORY_PLURAL[category] ?? category;
 }
 
 /**

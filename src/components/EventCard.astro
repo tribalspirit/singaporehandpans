@@ -132,10 +132,17 @@ const imageSrc = storyblokImage(
   IMAGE_WIDTH,
   IMAGE_HEIGHT
 );
+// Densities chosen against measured well widths, not picked round: the grid
+// puts 361-466px slots on desktop and up to 718px at the 768px breakpoint.
+// 1.5x (525w) serves desktop 1x, which would otherwise jump to 700w for a
+// 380px slot; 2.25x (788w) serves desktop 2x, which needs ~750 and would
+// otherwise jump to 1050w. 4x (1400w) is the ceiling: a 2x tablet at the 768px
+// breakpoint wants 1436, and the 2.5% shortfall is not worth another variant.
 const imageSrcSet = storyblokSrcSet(
   event.content.image?.filename,
   WELL_WIDTH,
-  WELL_HEIGHT
+  WELL_HEIGHT,
+  { densities: [1, 1.5, 2.25, 3, 4] }
 );
 
 /**
@@ -174,7 +181,7 @@ const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
         <img
           src={imageSrc}
           srcset={imageSrcSet ?? undefined}
-          sizes="(max-width: 768px) 100vw, 350px"
+          sizes="(max-width: 768px) 100vw, (max-width: 1199px) 50vw, 380px"
           width={IMAGE_WIDTH}
           height={IMAGE_HEIGHT}
           alt={event.content.image.alt || event.content.title}
