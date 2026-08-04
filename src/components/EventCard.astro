@@ -43,8 +43,12 @@ const { event, isPast = false, timing, next, eager = false } = Astro.props;
  * Doubling here instead would have the browser fetch 2× of an already-2×
  * asset. `storyblokSrcSet` derives the 2× and 3× candidates.
  */
+// 16:10, matching `aspect-ratio` on `.event-image`. At 350x200 (7:4) the
+// browser's `object-fit: cover` cropped Storyblok's already face-aware
+// transform a second time, discarding 8.6% of its width — which can remove
+// exactly the subject the smart crop was keeping near an edge.
 const WELL_WIDTH = 350;
-const WELL_HEIGHT = 200;
+const WELL_HEIGHT = 219;
 
 /** Fallback for browsers without `srcset`; also sets the intrinsic ratio. */
 const FALLBACK_DENSITY = 2;
@@ -112,12 +116,17 @@ const availabilityLabel: Record<string, string> = {
   sold_out: 'Sold Out',
 };
 
-// A duration beside an exact time range is noise — "~1.5 hours" next to
-// "10:30 am – 12:00 pm" restates it, and the tilde makes an exact time read as
-// approximate. It survives only where a cadence is shown instead of a range.
-const durationLabel = recurrenceLabel
-  ? resolveDurationLabel(eventTiming, event.content.duration)
-  : null;
+// A duration beside an exact time range is noise — "1.5 hours" next to
+// "10:30 am – 12:00 pm" restates it. It survives only where no range is shown
+// at all, which means a series summarised by its cadence alone.
+//
+// Keying this off `recurrenceLabel` was not enough: a live series also prints
+// "Next: Thu, 6 Aug, 10:30 am – 12:00 pm", which is a range. That went unseen
+// until the first genuinely recurring class existed in the CMS.
+const showsTimeRange = !recurrenceLabel || showNextSession;
+const durationLabel = showsTimeRange
+  ? null
+  : resolveDurationLabel(eventTiming, event.content.duration);
 
 const priceLabel = formatPrice(event.content.price);
 

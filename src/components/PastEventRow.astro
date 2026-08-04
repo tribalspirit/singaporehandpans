@@ -45,13 +45,17 @@ const FALLBACK_DENSITY = 2;
 
 const eventUrl = `/events/${event.slug}/`;
 
-// The date comes from the occurrence's END because that is what the archive
-// groups on — reading the start would print "30 APR" under a "MAY 2026"
-// heading for an event that ran 30 April to 2 May. The time still comes from
-// the start, which is the useful fact ("it began at 10:30"), and for the
-// single-day events that make up nearly all of the archive the two agree.
-const { date } = formatRowDate(ranTo);
-const { time } = formatRowDate(ranFrom);
+// Single-day events — nearly the whole archive — show the day and its start
+// time. A multi-day occurrence shows the span instead of a time: mixing the
+// end date with the start time produced "SAT 2 MAY 10:30", a moment at which
+// neither endpoint happened, and taking both from one endpoint would file the
+// row under a month its own date contradicts (the archive groups on the end).
+const from = formatRowDate(ranFrom);
+const to = formatRowDate(ranTo);
+const isMultiDay = from.date !== to.date;
+
+const date = isMultiDay ? from.date : to.date;
+const time = isMultiDay ? `– ${to.date}` : from.time;
 
 const category = getEventCategory(event.content.tags);
 const meta = [

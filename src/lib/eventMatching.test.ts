@@ -126,6 +126,24 @@ describe('findRunsAgainMatch', () => {
     expect(findRunsAgainMatch(past, untagged)?.story.slug).toBe('untagged');
   });
 
+  it('will not pair two different classes that share only a teacher', () => {
+    // Category and format noun are already stripped, so a shared teacher was
+    // enough to clear the threshold on titles with little else in them.
+    const past = item('Handpan Workshop with Dany Rud', ['workshop']);
+    const other = [
+      item('Rhythm Workshop with Dany Rud', ['workshop'], 'rhythm'),
+    ];
+    expect(findRunsAgainMatch(past, other)).toBeNull();
+  });
+
+  it('still pairs when the subject matches as well as the teacher', () => {
+    const past = item('Konnakol Rhythm Workshop with Dany Rud', ['workshop']);
+    const other = [
+      item('Konnakol Rhythm Workshop with Dany Rud', ['workshop'], 'konnakol'),
+    ];
+    expect(findRunsAgainMatch(past, other)?.story.slug).toBe('konnakol');
+  });
+
   it('picks the strongest match when several share a category', () => {
     const crowded = [
       item('Handpan Gathering', ['community'], 'weak'),

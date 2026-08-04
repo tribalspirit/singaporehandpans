@@ -88,13 +88,25 @@ export function extractTeacherName(
   return TEACHER_REGEX.exec(title)?.[1] ?? null;
 }
 
-/** Significant lowercased words in a title. */
+/** Significant lowercased words in a title, minus the teacher's name. */
 function titleTokens(title: string): Set<string> {
+  // The teacher is excluded from the score deliberately. Once stopwords and
+  // the format noun are gone, "Handpan Workshop with Dany Rud" and "Rhythm
+  // Workshop with Dany Rud" overlapped on the teacher alone and matched —
+  // two unrelated classes joined because the same person taught both.
+  const teacher = extractTeacherName(title)?.toLowerCase() ?? '';
+  const teacherWords = new Set(teacher.split(WORD_SPLIT_REGEX).filter(Boolean));
+
   return new Set(
     title
       .toLowerCase()
       .split(WORD_SPLIT_REGEX)
-      .filter((word) => word.length > 0 && !TITLE_STOPWORDS.has(word))
+      .filter(
+        (word) =>
+          word.length > 0 &&
+          !TITLE_STOPWORDS.has(word) &&
+          !teacherWords.has(word)
+      )
   );
 }
 

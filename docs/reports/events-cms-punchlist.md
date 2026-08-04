@@ -10,7 +10,22 @@ Where the critique was wrong, that is noted.
 
 ---
 
-## 1 — Typos (highest visibility, lowest effort)
+## Status
+
+| §   | Item                                                           | State                                          |
+| --- | -------------------------------------------------------------- | ---------------------------------------------- |
+| 1   | Typos                                                          | **Done** — applied to Storyblok 2026-08-04     |
+| 2   | `/events/events/` slug                                         | **Done** — applied 2026-08-04                  |
+| 3   | Thursday/Wednesday date contradiction                          | **Done** — owner confirmed, applied 2026-08-04 |
+| 4   | Title conventions                                              | Open — editorial, needs a pass over 43 entries |
+| 5   | Schema fields (`excerpt`, `teacher`, `price_max`, `series_id`) | Open                                           |
+| 6   | Multi-day duplicates                                           | Open — blocked on `series_id` (§5)             |
+| 7   | Redirects for changed slugs                                    | **Done** — in `_redirects`                     |
+| —   | Two remaining recurring classes (Tue, Sat)                     | **Blocked** — see §8                           |
+
+---
+
+## 1 — Typos (highest visibility, lowest effort) — DONE
 
 | Story slug                                                                | Field       | Current                                                                     | Should be                                   |
 | ------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------- | ------------------------------------------- |
@@ -20,32 +35,46 @@ Where the critique was wrong, that is noted.
 | `live-concert-by-marlia-coeur`                                            | title       | `Live Concert by␣␣Marlia Coeur` (double space)                              | `Live Concert by Marlia Coeur`              |
 | `advance-yoru-handpan-playing-skiils`                                     | **slug**    | advance-**yoru**-handpan-playing-**skiils**                                 | advance-**your**-handpan-playing-**skills** |
 
-**Not reproducible — please confirm in the CMS:**
+A full-content scan (all 43 stories, every text field) corrected two of the
+critique's claims and found one instance it missed:
 
-- `Do not miss teh opportunity` — the critique reports this, but "teh" does not
-  appear anywhere in the rendered output. Descriptions are now clamped, so it
-  may sit past the visible cut. Search the description fields directly.
-- `Jungle Adventur` — **the critique is wrong here.** The live title and slug
-  both read `Jungle Adventure Sound Journey For Kids`, spelled correctly. No
-  action needed.
+- **`Jungle Adventur` — the critique located it wrongly.** The title and slug
+  are spelled correctly; the typo was in the **description**. Fixed there.
+- **`Communtiy` was also in the description**, not only the title and slug.
+  Fixed in all three.
+- **`Do not miss teh opportunity` does not exist.** No occurrence of "teh" in
+  any field of any story. The critique is wrong; nothing to do.
 
-## 2 — The `/events/events/` slug
+Deliberately **not** changed: ~30 double spaces across descriptions and
+`seo_title`s. Most sit inside bullet lists built from `•⁠` plus U+2060 word
+joiners, where a blind whitespace collapse would break the formatting. Only the
+visible one in the concert title was fixed. Worth a careful manual pass, not a
+regex.
 
-One archive story has the literal slug `events`, so its URL is
-`/events/events/`. Give it a real slug describing the event.
+## 2 — The `/events/events/` slug — DONE
 
-## 3 — Data correctness (do this first)
+The cause was structural rather than a typo: the story was flagged
+`is_startpage: true` for the `events` folder, so Storyblok forced its slug to
+match the folder and it resolved at `/events/events/`. A plain slug update
+returns `200` and silently does nothing while that flag is set.
 
-`handpan-for-beginners-on-thursday-mornings` is the **first card on the page**
-and contradicts itself: the title says _Thursday Mornings_, the card prints
-**Wed, 5 Aug 2026**. 5 August 2026 is a Wednesday, so the `date` field and the
-title disagree — a visitor sees the contradiction directly beside a Book Now
-button.
+Fixed by clearing `is_startpage` and setting
+`handpan-essentials-with-peter-bognar`. Nothing depended on the folder having a
+start page — `/events/` is an Astro route, and every CMS query selects on
+`starts_with: 'events/'` + `content_type: 'event'`, which still matches.
 
-Someone who knows the schedule has to decide which is wrong. The code cannot:
-it renders whatever `date` holds.
+## 3 — Data correctness — DONE
 
-Once resolved, adopt the convention in §4 so it cannot recur.
+`handpan-for-beginners-on-thursday-mornings` said _Thursday Mornings_ while
+printing **Wed, 5 Aug 2026**.
+
+Owner confirmed: the **date** was wrong, and the class is a **weekly Thursday**
+series. Set to `2026-08-06 10:30` with `recurrence: weekly` (open-ended). The
+duration was already 1.5h, matching the stated 10:30–12:00.
+
+The title needs no change — now that the class genuinely recurs on Thursdays,
+`formatRecurrenceLabel` renders "Every Thursday, 10:30 am" and the title agrees
+with it.
 
 ## 4 — Title conventions
 
@@ -108,18 +137,46 @@ one entry with a span. `formatSeriesSpanLabel` already exists to render
 A code-only heuristic was considered and rejected: collapsing on title equality
 alone would merge any genuinely repeated title.
 
-## 7 — After changing any slug
+## 7 — After changing any slug — DONE
 
-Add a 301 to `_redirects` at the repo root for each old → new slug, so inbound
-links and search equity survive:
-
-```
-/events/handpan-masterclass-with-takao-minemoto-for-singapore-handpan-communtiy/  /events/handpan-masterclass-with-takao-minemoto-for-singapore-handpan-community/  301
-/events/advance-yoru-handpan-playing-skiils/  /events/advance-your-handpan-playing-skills/  301
-```
+All three 301s are in `_redirects` at the repo root, so inbound links and
+search equity survive the renames.
 
 Do **not** add trailing-slash rules there — that policy lives in
 `src/middleware.ts` and the two would conflict. The file says so already.
+
+## 8 — The other two recurring classes — BLOCKED, needs a decision
+
+The owner states there are **three** weekly classes:
+
+| Slot            | Story                                                   |
+| --------------- | ------------------------------------------------------- |
+| Thu 10:30–12:00 | `handpan-for-beginners-on-thursday-mornings` — **done** |
+| Tue 19:00–20:30 | **no story exists**                                     |
+| Sat 10:30–12:00 | **ambiguous — three candidates**                        |
+
+**Tuesday.** No event in the space starts at 19:00 on a Tuesday. The only 19:00
+starts are Fri, Sat, Sun and Mon, all one-off past events. This class needs a
+story creating from scratch — title, description, price, image, booking URL —
+which is authoring, not a data fix.
+
+**Saturday.** Three stories sit at Sat 10:30 and any of them could be the
+weekly class:
+
+| Story                       | Date  | Duration | Title                                                                  |
+| --------------------------- | ----- | -------- | ---------------------------------------------------------------------- |
+| `…-handpan-with-yana-an`    | 1 Aug | 2h       | Handpan First Touch Workshop with Yana An — **Every Saturday Morning** |
+| `…-with-singapore-handpans` | 8 Aug | 1.5h     | Handpan First Touch Workshop with Yana An                              |
+| `handpan-beginner-course`   | 8 Aug | 1.5h     | HANDPAN COURSE FOR BEGINNERS — 4 LESSONS JOURNEY                       |
+
+The first says "Every Saturday Morning" in its title, which points at it — but
+its duration is 2h, not the 1.5h implied by 10:30–12:00, and the second matches
+the duration while the third is a fixed four-lesson course rather than an
+open weekly drop-in.
+
+Marking the wrong one recurring would put a permanent weekly class on the site
+that does not run, so this was left alone. Naming the story (or confirming the
+first, and whether its duration should become 1.5h) is all that is needed.
 
 ---
 
