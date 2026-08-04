@@ -13,11 +13,18 @@
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import EventCard from '../../components/EventCard.astro';
+import EventsTabs from '../../components/EventsTabs.astro';
+import PastEventRow from '../../components/PastEventRow.astro';
 import CMSFallback from '../../components/CMSFallback.astro';
 import { getStoryblokClient } from '../../lib/storyblok';
 import { setEdgeCache } from '../../lib/edgeCache';
 import { fetchEventStories, partitionEvents } from '../../lib/eventsApi';
-import { groupByYearMonth } from '../../lib/eventDates';
+import { groupByYearMonth, getMonthLabel } from '../../lib/eventDates';
+import { getEventCategory, UNCATEGORISED } from '../../utils/tags';
+import {
+  extractTeacherName,
+  findRunsAgainMatch,
+} from '../../lib/eventMatching';
 import type { EventListItem } from '../../lib/eventsApi';
 
 export const prerender = false;
@@ -31,6 +38,7 @@ const SCHEMA_ITEM_LIMIT = 100;
 const now = new Date();
 
 let pastEvents: EventListItem[] = [];
+let upcomingEvents: EventListItem[] = [];
 let cmsError = false;
 
 const runtime = Astro.locals.runtime;
@@ -41,7 +49,11 @@ try {
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
 
   const events = await fetchEventStories(storyblokApi, storyblokVersion);
-  pastEvents = partitionEvents(events, now).past;
+  // Both halves: the page already fetched everything, so the upcoming count in
+  // the tab strip and the "Runs again" matches cost no extra request.
+  const partitioned = partitionEvents(events, now);
+  pastEvents = partitioned.past;
+  upcomingEvents = partitioned.upcoming;
 } catch (error) {
   console.error('Events archive: Failed to load from Storyblok', error);
   cmsError = true;
@@ -68,6 +80,69 @@ const jumpTargets =
         label: month.label,
         count: month.items.length,
       }));
+
+/**
+ * Filter chips, built from the categories actually present rather than a fixed
+ * list — the CMS tag vocabulary and the live free-text data do not agree, and a
+ * hardcoded chip reading "Masterclasses 0" would be worse than no chip.
+ */
+const categoryCounts = new Map<string, number>();
+for (const item of pastEvents) {
+  const key = getEventCategory(item.story.content.tags) ?? UNCATEGORISED;
+  categoryCounts.set(key, (categoryCounts.get(key) ?? 0) + 1);
+}
+
+const filters = [
+  { key: 'all', label: 'All', count: pastEvents.length },
+  ...[...categoryCounts.entries()]
+    .filter(([key]) => key !== UNCATEGORISED)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([key, count]) => ({ key, label: `${key}s`, count })),
+];
+
+/**
+ * Each past event paired with the same class running again, so a reader who has
+ * just learned they missed something is offered the next date instead of a dead
+ * end. Conservative — see `findRunsAgainMatch`; a miss simply reads "Details".
+ */
+const runsAgainBySlug = new Map<string, Date>();
+for (const item of pastEvents) {
+  const match = findRunsAgainMatch(item, upcomingEvents);
+  if (match?.next) runsAgainBySlug.set(item.story.slug, match.next.start);
+}
+
+/**
+ * The context line under the tabs: the span the archive covers and the teachers
+ * in it. This is the credibility material the old entry link never mentioned.
+ */
+const TEACHERS_NAMED = 4;
+const archiveContext = (() => {
+  if (pastEvents.length === 0) return null;
+
+  const newest = years[0];
+  const oldestYear = years[years.length - 1];
+  const oldest = oldestYear.months[oldestYear.months.length - 1];
+  const span =
+    newest.year === oldestYear.year
+      ? `${getMonthLabel(oldest.month).slice(0, 3)}–${getMonthLabel(newest.months[0].month).slice(0, 3)} ${newest.year}`
+      : `${getMonthLabel(oldest.month).slice(0, 3)} ${oldestYear.year} – ${getMonthLabel(newest.months[0].month).slice(0, 3)} ${newest.year}`;
+
+  const teachers = [
+    ...new Set(
+      pastEvents
+        .map((item) => extractTeacherName(item.story.content.title))
+        .filter((name): name is string => Boolean(name))
+    ),
+  ].slice(0, TEACHERS_NAMED);
+
+  return teachers.length > 0
+    ? `${span} · masterclasses with ${teachers.join(', ')}.`
+    : `${span}.`;
+})();
+
+/** Three upcoming cards close the page, so the archive is not a dead end. */
+const CLOSING_CARD_COUNT = 3;
+const closingEvents = upcomingEvents.slice(0, CLOSING_CARD_COUNT);
 
 const siteUrl =
   Astro.site?.toString().replace(/\/$/, '') || 'https://singaporehandpans.com';
@@ -103,13 +178,13 @@ const breadcrumbSchema = {
     {
       '@type': 'ListItem',
       position: 2,
-      name: 'Classes',
+      name: 'Classes & Events',
       item: `${siteUrl}/events/`,
     },
     {
       '@type': 'ListItem',
       position: 3,
-      name: 'Past Classes',
+      name: 'Past events',
       item: `${siteUrl}/events/archive/`,
     },
   ],
@@ -136,7 +211,7 @@ const breadcrumbSchema = {
     slot="head"
   />
 
-  <main class="archive-page">
+  <main class="archive-page" id="top">
     {cmsError && <CMSFallback type="events" />}
 
     <!-- Masthead band wraps the container so its ground and hairline run the
@@ -146,7 +221,7 @@ const breadcrumbSchema = {
         <p class="page-eyebrow">
           <a href="/events/">Classes &amp; Events</a>
         </p>
-        <h1>Past Classes &amp; Events</h1>
+        <h1>Past events</h1>
         <p class="page-subtitle">
           Everything we've run at the studio, newest first. Nothing is taken
           down — browse by month to see what a season at Singapore Handpan
@@ -156,6 +231,13 @@ const breadcrumbSchema = {
     </header>
 
     <div class="container">
+      <EventsTabs
+        active="past"
+        upcomingCount={upcomingEvents.length}
+        pastCount={pastEvents.length}
+        context={archiveContext}
+      />
+
       {
         jumpTargets.length > 1 && (
           <nav
@@ -165,9 +247,9 @@ const breadcrumbSchema = {
             <ul>
               {jumpTargets.map((target) => (
                 <li>
-                  <a href={`#${target.anchor}`}>
+                  <a href={`#${target.anchor}`} data-jump-link>
                     {target.label}
-                    <span class="year-nav__count">{target.count}</span>
+                    <span class="year-nav__count">({target.count})</span>
                   </a>
                 </li>
               ))}
@@ -177,34 +259,90 @@ const breadcrumbSchema = {
       }
 
       {
+        filters.length > 2 && (
+          <div class="archive-filters" data-archive-filters>
+            <span class="archive-filters__label" id="archive-filter-label">
+              Show
+            </span>
+            <ul aria-labelledby="archive-filter-label">
+              {filters.map((filter) => (
+                <li>
+                  <button
+                    type="button"
+                    class="archive-filters__chip"
+                    data-filter={filter.key}
+                    aria-pressed={filter.key === 'all' ? 'true' : 'false'}
+                  >
+                    {filter.label}
+                    <span class="archive-filters__count">{filter.count}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+
+      {
         years.map((year) => (
-          <section class="archive-year" id={year.anchor}>
+          <section class="archive-year" id={year.anchor} data-archive-year>
             <h2 class="archive-year__heading">
               {year.year}
-              <span class="archive-year__count">
+              <span class="archive-year__count" data-year-count>
                 {year.total} {year.total === 1 ? 'event' : 'events'}
               </span>
             </h2>
 
             {year.months.map((month) => (
-              <section class="archive-month" id={month.anchor}>
+              <section
+                class="archive-month"
+                id={month.anchor}
+                data-archive-month
+              >
                 <h3 class="archive-month__heading">
                   {month.label} {year.year}
                 </h3>
-                <div class="events-grid">
+                <ul class="past-rows">
                   {month.items.map((item) => (
-                    <EventCard
+                    <PastEventRow
                       event={item.story}
-                      timing={item.timing}
-                      next={item.next}
-                      isPast={true}
+                      ranAt={item.last!.start}
+                      runsAgainAt={runsAgainBySlug.get(item.story.slug) ?? null}
                     />
                   ))}
-                </div>
+                </ul>
               </section>
             ))}
+
+            <p class="archive-year__top">
+              <a href="#top">&uarr; Back to top</a>
+            </p>
           </section>
         ))
+      }
+
+      <p class="archive-empty" data-archive-empty hidden>
+        Nothing in the archive matches that filter.
+      </p>
+
+      {
+        closingEvents.length > 0 && (
+          <section class="archive-upcoming">
+            <h2 class="archive-upcoming__heading">Coming up next</h2>
+            <div class="events-grid">
+              {closingEvents.map((item) => (
+                <EventCard
+                  event={item.story}
+                  timing={item.timing}
+                  next={item.next}
+                />
+              ))}
+            </div>
+            <p class="archive-upcoming__more">
+              <a href="/events/">See all classes &amp; events &rarr;</a>
+            </p>
+          </section>
+        )
       }
 
       {
@@ -220,6 +358,162 @@ const breadcrumbSchema = {
       }
     </div>
   </main>
+
+  <script>
+    /**
+     * Archive filtering and jump-nav state.
+     *
+     * One block for both: they read the same sections, and a single
+     * DOMContentLoaded keeps the observer from racing a filter pass that has
+     * just hidden the section it is observing.
+     *
+     * Filtering is presentational only — every row stays in the DOM, so the
+     * full list is there without JS and for crawlers.
+     */
+    document.addEventListener('DOMContentLoaded', () => {
+      const rows = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-past-row]')
+      );
+      const months = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-archive-month]')
+      );
+      const yearSections = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-archive-year]')
+      );
+      const jumpLinks = Array.from(
+        document.querySelectorAll<HTMLAnchorElement>('[data-jump-link]')
+      );
+
+      const visible = (element: HTMLElement) => !element.hidden;
+
+      /* ---------- filtering ---------- */
+
+      const filterBar = document.querySelector<HTMLElement>(
+        '[data-archive-filters]'
+      );
+      const emptyNote = document.querySelector<HTMLElement>(
+        '[data-archive-empty]'
+      );
+
+      const applyFilter = (category: string) => {
+        for (const row of rows) {
+          row.hidden = category !== 'all' && row.dataset.category !== category;
+        }
+
+        // A heading for a month with nothing left in it is a lie, and so is a
+        // year total counting rows that are no longer on screen.
+        for (const month of months) {
+          month.hidden = !month.querySelector<HTMLElement>(
+            '[data-past-row]:not([hidden])'
+          );
+        }
+
+        for (const section of yearSections) {
+          const shown = section.querySelectorAll(
+            '[data-past-row]:not([hidden])'
+          ).length;
+          section.hidden = shown === 0;
+
+          const count = section.querySelector<HTMLElement>('[data-year-count]');
+          if (count) {
+            count.textContent = `${shown} ${shown === 1 ? 'event' : 'events'}`;
+          }
+        }
+
+        // Jump chips lose their meaning once their section is filtered away.
+        // The active mark has to be cleared with them: the observer below only
+        // ever *sets* aria-current, so a chip whose section was hidden while it
+        // was current would otherwise keep the mark indefinitely.
+        for (const link of jumpLinks) {
+          const target = document.querySelector<HTMLElement>(
+            link.getAttribute('href') ?? ''
+          );
+          const hidden = Boolean(target?.hidden);
+          const listItem = link.closest('li');
+          if (listItem) listItem.hidden = hidden;
+          if (hidden) link.removeAttribute('aria-current');
+        }
+
+        if (emptyNote) emptyNote.hidden = rows.some(visible);
+
+        if (filterBar) {
+          for (const chip of filterBar.querySelectorAll<HTMLButtonElement>(
+            '[data-filter]'
+          )) {
+            chip.setAttribute(
+              'aria-pressed',
+              String(chip.dataset.filter === category)
+            );
+          }
+        }
+      };
+
+      const selectFilter = (category: string, pushToUrl: boolean) => {
+        applyFilter(category);
+
+        if (!pushToUrl) return;
+        // Mirrored to the query string so a filtered view is shareable.
+        const url = new URL(window.location.href);
+        if (category === 'all') url.searchParams.delete('type');
+        else url.searchParams.set('type', category);
+        window.history.replaceState({}, '', url);
+      };
+
+      if (filterBar) {
+        filterBar.addEventListener('click', (event) => {
+          const chip = (event.target as HTMLElement).closest<HTMLButtonElement>(
+            '[data-filter]'
+          );
+          if (chip?.dataset.filter) selectFilter(chip.dataset.filter, true);
+        });
+
+        const requested = new URL(window.location.href).searchParams.get(
+          'type'
+        );
+        const known = Array.from(
+          filterBar.querySelectorAll<HTMLButtonElement>('[data-filter]')
+        ).map((chip) => chip.dataset.filter);
+
+        if (requested && known.includes(requested)) {
+          selectFilter(requested, false);
+        }
+      }
+
+      /* ---------- jump-nav active state ---------- */
+
+      if (jumpLinks.length === 0 || !('IntersectionObserver' in window)) return;
+
+      const linkByAnchor = new Map(
+        jumpLinks.map((link) => [link.getAttribute('href')!.slice(1), link])
+      );
+      const targets = Array.from(linkByAnchor.keys())
+        .map((id) => document.getElementById(id))
+        .filter((element): element is HTMLElement => element !== null);
+
+      const setActive = (anchor: string) => {
+        for (const [id, link] of linkByAnchor) {
+          if (id === anchor) link.setAttribute('aria-current', 'true');
+          else link.removeAttribute('aria-current');
+        }
+      };
+
+      // The top offset clears the sticky bar itself, so a section counts as
+      // "current" only once it is actually readable below it.
+      const navHeight =
+        document.querySelector<HTMLElement>('.year-nav')?.offsetHeight ?? 72;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) setActive(entry.target.id);
+          }
+        },
+        { rootMargin: `-${navHeight}px 0px -70% 0px`, threshold: 0 }
+      );
+
+      for (const target of targets) observer.observe(target);
+    });
+  </script>
 </BaseLayout>
 
 <style lang="scss">
@@ -328,12 +622,86 @@ const breadcrumbSchema = {
         border-color: var(--color-primary);
         color: var(--color-primary);
       }
+
+      // Set by the IntersectionObserver as you scroll — the bar was stateless
+      // through eleven screens.
+      &[aria-current='true'] {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+      }
     }
   }
 
+  // Parenthesised and set in mono, because "August 1" parsed as a date on
+  // every chip. It is a count.
   .year-nav__count {
-    font-size: var(--font-size-sm);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
     color: var(--color-text-secondary);
+  }
+
+  // Sits beside the month jump nav. "Show me the concerts" is what an archive
+  // gets asked, and reading 32 rows in date order was the only answer.
+  .archive-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+
+    ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+  }
+
+  .archive-filters__label {
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .archive-filters__chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    background: transparent;
+    color: var(--color-text-primary);
+    font-family: inherit;
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast),
+      color var(--transition-fast);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    &[aria-pressed='true'] {
+      background: var(--color-gray-900);
+      border-color: var(--color-gray-900);
+      color: var(--color-white);
+    }
+  }
+
+  .archive-filters__count {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    color: inherit;
+    opacity: 0.7;
   }
 
   .archive-year {
@@ -376,6 +744,70 @@ const breadcrumbSchema = {
     margin-bottom: var(--spacing-md);
   }
 
+  // Past events are rows now, not cards — see `PastEventRow`. The grid below
+  // is only for the upcoming cards that close the page.
+  .past-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+  }
+
+  .archive-year__top {
+    margin-top: var(--spacing-lg);
+    font-size: var(--font-size-sm);
+
+    a {
+      color: var(--color-text-secondary);
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        color: var(--color-primary);
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .archive-empty {
+    padding: var(--spacing-xl) 0;
+    color: var(--color-text-secondary);
+  }
+
+  // Closes the page with what is open, rather than ending on the last finished
+  // event — someone reading about a class they missed is a warm lead.
+  .archive-upcoming {
+    margin-top: var(--spacing-2xl);
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid var(--color-hairline);
+  }
+
+  .archive-upcoming__heading {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .archive-upcoming__more {
+    margin-top: var(--spacing-lg);
+
+    a {
+      color: var(--color-primary);
+      font-weight: var(--font-weight-medium);
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        text-decoration: underline;
+      }
+    }
+  }
+
   .events-grid {
     display: grid;
     // auto-FILL, not auto-fit: grouping by month means a one-event month is
@@ -387,6 +819,12 @@ const breadcrumbSchema = {
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
       gap: var(--spacing-md);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .archive-filters__chip {
+      transition: none;
     }
   }
 

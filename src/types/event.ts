@@ -2,6 +2,12 @@ export interface EventContent {
   title: string;
   description: string;
   /**
+   * One written sentence for the card. Not yet a field in the Storyblok
+   * schema — cards fall back to a word-boundary trim of `description` until it
+   * is added and authored.
+   */
+  excerpt?: string;
+  /**
    * Start date and time, stored by Storyblok as a naive `'YYYY-MM-DD HH:mm'`
    * string with no timezone. Never pass it to `new Date()` directly — use
    * `parseSingaporeDate` / `getEventTiming` from `src/lib/eventDates.ts`, which

@@ -512,4 +512,32 @@ describe('groupByYearMonth', () => {
   it('returns an empty array for no items', () => {
     expect(groupByYearMonth([], (i: { at: Date }) => i.at)).toEqual([]);
   });
+
+  it('orders soonest first when asked, at every level', () => {
+    const groups = groupByYearMonth(
+      [
+        item('2026-09-13 10:00'),
+        item('2026-08-05 19:00'),
+        item('2027-01-04 10:00'),
+        item('2026-08-22 09:00'),
+      ],
+      (i) => i.at,
+      { order: 'oldest' }
+    );
+
+    expect(groups.map((g) => g.year)).toEqual([2026, 2027]);
+    expect(groups[0].months.map((m) => m.month)).toEqual([8, 9]);
+    expect(groups[0].months[0].items.map((i) => i.id)).toEqual([
+      '2026-08-05 19:00',
+      '2026-08-22 09:00',
+    ]);
+  });
+
+  it('still defaults to newest first, so the archive is unaffected', () => {
+    const groups = groupByYearMonth(
+      [item('2026-08-05 19:00'), item('2026-09-13 10:00')],
+      (i) => i.at
+    );
+    expect(groups[0].months.map((m) => m.month)).toEqual([9, 8]);
+  });
 });

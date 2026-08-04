@@ -10,6 +10,8 @@ import {
   formatShortDate,
   formatDateBadge,
   resolveDurationLabel,
+  formatPrice,
+  formatRowDate,
 } from './eventFormat';
 
 /**
@@ -329,5 +331,70 @@ describe('formatShortDate', () => {
     expect(
       formatShortDate(parseSingaporeDate('2026-03-14 13:00') as Date)
     ).toBe('14 Mar 2026');
+  });
+});
+
+describe('formatPrice', () => {
+  it('normalises the dollar-prefixed form the CMS mostly holds', () => {
+    expect(formatPrice('$88')).toBe('S$88');
+  });
+
+  it('normalises a bare number', () => {
+    expect(formatPrice('88')).toBe('S$88');
+  });
+
+  it('leaves an already-correct value alone', () => {
+    expect(formatPrice('S$120')).toBe('S$120');
+  });
+
+  it('renders a range with an en dash and one currency mark', () => {
+    expect(formatPrice('$38-$138')).toBe('S$38–138');
+    expect(formatPrice('38 - 138')).toBe('S$38–138');
+  });
+
+  it('title-cases free', () => {
+    expect(formatPrice('Free')).toBe('Free');
+    expect(formatPrice('free')).toBe('Free');
+    expect(formatPrice('FREE')).toBe('Free');
+  });
+
+  it('keeps decimals when they carry cents', () => {
+    expect(formatPrice('$88.50')).toBe('S$88.50');
+  });
+
+  it('drops a trailing .00 that adds nothing', () => {
+    expect(formatPrice('$88.00')).toBe('S$88');
+  });
+
+  it('returns unparseable text unchanged rather than losing information', () => {
+    expect(formatPrice('Pay what you feel')).toBe('Pay what you feel');
+    expect(formatPrice('$88 per person')).toBe('$88 per person');
+  });
+
+  it('returns null for an unset price', () => {
+    expect(formatPrice(undefined)).toBeNull();
+    expect(formatPrice('')).toBeNull();
+    expect(formatPrice('   ')).toBeNull();
+  });
+});
+
+describe('formatRowDate', () => {
+  it('renders the archive row date column in caps with a 24-hour time', () => {
+    expect(
+      formatRowDate(parseSingaporeDate('2026-08-01 10:30') as Date)
+    ).toEqual({ date: 'SAT 1 AUG', time: '10:30' });
+  });
+
+  it('pads the hour so the mono column stays aligned', () => {
+    expect(
+      formatRowDate(parseSingaporeDate('2026-07-31 09:05') as Date)
+    ).toEqual({ date: 'FRI 31 JUL', time: '09:05' });
+  });
+
+  it('reads calendar parts in Singapore time, not the runtime zone', () => {
+    // 2026-01-01 00:30 SGT is still 2025-12-31 in UTC.
+    expect(
+      formatRowDate(parseSingaporeDate('2026-01-01 00:30') as Date)
+    ).toEqual({ date: 'THU 1 JAN', time: '00:30' });
   });
 });

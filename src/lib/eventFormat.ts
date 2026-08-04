@@ -227,6 +227,55 @@ export function resolveDurationLabel(
   return formatDurationLabel(duration);
 }
 
+/**
+ * The archive row's mono date column: `{ date: 'SAT 1 AUG', time: '10:30' }`.
+ *
+ * A 24-hour, zero-padded time so the column stays optically aligned down a
+ * list of 32 rows — `formatTime`'s `10:30 am` / `9:05 am` does not.
+ */
+export function formatRowDate(date: Date): { date: string; time: string } {
+  const { weekday, day, month } = getSingaporeParts(date);
+  const { hour, minute } = singaporeTimeParts(date);
+
+  return {
+    date: `${WEEKDAYS_SHORT[weekday]} ${day} ${shortMonth(month)}`.toUpperCase(),
+    time: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+  };
+}
+
+/**
+ * `price` is a free-text CMS field and has drifted accordingly — `$88`, a bare
+ * `88`, `$38-$138`, `Free`, `S$120`. This normalises the shapes it can read to
+ * `S$88` / `S$38–138` / `Free`, and returns anything else untouched: a price
+ * this cannot parse is still information the reader needs.
+ */
+const PRICE_REGEX =
+  /^(?:S?\$)?\s*(\d+(?:\.\d+)?)(?:\s*[-–—]\s*(?:S?\$)?\s*(\d+(?:\.\d+)?))?$/;
+
+/** `88.00` reads as `88`; `88.50` keeps its cents. */
+const trimAmount = (amount: string) => {
+  const value = Number(amount);
+  return Number.isInteger(value) ? String(value) : amount;
+};
+
+export function formatPrice(
+  price: string | number | null | undefined
+): string | null {
+  if (price === null || price === undefined) return null;
+
+  const raw = String(price).trim();
+  if (raw === '') return null;
+  if (raw.toLowerCase() === 'free') return 'Free';
+
+  const match = PRICE_REGEX.exec(raw);
+  if (!match) return raw;
+
+  const [, from, to] = match;
+  return to
+    ? `S$${trimAmount(from)}${TIGHT_RANGE}${trimAmount(to)}`
+    : `S$${trimAmount(from)}`;
+}
+
 /** `1 hour` / `1.5 hours`, or `null` for the unset values the CMS holds. */
 export function formatDurationLabel(
   duration: number | string | null | undefined
