@@ -1,0 +1,133 @@
+---
+/**
+ * The Upcoming / Past segmented control, rendered at the top of both
+ * `/events/` and `/events/archive/`.
+ *
+ * Two real links to two real URLs, not a JS tab widget: both pages must stay
+ * independently crawlable and linkable. Replaces the `.archive-link` aside,
+ * which sat after the full upcoming grid — six screens down on desktop, ten
+ * plus on mobile — and was the least visible interactive element on a page
+ * where every other action is a 44px bordered or filled button.
+ */
+
+export interface Props {
+  active: 'upcoming' | 'past';
+  upcomingCount: number;
+  pastCount: number;
+  /** One line of context below the strip. Omitted when there is nothing to say. */
+  context?: string | null;
+}
+
+const { active, upcomingCount, pastCount, context = null } = Astro.props;
+
+// The pair contrasts time, not page names: "Classes & Events" as a tab label
+// would restate the H1 directly above it, which is the redundancy the old
+// "Upcoming Classes & Events" heading was removed for. "Classes & Events" and
+// "Past events" remain the standardised names in the nav, footer and H1s.
+const tabs = [
+  {
+    key: 'upcoming',
+    label: 'Upcoming',
+    href: '/events/',
+    count: upcomingCount,
+  },
+  {
+    key: 'past',
+    label: 'Past events',
+    href: '/events/archive/',
+    count: pastCount,
+  },
+] as const;
+---
+
+<nav class="events-tabs" aria-label="Events">
+  <ul class="events-tabs__list">
+    {
+      tabs.map((tab) => (
+        <li>
+          <a
+            href={tab.href}
+            class:list={[
+              'events-tabs__tab',
+              { 'is-active': tab.key === active },
+            ]}
+            aria-current={tab.key === active ? 'page' : undefined}
+          >
+            {tab.label}
+            <span class="events-tabs__count">{tab.count}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+{context && <p class="events-tabs__context">{context}</p>}
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  .events-tabs {
+    border-bottom: 1px solid var(--color-hairline);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .events-tabs__list {
+    display: flex;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  // The active tab's 2px rule sits on top of the container's 1px hairline
+  // rather than below it, so the two read as one edge.
+  .events-tabs__tab {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--spacing-xs);
+    padding: 12px 18px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    color: var(--color-primary);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+
+    &:hover,
+    &:focus-visible {
+      border-bottom-color: var(--color-primary-light);
+    }
+
+    &.is-active {
+      color: var(--color-text-primary);
+      border-bottom-color: var(--color-gray-900);
+    }
+  }
+
+  .events-tabs__count {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+  }
+
+  .events-tabs__context {
+    margin: 0 0 var(--spacing-xl);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    max-width: 72ch;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .events-tabs__tab {
+      transition: none;
+    }
+  }
+</style>

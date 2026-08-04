@@ -444,14 +444,24 @@ export function getMonthLabel(month: number): string {
   return MONTH_NAMES[month - 1] ?? '';
 }
 
+export interface GroupOrderOptions {
+  /**
+   * `'newest'` (the default) reads backwards from now, which is what an
+   * archive wants. `'oldest'` reads forwards, which is what an upcoming list
+   * wants — the next class must come first.
+   */
+  order?: 'newest' | 'oldest';
+}
+
 /**
- * Group items into Year → Month buckets for the archive, newest first at every
- * level. Grouping uses Singapore calendar parts, so a 23:30 event on 30 June
- * files under June rather than leaking into July via UTC.
+ * Group items into Year → Month buckets, newest first at every level unless
+ * `order: 'oldest'` is given. Grouping uses Singapore calendar parts, so a
+ * 23:30 event on 30 June files under June rather than leaking into July via UTC.
  */
 export function groupByYearMonth<T>(
   items: readonly T[],
-  getDate: (item: T) => Date
+  getDate: (item: T) => Date,
+  options: GroupOrderOptions = {}
 ): ArchiveYear<T>[] {
   const byYear = new Map<number, Map<number, T[]>>();
 
@@ -462,22 +472,26 @@ export function groupByYearMonth<T>(
     byYear.set(year, months);
   }
 
-  const newestFirst = (a: T, b: T) =>
-    getDate(b).getTime() - getDate(a).getTime();
+  // One direction flag drives all three levels, so a year, its months and its
+  // items can never disagree about which way the list reads.
+  const descending = options.order !== 'oldest';
+  const byKey = (a: number, b: number) => (descending ? b - a : a - b);
+  const byDate = (a: T, b: T) =>
+    byKey(getDate(a).getTime(), getDate(b).getTime());
 
   return [...byYear.entries()]
-    .sort(([a], [b]) => b - a)
+    .sort(([a], [b]) => byKey(a, b))
     .map(([year, months]) => ({
       year,
       anchor: `y${year}`,
       total: [...months.values()].reduce((sum, list) => sum + list.length, 0),
       months: [...months.entries()]
-        .sort(([a], [b]) => b - a)
+        .sort(([a], [b]) => byKey(a, b))
         .map(([month, list]) => ({
           month,
           label: getMonthLabel(month),
           anchor: `m${year}-${pad(month)}`,
-          items: [...list].sort(newestFirst),
+          items: [...list].sort(byDate),
         })),
     }));
 }

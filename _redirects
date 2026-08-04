@@ -35,6 +35,13 @@
 # /workshop /workshops 301
 # /contact /contacts 301
 
+# Event slugs corrected in Storyblok (see docs/reports/events-cms-punchlist.md).
+# Two were misspelled; the third was the events folder's start page, so it had
+# taken the folder's own slug and resolved at /events/events/.
+/events/handpan-masterclass-with-takao-minemoto-for-singapore-handpan-communtiy/ /events/handpan-masterclass-with-takao-minemoto-for-singapore-handpan-community/ 301
+/events/advance-yoru-handpan-playing-skiils/ /events/advance-your-handpan-playing-skills/ 301
+/events/events/ /events/handpan-essentials-with-peter-bognar/ 301
+
 
 
 
