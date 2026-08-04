@@ -148,6 +148,15 @@ const thumbnailSrcSet = storyblokSrcSet(
 
     display: grid;
     grid-template-columns: var(--row-columns) auto;
+
+    // `display: grid` is an author rule and outranks the user agent's
+    // `[hidden] { display: none }`, so the archive filter — which works by
+    // setting `row.hidden` — left every non-matching row on screen while the
+    // counts above them said otherwise. Any element given an explicit
+    // `display` needs this reset to stay hideable.
+    &[hidden] {
+      display: none;
+    }
     gap: var(--spacing-md);
     align-items: center;
     min-height: 44px;
