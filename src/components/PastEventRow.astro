@@ -21,20 +21,29 @@ import { formatRowDate, formatShortDate } from '../lib/eventFormat';
 
 export interface Props {
   event: EventStory;
-  /** End of the event's final occurrence — how the archive files it. */
-  ranAt: Date;
+  /** Start of the event's final occurrence — the time it began. */
+  ranFrom: Date;
+  /** End of that occurrence — the instant the archive files the event under. */
+  ranTo: Date;
   /** The same class running again, when one was matched. */
-  runsAgainAt?: Date | null;
+  runsAgain?: { at: Date; url: string } | null;
 }
 
-const { event, ranAt, runsAgainAt = null } = Astro.props;
+const { event, ranFrom, ranTo, runsAgain = null } = Astro.props;
 
 /** The thumbnail paints at 68×51; 160×120 covers a 2× display. */
 const THUMB_WIDTH = 160;
 const THUMB_HEIGHT = 120;
 
 const eventUrl = `/events/${event.slug}/`;
-const { date, time } = formatRowDate(ranAt);
+
+// The date comes from the occurrence's END because that is what the archive
+// groups on — reading the start would print "30 APR" under a "MAY 2026"
+// heading for an event that ran 30 April to 2 May. The time still comes from
+// the start, which is the useful fact ("it began at 10:30"), and for the
+// single-day events that make up nearly all of the archive the two agree.
+const { date } = formatRowDate(ranTo);
+const { time } = formatRowDate(ranFrom);
 
 const category = getEventCategory(event.content.tags);
 const meta = [
@@ -78,56 +87,74 @@ const thumbnail = event.content.image
         )
       }
     </span>
-
-    {
-      /* "Runs again" is the one fact this row exists to surface and it appears
-        nowhere else in the row, so it stays in the link's accessible name.
-        Only the arrow, and the "Details" label that merely restates the link,
-        are hidden from assistive tech. */
-    }
-    <span class:list={['past-row__action', { 'is-recurring': runsAgainAt }]}>
-      {
-        runsAgainAt ? (
-          <>
-            Runs again {formatShortDate(runsAgainAt)}
-            <span aria-hidden="true"> →</span>
-          </>
-        ) : (
-          <span aria-hidden="true">Details →</span>
-        )
-      }
-    </span>
   </a>
+
+  {
+    /* Column 4. Always a sibling of the row link, never a child: an anchor
+       cannot contain another anchor, and the link spans only the first three
+       columns — nesting this inside it would wrap the action onto a second
+       line.
+
+       "Details →" merely restates the link beside it, so it stays decorative
+       and hidden from assistive tech. "Runs again" is a real link to the
+       upcoming class, because that is what the label promises: pointing it at
+       the finished event would send a warm lead to the very page telling them
+       they missed it. The row itself still opens the archived event, so both
+       remain reachable. */
+    runsAgain ? (
+      <a class="past-row__action is-recurring" href={runsAgain.url}>
+        Runs again {formatShortDate(runsAgain.at)}
+        <span aria-hidden="true"> →</span>
+      </a>
+    ) : (
+      <span class="past-row__action" aria-hidden="true">
+        Details →
+      </span>
+    )
+  }
 </li>
 
 <style lang="scss">
   @use 'src/styles/tokens.scss';
 
+  // The row owns the grid so the action can be a sibling of the row link
+  // rather than nested inside it. Columns are declared once and reused by the
+  // link, which spans all but the last of them.
   .past-row {
-    background: var(--color-surface);
-    border-bottom: 1px solid var(--color-hairline);
+    --row-columns: 92px 68px 1fr;
 
-    &:last-child {
-      border-bottom: 0;
-    }
-  }
-
-  // The whole row is one link — no nested interactive elements, so the row is
-  // a single tab stop.
-  .past-row__link {
     display: grid;
-    grid-template-columns: 92px 68px 1fr auto;
+    grid-template-columns: var(--row-columns) auto;
     gap: var(--spacing-md);
     align-items: center;
     min-height: 44px;
     padding: var(--spacing-md) var(--spacing-lg);
-    color: inherit;
-    text-decoration: none;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-hairline);
     transition: background-color var(--transition-fast);
 
+    &:last-child {
+      border-bottom: 0;
+    }
+
     &:hover,
-    &:focus-visible {
+    &:focus-within {
       background: var(--color-gray-50);
+    }
+  }
+
+  .past-row__link {
+    display: grid;
+    grid-column: 1 / 4;
+    grid-template-columns: var(--row-columns);
+    gap: var(--spacing-md);
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
     }
   }
 
@@ -183,17 +210,24 @@ const thumbnail = event.content.image
     font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
     white-space: nowrap;
+    text-decoration: none;
 
     // A past event that runs again is the one thing on this page a warm lead
-    // can act on, so it gets the bronze.
+    // can act on, so it gets the bronze. It is also a real link, unlike the
+    // decorative "Details" label.
     &.is-recurring {
       color: var(--color-primary);
       font-weight: var(--font-weight-medium);
+
+      &:hover,
+      &:focus-visible {
+        text-decoration: underline;
+      }
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .past-row__link {
+    .past-row {
       transition: none;
     }
   }
@@ -201,10 +235,16 @@ const thumbnail = event.content.image
   // The thumbnail is the first thing to go: at this width the title and its
   // meta line need the room more than a 68px photo does.
   @media (max-width: 768px) {
-    .past-row__link {
-      grid-template-columns: 92px 1fr;
+    .past-row {
+      --row-columns: 92px 1fr;
+
+      grid-template-columns: var(--row-columns);
       gap: var(--spacing-sm) var(--spacing-md);
       padding: var(--spacing-md);
+    }
+
+    .past-row__link {
+      grid-column: 1 / 3;
     }
 
     .past-row__thumb {

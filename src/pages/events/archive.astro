@@ -105,10 +105,17 @@ const filters = [
  * just learned they missed something is offered the next date instead of a dead
  * end. Conservative — see `findRunsAgainMatch`; a miss simply reads "Details".
  */
-const runsAgainBySlug = new Map<string, Date>();
+const runsAgainBySlug = new Map<string, { at: Date; url: string }>();
 for (const item of pastEvents) {
   const match = findRunsAgainMatch(item, upcomingEvents);
-  if (match?.next) runsAgainBySlug.set(item.story.slug, match.next.start);
+  if (match?.next) {
+    runsAgainBySlug.set(item.story.slug, {
+      at: match.next.start,
+      // The matched class's own URL, not the finished event's — the label
+      // promises the next run, so that is where it has to lead.
+      url: `/events/${match.story.slug}/`,
+    });
+  }
 }
 
 /**
@@ -306,8 +313,9 @@ const breadcrumbSchema = {
                   {month.items.map((item) => (
                     <PastEventRow
                       event={item.story}
-                      ranAt={item.last!.start}
-                      runsAgainAt={runsAgainBySlug.get(item.story.slug) ?? null}
+                      ranFrom={item.last!.start}
+                      ranTo={item.last!.end}
+                      runsAgain={runsAgainBySlug.get(item.story.slug) ?? null}
                     />
                   ))}
                 </ul>
@@ -358,6 +366,15 @@ const breadcrumbSchema = {
       }
     </div>
   </main>
+
+  {
+    /* The upcoming cards closing this page carry the same booking CTAs and
+      availability badges as /events/, so they need the same reconciliation —
+      without it the archive could offer a booking link for a sold-out session,
+      or show a stale Sold Out for one that has reopened. Past rows emit none
+      of the hooks this script looks for, so it ignores them. */
+  }
+  <script src="../../scripts/availability-hydration.ts"></script>
 
   <script>
     /**
