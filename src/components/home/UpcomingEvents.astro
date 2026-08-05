@@ -1,10 +1,12 @@
 ---
 import { getStoryblokClient } from '../../lib/storyblok';
 import HomeEventCard from './HomeEventCard.astro';
-import type { EventStory } from '../../types/event';
+import { fetchEventStories, partitionEvents } from '../../lib/eventsApi';
+import type { EventListItem } from '../../lib/eventsApi';
 
-let allUpcomingEvents: EventStory[] = [];
-let totalUpcoming = 0;
+const FEATURED_COUNT = 3;
+
+let upcomingEvents: EventListItem[] = [];
 
 try {
   const runtime = Astro.locals.runtime;
@@ -12,29 +14,19 @@ try {
     runtime?.env?.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
   const storyblokApi = getStoryblokClient(token);
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
-  const now = new Date().toISOString().slice(0, 10) + ' 00:00';
 
-  const { data } = await storyblokApi.get('cdn/stories', {
-    starts_with: 'events/',
-    content_type: 'event',
-    sort_by: 'content.date:asc',
-    filter_query: {
-      date: { gt_date: now },
-    },
-    version: storyblokVersion,
-    resolve_assets: 1,
-  });
-
-  if (data?.stories && data.stories.length > 0) {
-    allUpcomingEvents = data.stories;
-    totalUpcoming = data.stories.length;
-  }
+  // This used to filter server-side on `content.date > today`. Storyblok can
+  // only compare the stored first-occurrence date, so that hid a multi-day
+  // event partway through its run and every recurring series after its opening
+  // week. Partitioning has to happen in JS now.
+  const events = await fetchEventStories(storyblokApi, storyblokVersion);
+  upcomingEvents = partitionEvents(events, new Date()).upcoming;
 } catch (error) {
   console.error('UpcomingEvents: Failed to load from Storyblok', error);
 }
 
-const displayEvents = allUpcomingEvents.slice(0, 3);
-const hasMoreEvents = totalUpcoming > 3;
+const displayEvents = upcomingEvents.slice(0, FEATURED_COUNT);
+const hasMoreEvents = upcomingEvents.length > FEATURED_COUNT;
 ---
 
 {
@@ -52,8 +44,12 @@ const hasMoreEvents = totalUpcoming > 3;
         </div>
 
         <div class="upcoming-events__grid">
-          {displayEvents.map((event) => (
-            <HomeEventCard event={event} />
+          {displayEvents.map((item) => (
+            <HomeEventCard
+              event={item.story}
+              timing={item.timing}
+              next={item.next}
+            />
           ))}
         </div>
 

@@ -1,21 +1,55 @@
 ---
 import type { EventStory } from '../../types/event';
+import {
+  getEventTiming,
+  getNextOccurrence,
+  type EventOccurrence,
+  type EventTiming,
+} from '../../lib/eventDates';
+import { getAcuityHooks } from '../../lib/eventsApi';
+import {
+  formatDateBadge,
+  formatEventDateRange,
+  formatOccurrenceLabel,
+  formatRecurrenceLabel,
+} from '../../lib/eventFormat';
 
 export interface Props {
   event: EventStory;
+  /** Precomputed by `partitionEvents`; derived here for standalone callers. */
+  timing?: EventTiming | null;
+  next?: EventOccurrence | null;
 }
 
-const { event } = Astro.props;
+const { event, timing, next } = Astro.props;
 const status = event.content.sold_out_override
   ? 'sold_out'
   : event.content.availability_status || 'available';
 const isSoldOut = status === 'sold_out';
 
-const eventDate = new Date(event.content.date);
-const month = eventDate
-  .toLocaleDateString('en-SG', { month: 'short' })
-  .toUpperCase();
-const day = eventDate.getDate();
+const eventTiming = timing ?? getEventTiming(event.content);
+const nextOccurrence =
+  next ?? (eventTiming ? getNextOccurrence(eventTiming, new Date()) : null);
+
+// The badge shows the session you can actually attend — for a series that is
+// the next occurrence, not the first one, which may be months in the past.
+// Parts are read in Singapore time; `getDate()` read the runtime's zone, so on
+// Workers (UTC) a morning class showed the previous day.
+const { month, day } = formatDateBadge(eventTiming, nextOccurrence);
+
+const recurrenceLabel = eventTiming ? formatRecurrenceLabel(eventTiming) : null;
+// A span crossing a month cannot fit the chip, so the full range is spelled out
+// here instead of being mangled into "APR 30–2". Recurring spans need this just
+// as much — excluding them left a 30 Apr–2 May session showing only "APR 30" —
+// and for those the range comes from the advertised occurrence, not the first.
+const dateRangeLabel = !eventTiming?.isMultiDay
+  ? null
+  : recurrenceLabel && nextOccurrence
+    ? formatOccurrenceLabel(nextOccurrence)
+    : formatEventDateRange(eventTiming);
+
+// A series must not advertise its first class instance — see `getAcuityHooks`.
+const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
 
 const eventUrl = `/events/${event.slug}/`;
 
@@ -32,9 +66,12 @@ const imageUrl = event.content.image?.filename
 
 <article
   class="home-event-card"
-  data-acuity-class-id={event.content.acuity_class_id || undefined}
-  data-acuity-appointment-type-id={event.content.acuity_appointment_type_id ||
-    undefined}
+  data-acuity-class-id={acuityHooks.classId}
+  data-acuity-appointment-type-id={acuityHooks.appointmentTypeId}
+  data-acuity-month={acuityHooks.month}
+  data-acuity-time={acuityHooks.time}
+  data-booking-url={event.content.booking_url || undefined}
+  data-sold-out-override={event.content.sold_out_override ? 'true' : undefined}
 >
   <a href={eventUrl} class="home-event-card__image-link">
     <div class="home-event-card__image-wrapper">
@@ -94,6 +131,17 @@ const imageUrl = event.content.image?.filename
       <span>{event.content.location}</span>
     </div>
 
+    {
+      recurrenceLabel && (
+        <p class="home-event-card__recurrence">{recurrenceLabel}</p>
+      )
+    }
+    {
+      dateRangeLabel && (
+        <p class="home-event-card__recurrence">{dateRangeLabel}</p>
+      )
+    }
+
     <p class="home-event-card__description">{event.content.description}</p>
 
     {
@@ -118,10 +166,15 @@ const imageUrl = event.content.image?.filename
     </div>
 
     {
+      /* A sold-out CTA stays a <span>, not an href-less <a>, which would not be
+         keyboard accessible. Hydration swaps the element outright when live
+         availability disagrees — see availability-hydration.ts. */
       isSoldOut ? (
         <span
           class="home-event-card__cta home-event-card__cta--disabled"
           data-booking-cta
+          data-cta-class="home-event-card__cta"
+          data-cta-disabled-class="home-event-card__cta--disabled"
         >
           Sold Out
         </span>
@@ -132,11 +185,13 @@ const imageUrl = event.content.image?.filename
           target="_blank"
           rel="noopener noreferrer"
           data-booking-cta
+          data-cta-class="home-event-card__cta"
+          data-cta-disabled-class="home-event-card__cta--disabled"
         >
           Book Now
         </a>
       ) : (
-        <a href={eventUrl} class="home-event-card__cta" data-booking-cta>
+        <a href={eventUrl} class="home-event-card__cta">
           Learn More
         </a>
       )
@@ -243,6 +298,17 @@ const imageUrl = event.content.image?.filename
         color: var(--color-primary);
       }
     }
+  }
+
+  // Shares the location line's mono-caps treatment, but in bronze so a repeating
+  // class reads as a standing fixture rather than another metadata row.
+  .home-event-card__recurrence {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin: calc(var(--space-3) * -1) 0 var(--space-3);
   }
 
   .home-event-card__location {

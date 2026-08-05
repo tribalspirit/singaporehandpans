@@ -1,49 +1,110 @@
 ---
 import type { EventStory } from '../types/event';
+import { getEventCategory, getLevelLabel } from '../utils/tags';
+import { getAcuityHooks } from '../lib/eventsApi';
+import { storyblokImage, storyblokSrcSet } from '../lib/storyblokImage';
+import { isStudioLocation } from '../lib/eventLocation';
+import {
+  getEventTiming,
+  getNextOccurrence,
+  getSingaporeParts,
+  type EventOccurrence,
+  type EventTiming,
+} from '../lib/eventDates';
+import {
+  resolveDurationLabel,
+  formatEventDateRange,
+  formatEventTimeRange,
+  formatOccurrenceLabel,
+  formatRecurrenceLabel,
+  formatSeriesSpanLabel,
+  formatPrice,
+} from '../lib/eventFormat';
 
 export interface Props {
   event: EventStory;
   isPast?: boolean;
+  /** Precomputed by `partitionEvents`; derived here for standalone callers. */
+  timing?: EventTiming | null;
+  next?: EventOccurrence | null;
+  /**
+   * Above-the-fold cards load their image eagerly. Everything else stays lazy —
+   * previously the whole grid was lazy, including the first row, which delayed
+   * the largest contentful paint on purpose.
+   */
+  eager?: boolean;
 }
 
-const { event, isPast = false } = Astro.props;
+const { event, isPast = false, timing, next, eager = false } = Astro.props;
 
-// Normalize tags to always be an array (handles string from Storyblok or array from fallback)
-const normalizeTags = (tags: string | string[] | undefined): string[] => {
-  if (!tags) return [];
-  if (Array.isArray(tags)) return tags;
-  if (typeof tags === 'string')
-    return tags
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean);
-  return [];
-};
+/**
+ * The **1× CSS size** of the image well, which is what `srcset`'s `w`
+ * descriptors and `sizes` are measured against — not a pre-doubled value.
+ * Doubling here instead would have the browser fetch 2× of an already-2×
+ * asset. `storyblokSrcSet` derives the 2× and 3× candidates.
+ */
+// 16:10, matching `aspect-ratio` on `.event-image`. At 350x200 (7:4) the
+// browser's `object-fit: cover` cropped Storyblok's already face-aware
+// transform a second time, discarding 8.6% of its width — which can remove
+// exactly the subject the smart crop was keeping near an edge.
+const WELL_WIDTH = 350;
+const WELL_HEIGHT = 219;
 
-const eventTags = normalizeTags(event.content.tags);
+/** Fallback for browsers without `srcset`; also sets the intrinsic ratio. */
+const FALLBACK_DENSITY = 2;
+const IMAGE_WIDTH = WELL_WIDTH * FALLBACK_DENSITY;
+const IMAGE_HEIGHT = WELL_HEIGHT * FALLBACK_DENSITY;
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-SG', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
-
-const formatTime = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-SG', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
-};
+/** Fallback excerpt length, cut on a word boundary rather than mid-word. */
+const EXCERPT_LIMIT = 160;
 
 const eventUrl = `/events/${event.slug}/`;
-const eventDate = new Date(event.content.date);
-const isUpcoming = eventDate >= new Date();
+
+// One category chip and one collapsed level string, instead of a run of four
+// identical chips mixing two taxonomies.
+const category = getEventCategory(event.content.tags);
+const levelLabel = getLevelLabel(event.content.tags);
+
+const now = new Date();
+const eventTiming = timing ?? getEventTiming(event.content);
+const nextOccurrence =
+  next ?? (eventTiming ? getNextOccurrence(eventTiming, now) : null);
+
+// A recurring class shows its cadence rather than one specific date; past ones
+// show the span they ran for, since they appear once in the archive, not once
+// per session.
+const recurrenceLabel = eventTiming ? formatRecurrenceLabel(eventTiming) : null;
+const seriesSpanLabel =
+  isPast && eventTiming ? formatSeriesSpanLabel(eventTiming) : null;
+
+// For a live series the headline date is the next session, not the first one
+// (which may be months ago). For a one-off it is the event's own span.
+const showNextSession = Boolean(recurrenceLabel && nextOccurrence && !isPast);
+const dateLabel = eventTiming ? formatEventDateRange(eventTiming) : '';
+const timeLabel = eventTiming ? formatEventTimeRange(eventTiming) : '';
+
+const isSameSingaporeDay = (a: Date, b: Date) => {
+  const left = getSingaporeParts(a);
+  const right = getSingaporeParts(b);
+  return (
+    left.year === right.year &&
+    left.month === right.month &&
+    left.day === right.day
+  );
+};
+
+// Past cards carry no badge at all. Otherwise: a session under way says so
+// (previously these read "Upcoming" right up until they were dropped from the
+// page mid-class), then today — and nothing otherwise. Every card on the
+// upcoming page used to read "Upcoming", inside a section that said so too, so
+// the badge drew the eye without carrying information.
+const statusBadge = (() => {
+  if (isPast || !nextOccurrence) return null;
+  if (nextOccurrence.start <= now && now <= nextOccurrence.end) {
+    return 'Happening now';
+  }
+  return isSameSingaporeDay(nextOccurrence.start, now) ? 'Today' : null;
+})();
 
 const isSoldOut =
   event.content.sold_out_override ||
@@ -55,23 +116,87 @@ const availabilityLabel: Record<string, string> = {
   sold_out: 'Sold Out',
 };
 
-const formatDuration = (hours: number) =>
-  hours === 1 ? '1 hour' : `${hours} hours`;
+// A duration beside an exact time range is noise — "1.5 hours" next to
+// "10:30 am – 12:00 pm" restates it. It survives only where no range is shown
+// at all, which means a series summarised by its cadence alone.
+//
+// Keying this off `recurrenceLabel` was not enough: a live series also prints
+// "Next: Thu, 6 Aug, 10:30 am – 12:00 pm", which is a range. That went unseen
+// until the first genuinely recurring class existed in the CMS.
+const showsTimeRange = !recurrenceLabel || showNextSession;
+const durationLabel = showsTimeRange
+  ? null
+  : resolveDurationLabel(eventTiming, event.content.duration);
+
+const priceLabel = formatPrice(event.content.price);
+
+// Shown only when it is somewhere other than the studio. The default is stated
+// once at page level, under the tabs.
+const locationLabel = isStudioLocation(event.content.location)
+  ? null
+  : event.content.location;
+
+const imageSrc = storyblokImage(
+  event.content.image?.filename,
+  IMAGE_WIDTH,
+  IMAGE_HEIGHT
+);
+// Densities chosen against measured well widths, not picked round: the grid
+// puts 361-466px slots on desktop and up to 718px at the 768px breakpoint.
+// 1.5x (525w) serves desktop 1x, which would otherwise jump to 700w for a
+// 380px slot; 2.25x (788w) serves desktop 2x, which needs ~750 and would
+// otherwise jump to 1050w. 4x (1400w) is the ceiling: a 2x tablet at the 768px
+// breakpoint wants 1436, and the 2.5% shortfall is not worth another variant.
+const imageSrcSet = storyblokSrcSet(
+  event.content.image?.filename,
+  WELL_WIDTH,
+  WELL_HEIGHT,
+  { densities: [1, 1.5, 2.25, 3, 4] }
+);
+
+/**
+ * A one-sentence `excerpt` when the CMS has one; otherwise the description cut
+ * on a word boundary. The old `substring(0, 120)` cut mid-word and, on entries
+ * whose description opens with a bullet list, cut inside the list.
+ */
+const excerpt = (() => {
+  const written = event.content.excerpt?.trim();
+  if (written) return written;
+
+  const description = event.content.description?.trim() ?? '';
+  if (description.length <= EXCERPT_LIMIT) return description;
+
+  const cut = description.slice(0, EXCERPT_LIMIT);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.–—-]+$/, '')}…`;
+})();
+
+// A series must not advertise its first class instance — see `getAcuityHooks`.
+const acuityHooks = getAcuityHooks(event.content, eventTiming, nextOccurrence);
 ---
 
 <article
   class={`event-card ${isPast ? 'past-event' : ''}`}
-  data-acuity-class-id={event.content.acuity_class_id || undefined}
-  data-acuity-appointment-type-id={event.content.acuity_appointment_type_id ||
-    undefined}
+  data-acuity-class-id={acuityHooks.classId}
+  data-acuity-appointment-type-id={acuityHooks.appointmentTypeId}
+  data-acuity-month={acuityHooks.month}
+  data-acuity-time={acuityHooks.time}
+  data-booking-url={event.content.booking_url || undefined}
+  data-sold-out-override={event.content.sold_out_override ? 'true' : undefined}
 >
   <div class="event-image">
     {
       event.content.image ? (
         <img
-          src={event.content.image.filename}
+          src={imageSrc}
+          srcset={imageSrcSet ?? undefined}
+          sizes="(max-width: 768px) 100vw, (max-width: 1199px) 50vw, 380px"
+          width={IMAGE_WIDTH}
+          height={IMAGE_HEIGHT}
           alt={event.content.image.alt || event.content.title}
-          loading="lazy"
+          loading={eager ? 'eager' : 'lazy'}
+          fetchpriority={eager ? 'high' : undefined}
+          decoding={eager ? 'sync' : 'async'}
         />
       ) : (
         <div class="placeholder-image">
@@ -91,11 +216,7 @@ const formatDuration = (hours: number) =>
       )
     }
 
-    {
-      !isPast && (
-        <div class="event-status">{isUpcoming ? 'Upcoming' : 'Today'}</div>
-      )
-    }
+    {statusBadge && <div class="event-status">{statusBadge}</div>}
 
     {
       !isPast && availabilityStatus !== 'available' && (
@@ -116,11 +237,10 @@ const formatDuration = (hours: number) =>
       </h3>
 
       {
-        eventTags.length > 0 && (
+        (category || levelLabel) && (
           <div class="event-tags">
-            {eventTags.map((tag) => (
-              <span class="tag">{tag}</span>
-            ))}
+            {category && <span class="tag">{category}</span>}
+            {levelLabel && <span class="event-level">{levelLabel}</span>}
           </div>
         )
       }
@@ -142,28 +262,48 @@ const formatDuration = (hours: number) =>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
         <div>
-          <div class="date">{formatDate(event.content.date)}</div>
-          <div class="time">{formatTime(event.content.date)}</div>
+          {
+            recurrenceLabel ? (
+              <>
+                <div class="date">{recurrenceLabel}</div>
+                {showNextSession && nextOccurrence && (
+                  <div class="time">
+                    Next: {formatOccurrenceLabel(nextOccurrence)}
+                  </div>
+                )}
+                {seriesSpanLabel && <div class="time">{seriesSpanLabel}</div>}
+              </>
+            ) : (
+              <>
+                <div class="date">{dateLabel}</div>
+                <div class="time">{timeLabel}</div>
+              </>
+            )
+          }
         </div>
       </div>
 
-      <div class="event-location">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-          <circle cx="12" cy="10" r="3"></circle>
-        </svg>
-        <span>{event.content.location}</span>
-      </div>
+      {
+        locationLabel && (
+          <div class="event-location">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span>{locationLabel}</span>
+          </div>
+        )
+      }
 
       {
-        event.content.price && (
+        priceLabel && (
           <div class="event-price">
             <svg
               width="16"
@@ -176,19 +316,15 @@ const formatDuration = (hours: number) =>
               <line x1="12" y1="1" x2="12" y2="23" />
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
-            <span
-              class={
-                event.content.price.toLowerCase() === 'free' ? 'free-price' : ''
-              }
-            >
-              {event.content.price}
+            <span class={priceLabel === 'Free' ? 'free-price' : ''}>
+              {priceLabel}
             </span>
           </div>
         )
       }
 
       {
-        event.content.duration && (
+        durationLabel && (
           <div class="event-duration">
             <svg
               width="16"
@@ -201,47 +337,35 @@ const formatDuration = (hours: number) =>
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            <span>~{formatDuration(event.content.duration)}</span>
+            <span>{durationLabel}</span>
           </div>
         )
       }
 
       {
-        event.content.max_participants && (
-          <div class="event-capacity">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            <span>Max {event.content.max_participants} participants</span>
-          </div>
-        )
+        /* Capacity lives on the detail page. On a card it was identical across
+          nine of ten events, so it distinguished nothing while displacing
+          what does differ. */
       }
     </div>
 
-    <p class="event-description">
-      {
-        event.content.description.length > 120
-          ? event.content.description.substring(0, 120) + '...'
-          : event.content.description
-      }
-    </p>
+    <p class="event-description">{excerpt}</p>
 
     <div class="event-actions">
       <a href={eventUrl} class="btn btn-outline"> Learn More</a>
 
       {
+        /* Sold out stays a <span> for keyboard accessibility; hydration swaps
+           the element when live availability disagrees. */
         !isPast && isSoldOut ? (
-          <span class="btn btn-primary btn-disabled">Sold Out</span>
+          <span
+            class="btn btn-primary btn-disabled"
+            data-booking-cta
+            data-cta-class="btn btn-primary"
+            data-cta-disabled-class="btn-disabled"
+          >
+            Sold Out
+          </span>
         ) : !isPast && event.content.booking_url ? (
           <a
             href={event.content.booking_url}
@@ -249,6 +373,8 @@ const formatDuration = (hours: number) =>
             target="_blank"
             rel="noopener noreferrer"
             data-booking-cta
+            data-cta-class="btn btn-primary"
+            data-cta-disabled-class="btn-disabled"
           >
             Book Now
           </a>
@@ -262,6 +388,9 @@ const formatDuration = (hours: number) =>
   @use 'src/styles/tokens.scss';
 
   .event-card {
+    // Anchors the title's stretched link below, which turns the whole card
+    // into the click target.
+    position: relative;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-lg);
@@ -278,22 +407,22 @@ const formatDuration = (hours: number) =>
       border-color: var(--color-primary-light);
     }
 
-    &.past-event {
-      opacity: 0.8;
-
-      .event-image {
-        filter: grayscale(30%);
-      }
-
-      .event-status {
-        background: var(--color-text-secondary);
-      }
+    // No dimming on past cards. `opacity: 0.8` plus `grayscale(30%)` muddied
+    // the photography — the best material on the site — and the 0.8 multiplied
+    // against already-secondary text, pushing --color-gray-600 body copy below
+    // the contrast it was chosen for. On a page where everything is past, the
+    // treatment carried no information anyway.
+    &.past-event .event-status {
+      background: var(--color-text-secondary);
     }
   }
 
   .event-image {
     position: relative;
-    height: 200px;
+    // Scales with the card instead of a fixed 200px, so a wide card is not a
+    // letterbox slot. Storyblok's smart crop picks the subject; see
+    // `storyblokImage`.
+    aspect-ratio: 16 / 10;
     overflow: hidden;
     background: var(--color-background-secondary);
 
@@ -363,31 +492,46 @@ const formatDuration = (hours: number) =>
     h3 {
       margin: 0 0 var(--spacing-sm) 0;
 
+      // No min-height on the anchor: padding a heading to 44px opened a pocket
+      // of dead space under every one-line title. The target comes from the
+      // stretched link below, which makes the whole card clickable — so the
+      // touch area is the card, not the text line.
       a {
         color: var(--color-text-primary);
         text-decoration: none;
         font-size: var(--font-size-lg);
         font-weight: var(--font-weight-semibold);
         line-height: 1.3;
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
 
         &:hover {
           color: var(--color-primary);
         }
 
-        @media (min-width: 1280px) {
-          min-height: 32px;
+        // Covers the card. Sits under the buttons, which are lifted by their
+        // own stacking context, so Book Now and Learn More stay clickable.
+        &::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--color-primary);
+          outline-offset: 2px;
         }
       }
     }
   }
 
+  // Two marks, not four chips: one category on a ground, one level as plain
+  // secondary text. A run of identical chips mixing format and level tags read
+  // as one undifferentiated list.
   .event-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-xs);
+    align-items: baseline;
+    gap: var(--spacing-xs) var(--spacing-sm);
 
     .tag {
       background: var(--color-accent-light);
@@ -396,8 +540,12 @@ const formatDuration = (hours: number) =>
       border-radius: var(--border-radius-sm);
       font-size: var(--font-size-sm);
       font-weight: var(--font-weight-medium);
-      text-transform: capitalize;
     }
+  }
+
+  .event-level {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
   }
 
   .event-details {
@@ -434,6 +582,11 @@ const formatDuration = (hours: number) =>
     }
   }
 
+  // Mono numerals, matching the date treatment.
+  .event-price span {
+    font-family: var(--font-family-mono);
+  }
+
   .event-price {
     .free-price {
       color: var(--color-success-dark);
@@ -441,18 +594,32 @@ const formatDuration = (hours: number) =>
     }
   }
 
+  // Clamped visually rather than cut in the string, so the trim is a layout
+  // concern and a full sentence survives when it fits.
   .event-description {
     color: var(--color-text-secondary);
     line-height: 1.6;
     margin-bottom: var(--spacing-lg);
     flex: 1;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
   }
 
   .event-actions {
     display: flex;
     gap: var(--spacing-sm);
     margin-top: auto;
+    // Above the title's stretched link, so the buttons remain independently
+    // clickable rather than being swallowed by the card-wide target.
+    position: relative;
+    z-index: 1;
 
+    // The primary action takes twice the width of the secondary. Equal halves
+    // read as two equally-weighted choices, so booking carried only half the
+    // card's intent.
     .btn {
       flex: 1;
       display: inline-flex;
@@ -489,12 +656,17 @@ const formatDuration = (hours: number) =>
       }
 
       &.btn-primary {
+        flex: 2;
         background: var(--color-gray-900);
         color: var(--color-white);
 
         &:hover {
           background: var(--color-gray-800);
         }
+      }
+
+      &.btn-disabled.btn-primary {
+        flex: 2;
       }
 
       &.btn-disabled {
@@ -504,6 +676,16 @@ const formatDuration = (hours: number) =>
         pointer-events: none;
         opacity: 0.7;
       }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .event-image img {
+      transition: none;
+    }
+
+    .event-image:hover img {
+      transform: none;
     }
   }
 

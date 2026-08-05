@@ -26,5 +26,9 @@
   // With checkJs enabled, `astro check` would otherwise scan minified dist/
   // bundles (crashing the gate) and the untyped scripts/ CLIs (Storyblok
   // setup/migration tooling that never ships in the app bundle).
-  "exclude": ["dist", "node_modules", ".astro", "scripts"]
+  //
+  // `coverage/` is here for the same reason: the v8 HTML reporter emits its own
+  // vendored prettify.js, so running `npm run test:coverage` before `astro
+  // check` would otherwise fail the gate on third-party output.
+  "exclude": ["dist", "node_modules", ".astro", "scripts", "coverage"]
 }

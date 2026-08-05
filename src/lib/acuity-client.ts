@@ -86,3 +86,34 @@ export function computeAvailabilityStatus(
   if (slotsAvailable <= 3) return 'few_spots';
   return 'available';
 }
+
+/**
+ * Seats left in the session a card is advertising, or `null` when that session
+ * cannot be identified.
+ *
+ * Resolution is always to **one** session, never a monthly total: an
+ * appointment type can run several classes in a month, so summing them would
+ * report a later open session's seats against a sold-out "Next".
+ *
+ * `null` (unknown) is deliberately distinct from `0` (sold out). Collapsing the
+ * two is what let a recurring series advertise itself as sold out and drop its
+ * booking link the moment its first instance fell out of the current month.
+ */
+export function resolveSlotAvailability(
+  slots: readonly AcuityClassSlot[],
+  target: { classId?: string | null; time?: string | null }
+): number | null {
+  if (target.classId) {
+    const bySlotId = slots.find((s) => String(s.id) === target.classId);
+    return bySlotId ? bySlotId.slotsAvailable : null;
+  }
+
+  if (target.time) {
+    const wanted = new Date(target.time).getTime();
+    if (Number.isNaN(wanted)) return null;
+    const byTime = slots.find((s) => new Date(s.time).getTime() === wanted);
+    return byTime ? byTime.slotsAvailable : null;
+  }
+
+  return null;
+}

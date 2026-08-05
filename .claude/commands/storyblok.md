@@ -34,24 +34,36 @@ Component schemas: `/storyblok/components/`
 
 **Location**: Content → Events folder
 
-| Field            | Required | Description                      |
-| ---------------- | -------- | -------------------------------- |
-| Title            | Yes      | Event name                       |
-| Description      | Yes      | Event details                    |
-| Date & Time      | Yes      | When it happens                  |
-| Location         | Yes      | Where it happens                 |
-| Status           | Yes      | `upcoming` or `past`             |
-| Price            | No       | Cost to attend                   |
-| Booking URL      | No       | Calendly link                    |
-| Image            | No       | Featured image                   |
-| Tags             | No       | workshop, community, performance |
-| Max Participants | No       | Capacity limit                   |
+| Field            | Required | Description                                     |
+| ---------------- | -------- | ----------------------------------------------- |
+| Title            | Yes      | Event name                                      |
+| Description      | Yes      | Event details                                   |
+| Date             | Yes      | Start. For a series, the first session          |
+| End date         | No       | Multi-day span; for a series, session one's end |
+| Recurrence       | No       | `none`/`weekly`/`biweekly`/`monthly`            |
+| Repeat until     | No       | Last date a series runs (blank = 12 month cap)  |
+| Duration         | No       | Hours; ignored when End date is set             |
+| Location         | Yes      | Where it happens                                |
+| Status           | Yes      | Legacy — only `cancelled` does anything         |
+| Price            | No       | Cost to attend                                  |
+| Booking URL      | No       | Acuity booking link                             |
+| Image            | No       | Featured image                                  |
+| Tags             | No       | workshop, community, performance, beginner, …   |
+| Max Participants | No       | Capacity limit                                  |
 
 **Tips**:
 
-- Set status to `upcoming` for future events
+- Multi-day event → one story with **End date**, never a `-day-2` duplicate
+- Repeating class → one story with **Recurrence** + **Repeat until**, never
+  one story per week
+- Upcoming vs past is derived from the dates. `/events/` shows anything not
+  yet finished; `/events/archive/` shows the rest, grouped by year and month.
+  Nothing is ever unpublished — do not set Status to `past`.
 - Add booking URL to enable "Book Now" button
 - Always **Save** and **Publish** after changes
+
+Full field guide: `docs/setup/STORYBLOK.md`. Cleanup of the pre-existing
+hand-built workarounds: `docs/content/EVENTS_MIGRATION.md`.
 
 ### Gallery Items
 

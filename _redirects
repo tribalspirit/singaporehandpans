@@ -35,6 +35,12 @@
 # /workshop /workshops 301
 # /contact /contacts 301
 
+# Corrected event slugs are NOT redirected here. `/events/[slug]` is
+# `prerender = false`, so those URLs are served by the worker and never reach
+# this asset server — a rule here would never fire. They live in
+# `src/lib/legacyRedirects.ts`, enforced by `src/middleware.ts`, alongside the
+# /gallery -> /stories/ rule and covered by unit tests.
+
 
 
 

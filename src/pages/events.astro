@@ -1,15 +1,29 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import EventCard from '../components/EventCard.astro';
+import EventsTabs from '../components/EventsTabs.astro';
 import CMSFallback from '../components/CMSFallback.astro';
 import { getStoryblokClient } from '../lib/storyblok';
 import { setEdgeCache } from '../lib/edgeCache';
+import { fetchEventStories, partitionEvents } from '../lib/eventsApi';
+import { toSingaporeIso, groupByYearMonth } from '../lib/eventDates';
+import { STUDIO_ADDRESS_LINES } from '../constants/contacts';
 import type { EventStory } from '../types/event';
 
 export const prerender = false;
 setEdgeCache(Astro.response, 'short');
 
-const FALLBACK_EVENTS = [
+const now = new Date();
+
+/**
+ * Shown only when Storyblok is unreachable. Dates are relative to now so the
+ * fallback always renders as genuinely upcoming — hardcoded 2024 dates would
+ * now be partitioned into the archive, leaving the outage page empty.
+ */
+const inDays = (days: number, time: string) =>
+  `${toSingaporeIso(new Date(now.getTime() + days * 86400000)).slice(0, 10)} ${time}`;
+
+const FALLBACK_EVENTS: EventStory[] = [
   {
     id: 'fallback-1',
     name: 'Beginner Handpan Workshop',
@@ -18,7 +32,8 @@ const FALLBACK_EVENTS = [
       title: 'Beginner Handpan Workshop',
       description:
         'Join us for an introduction to the beautiful world of handpan music. Perfect for complete beginners who want to learn the basics in a supportive environment.',
-      date: '2024-03-15T19:00:00Z',
+      date: inDays(7, '19:00'),
+      duration: 2,
       location: 'Singapore Handpan Studio',
       price: 'S$120',
       booking_url:
@@ -40,7 +55,8 @@ const FALLBACK_EVENTS = [
       title: 'Community Handpan Gathering',
       description:
         'A relaxed gathering for handpan enthusiasts to play together, share music, and connect with fellow musicians in Singapore.',
-      date: '2024-03-22T15:00:00Z',
+      date: inDays(14, '15:00'),
+      duration: 2,
       location: 'Singapore Handpan Studio',
       price: 'Free',
       tags: ['community', 'gathering'],
@@ -63,18 +79,9 @@ try {
   const storyblokApi = getStoryblokClient(token);
   const storyblokVersion = import.meta.env.PROD ? 'published' : 'draft';
 
-  const { data } = await storyblokApi.get('cdn/stories', {
-    starts_with: 'events/',
-    content_type: 'event',
-    sort_by: 'content.date:desc',
-    version: storyblokVersion,
-    resolve_assets: 1,
-  });
+  events = await fetchEventStories(storyblokApi, storyblokVersion);
 
-  if (data?.stories && data.stories.length > 0) {
-    events = data.stories as EventStory[];
-    cmsError = false;
-  } else {
+  if (events.length === 0) {
     cmsError = true;
     events = FALLBACK_EVENTS;
   }
@@ -84,26 +91,56 @@ try {
   events = FALLBACK_EVENTS;
 }
 
-const now = new Date();
-const upcomingEvents = events
-  .filter((event) => {
-    const eventDate = new Date(event.content.date);
-    return eventDate >= now;
-  })
-  .sort(
-    (a, b) =>
-      new Date(a.content.date).getTime() - new Date(b.content.date).getTime()
-  );
+// Past events live on /events/archive/ now. Keeping them here meant the page
+// grew without bound — 34 of 43 cards were finished classes.
+const { upcoming: upcomingEvents, past: pastEvents } = partitionEvents(
+  events,
+  now
+);
 
-const pastEvents = events
-  .filter((event) => {
-    const eventDate = new Date(event.content.date);
-    return eventDate < now;
-  })
-  .sort(
-    (a, b) =>
-      new Date(b.content.date).getTime() - new Date(a.content.date).getTime()
-  );
+/** How far ahead "This week" reaches. */
+const THIS_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Images above the fold load eagerly; everything below stays lazy. */
+const EAGER_CARD_COUNT = 3;
+
+// The list ran 5 Aug to 13 Sep as one undivided grid. "This week" leads,
+// because it is the single most useful cut on an upcoming list, and the rest
+// is grouped by month like the archive — soonest first, not newest first.
+const thisWeekCutoff = new Date(now.getTime() + THIS_WEEK_MS);
+const isThisWeek = (item: (typeof upcomingEvents)[number]) =>
+  item.next !== null && item.next.start <= thisWeekCutoff;
+
+const thisWeekEvents = upcomingEvents.filter(isThisWeek);
+const laterMonths = groupByYearMonth(
+  upcomingEvents.filter((item) => !isThisWeek(item)),
+  (item) => item.next!.start,
+  { order: 'oldest' }
+).flatMap((year) =>
+  year.months.map((month) => ({
+    key: month.anchor,
+    heading: `${month.label} ${year.year}`,
+    items: month.items,
+  }))
+);
+
+const groups = [
+  ...(thisWeekEvents.length > 0
+    ? [{ key: 'this-week', heading: 'This week', items: thisWeekEvents }]
+    : []),
+  ...laterMonths,
+];
+
+// Flattened in render order, so the eager flag lands on the cards that
+// actually paint first rather than on whatever the fetch returned first.
+const eagerSlugs = new Set(
+  groups
+    .flatMap((group) => group.items)
+    .slice(0, EAGER_CARD_COUNT)
+    .map((item) => item.story.slug)
+);
+
+const studioLine = `All classes at the studio, ${STUDIO_ADDRESS_LINES[0]}, unless noted.`;
 
 const seoTitle = 'Handpan Classes & Events in Singapore';
 const seoDescription =
@@ -131,34 +168,33 @@ const seoDescription =
     </header>
 
     <div class="container">
+      <EventsTabs
+        active="upcoming"
+        upcomingCount={upcomingEvents.length}
+        pastCount={pastEvents.length}
+        context={studioLine}
+      />
+
       {
-        upcomingEvents.length > 0 && (
-          <section class="events-section">
-            <h2>Upcoming Classes & Events</h2>
+        groups.map((group) => (
+          <section class="events-group">
+            <h2 class="events-group__heading">{group.heading}</h2>
             <div class="events-grid">
-              {upcomingEvents.map((event) => (
-                <EventCard event={event} />
+              {group.items.map((item) => (
+                <EventCard
+                  event={item.story}
+                  timing={item.timing}
+                  next={item.next}
+                  eager={eagerSlugs.has(item.story.slug)}
+                />
               ))}
             </div>
           </section>
-        )
+        ))
       }
 
       {
-        pastEvents.length > 0 && (
-          <section class="events-section">
-            <h2>Past Classes & Events</h2>
-            <div class="events-grid">
-              {pastEvents.map((event) => (
-                <EventCard event={event} isPast={true} />
-              ))}
-            </div>
-          </section>
-        )
-      }
-
-      {
-        events.length === 0 && (
+        upcomingEvents.length === 0 && (
           <section class="no-events">
             <h2>No Classes Available Right Now</h2>
             <p>
@@ -230,22 +266,31 @@ const seoDescription =
     }
   }
 
-  .events-section {
-    margin-bottom: var(--spacing-2xl);
+  // Matches `.archive-month__heading` on the archive: a quiet uppercase rule
+  // that divides the list without competing with the card titles under it.
+  // The old `<h2>Upcoming Classes & Events</h2>` said the same thing as the
+  // masthead and the active tab directly above it.
+  .events-group {
+    margin-bottom: var(--spacing-xl);
+  }
 
-    h2 {
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-semibold);
-      color: var(--color-text-primary);
-      margin-bottom: var(--spacing-lg);
-      padding-bottom: var(--spacing-sm);
-      border-bottom: 2px solid var(--color-accent);
-    }
+  .events-group__heading {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-md);
   }
 
   .events-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    // auto-FILL, not auto-fit — the same reason as the archive. Now that this
+    // page is grouped by month, a one- or two-event group is common, and
+    // auto-fit collapses the empty tracks so a lone card stretches across the
+    // full 1176px content width. Ungrouped, the single grid was always full
+    // enough for the difference not to show.
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: var(--spacing-lg);
 
     @media (max-width: 768px) {
@@ -253,6 +298,10 @@ const seoDescription =
       gap: var(--spacing-md);
     }
   }
+
+  // The `.archive-link` aside that used to close this page is gone: the route
+  // into the archive is now the tab strip at the top, where it is visible
+  // before any scrolling rather than six screens down.
 
   .no-events {
     text-align: center;

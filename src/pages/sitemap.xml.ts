@@ -3,6 +3,7 @@ import { getStoryblokClient } from '../lib/storyblok';
 import { fetchAllStories } from '../lib/storiesApi';
 import { fetchAllCollections, isShopEnabled, isHitpayShop } from '../lib/shop';
 import type { StoryArticleStory } from '../types/stories';
+import type { EventStory } from '../types/event';
 
 const SITE = 'https://singaporehandpans.com';
 
@@ -15,6 +16,7 @@ const STATIC_PAGES: { path: string; changefreq: string; priority: number }[] = [
   { path: '/', changefreq: 'weekly', priority: 1.0 },
   { path: '/about/', changefreq: 'monthly', priority: 0.8 },
   { path: '/events/', changefreq: 'weekly', priority: 0.9 },
+  { path: '/events/archive/', changefreq: 'monthly', priority: 0.4 },
   { path: '/academy/', changefreq: 'monthly', priority: 0.8 },
   { path: '/academy/memorization/', changefreq: 'monthly', priority: 0.7 },
   { path: '/stories/', changefreq: 'weekly', priority: 0.8 },
@@ -48,14 +50,13 @@ export const GET: APIRoute = async ({ locals }) => {
   // Dynamic event pages from Storyblok
   try {
     const storyblokApi = getStoryblokClient(token);
-    const { data } = await storyblokApi.get('cdn/stories', {
+    // Paginated, so events beyond the first 100 don't drop out of the sitemap.
+    const events = await fetchAllStories<EventStory>(storyblokApi, {
       starts_with: 'events/',
       content_type: 'event',
       version: storyblokVersion,
-      per_page: 100,
     });
 
-    const events = data?.stories || [];
     for (const event of events) {
       entries.push(urlEntry(`${SITE}/events/${event.slug}/`, 'weekly', 0.7));
     }

@@ -17,6 +17,7 @@ const pages = [
   { path: '/academy', name: 'academy' },
   { path: '/academy/memorization', name: 'academy-memorization' },
   { path: '/events', name: 'events' },
+  { path: '/events/archive', name: 'events-archive' },
   {
     path: '/events/beginner-handpan-workshop',
     name: 'event-beginner-workshop',

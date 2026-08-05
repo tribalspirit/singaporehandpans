@@ -1,0 +1,290 @@
+---
+/**
+ * One finished event, as a row.
+ *
+ * The archive used to reuse `EventCard`, so a finished event still advertised
+ * a 200px photo, its price, "~1.5 hours" and "Max 15 participants" — capacity
+ * is meaningless once an event is over and price is trivia, while what a
+ * reader of an archive actually wants (what kind of thing it was, who taught
+ * it) was buried in a truncated paragraph. At ~560px per card, 32 events ran
+ * to eleven screens; at ~96px per row they fit in three.
+ *
+ * Emits none of the `data-acuity-*` / `data-booking-cta` hooks that
+ * `availability-hydration.ts` looks for: a past row has no booking CTA and
+ * must not be picked up by it.
+ */
+import type { EventStory } from '../types/event';
+import { getEventCategory, getLevelLabel, UNCATEGORISED } from '../utils/tags';
+import { storyblokImage, storyblokSrcSet } from '../lib/storyblokImage';
+import { extractTeacherName } from '../lib/eventMatching';
+import { formatRowDate, formatDayMonth } from '../lib/eventFormat';
+
+export interface Props {
+  event: EventStory;
+  /** Start of the event's final occurrence — the time it began. */
+  ranFrom: Date;
+  /** End of that occurrence — the instant the archive files the event under. */
+  ranTo: Date;
+  /** The same class running again, when one was matched. */
+  runsAgain?: { at: Date; url: string } | null;
+}
+
+const { event, ranFrom, ranTo, runsAgain = null } = Astro.props;
+
+/**
+ * The **1× CSS size** of the thumbnail well — 52px tall at 4/3. As in
+ * `EventCard`, this must not be pre-doubled: `storyblokSrcSet` derives the 2×
+ * and 3× candidates, and passing an already-doubled base makes every display
+ * fetch twice the resolution it can show.
+ */
+const THUMB_WIDTH = 68;
+const THUMB_HEIGHT = 51;
+
+/** Fallback for browsers without `srcset`. */
+const FALLBACK_DENSITY = 2;
+
+const eventUrl = `/events/${event.slug}/`;
+
+// Single-day events — nearly the whole archive — show the day and its start
+// time. A multi-day occurrence shows the span instead of a time: mixing the
+// end date with the start time produced "SAT 2 MAY 10:30", a moment at which
+// neither endpoint happened, and taking both from one endpoint would file the
+// row under a month its own date contradicts (the archive groups on the end).
+const from = formatRowDate(ranFrom);
+const to = formatRowDate(ranTo);
+const isMultiDay = from.date !== to.date;
+
+const date = isMultiDay ? from.date : to.date;
+const time = isMultiDay ? `– ${to.date}` : from.time;
+
+const category = getEventCategory(event.content.tags);
+const meta = [
+  category,
+  getLevelLabel(event.content.tags)?.toLowerCase(),
+  extractTeacherName(event.content.title),
+].filter(Boolean);
+
+const thumbnail = event.content.image
+  ? storyblokImage(
+      event.content.image.filename,
+      THUMB_WIDTH * FALLBACK_DENSITY,
+      THUMB_HEIGHT * FALLBACK_DENSITY
+    )
+  : null;
+const thumbnailSrcSet = storyblokSrcSet(
+  event.content.image?.filename,
+  THUMB_WIDTH,
+  THUMB_HEIGHT
+);
+---
+
+<li class="past-row" data-past-row data-category={category ?? UNCATEGORISED}>
+  <a class="past-row__link" href={eventUrl}>
+    <span class="past-row__date">
+      <span class="past-row__day">{date}</span>
+      <span class="past-row__time">{time}</span>
+    </span>
+
+    <span class="past-row__thumb">
+      {
+        thumbnail && (
+          <img
+            src={thumbnail}
+            srcset={thumbnailSrcSet ?? undefined}
+            sizes={`${THUMB_WIDTH}px`}
+            alt=""
+            width={THUMB_WIDTH * FALLBACK_DENSITY}
+            height={THUMB_HEIGHT * FALLBACK_DENSITY}
+            loading="lazy"
+            decoding="async"
+          />
+        )
+      }
+    </span>
+
+    <span class="past-row__body">
+      <span class="past-row__title">{event.content.title}</span>
+      {
+        meta.length > 0 && (
+          <span class="past-row__meta">{meta.join(' · ')}</span>
+        )
+      }
+    </span>
+  </a>
+
+  {
+    /* Column 4. Always a sibling of the row link, never a child: an anchor
+       cannot contain another anchor, and the link spans only the first three
+       columns — nesting this inside it would wrap the action onto a second
+       line.
+
+       "Details →" merely restates the link beside it, so it stays decorative
+       and hidden from assistive tech. "Runs again" is a real link to the
+       upcoming class, because that is what the label promises: pointing it at
+       the finished event would send a warm lead to the very page telling them
+       they missed it. The row itself still opens the archived event, so both
+       remain reachable. */
+    runsAgain ? (
+      <a class="past-row__action is-recurring" href={runsAgain.url}>
+        Runs again {formatDayMonth(runsAgain.at)}
+        <span aria-hidden="true"> →</span>
+      </a>
+    ) : (
+      <span class="past-row__action" aria-hidden="true">
+        Details →
+      </span>
+    )
+  }
+</li>
+
+<style lang="scss">
+  @use 'src/styles/tokens.scss';
+
+  // The row owns the grid so the action can be a sibling of the row link
+  // rather than nested inside it. Columns are declared once and reused by the
+  // link, which spans all but the last of them.
+  .past-row {
+    --row-columns: 92px 68px 1fr;
+
+    display: grid;
+    grid-template-columns: var(--row-columns) auto;
+
+    // `display: grid` is an author rule and outranks the user agent's
+    // `[hidden] { display: none }`, so the archive filter — which works by
+    // setting `row.hidden` — left every non-matching row on screen while the
+    // counts above them said otherwise. Any element given an explicit
+    // `display` needs this reset to stay hideable.
+    &[hidden] {
+      display: none;
+    }
+    gap: var(--spacing-md);
+    align-items: center;
+    min-height: 44px;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-hairline);
+    transition: background-color var(--transition-fast);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    &:hover,
+    &:focus-within {
+      background: var(--color-gray-50);
+    }
+  }
+
+  .past-row__link {
+    display: grid;
+    grid-column: 1 / 4;
+    grid-template-columns: var(--row-columns);
+    gap: var(--spacing-md);
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  .past-row__date {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    line-height: 1.4;
+    color: var(--color-text-secondary);
+  }
+
+  .past-row__time {
+    color: var(--color-gray-400);
+  }
+
+  .past-row__thumb {
+    display: block;
+    height: 52px;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--color-gray-200);
+    border-radius: var(--border-radius-sm);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  .past-row__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .past-row__title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.3;
+    color: var(--color-text-primary);
+  }
+
+  .past-row__meta {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+
+  .past-row__action {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    text-decoration: none;
+
+    // A past event that runs again is the one thing on this page a warm lead
+    // can act on, so it gets the bronze. It is also a real link, unlike the
+    // decorative "Details" label.
+    &.is-recurring {
+      color: var(--color-primary);
+      font-weight: var(--font-weight-medium);
+
+      &:hover,
+      &:focus-visible {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .past-row {
+      transition: none;
+    }
+  }
+
+  // The thumbnail is the first thing to go: at this width the title and its
+  // meta line need the room more than a 68px photo does.
+  @media (max-width: 768px) {
+    .past-row {
+      --row-columns: 92px 1fr;
+
+      grid-template-columns: var(--row-columns);
+      gap: var(--spacing-sm) var(--spacing-md);
+      padding: var(--spacing-md);
+    }
+
+    .past-row__link {
+      grid-column: 1 / 3;
+    }
+
+    .past-row__thumb {
+      display: none;
+    }
+
+    .past-row__action {
+      grid-column: 2;
+    }
+  }
+</style>
