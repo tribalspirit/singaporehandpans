@@ -153,3 +153,19 @@ describe('findRunsAgainMatch', () => {
     expect(findRunsAgainMatch(past, crowded)?.story.slug).toBe('strong');
   });
 });
+
+describe('extractTeacherName — non-person guards', () => {
+  it('does not read a technique or instrument as a teacher', () => {
+    // "masterclasses with Dany Rud, Kirill Osherov, Konnakol" shipped live.
+    expect(extractTeacherName('Handpan Masterclass with Konnakol')).toBeNull();
+    expect(extractTeacherName('Sound Journey with Handpan')).toBeNull();
+    expect(extractTeacherName('Workshop with Frame Drum')).toBeNull();
+  });
+
+  it('still reads real names', () => {
+    expect(extractTeacherName('Master Handpan with Dany Rud')).toBe('Dany Rud');
+    expect(extractTeacherName('Handpan Masterclass with Peter Bognár')).toBe(
+      'Peter Bognár'
+    );
+  });
+});

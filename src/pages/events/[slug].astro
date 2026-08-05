@@ -14,13 +14,12 @@ import {
   getSingaporeParts,
   toSingaporeIso,
 } from '../../lib/eventDates';
+import { parsePrice } from '../../lib/eventFormat';
 import type { EventStory } from '../../types/event';
 
 export const prerender = false;
 setEdgeCache(Astro.response, 'medium');
 
-const PRICE_SANITIZE_REGEX = /[^0-9.]/g;
-const FREE_LABEL = 'Free';
 const PRICE_CURRENCY = 'SGD';
 
 const { slug } = Astro.params;
@@ -151,10 +150,23 @@ const eventSchedule =
       }
     : undefined;
 
-const priceValue =
-  event.content.price && event.content.price !== FREE_LABEL
-    ? event.content.price.replace(PRICE_SANITIZE_REGEX, '')
-    : '0';
+// Parsed, not stripped. `replace(/[^0-9.]/g, '')` turned the range "$38-$138"
+// into "38138" — an Offer.price of thirty-eight thousand. A range is published
+// as a priceSpecification; an unparseable price is omitted rather than guessed.
+const parsedPrice = parsePrice(event.content.price);
+
+const priceOffer = parsedPrice
+  ? parsedPrice.max !== null
+    ? {
+        priceSpecification: {
+          '@type': 'PriceSpecification',
+          minPrice: parsedPrice.min,
+          maxPrice: parsedPrice.max,
+          priceCurrency: PRICE_CURRENCY,
+        },
+      }
+    : { price: String(parsedPrice.min), priceCurrency: PRICE_CURRENCY }
+  : null;
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -180,11 +192,10 @@ const structuredData = {
     name: 'Singapore Handpan Studio',
     url: Astro.site?.toString(),
   },
-  offers: event.content.price
+  offers: priceOffer
     ? {
         '@type': 'Offer',
-        price: priceValue,
-        priceCurrency: PRICE_CURRENCY,
+        ...priceOffer,
         // Describes the advertised session, matching what the page renders: the
         // live lookup when there is one, otherwise the story's own value —
         // except for a series, where that value refers to a session that has

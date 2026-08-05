@@ -35,12 +35,11 @@
 # /workshop /workshops 301
 # /contact /contacts 301
 
-# Event slugs corrected in Storyblok (see docs/reports/events-cms-punchlist.md).
-# Two were misspelled; the third was the events folder's start page, so it had
-# taken the folder's own slug and resolved at /events/events/.
-/events/handpan-masterclass-with-takao-minemoto-for-singapore-handpan-communtiy/ /events/handpan-masterclass-with-takao-minemoto-for-singapore-handpan-community/ 301
-/events/advance-yoru-handpan-playing-skiils/ /events/advance-your-handpan-playing-skills/ 301
-/events/events/ /events/handpan-essentials-with-peter-bognar/ 301
+# Corrected event slugs are NOT redirected here. `/events/[slug]` is
+# `prerender = false`, so those URLs are served by the worker and never reach
+# this asset server — a rule here would never fire. They live in
+# `src/lib/legacyRedirects.ts`, enforced by `src/middleware.ts`, alongside the
+# /gallery -> /stories/ rule and covered by unit tests.
 
 
 

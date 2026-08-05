@@ -48,10 +48,19 @@ describe('getEventCategory', () => {
     expect(getEventCategory([' Workshop '])).toBe('Workshop');
   });
 
-  it('returns the first category present, ignoring level tags', () => {
+  it('ignores level tags when picking the category', () => {
     expect(getEventCategory(['beginner', 'intermediate', 'workshop'])).toBe(
       'Workshop'
     );
+  });
+
+  it('applies a fixed precedence rather than author order', () => {
+    // Both orderings must agree; previously whichever the author listed first
+    // won, so the same event could render either chip.
+    expect(getEventCategory(['workshop', 'masterclass'])).toBe('Masterclass');
+    expect(getEventCategory(['masterclass', 'workshop'])).toBe('Masterclass');
+    expect(getEventCategory(['workshop', 'concert'])).toBe('Concert');
+    expect(getEventCategory(['community', 'workshop'])).toBe('Workshop');
   });
 
   it('returns null when no category tag is present', () => {

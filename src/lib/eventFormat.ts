@@ -69,6 +69,16 @@ export function formatShortDate(date: Date): string {
   return `${day} ${shortMonth(month)} ${year}`;
 }
 
+/**
+ * `8 Aug` — a near date that does not need a year. Used by the archive's
+ * "Runs again" action, where "Runs again 8 Aug 2026" made a next-week date read
+ * like a distant one.
+ */
+export function formatDayMonth(date: Date): string {
+  const { day, month } = getSingaporeParts(date);
+  return `${day} ${shortMonth(month)}`;
+}
+
 /** `Sat, 14 Mar 2026`. */
 export function formatLongDate(date: Date): string {
   const { weekday } = getSingaporeParts(date);
@@ -274,6 +284,32 @@ export function formatPrice(
   return to
     ? `S$${trimAmount(from)}${TIGHT_RANGE}${trimAmount(to)}`
     : `S$${trimAmount(from)}`;
+}
+
+/**
+ * The numeric value(s) behind a free-text price, for structured data — or
+ * `null` when the field says something a number cannot express.
+ *
+ * Separate from `formatPrice` because schema.org needs values, not a display
+ * string. The previous approach stripped non-digits, which turned `$38-$138`
+ * into `38138` — an `Offer.price` of thirty-eight thousand that Google would
+ * reject. A range must be published as a `priceSpecification`, and an
+ * unparseable price must be omitted rather than guessed at.
+ */
+export function parsePrice(
+  price: string | number | null | undefined
+): { min: number; max: number | null } | null {
+  if (price === null || price === undefined) return null;
+
+  const raw = String(price).trim();
+  if (raw === '') return null;
+  if (raw.toLowerCase() === 'free') return { min: 0, max: null };
+
+  const match = PRICE_REGEX.exec(raw);
+  if (!match) return null;
+
+  const [, from, to] = match;
+  return { min: Number(from), max: to === undefined ? null : Number(to) };
 }
 
 /** `1 hour` / `1.5 hours`, or `null` for the unset values the CMS holds. */

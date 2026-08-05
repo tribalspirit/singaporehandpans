@@ -158,14 +158,14 @@ const closingEvents = upcomingEvents.slice(0, CLOSING_CARD_COUNT);
 const siteUrl =
   Astro.site?.toString().replace(/\/$/, '') || 'https://singaporehandpans.com';
 
-const seoTitle = 'Past Handpan Classes & Events in Singapore';
+const seoTitle = 'Past Handpan Events in Singapore';
 const seoDescription =
   'An archive of every handpan workshop, masterclass, concert and community gathering held at Singapore Handpan Studio, grouped by year and month.';
 
 const collectionSchema = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  name: 'Past Classes & Events',
+  name: 'Past events',
   url: `${siteUrl}/events/archive/`,
   description: seoDescription,
   mainEntity: {
@@ -538,8 +538,19 @@ const breadcrumbSchema = {
       const observer = new IntersectionObserver(
         (entries) => {
           for (const entry of entries) {
-            if (entry.isIntersecting) setActive(entry.target.id);
+            if (entry.isIntersecting) {
+              setActive(entry.target.id);
+              return;
+            }
           }
+          // Nothing is in view — scrolled above the first section, or every
+          // section is filtered out. The callback only ever *set* the mark
+          // before, so a chip stayed current with nothing on screen under it.
+          const anyVisible = targets.some((t) => {
+            const box = t.getBoundingClientRect();
+            return box.top < window.innerHeight && box.bottom > navHeight;
+          });
+          if (!anyVisible) setActive('');
         },
         { rootMargin: `-${navHeight}px 0px -70% 0px`, threshold: 0 }
       );
@@ -657,10 +668,13 @@ const breadcrumbSchema = {
       }
 
       // Set by the IntersectionObserver as you scroll — the bar was stateless
-      // through eleven screens.
+      // through eleven screens. Filled rather than merely bronze-bordered:
+      // hover already uses the bronze border, so an identical treatment made
+      // "where I am" indistinguishable from "what I'm pointing at".
       &[aria-current='true'] {
-        border-color: var(--color-primary);
-        color: var(--color-primary);
+        background: var(--color-gray-900);
+        border-color: var(--color-gray-900);
+        color: var(--color-white);
       }
     }
   }

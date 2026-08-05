@@ -89,7 +89,10 @@ const tabs = [
     display: inline-flex;
     align-items: baseline;
     gap: var(--spacing-xs);
-    padding: 12px 18px;
+    // 13px vertical clears 44px with the 18px line-box, matching the touch
+    // target every other action on these pages uses.
+    padding: 13px 18px;
+    min-height: 44px;
     margin-bottom: -1px;
     border-bottom: 2px solid transparent;
     color: var(--color-primary);
@@ -101,8 +104,14 @@ const tabs = [
       color var(--transition-fast),
       border-color var(--transition-fast);
 
-    &:hover,
+    &:hover {
+      border-bottom-color: var(--color-primary-light);
+    }
+
+    // A border colour change alone is not a focus indicator.
     &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
       border-bottom-color: var(--color-primary-light);
     }
 

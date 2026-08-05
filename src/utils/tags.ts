@@ -72,14 +72,34 @@ const capitalize = (word: string) =>
  * The single category chip for an event — `Workshop`, `Concert`, `Community` —
  * or `null` when the event carries no format tag. Level tags are ignored.
  */
+/**
+ * Precedence when an event carries more than one format tag, most specific
+ * first. Without it the chip was decided by whichever tag the author happened
+ * to list first, so the same event could render either label.
+ */
+const CATEGORY_PRECEDENCE = [
+  'Masterclass',
+  'Concert',
+  'Course',
+  'Workshop',
+  'Private',
+  'Community',
+] as const;
+
 export function getEventCategory(
   tags: string | string[] | undefined
 ): string | null {
-  for (const tag of normalizeTags(tags)) {
-    const category = CATEGORY_BY_TAG[canonical(tag)];
-    if (category) return category;
-  }
-  return null;
+  const present = new Set(
+    normalizeTags(tags)
+      .map((tag) => CATEGORY_BY_TAG[canonical(tag)])
+      .filter(Boolean)
+  );
+  if (present.size === 0) return null;
+
+  return (
+    CATEGORY_PRECEDENCE.find((category) => present.has(category)) ??
+    [...present][0]
+  );
 }
 
 /**
