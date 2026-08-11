@@ -22,6 +22,7 @@
     "storyblok:content": "node scripts/create-sample-content.js",
     "storyblok:stories": "node scripts/create-stories-content.js",
     "gallery:migrate": "node scripts/migrate-gallery.js",
+    "shop:migrate": "node scripts/migrate-shop-catalog.js",
     "prepare": "husky || true"
   },
   "lint-staged": {

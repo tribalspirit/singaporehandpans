@@ -1,218 +1,203 @@
 ---
 name: shop
-description: Shopify Storefront API integration for product catalog. Covers architecture, feature toggle, filtering, and implementation patterns.
+description: Shop section with two selectable backends — Storyblok catalog + HitPay checkout, or the legacy Shopify Storefront API. Covers the selector, catalog migration, filtering, and implementation patterns.
 ---
 
-# Shop Feature - Shopify Integration
+# Shop Feature
 
-Product catalog integration with Shopify Storefront API. Feature-toggled, disabled by default.
+The shop has **two implementations behind one contract**. `PUBLIC_SHOP_IMPL`
+picks which one a given deploy uses, so production and preview can run
+different backends from the same codebase.
 
-## Overview
+| `PUBLIC_SHOP_IMPL` | Catalog                     | Checkout                      |
+| ------------------ | --------------------------- | ----------------------------- |
+| `hitpay`           | Storyblok stories           | On-site → HitPay hosted page  |
+| `shopify` (default)| Shopify Storefront API      | Links out to the Shopify store|
 
-- Displays handpans and accessories from Shopify store
-- Product grid with search and filtering
-- "Buy" buttons link to Shopify product pages (no in-site checkout)
-- Feature toggle controls visibility
+`PUBLIC_ENABLE_SHOP` remains the master on/off switch for the whole section.
+
+**Never import a concrete client.** Pages and islands import from the facade
+`src/lib/shop.ts`, which dispatches to the active implementation. Both clients
+return the same `ShopProduct` / `ShopCollection` shapes (`src/lib/shopTypes.ts`).
 
 ## Environment Variables
 
 ```bash
-# Enable/disable shop (default: false)
-PUBLIC_ENABLE_SHOP=true
+PUBLIC_ENABLE_SHOP=true        # master switch (default: false)
+PUBLIC_SHOP_IMPL=hitpay        # 'hitpay' | 'shopify' (default: shopify)
 
-# Shopify store domain (without https://)
-PUBLIC_SHOPIFY_STORE_DOMAIN=your-store-name.myshopify.com
+# --- hitpay implementation ---
+STORYBLOK_TOKEN=...            # catalog lives in Storyblok
+HITPAY_API_URL=https://api.sandbox.hit-pay.com   # or https://api.hit-pay.com
+HITPAY_API_KEY=...             # server-side secret, never PUBLIC_
+HITPAY_SALT=...                # verifies the webhook HMAC
+RESEND_API_KEY=...             # order notification email
+SHOP_EMAIL_FROM=shop@singaporehandpans.com
+SHOP_ORDER_EMAIL=singaporehandpanstudio@gmail.com
 
-# Shopify Storefront API token
-PUBLIC_SHOPIFY_STOREFRONT_TOKEN=your_storefront_access_token
+# --- shopify implementation ---
+PUBLIC_SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
+PUBLIC_SHOPIFY_STOREFRONT_TOKEN=...
 ```
 
-## Feature Toggle Behavior
+HitPay values are **server-side secrets** — set them as encrypted Cloudflare
+Pages secrets, never with a `PUBLIC_` prefix. To obtain them, see
+[docs/features/HITPAY-CREDENTIALS.md](../../docs/features/HITPAY-CREDENTIALS.md),
+which is written to be handed to the product owner.
 
-**When `PUBLIC_ENABLE_SHOP=false`**:
+## Feature Toggle Behaviour
 
-- Shop link hidden from navigation
-- `/shop` redirects to 404
+**`PUBLIC_ENABLE_SHOP=false`**: shop link hidden from navigation, `/shop`
+returns 404, homepage product rail does not render.
 
-**When `PUBLIC_ENABLE_SHOP=true`**:
-
-- Shop link appears in navigation
-- Shop page displays products
+**`PUBLIC_ENABLE_SHOP=true`**: shop link appears, `/shop` lists the catalog.
 
 ## Architecture
 
 ```
 src/
 ├── lib/
-│   └── shopifyClient.ts      # Shopify API client
+│   ├── shop.ts             # facade — selects backend, the only thing pages import
+│   ├── shopTypes.ts        # shared ShopProduct / ShopCollection contract
+│   ├── shopClient.ts       # hitpay impl: Storyblok catalog fetchers
+│   ├── shopifyClient.ts    # shopify impl: Storefront API
+│   ├── hitpay.ts           # payment request creation + webhook HMAC verify
+│   └── orderEmail.ts       # order notification via Resend
 ├── components/
-│   ├── ShopProductList.tsx   # React island with filters
-│   ├── ShopProductList.module.scss
-│   ├── ProductCard.tsx       # Product card component
-│   └── ProductCard.module.scss
+│   ├── ShopProductList.tsx # React island: search + filters + grid
+│   ├── ProductCard.tsx     # stateless card
+│   └── home/FeaturedProducts.astro
 └── pages/
-    └── shop.astro            # Shop page route
+    ├── shop/index.astro           # catalog
+    ├── shop/[collection].astro    # per-collection listing
+    ├── shop/product/[slug].astro  # detail page (hitpay only)
+    ├── shop/thank-you.astro       # post-payment (no-store)
+    └── api/shop/
+        ├── checkout.ts            # validates price/stock server-side, redirects to HitPay
+        └── hitpay-webhook.ts      # verifies HMAC, then notifies the owner
 ```
 
-### Component Responsibilities
+Shop pages are **SSR at request time** — do not add `prerender = true`, or the
+catalog goes stale between deploys.
 
-| Component             | Purpose                                           |
-| --------------------- | ------------------------------------------------- |
-| `shop.astro`          | Route, feature gate, server-side product fetch    |
-| `shopifyClient.ts`    | API calls, auth headers, response normalization   |
-| `ShopProductList.tsx` | React island: search, filters, grid, empty states |
-| `ProductCard.tsx`     | Stateless: thumbnail, title, price, Buy link      |
+## Storyblok Catalog Model (hitpay)
 
-### Data Flow
+Products are `product` stories under `shop/products/`; collections are
+`shop_collection` stories under `shop/collections/`.
 
-1. Products fetched from Shopify at **build time**
-2. Product data passed to React island
-3. Filtering happens **client-side** (no additional API calls)
-4. ~50-100 products kept in memory
+**A product's `brand` field must exactly equal a collection story slug** —
+that is the only thing joining a product to its collection
+(`buildCollectionProductMap` in `shopClient.ts`). Collections with zero
+products are filtered out of the listing.
 
-## Shopify API
+Brand slugs: `mag`, `battiloro`, `sew`, `sirvan`, `sg-pan`, `rav`, `hardcase`,
+`studio`. Product types: `Handpan`, `Tongue Drum`, `Case`, `Stand`,
+`Accessory`. Both are `option` fields in
+[storyblok/components/product.json](../../storyblok/components/product.json) —
+adding a brand means adding the option **and** creating the matching
+collection story.
 
-### Endpoint
+The schema carries **one price per story and no variant field**. Products that
+vary by colour/size are stored as one story per variant, so each has its own
+price and `in_stock` flag, and HitPay checkout stays single-item.
 
+### Catalog Migration
+
+`npm run shop:migrate` copies the Shopify catalog into Storyblok
+([scripts/migrate-shop-catalog.js](../../scripts/migrate-shop-catalog.js)).
+It derives brand from the product **title** (Shopify's `vendor` is mostly the
+reseller, not the maker), splits colour variants, uploads images into Storyblok
+assets, and upserts stories by `full_slug` so re-runs update rather than
+duplicate.
+
+```bash
+npm run shop:migrate -- --dry-run --verbose   # report only, no writes
+npm run shop:migrate                          # perform the migration
 ```
-POST https://<SHOP_DOMAIN>/api/2024-01/graphql.json
-```
 
-### Headers
-
-```
-Content-Type: application/json
-X-Shopify-Storefront-Access-Token: <TOKEN>
-```
-
-### GraphQL Query
-
-```graphql
-query GetProducts {
-  products(first: 100) {
-    edges {
-      node {
-        title
-        handle
-        productType
-        description
-        availableForSale
-        priceRange {
-          minVariantPrice {
-            amount
-            currencyCode
-          }
-          maxVariantPrice {
-            amount
-            currencyCode
-          }
-        }
-        images(first: 1) {
-          edges {
-            node {
-              url
-              altText
-            }
-          }
-        }
-        tags
-      }
-    }
-  }
-}
-```
+Push the component schemas to the space before the first run, or the fields
+will not be editable in the CMS.
 
 ## Product Model
 
 ```ts
 type ShopProduct = {
+  id: string;
   title: string;
   handle: string;
-  productType: string; // category
+  productType: string;
   description: string;
   availableForSale: boolean;
   priceMin: { amount: number; currencyCode: string };
   priceMax?: { amount: number; currencyCode: string };
   image?: { url: string; altText?: string };
-  tags?: string[];
-  shopUrl: string; // https://<domain>/products/<handle>
+  images?: { url: string; altText?: string }[];
+  tags: string[];
+  brand: string;
+  featured: boolean;
+  seoDescription?: string;
+  shopUrl: string; // hitpay: /shop/product/<slug>/ · shopify: absolute external URL
 };
 ```
 
+`shopUrl` is **relative for hitpay and absolute for shopify** — use
+`toAbsoluteShopUrl()` from the facade when building canonical or structured-data
+URLs, or you will produce `https://site.comhttps://store...`.
+
 ## Client-Side Filtering
 
-### State Variables
+Filtering happens in the island with no extra API calls.
 
-- `searchTerm` - Text search
-- `categoryFilter` - Product type dropdown
-- `priceFilter` - Price bucket dropdown
-- `availabilityFilter` - Stock status dropdown
+- `searchTerm` — title OR description contains the term (case-insensitive)
+- `categoryFilter` — must match `productType`
+- `availabilityFilter` — `availableForSale`
+- `priceFilter` — buckets: All · Under S$500 · S$500–S$1,500 · Above S$1,500,
+  compared against `priceMin.amount`
 
-### Price Buckets
+**Out of stock**: Buy control disabled + "Sold out" badge.
 
-- All
-- Under S$500
-- S$500–S$1,500
-- Above S$1,500
+## Checkout Flow (hitpay)
 
-### Filter Logic
+1. Buy form POSTs to `/api/shop/checkout` (honeypot + origin check + input caps).
+2. The endpoint re-reads price and stock **from published CMS content** — it
+   never trusts the posted price — then creates a HitPay payment request.
+3. Buyer is redirected to HitPay's hosted page (PayNow QR + cards). Card
+   details never touch this site.
+4. HitPay calls `/api/shop/hitpay-webhook`; the HMAC-SHA256 signature is
+   verified against `HITPAY_SALT` **before any side effect**, then the owner is
+   emailed.
+5. Buyer lands on `/shop/thank-you/` (sent `no-store`).
 
-1. **Search**: title OR description includes term (case-insensitive)
-2. **Category**: productType must match (if not "All")
-3. **Availability**: `availableForSale` boolean
-4. **Price**: Compare `priceMin.amount` against bucket
-
-## Buy Link Behavior
-
-```tsx
-<a href={shopUrl} target="_blank" rel="noopener noreferrer">
-  Buy
-</a>
-```
-
-**Out-of-stock**: Disable button + show "Sold out" badge
-
-## Shopify Setup
-
-1. Create Shopify store, note domain
-2. Add products with:
-   - Title, description, images
-   - **Product type** for categorization
-   - **Tags** for search
-   - Active status
-3. Install **Headless** sales channel
-4. Create storefront, copy **Storefront API token**
-5. Required permissions: Products (read), Product images (read)
+The webhook is deliberately **not** gated on the feature flags — the signature
+check is its authentication, and in-flight orders must still settle if the shop
+is toggled off.
 
 ## Troubleshooting
 
-### Products Not Loading
+**Products not loading** — confirm `PUBLIC_SHOP_IMPL` matches the backend you
+expect; check `STORYBLOK_TOKEN` (hitpay) or the Storefront token (shopify).
 
-1. Check environment variables
-2. Verify Storefront API token permissions
-3. Check browser console for errors
+**A collection is missing** — a collection with zero matching products is
+filtered out. Check that products carry a `brand` exactly equal to the
+collection slug.
 
-### Shop Link Not Appearing
+**Shop link not appearing** — `PUBLIC_ENABLE_SHOP=true`, then rebuild;
+`PUBLIC_*` vars are inlined at build time, so changing them needs a redeploy.
 
-- Ensure `PUBLIC_ENABLE_SHOP=true`
-- Rebuild and deploy after changing
+**Checkout redirects to `?checkout=error`** — the server logged the reason.
+Most often `HITPAY_API_URL`/`HITPAY_API_KEY`/`HITPAY_SALT` are unset.
 
-### Images Not Displaying
-
-1. Verify products have images in Shopify
-2. Check image URLs accessible
-
-### Prices Showing Incorrectly
-
-- Products use `priceRange.minVariantPrice`
-- Multi-variant products show lowest price
+**Webhook returns 400** — signature mismatch, usually the wrong salt, or the
+sandbox salt against production (the two accounts are fully separate).
 
 ## Related Skills
 
-- `/setup` - Environment variable configuration
-- `/deploy` - Deployment after enabling shop
+- `/setup` — environment variable configuration
+- `/deploy` — deployment after enabling the shop
+- `/storyblok` — CMS content workflows
 
 ## Source Documentation
 
 - `docs/features/SHOP.md`
+- `docs/features/HITPAY-CREDENTIALS.md`
 - `.specify/shop-spec-kit-md/`
