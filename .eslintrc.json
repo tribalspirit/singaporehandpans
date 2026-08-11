@@ -28,7 +28,8 @@
       "error",
       { "max": 1, "maxEOF": 0, "maxBOF": 0 }
     ],
-    "eol-last": ["error", "always"]
+    "eol-last": ["error", "always"],
+    "jsx-a11y/no-redundant-roles": ["error", { "ul": ["list"] }]
   },
   "overrides": [
     {

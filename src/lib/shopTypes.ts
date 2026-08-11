@@ -37,5 +37,12 @@ export type ShopCollection = {
   handle: string;
   description: string;
   image?: ShopImage;
+  /**
+   * True when `image` was picked automatically from a product photo by the
+   * catalog migration, rather than uploaded by an editor. Product photos are
+   * cropped to fill the card; an editor's image may be a brand logo, which must
+   * be fitted instead of cropped.
+   */
+  imageIsAutoCover?: boolean;
   productCount: number;
 };

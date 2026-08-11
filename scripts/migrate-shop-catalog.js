@@ -43,6 +43,13 @@ const PRUNE = process.argv.includes('--prune');
 // Must match the paths shopClient.ts reads from.
 const PRODUCTS_PATH = 'shop/products/';
 const CURRENCY = 'SGD';
+
+/**
+ * Written into the `title` of an automatically chosen collection cover, so a
+ * later run can tell its own pick apart from an image an editor uploaded and
+ * refresh the former without overwriting the latter.
+ */
+const AUTO_COVER_MARK = 'auto: collection cover';
 const COLLECTIONS_PATH = 'shop/collections/';
 
 const TOKEN = process.env.STORYBLOK_MANAGEMENT_TOKEN;
@@ -213,25 +220,58 @@ function slugify(value) {
     .replace(/^-+|-+$/g, '');
 }
 
-/** Strip Shopify's description HTML down to the plain text the textarea holds. */
-function htmlToText(html) {
-  if (!html) return '';
-  return html
-    .replace(/<\s*(br|\/p|\/div|\/li|\/h[1-6])\s*\/?>/gi, '\n')
-    .replace(/<li[^>]*>/gi, '• ')
-    .replace(/<[^>]+>/g, '')
+function decodeEntities(text) {
+  return text
     .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#39;|&apos;/g, "'")
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .split('\n')
-    .map((line) => line.trim())
-    .join('\n')
-    .trim();
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&amp;/g, '&'); // last, so &amp;lt; does not become <
+}
+
+/**
+ * Strip Shopify's description HTML down to the plain text the textarea holds.
+ *
+ * The product page renders this with `white-space: pre-line`, so every newline
+ * here is a visible line break — the conversion has to produce final layout,
+ * not just tag-free text.
+ *
+ * List items are flattened first, deliberately. Shopify writes
+ * `<li><p><span>text</span></p></li>` with newlines between the tags, so
+ * treating `</li>` as a plain break left the bullet stranded on its own line
+ * with a blank line after every item.
+ */
+function htmlToText(html) {
+  if (!html) return '';
+
+  const withBullets = html.replace(
+    /<li[^>]*>([\s\S]*?)<\/li>/gi,
+    (_, inner) =>
+      `\n• ${inner
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()}\n`
+  );
+
+  return (
+    decodeEntities(
+      withBullets
+        .replace(/<\s*(br|\/p|\/div|\/h[1-6]|\/ul|\/ol|\/tr)\s*\/?>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+    )
+      .replace(/[ \t]+/g, ' ')
+      .split('\n')
+      .map((line) => line.trim())
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      // Consecutive bullets are one list — no blank line between them, and none
+      // between a lead-in line like "Features:" and the first bullet.
+      .replace(/\n\n(?=• )/g, '\n')
+      .replace(/(^|\n)• *(?=\n|$)/g, '$1') // drop empty bullets
+      .trim()
+  );
 }
 
 function detectBrand(title, vendor) {
@@ -591,7 +631,7 @@ async function uploadImage(image, assetCache) {
  * the first page would silently re-upload images and drop editor-authored
  * fields for everything after it.
  */
-async function fetchDraftStories(path, contentType) {
+async function fetchStories(path, contentType, version = 'draft') {
   const deliveryToken = process.env.STORYBLOK_TOKEN;
   if (!deliveryToken) return null;
 
@@ -599,7 +639,7 @@ async function fetchDraftStories(path, contentType) {
   for (let page = 1; page <= 50; page += 1) {
     const res = await fetch(
       `https://api.storyblok.com/v2/cdn/stories?token=${deliveryToken}` +
-        `&version=draft&starts_with=${path}&content_type=${contentType}` +
+        `&version=${version}&starts_with=${path}&content_type=${contentType}` +
         `&per_page=100&page=${page}`
     );
     if (!res.ok) throw new Error(`delivery API ${res.status}`);
@@ -646,8 +686,8 @@ async function fetchExistingContent() {
   const byFullSlug = new Map();
   try {
     const groups = await Promise.all([
-      fetchDraftStories(PRODUCTS_PATH, 'product'),
-      fetchDraftStories(COLLECTIONS_PATH, 'shop_collection'),
+      fetchStories(PRODUCTS_PATH, 'product'),
+      fetchStories(COLLECTIONS_PATH, 'shop_collection'),
     ]);
     groups.forEach((stories) =>
       (stories ?? []).forEach((story) => {
@@ -668,6 +708,29 @@ async function fetchExistingContent() {
   return byFullSlug;
 }
 
+/**
+ * Images each product currently has *published*, keyed by slug.
+ *
+ * Used only for products the run skips because they carry unpublished edits.
+ * Their draft content may contain artwork nobody has approved, and a collection
+ * cover is published immediately — so the cover must be chosen from what is
+ * already live, never from the draft.
+ */
+async function fetchPublishedProductState() {
+  const bySlug = new Map();
+  const stories =
+    (await fetchStories(PRODUCTS_PATH, 'product', 'published')) ?? [];
+  stories.forEach((story) => {
+    bySlug.set(story.slug, {
+      images: story.content?.images ?? [],
+      inStock: story.content?.in_stock !== false,
+      featured: story.content?.featured === true,
+      brand: story.content?.brand ?? '',
+    });
+  });
+  return bySlug;
+}
+
 async function seedAssetCache(assetCache) {
   if (!process.env.STORYBLOK_TOKEN) {
     console.log(
@@ -677,7 +740,7 @@ async function seedAssetCache(assetCache) {
   }
 
   try {
-    const stories = (await fetchDraftStories(PRODUCTS_PATH, 'product')) ?? [];
+    const stories = (await fetchStories(PRODUCTS_PATH, 'product')) ?? [];
 
     stories.forEach((story) => {
       (story.content?.images ?? []).forEach((asset) => {
@@ -698,15 +761,140 @@ async function seedAssetCache(assetCache) {
   }
 }
 
+/**
+ * Choose the cover photo for each collection: the first image of a
+ * representative product in it.
+ *
+ * Availability outranks being featured. A featured product can sell out, and
+ * fronting a brand with something nobody can buy is worse than fronting it with
+ * an ordinary item that is in stock — so `featured` only breaks ties among
+ * products of the same availability. Ordering is by slug rather than catalog
+ * order so the pick is stable between runs and does not shuffle the shop page.
+ *
+ * Without this every collection card falls back to the generic outline icon in
+ * shop/index.astro, which is what the "Browse by Brand" grid was showing.
+ */
+/**
+ * Add products that exist only in Storyblok to the cover candidate pool.
+ *
+ * `records` holds what Shopify returned, so a product authored directly in the
+ * CMS — the point of moving the catalog there — could never front its brand.
+ * That matters most for a collection whose Shopify products have all been
+ * deleted: it is still maintained, so without this its cover would be cleared
+ * and never re-set even though a perfectly good published product remains.
+ *
+ * Only published state is used, and their images are fed into the same map the
+ * ranking reads from.
+ */
+function withCmsAuthoredProducts(
+  records,
+  publishedState,
+  imagesBySlug,
+  stockBySlug,
+  featuredBySlug
+) {
+  const known = new Set(records.map((record) => record.slug));
+  const extra = [];
+
+  publishedState.forEach((state, slug) => {
+    if (known.has(slug) || !state.brand || !state.images.length) return;
+    // Published values throughout: this run is not writing these products, so
+    // ranking them on draft state could move a cover on the strength of an edit
+    // nobody has published.
+    imagesBySlug.set(slug, state.images);
+    stockBySlug.set(slug, state.inStock);
+    featuredBySlug.set(slug, state.featured);
+    extra.push({
+      slug,
+      brand: state.brand,
+      inStock: state.inStock,
+      name: slug,
+    });
+  });
+
+  return [...records, ...extra];
+}
+
+function pickCollectionCovers(
+  records,
+  imagesBySlug,
+  stockBySlug,
+  featuredBySlug,
+  existingContent
+) {
+  // `stockBySlug` overrides Shopify's value for products whose stock was not
+  // written this run, so ranking reflects what the site actually serves.
+  const inStock = (record) =>
+    stockBySlug?.has(record.slug)
+      ? stockBySlug.get(record.slug)
+      : record.inStock;
+
+  // `featured` is editor-owned and only seeded on create, so the persisted
+  // value is what counts. Ranking on the FEATURED_SLUGS seed instead would
+  // ignore an editor's change — fronting a brand with a product they
+  // unfeatured, or overlooking the one they promoted.
+  const isFeatured = (record) => {
+    // Skipped products expose their *published* flag, for the same reason as
+    // stock: a draft change to `featured` must not move a collection cover and
+    // publish it while the product itself is being held back.
+    if (featuredBySlug?.has(record.slug))
+      return featuredBySlug.get(record.slug);
+    const stored = existingContent?.get(`${PRODUCTS_PATH}${record.slug}`);
+    return stored ? stored.featured === true : FEATURED_SLUGS.has(record.slug);
+  };
+
+  const rank = (record) =>
+    (inStock(record) ? 0 : 2) + (isFeatured(record) ? 0 : 1);
+  const covers = new Map();
+
+  [...records]
+    .sort((a, b) => rank(a) - rank(b) || a.slug.localeCompare(b.slug))
+    .forEach((record) => {
+      if (covers.has(record.brand)) return;
+      const cover = (imagesBySlug.get(record.slug) ?? [])[0];
+      if (cover) covers.set(record.brand, cover);
+    });
+
+  return covers;
+}
+
 async function migrateCollections(
   collections,
   parentId,
   existing,
-  existingContent
+  existingContent,
+  covers
 ) {
   for (const collection of collections) {
+    const fullSlug = `${COLLECTIONS_PATH}${collection.slug}`;
+    const current = existingContent?.get(fullSlug)?.image;
+    const cover = covers?.get(collection.slug);
+
+    /*
+     * Three cases, distinguished by the marker written into the asset's `title`:
+     *   - no image        -> seed one
+     *   - auto-seeded     -> re-seed, so a cover whose product has since sold
+     *                        out or been deleted gets re-ranked instead of
+     *                        advertising something unavailable forever
+     *   - editor's image  -> leave alone; a curated choice outranks the
+     *                        automatic one
+     * Without the marker the second and third cases are indistinguishable.
+     */
+    const isAuto = current?.title === AUTO_COVER_MARK;
+    const mayReplace = !current?.filename || isAuto;
+    // An empty patch would let the merge carry the old image forward, so when an
+    // auto cover can no longer be justified — its product deleted, or nothing
+    // left in the collection has a photo — it is cleared explicitly rather than
+    // left advertising something that is gone.
+    let image = {};
+    if (mayReplace && cover) {
+      image = { image: { ...cover, title: AUTO_COVER_MARK } };
+    } else if (isAuto && !cover) {
+      image = { image: null };
+    }
+
     await upsertStory({
-      fullSlug: `${COLLECTIONS_PATH}${collection.slug}`,
+      fullSlug,
       name: collection.title,
       slug: collection.slug,
       parentId,
@@ -716,6 +904,7 @@ async function migrateCollections(
         component: 'shop_collection',
         title: collection.title,
         description: collection.description,
+        ...image,
       },
     });
   }
@@ -781,8 +970,13 @@ async function migrateProducts(
   parentId,
   existing,
   assetCache,
-  existingContent
+  existingContent,
+  publishedState
 ) {
+  const imagesBySlug = new Map();
+  const stockBySlug = new Map();
+  const featuredBySlug = new Map();
+
   for (const record of records) {
     const fullSlug = `${PRODUCTS_PATH}${record.slug}`;
 
@@ -791,6 +985,21 @@ async function migrateProducts(
     // never sees them and every later run uploads them again.
     if (hasUnpublishedEdits(existing, fullSlug)) {
       reportSkippedDraft(fullSlug);
+      // Contribute the product's *published* images so the cover ranking is
+      // unchanged by an in-flight draft — a collection whose best
+      // representative happens to be mid-edit should not silently demote and
+      // flip back next run. Published, not draft: a collection cover is
+      // published immediately, so drafting new artwork must not push it live.
+      const live = publishedState?.get(record.slug);
+      if (live?.images?.length) imagesBySlug.set(record.slug, live.images);
+      // Rank it on the stock the site is actually serving, too. Its `in_stock`
+      // is deliberately not written this run, so ranking on Shopify's newer
+      // value could front a collection with something the live page still
+      // shows as sold out.
+      if (live) {
+        stockBySlug.set(record.slug, live.inStock);
+        featuredBySlug.set(record.slug, live.featured);
+      }
       continue;
     }
 
@@ -800,6 +1009,7 @@ async function migrateProducts(
         images.push(await uploadImage(image, assetCache));
       }
     }
+    imagesBySlug.set(record.slug, images);
 
     // `featured` and `seo_description` are merchandising controls owned by the
     // editor — the schema calls the latter an override, and the homepage rail
@@ -836,6 +1046,8 @@ async function migrateProducts(
       },
     });
   }
+
+  return { imagesBySlug, stockBySlug, featuredBySlug };
 }
 
 async function fetchExistingShopStories() {
@@ -977,9 +1189,15 @@ async function main() {
   );
 
   const usedBrands = new Set(records.map((record) => record.brand));
-  const collections = COLLECTIONS.filter((collection) =>
-    usedBrands.has(collection.slug)
-  );
+  /*
+   * Every known brand is processed, not just those with Shopify products this
+   * run. A brand whose last Shopify product is deleted still needs its
+   * collection maintained — otherwise a stale automatic cover is never
+   * refreshed or cleared, and the tile keeps advertising a product that is
+   * gone. Collections with no products at all are filtered out downstream by
+   * shopClient, so this cannot surface an empty one.
+   */
+  const collections = COLLECTIONS;
   const orphanBrands = [...usedBrands].filter(
     (brand) => !COLLECTIONS.some((collection) => collection.slug === brand)
   );
@@ -1012,25 +1230,42 @@ async function main() {
     existing
   );
 
+  // Products first: their uploaded images are what the collection covers are
+  // chosen from, so collections cannot be written until the assets exist.
+  console.log('\nProducts:');
+  const assetCache = new Map();
+  if (!DRY_RUN) await seedAssetCache(assetCache);
+  const publishedState = await fetchPublishedProductState();
+  const { imagesBySlug, stockBySlug, featuredBySlug } = await migrateProducts(
+    records,
+    productsId,
+    existing,
+    assetCache,
+    existingContent,
+    publishedState
+  );
+  await reconcileOrphanProducts(records, existing);
+
   console.log('\nCollections:');
   await migrateCollections(
     collections,
     collectionsId,
     existing,
-    existingContent
+    existingContent,
+    pickCollectionCovers(
+      withCmsAuthoredProducts(
+        records,
+        publishedState,
+        imagesBySlug,
+        stockBySlug,
+        featuredBySlug
+      ),
+      imagesBySlug,
+      stockBySlug,
+      featuredBySlug,
+      existingContent
+    )
   );
-
-  console.log('\nProducts:');
-  const assetCache = new Map();
-  if (!DRY_RUN) await seedAssetCache(assetCache);
-  await migrateProducts(
-    records,
-    productsId,
-    existing,
-    assetCache,
-    existingContent
-  );
-  await reconcileOrphanProducts(records, existing);
 
   console.log(
     `\n✨ Done — ${collections.length} collections, ${records.length} products.`

@@ -146,8 +146,38 @@ describe('transformCollection', () => {
       handle: 'mag',
       description: 'Handpans from MAG.',
       image: { url: 'https://a.storyblok.com/f/1/mag.png', altText: 'MAG' },
+      imageIsAutoCover: false,
       productCount: 4,
     });
+  });
+
+  test('treats an unmarked image as editor-supplied so it is fitted, not cropped', () => {
+    expect(transformCollection(story, 4).imageIsAutoCover).toBe(false);
+  });
+
+  test('flags a cover the migration picked so the card can crop it to fill', () => {
+    const auto = {
+      ...story,
+      content: {
+        ...story.content,
+        image: {
+          filename: 'https://a.storyblok.com/f/1/product.jpg',
+          alt: 'MAG',
+          title: 'auto: collection cover',
+        },
+      },
+    } as CollectionStory;
+    expect(transformCollection(auto, 4).imageIsAutoCover).toBe(true);
+  });
+
+  test('reports no auto cover when the collection has no image at all', () => {
+    const bare = {
+      ...story,
+      content: { component: 'shop_collection', title: 'MAG' },
+    } as CollectionStory;
+    const collection = transformCollection(bare, 0);
+    expect(collection.image).toBeUndefined();
+    expect(collection.imageIsAutoCover).toBe(false);
   });
 
   test('falls back to the story name and empty description', () => {

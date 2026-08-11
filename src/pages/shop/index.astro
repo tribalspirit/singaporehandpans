@@ -69,7 +69,13 @@ const pageDescription =
                 <div class="collections-grid">
                   {collections.map((col) => (
                     <a href={`/shop/${col.handle}/`} class="collection-card">
-                      <div class="collection-image-wrapper">
+                      <div
+                        class:list={[
+                          'collection-image-wrapper',
+                          col.imageIsAutoCover &&
+                            'collection-image-wrapper--photo',
+                        ]}
+                      >
                         {col.image ? (
                           <img
                             src={col.image.url}
@@ -225,6 +231,12 @@ const pageDescription =
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--color-gray-200);
+
+    /*
+     * Default is `contain` with padding, which is what an editor-supplied image
+     * needs: shop_collection.image is documented as "brand logo or hero photo",
+     * and cropping a logo to 16:9 would clip it.
+     */
     padding: var(--space-4);
 
     img {
@@ -235,7 +247,21 @@ const pageDescription =
     }
 
     .collection-card:hover & img {
-      transform: scale(1.02);
+      transform: scale(1.03);
+    }
+  }
+
+  /*
+   * Automatically picked product photos instead fill the frame. They come from
+   * the catalog with wildly different backgrounds (white studio cut-outs, dark
+   * scenes) and subject scales, so letterboxing them made the grid read as
+   * eight mismatched thumbnails floating on different fields.
+   */
+  .collection-image-wrapper--photo {
+    padding: 0;
+
+    img {
+      object-fit: cover;
     }
   }
 

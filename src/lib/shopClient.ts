@@ -18,7 +18,15 @@ export type { ShopProduct, ShopCollection } from './shopTypes';
 type StoryblokAsset = {
   filename: string;
   alt?: string | null;
+  title?: string | null;
 };
+
+/**
+ * Marker the catalog migration writes into an automatically chosen collection
+ * cover's `title` (see scripts/migrate-shop-catalog.js). It distinguishes a
+ * product photo the migration picked from an image an editor uploaded.
+ */
+const AUTO_COVER_MARK = 'auto: collection cover';
 
 export type ProductStory = {
   uuid: string;
@@ -112,6 +120,7 @@ export function transformCollection(
     handle: story.slug,
     description: story.content.description || '',
     image: toImage(story.content.image, story.content.title || story.name),
+    imageIsAutoCover: story.content.image?.title === AUTO_COVER_MARK,
     productCount,
   };
 }
