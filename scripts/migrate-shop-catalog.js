@@ -22,6 +22,8 @@
  * Usage:
  *   node scripts/migrate-shop-catalog.js --dry-run   # report only, no writes
  *   node scripts/migrate-shop-catalog.js             # perform the migration
+ *   node scripts/migrate-shop-catalog.js --prune     # also unpublish products
+ *                                                    # no longer in Shopify
  *
  * Requires STORYBLOK_MANAGEMENT_TOKEN, STORYBLOK_SPACE_ID,
  * PUBLIC_SHOPIFY_STORE_DOMAIN and PUBLIC_SHOPIFY_STOREFRONT_TOKEN in .env.
@@ -36,6 +38,7 @@ const MAPI = 'https://mapi.storyblok.com/v1';
 const SHOPIFY_API_VERSION = '2024-01';
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERBOSE = process.argv.includes('--verbose');
+const PRUNE = process.argv.includes('--prune');
 
 // Must match the paths shopClient.ts reads from.
 const PRODUCTS_PATH = 'shop/products/';
@@ -350,7 +353,16 @@ function assetFileName(sourceUrl) {
 /** Storyblok 3-step signed upload; returns an asset object for content fields. */
 async function uploadImage(image, assetCache) {
   const cleanName = assetFileName(image.url);
-  const cached = assetCache.get(image.url) ?? assetCache.get(cleanName);
+
+  // Exact match on the source URL is authoritative. The filename fallback only
+  // applies to legacy assets that carry no `source`: Shopify image URLs are
+  // version-stamped (?v=...), so an image replaced under the same filename gets
+  // a new URL, and falling back on filename alone would silently re-publish the
+  // superseded image instead of downloading the replacement.
+  const bySource = assetCache.get(image.url);
+  const byName = assetCache.get(cleanName);
+  const cached = bySource ?? (byName && !byName.source ? byName : undefined);
+
   if (cached) {
     stats.reused += 1;
     // Backfill `source` on assets uploaded before it was recorded, so future
@@ -466,6 +478,56 @@ async function migrateCollections(collections, parentId, existing) {
         description: collection.description,
       },
     });
+  }
+}
+
+/**
+ * Report product stories that no longer correspond to anything in Shopify —
+ * left behind when a product is deleted, renamed (slugs derive from titles, so
+ * a rename creates a new story), or loses a variant.
+ *
+ * This matters beyond tidiness: `/api/shop/checkout` reads price and stock from
+ * *published* CMS content, so an orphan stays purchasable at its old price.
+ *
+ * Orphans are only reported by default, never removed. Products may legitimately
+ * be authored directly in Storyblok — that is the point of moving the catalog
+ * into the CMS — and those must not be destroyed by a Shopify sync. Pass
+ * `--prune` to unpublish the orphans (content is retained, just not sellable).
+ */
+async function reconcileOrphanProducts(records, existing) {
+  const desired = new Set(
+    records.map((record) => `${PRODUCTS_PATH}${record.slug}`)
+  );
+  const orphans = [...existing.entries()].filter(
+    ([fullSlug, story]) =>
+      fullSlug.startsWith(PRODUCTS_PATH) &&
+      !story.is_folder &&
+      !desired.has(fullSlug)
+  );
+
+  if (!orphans.length) return;
+
+  console.log(
+    `\n⚠️  ${orphans.length} product story(ies) not present in Shopify:`
+  );
+  for (const [fullSlug, story] of orphans) {
+    const published = story.published && !story.unpublished_changes;
+    console.log(
+      `   ${fullSlug}${published ? '  [PUBLISHED — still purchasable]' : '  [draft]'}`
+    );
+
+    if (!PRUNE || DRY_RUN) continue;
+    if (!story.published) continue;
+
+    await mapi('GET', `stories/${story.id}/unpublish`);
+    console.log('     ↳ unpublished');
+    await sleep(180);
+  }
+
+  if (!PRUNE) {
+    console.log(
+      '   Re-run with --prune to unpublish these, or remove them in Storyblok.'
+    );
   }
 }
 
@@ -634,6 +696,7 @@ async function main() {
   const assetCache = new Map();
   if (!DRY_RUN) await seedAssetCache(assetCache);
   await migrateProducts(records, productsId, existing, assetCache);
+  await reconcileOrphanProducts(records, existing);
 
   console.log(
     `\n✨ Done — ${collections.length} collections, ${records.length} products.`
