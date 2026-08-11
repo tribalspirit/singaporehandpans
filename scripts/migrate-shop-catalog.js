@@ -43,6 +43,13 @@ const PRUNE = process.argv.includes('--prune');
 // Must match the paths shopClient.ts reads from.
 const PRODUCTS_PATH = 'shop/products/';
 const CURRENCY = 'SGD';
+
+/**
+ * Written into the `title` of an automatically chosen collection cover, so a
+ * later run can tell its own pick apart from an image an editor uploaded and
+ * refresh the former without overwriting the latter.
+ */
+const AUTO_COVER_MARK = 'auto: collection cover';
 const COLLECTIONS_PATH = 'shop/collections/';
 
 const TOKEN = process.env.STORYBLOK_MANAGEMENT_TOKEN;
@@ -769,11 +776,25 @@ async function migrateCollections(
 ) {
   for (const collection of collections) {
     const fullSlug = `${COLLECTIONS_PATH}${collection.slug}`;
-    // Only supply a cover when the collection has none. The image is an
-    // editor-owned field, so a curated choice must win over the automatic one.
-    const editorImage = existingContent?.get(fullSlug)?.image?.filename;
+    const current = existingContent?.get(fullSlug)?.image;
     const cover = covers?.get(collection.slug);
-    const image = !editorImage && cover ? { image: cover } : {};
+
+    /*
+     * Three cases, distinguished by the marker written into the asset's `title`:
+     *   - no image        -> seed one
+     *   - auto-seeded     -> re-seed, so a cover whose product has since sold
+     *                        out or been deleted gets re-ranked instead of
+     *                        advertising something unavailable forever
+     *   - editor's image  -> leave alone; a curated choice outranks the
+     *                        automatic one
+     * Without the marker the second and third cases are indistinguishable.
+     */
+    const isAuto = current?.title === AUTO_COVER_MARK;
+    const mayReplace = !current?.filename || isAuto;
+    const image =
+      mayReplace && cover
+        ? { image: { ...cover, title: AUTO_COVER_MARK } }
+        : {};
 
     await upsertStory({
       fullSlug,
