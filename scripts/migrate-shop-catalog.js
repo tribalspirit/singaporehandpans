@@ -239,19 +239,21 @@ function seoDescription(text) {
   return `${cut.slice(0, lastSpace > 80 ? lastSpace : 157)}…`;
 }
 
-async function fetchShopifyCatalog() {
-  const query = `{
-    products(first: 250) {
-      edges { node {
-        handle title productType vendor availableForSale descriptionHtml
-        images(first: 12) { edges { node { url altText width height } } }
-        variants(first: 25) { edges { node {
-          title availableForSale price { amount currencyCode }
-        } } }
-      } }
-    }
-  }`;
+const CATALOG_QUERY = `query Catalog($cursor: String) {
+  products(first: 100, after: $cursor) {
+    pageInfo { hasNextPage endCursor }
+    edges { node {
+      handle title productType vendor availableForSale descriptionHtml
+      images(first: 12) { edges { node { url altText width height } } }
+      variants(first: 25) { edges { node {
+        title availableForSale price { amount currencyCode }
+        image { url altText width height }
+      } } }
+    } }
+  }
+}`;
 
+async function shopifyRequest(variables) {
   const res = await fetch(
     `https://${SHOP_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`,
     {
@@ -260,7 +262,7 @@ async function fetchShopifyCatalog() {
         'Content-Type': 'application/json',
         'X-Shopify-Storefront-Access-Token': SHOP_TOKEN,
       },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query: CATALOG_QUERY, variables }),
     }
   );
   if (!res.ok) throw new Error(`Shopify API ${res.status}`);
@@ -270,7 +272,29 @@ async function fetchShopifyCatalog() {
       `Shopify errors: ${JSON.stringify(json.errors).slice(0, 300)}`
     );
   }
-  return json.data.products.edges.map((edge) => edge.node);
+  return json.data.products;
+}
+
+/**
+ * Walk the whole product connection. Paginating rather than taking a single
+ * large page matters for correctness, not just scale: a silently truncated
+ * catalog would leave the omitted products stale, and `--prune` would treat
+ * them as deleted from Shopify and unpublish them.
+ */
+async function fetchShopifyCatalog() {
+  const nodes = [];
+  let cursor = null;
+
+  for (let page = 1; page <= 50; page += 1) {
+    const { edges, pageInfo } = await shopifyRequest({ cursor });
+    nodes.push(...edges.map((edge) => edge.node));
+    if (!pageInfo.hasNextPage) return nodes;
+    cursor = pageInfo.endCursor;
+  }
+
+  throw new Error(
+    `Shopify catalog exceeded the 50-page ceiling after ${nodes.length} products`
+  );
 }
 
 /**
@@ -330,10 +354,32 @@ function buildProductRecords(shopifyProducts) {
         brand,
         productType,
         description,
-        images,
+        images: orderImagesForVariant(images, variant, title),
       };
     });
   });
+}
+
+/**
+ * Lead a split variant's image set with that variant's own photo.
+ *
+ * Every colour story would otherwise inherit the product-level array in its
+ * original order, so the EVATEK Woodbine and Mustang stories would both show
+ * the black bag as their card and hero image. The remaining photos are kept, in
+ * order, as secondary shots.
+ */
+function orderImagesForVariant(images, variant, fallbackAlt) {
+  const url = variant.image?.url;
+  if (!url) return images;
+
+  const own = images.find((image) => image.url === url) ?? {
+    url,
+    alt: variant.image.altText || `${fallbackAlt} — ${variant.title}`,
+    width: variant.image.width,
+    height: variant.image.height,
+  };
+
+  return [own, ...images.filter((image) => image.url !== url)];
 }
 
 /**
