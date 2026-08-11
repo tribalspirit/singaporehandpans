@@ -780,7 +780,10 @@ async function migrateProducts(
 
 async function fetchExistingShopStories() {
   const byFullSlug = new Map();
-  for (let page = 1; page <= 10; page += 1) {
+  // 50 pages, matching the other paginated reads. A story missing from this map
+  // is treated as new and sent down the create path, which duplicates a slug
+  // that already exists rather than updating it.
+  for (let page = 1; page <= 50; page += 1) {
     const { stories } = await mapi(
       'GET',
       `stories?starts_with=shop/&per_page=100&page=${page}`
@@ -848,7 +851,12 @@ async function upsertStory({
           `brand=${content.brand} stock=${content.in_stock} ` +
           `imgs=${content.images.length} desc=${content.description.length}ch`
       );
-      console.log(`      seo="${content.seo_description.slice(0, 100)}"`);
+      // Omitted for existing products, whose editor-set value is preserved.
+      console.log(
+        content.seo_description === undefined
+          ? '      seo=<kept from CMS>'
+          : `      seo="${content.seo_description.slice(0, 100)}"`
+      );
     }
     return;
   }
