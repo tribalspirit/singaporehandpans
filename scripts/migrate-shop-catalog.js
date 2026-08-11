@@ -772,15 +772,30 @@ async function seedAssetCache(assetCache) {
  * Without this every collection card falls back to the generic outline icon in
  * shop/index.astro, which is what the "Browse by Brand" grid was showing.
  */
-function pickCollectionCovers(records, imagesBySlug, stockBySlug) {
+function pickCollectionCovers(
+  records,
+  imagesBySlug,
+  stockBySlug,
+  existingContent
+) {
   // `stockBySlug` overrides Shopify's value for products whose stock was not
   // written this run, so ranking reflects what the site actually serves.
   const inStock = (record) =>
     stockBySlug?.has(record.slug)
       ? stockBySlug.get(record.slug)
       : record.inStock;
+
+  // `featured` is editor-owned and only seeded on create, so the persisted
+  // value is what counts. Ranking on the FEATURED_SLUGS seed instead would
+  // ignore an editor's change — fronting a brand with a product they
+  // unfeatured, or overlooking the one they promoted.
+  const isFeatured = (record) => {
+    const stored = existingContent?.get(`${PRODUCTS_PATH}${record.slug}`);
+    return stored ? stored.featured === true : FEATURED_SLUGS.has(record.slug);
+  };
+
   const rank = (record) =>
-    (inStock(record) ? 0 : 2) + (FEATURED_SLUGS.has(record.slug) ? 0 : 1);
+    (inStock(record) ? 0 : 2) + (isFeatured(record) ? 0 : 1);
   const covers = new Map();
 
   [...records]
@@ -1121,9 +1136,15 @@ async function main() {
   );
 
   const usedBrands = new Set(records.map((record) => record.brand));
-  const collections = COLLECTIONS.filter((collection) =>
-    usedBrands.has(collection.slug)
-  );
+  /*
+   * Every known brand is processed, not just those with Shopify products this
+   * run. A brand whose last Shopify product is deleted still needs its
+   * collection maintained — otherwise a stale automatic cover is never
+   * refreshed or cleared, and the tile keeps advertising a product that is
+   * gone. Collections with no products at all are filtered out downstream by
+   * shopClient, so this cannot surface an empty one.
+   */
+  const collections = COLLECTIONS;
   const orphanBrands = [...usedBrands].filter(
     (brand) => !COLLECTIONS.some((collection) => collection.slug === brand)
   );
@@ -1177,7 +1198,7 @@ async function main() {
     collectionsId,
     existing,
     existingContent,
-    pickCollectionCovers(records, imagesBySlug, stockBySlug)
+    pickCollectionCovers(records, imagesBySlug, stockBySlug, existingContent)
   );
 
   console.log(
