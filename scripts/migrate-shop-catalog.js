@@ -716,13 +716,15 @@ async function fetchExistingContent() {
  * cover is published immediately — so the cover must be chosen from what is
  * already live, never from the draft.
  */
-async function fetchPublishedProductImages() {
+async function fetchPublishedProductState() {
   const bySlug = new Map();
   const stories =
     (await fetchStories(PRODUCTS_PATH, 'product', 'published')) ?? [];
   stories.forEach((story) => {
-    const images = story.content?.images ?? [];
-    if (images.length) bySlug.set(story.slug, images);
+    bySlug.set(story.slug, {
+      images: story.content?.images ?? [],
+      inStock: story.content?.in_stock !== false,
+    });
   });
   return bySlug;
 }
@@ -770,9 +772,15 @@ async function seedAssetCache(assetCache) {
  * Without this every collection card falls back to the generic outline icon in
  * shop/index.astro, which is what the "Browse by Brand" grid was showing.
  */
-function pickCollectionCovers(records, imagesBySlug) {
+function pickCollectionCovers(records, imagesBySlug, stockBySlug) {
+  // `stockBySlug` overrides Shopify's value for products whose stock was not
+  // written this run, so ranking reflects what the site actually serves.
+  const inStock = (record) =>
+    stockBySlug?.has(record.slug)
+      ? stockBySlug.get(record.slug)
+      : record.inStock;
   const rank = (record) =>
-    (record.inStock ? 0 : 2) + (FEATURED_SLUGS.has(record.slug) ? 0 : 1);
+    (inStock(record) ? 0 : 2) + (FEATURED_SLUGS.has(record.slug) ? 0 : 1);
   const covers = new Map();
 
   [...records]
@@ -899,9 +907,10 @@ async function migrateProducts(
   existing,
   assetCache,
   existingContent,
-  publishedImages
+  publishedState
 ) {
   const imagesBySlug = new Map();
+  const stockBySlug = new Map();
 
   for (const record of records) {
     const fullSlug = `${PRODUCTS_PATH}${record.slug}`;
@@ -916,8 +925,13 @@ async function migrateProducts(
       // representative happens to be mid-edit should not silently demote and
       // flip back next run. Published, not draft: a collection cover is
       // published immediately, so drafting new artwork must not push it live.
-      const known = publishedImages?.get(record.slug) ?? [];
-      if (known.length) imagesBySlug.set(record.slug, known);
+      const live = publishedState?.get(record.slug);
+      if (live?.images?.length) imagesBySlug.set(record.slug, live.images);
+      // Rank it on the stock the site is actually serving, too. Its `in_stock`
+      // is deliberately not written this run, so ranking on Shopify's newer
+      // value could front a collection with something the live page still
+      // shows as sold out.
+      if (live) stockBySlug.set(record.slug, live.inStock);
       continue;
     }
 
@@ -965,7 +979,7 @@ async function migrateProducts(
     });
   }
 
-  return imagesBySlug;
+  return { imagesBySlug, stockBySlug };
 }
 
 async function fetchExistingShopStories() {
@@ -1147,13 +1161,13 @@ async function main() {
   console.log('\nProducts:');
   const assetCache = new Map();
   if (!DRY_RUN) await seedAssetCache(assetCache);
-  const imagesBySlug = await migrateProducts(
+  const { imagesBySlug, stockBySlug } = await migrateProducts(
     records,
     productsId,
     existing,
     assetCache,
     existingContent,
-    await fetchPublishedProductImages()
+    await fetchPublishedProductState()
   );
   await reconcileOrphanProducts(records, existing);
 
@@ -1163,7 +1177,7 @@ async function main() {
     collectionsId,
     existing,
     existingContent,
-    pickCollectionCovers(records, imagesBySlug)
+    pickCollectionCovers(records, imagesBySlug, stockBySlug)
   );
 
   console.log(
