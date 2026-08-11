@@ -631,7 +631,7 @@ async function uploadImage(image, assetCache) {
  * the first page would silently re-upload images and drop editor-authored
  * fields for everything after it.
  */
-async function fetchDraftStories(path, contentType) {
+async function fetchStories(path, contentType, version = 'draft') {
   const deliveryToken = process.env.STORYBLOK_TOKEN;
   if (!deliveryToken) return null;
 
@@ -639,7 +639,7 @@ async function fetchDraftStories(path, contentType) {
   for (let page = 1; page <= 50; page += 1) {
     const res = await fetch(
       `https://api.storyblok.com/v2/cdn/stories?token=${deliveryToken}` +
-        `&version=draft&starts_with=${path}&content_type=${contentType}` +
+        `&version=${version}&starts_with=${path}&content_type=${contentType}` +
         `&per_page=100&page=${page}`
     );
     if (!res.ok) throw new Error(`delivery API ${res.status}`);
@@ -686,8 +686,8 @@ async function fetchExistingContent() {
   const byFullSlug = new Map();
   try {
     const groups = await Promise.all([
-      fetchDraftStories(PRODUCTS_PATH, 'product'),
-      fetchDraftStories(COLLECTIONS_PATH, 'shop_collection'),
+      fetchStories(PRODUCTS_PATH, 'product'),
+      fetchStories(COLLECTIONS_PATH, 'shop_collection'),
     ]);
     groups.forEach((stories) =>
       (stories ?? []).forEach((story) => {
@@ -708,6 +708,25 @@ async function fetchExistingContent() {
   return byFullSlug;
 }
 
+/**
+ * Images each product currently has *published*, keyed by slug.
+ *
+ * Used only for products the run skips because they carry unpublished edits.
+ * Their draft content may contain artwork nobody has approved, and a collection
+ * cover is published immediately — so the cover must be chosen from what is
+ * already live, never from the draft.
+ */
+async function fetchPublishedProductImages() {
+  const bySlug = new Map();
+  const stories =
+    (await fetchStories(PRODUCTS_PATH, 'product', 'published')) ?? [];
+  stories.forEach((story) => {
+    const images = story.content?.images ?? [];
+    if (images.length) bySlug.set(story.slug, images);
+  });
+  return bySlug;
+}
+
 async function seedAssetCache(assetCache) {
   if (!process.env.STORYBLOK_TOKEN) {
     console.log(
@@ -717,7 +736,7 @@ async function seedAssetCache(assetCache) {
   }
 
   try {
-    const stories = (await fetchDraftStories(PRODUCTS_PATH, 'product')) ?? [];
+    const stories = (await fetchStories(PRODUCTS_PATH, 'product')) ?? [];
 
     stories.forEach((story) => {
       (story.content?.images ?? []).forEach((asset) => {
@@ -791,10 +810,16 @@ async function migrateCollections(
      */
     const isAuto = current?.title === AUTO_COVER_MARK;
     const mayReplace = !current?.filename || isAuto;
-    const image =
-      mayReplace && cover
-        ? { image: { ...cover, title: AUTO_COVER_MARK } }
-        : {};
+    // An empty patch would let the merge carry the old image forward, so when an
+    // auto cover can no longer be justified — its product deleted, or nothing
+    // left in the collection has a photo — it is cleared explicitly rather than
+    // left advertising something that is gone.
+    let image = {};
+    if (mayReplace && cover) {
+      image = { image: { ...cover, title: AUTO_COVER_MARK } };
+    } else if (isAuto && !cover) {
+      image = { image: null };
+    }
 
     await upsertStory({
       fullSlug,
@@ -873,7 +898,8 @@ async function migrateProducts(
   parentId,
   existing,
   assetCache,
-  existingContent
+  existingContent,
+  publishedImages
 ) {
   const imagesBySlug = new Map();
 
@@ -885,11 +911,12 @@ async function migrateProducts(
     // never sees them and every later run uploads them again.
     if (hasUnpublishedEdits(existing, fullSlug)) {
       reportSkippedDraft(fullSlug);
-      // Still record the images the story already has. Skipping the write must
-      // not also drop the product out of the cover ranking — otherwise a
-      // collection whose best representative happens to be mid-edit silently
-      // demotes to a lesser one, and flips back on the next run.
-      const known = existingContent?.get(fullSlug)?.images ?? [];
+      // Contribute the product's *published* images so the cover ranking is
+      // unchanged by an in-flight draft — a collection whose best
+      // representative happens to be mid-edit should not silently demote and
+      // flip back next run. Published, not draft: a collection cover is
+      // published immediately, so drafting new artwork must not push it live.
+      const known = publishedImages?.get(record.slug) ?? [];
       if (known.length) imagesBySlug.set(record.slug, known);
       continue;
     }
@@ -1125,7 +1152,8 @@ async function main() {
     productsId,
     existing,
     assetCache,
-    existingContent
+    existingContent,
+    await fetchPublishedProductImages()
   );
   await reconcileOrphanProducts(records, existing);
 
