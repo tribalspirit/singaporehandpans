@@ -628,10 +628,14 @@ async function fetchExistingContent() {
       })
     );
   } catch (error) {
-    // Non-fatal, but the operator must know CMS-only fields are at risk.
-    console.warn(
-      `⚠️  Could not read existing content (${error.message}) — ` +
-        'CMS-authored fields may be overwritten this run.'
+    // Fatal. An empty map is indistinguishable from "nothing exists yet", so
+    // carrying on would send every PUT with no merge base and strip the exact
+    // CMS-only fields this map exists to protect — collection images and
+    // editor-curated featured/SEO. An expired preview token, a token pointing
+    // at another space, or a transient Storyblok outage all land here.
+    throw new Error(
+      `Could not read existing content (${error.message}). ` +
+        'Refusing to continue — updates would overwrite CMS-authored fields.'
     );
   }
   return byFullSlug;
@@ -753,14 +757,22 @@ async function migrateProducts(
   existingContent
 ) {
   for (const record of records) {
+    const fullSlug = `${PRODUCTS_PATH}${record.slug}`;
+
+    // Checked before uploading, not inside upsertStory: images pushed for a
+    // story that is then skipped are referenced by nothing, so seedAssetCache
+    // never sees them and every later run uploads them again.
+    if (hasUnpublishedEdits(existing, fullSlug)) {
+      reportSkippedDraft(fullSlug);
+      continue;
+    }
+
     const images = [];
     if (!DRY_RUN) {
       for (const image of record.images) {
         images.push(await uploadImage(image, assetCache));
       }
     }
-
-    const fullSlug = `${PRODUCTS_PATH}${record.slug}`;
 
     // `featured` and `seo_description` are merchandising controls owned by the
     // editor — the schema calls the latter an override, and the homepage rail
@@ -844,6 +856,23 @@ async function ensureFolder(slug, name, parentId, existing) {
   return story.id;
 }
 
+/**
+ * True when a story has editor changes saved but not published. The migration
+ * must not touch these: the merge base is draft content, so writing would fold
+ * the unpublished edits into the payload and `publish: 1` would push them live.
+ */
+function hasUnpublishedEdits(existing, fullSlug) {
+  return Boolean(existing.get(fullSlug)?.unpublished_changes);
+}
+
+function reportSkippedDraft(fullSlug) {
+  warnings.push(
+    `Skipped ${fullSlug} — it has unpublished editor changes. ` +
+      'Publish or discard them in Storyblok, then re-run to sync it.'
+  );
+  console.log(`  ⏭️  skipped ${fullSlug} (unpublished editor changes)`);
+}
+
 async function upsertStory({
   fullSlug,
   name,
@@ -861,12 +890,8 @@ async function upsertStory({
   // folded into this payload and pushed live by `publish: 1` — a catalog sync
   // silently publishing something nobody approved. Skip it and say so; the
   // product syncs on the next run once the draft is published or discarded.
-  if (found?.unpublished_changes) {
-    warnings.push(
-      `Skipped ${fullSlug} — it has unpublished editor changes. ` +
-        'Publish or discard them in Storyblok, then re-run to sync it.'
-    );
-    console.log(`  ⏭️  skipped ${fullSlug} (unpublished editor changes)`);
+  if (hasUnpublishedEdits(existing, fullSlug)) {
+    reportSkippedDraft(fullSlug);
     return;
   }
 
