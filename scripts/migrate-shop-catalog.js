@@ -724,6 +724,7 @@ async function fetchPublishedProductState() {
     bySlug.set(story.slug, {
       images: story.content?.images ?? [],
       inStock: story.content?.in_stock !== false,
+      featured: story.content?.featured === true,
     });
   });
   return bySlug;
@@ -776,6 +777,7 @@ function pickCollectionCovers(
   records,
   imagesBySlug,
   stockBySlug,
+  featuredBySlug,
   existingContent
 ) {
   // `stockBySlug` overrides Shopify's value for products whose stock was not
@@ -790,6 +792,11 @@ function pickCollectionCovers(
   // ignore an editor's change — fronting a brand with a product they
   // unfeatured, or overlooking the one they promoted.
   const isFeatured = (record) => {
+    // Skipped products expose their *published* flag, for the same reason as
+    // stock: a draft change to `featured` must not move a collection cover and
+    // publish it while the product itself is being held back.
+    if (featuredBySlug?.has(record.slug))
+      return featuredBySlug.get(record.slug);
     const stored = existingContent?.get(`${PRODUCTS_PATH}${record.slug}`);
     return stored ? stored.featured === true : FEATURED_SLUGS.has(record.slug);
   };
@@ -926,6 +933,7 @@ async function migrateProducts(
 ) {
   const imagesBySlug = new Map();
   const stockBySlug = new Map();
+  const featuredBySlug = new Map();
 
   for (const record of records) {
     const fullSlug = `${PRODUCTS_PATH}${record.slug}`;
@@ -946,7 +954,10 @@ async function migrateProducts(
       // is deliberately not written this run, so ranking on Shopify's newer
       // value could front a collection with something the live page still
       // shows as sold out.
-      if (live) stockBySlug.set(record.slug, live.inStock);
+      if (live) {
+        stockBySlug.set(record.slug, live.inStock);
+        featuredBySlug.set(record.slug, live.featured);
+      }
       continue;
     }
 
@@ -994,7 +1005,7 @@ async function migrateProducts(
     });
   }
 
-  return { imagesBySlug, stockBySlug };
+  return { imagesBySlug, stockBySlug, featuredBySlug };
 }
 
 async function fetchExistingShopStories() {
@@ -1182,7 +1193,7 @@ async function main() {
   console.log('\nProducts:');
   const assetCache = new Map();
   if (!DRY_RUN) await seedAssetCache(assetCache);
-  const { imagesBySlug, stockBySlug } = await migrateProducts(
+  const { imagesBySlug, stockBySlug, featuredBySlug } = await migrateProducts(
     records,
     productsId,
     existing,
@@ -1198,7 +1209,13 @@ async function main() {
     collectionsId,
     existing,
     existingContent,
-    pickCollectionCovers(records, imagesBySlug, stockBySlug, existingContent)
+    pickCollectionCovers(
+      records,
+      imagesBySlug,
+      stockBySlug,
+      featuredBySlug,
+      existingContent
+    )
   );
 
   console.log(

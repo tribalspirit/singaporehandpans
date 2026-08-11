@@ -257,7 +257,7 @@ const descriptionBlocks = product.description
                 <div class="product-description">
                   {descriptionBlocks.map((block) =>
                     block.type === 'list' ? (
-                      <ul class="product-description__list">
+                      <ul class="product-description__list" role="list">
                         {block.items.map((item) => (
                           <li>{item}</li>
                         ))}
@@ -524,6 +524,9 @@ const descriptionBlocks = product.description
   .product-description__list {
     margin: 0;
     padding: 0;
+    /* The markup carries an explicit `role="list"` because of this line:
+       Safari drops list semantics from the accessibility tree when the marker
+       is removed, which would defeat the point of using a real list. */
     list-style: none;
 
     li {
