@@ -225,17 +225,23 @@ const pageDescription =
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: var(--color-gray-200);
-    padding: var(--space-4);
 
+    /*
+     * `cover`, not `contain`: these tiles are filled with a representative
+     * product photo, and the source images have wildly different backgrounds
+     * (white studio cut-outs, dark scenes) and subject scales. Letterboxing
+     * them made the grid read as eight mismatched thumbnails floating on
+     * different backgrounds. Cropping to fill gives one consistent band.
+     */
     img {
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
       transition: transform var(--transition-normal);
     }
 
     .collection-card:hover & img {
-      transform: scale(1.02);
+      transform: scale(1.03);
     }
   }
 

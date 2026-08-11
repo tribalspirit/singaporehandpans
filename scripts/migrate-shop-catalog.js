@@ -213,25 +213,58 @@ function slugify(value) {
     .replace(/^-+|-+$/g, '');
 }
 
-/** Strip Shopify's description HTML down to the plain text the textarea holds. */
-function htmlToText(html) {
-  if (!html) return '';
-  return html
-    .replace(/<\s*(br|\/p|\/div|\/li|\/h[1-6])\s*\/?>/gi, '\n')
-    .replace(/<li[^>]*>/gi, '• ')
-    .replace(/<[^>]+>/g, '')
+function decodeEntities(text) {
+  return text
     .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#39;|&apos;/g, "'")
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .split('\n')
-    .map((line) => line.trim())
-    .join('\n')
-    .trim();
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&amp;/g, '&'); // last, so &amp;lt; does not become <
+}
+
+/**
+ * Strip Shopify's description HTML down to the plain text the textarea holds.
+ *
+ * The product page renders this with `white-space: pre-line`, so every newline
+ * here is a visible line break — the conversion has to produce final layout,
+ * not just tag-free text.
+ *
+ * List items are flattened first, deliberately. Shopify writes
+ * `<li><p><span>text</span></p></li>` with newlines between the tags, so
+ * treating `</li>` as a plain break left the bullet stranded on its own line
+ * with a blank line after every item.
+ */
+function htmlToText(html) {
+  if (!html) return '';
+
+  const withBullets = html.replace(
+    /<li[^>]*>([\s\S]*?)<\/li>/gi,
+    (_, inner) =>
+      `\n• ${inner
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()}\n`
+  );
+
+  return (
+    decodeEntities(
+      withBullets
+        .replace(/<\s*(br|\/p|\/div|\/h[1-6]|\/ul|\/ol|\/tr)\s*\/?>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+    )
+      .replace(/[ \t]+/g, ' ')
+      .split('\n')
+      .map((line) => line.trim())
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      // Consecutive bullets are one list — no blank line between them, and none
+      // between a lead-in line like "Features:" and the first bullet.
+      .replace(/\n\n(?=• )/g, '\n')
+      .replace(/(^|\n)• *(?=\n|$)/g, '$1') // drop empty bullets
+      .trim()
+  );
 }
 
 function detectBrand(title, vendor) {
@@ -698,15 +731,49 @@ async function seedAssetCache(assetCache) {
   }
 }
 
+/**
+ * Choose the cover photo for each collection: the first image of a
+ * representative product in it. Preference order is featured, then in stock,
+ * then whatever comes first, so a collection is not fronted by a sold-out item.
+ * Ordering is by slug rather than catalog order so the pick is stable between
+ * runs and does not shuffle the shop page.
+ *
+ * Without this every collection card falls back to the generic outline icon in
+ * shop/index.astro, which is what the "Browse by Brand" grid was showing.
+ */
+function pickCollectionCovers(records, imagesBySlug) {
+  const rank = (record) =>
+    FEATURED_SLUGS.has(record.slug) ? 0 : record.inStock ? 1 : 2;
+  const covers = new Map();
+
+  [...records]
+    .sort((a, b) => rank(a) - rank(b) || a.slug.localeCompare(b.slug))
+    .forEach((record) => {
+      if (covers.has(record.brand)) return;
+      const cover = (imagesBySlug.get(record.slug) ?? [])[0];
+      if (cover) covers.set(record.brand, cover);
+    });
+
+  return covers;
+}
+
 async function migrateCollections(
   collections,
   parentId,
   existing,
-  existingContent
+  existingContent,
+  covers
 ) {
   for (const collection of collections) {
+    const fullSlug = `${COLLECTIONS_PATH}${collection.slug}`;
+    // Only supply a cover when the collection has none. The image is an
+    // editor-owned field, so a curated choice must win over the automatic one.
+    const editorImage = existingContent?.get(fullSlug)?.image?.filename;
+    const cover = covers?.get(collection.slug);
+    const image = !editorImage && cover ? { image: cover } : {};
+
     await upsertStory({
-      fullSlug: `${COLLECTIONS_PATH}${collection.slug}`,
+      fullSlug,
       name: collection.title,
       slug: collection.slug,
       parentId,
@@ -716,6 +783,7 @@ async function migrateCollections(
         component: 'shop_collection',
         title: collection.title,
         description: collection.description,
+        ...image,
       },
     });
   }
@@ -783,6 +851,8 @@ async function migrateProducts(
   assetCache,
   existingContent
 ) {
+  const imagesBySlug = new Map();
+
   for (const record of records) {
     const fullSlug = `${PRODUCTS_PATH}${record.slug}`;
 
@@ -800,6 +870,7 @@ async function migrateProducts(
         images.push(await uploadImage(image, assetCache));
       }
     }
+    imagesBySlug.set(record.slug, images);
 
     // `featured` and `seo_description` are merchandising controls owned by the
     // editor — the schema calls the latter an override, and the homepage rail
@@ -836,6 +907,8 @@ async function migrateProducts(
       },
     });
   }
+
+  return imagesBySlug;
 }
 
 async function fetchExistingShopStories() {
@@ -1012,18 +1085,12 @@ async function main() {
     existing
   );
 
-  console.log('\nCollections:');
-  await migrateCollections(
-    collections,
-    collectionsId,
-    existing,
-    existingContent
-  );
-
+  // Products first: their uploaded images are what the collection covers are
+  // chosen from, so collections cannot be written until the assets exist.
   console.log('\nProducts:');
   const assetCache = new Map();
   if (!DRY_RUN) await seedAssetCache(assetCache);
-  await migrateProducts(
+  const imagesBySlug = await migrateProducts(
     records,
     productsId,
     existing,
@@ -1031,6 +1098,15 @@ async function main() {
     existingContent
   );
   await reconcileOrphanProducts(records, existing);
+
+  console.log('\nCollections:');
+  await migrateCollections(
+    collections,
+    collectionsId,
+    existing,
+    existingContent,
+    pickCollectionCovers(records, imagesBySlug)
+  );
 
   console.log(
     `\n✨ Done — ${collections.length} collections, ${records.length} products.`
