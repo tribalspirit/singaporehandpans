@@ -885,6 +885,12 @@ async function migrateProducts(
     // never sees them and every later run uploads them again.
     if (hasUnpublishedEdits(existing, fullSlug)) {
       reportSkippedDraft(fullSlug);
+      // Still record the images the story already has. Skipping the write must
+      // not also drop the product out of the cover ranking — otherwise a
+      // collection whose best representative happens to be mid-edit silently
+      // demotes to a lesser one, and flips back on the next run.
+      const known = existingContent?.get(fullSlug)?.images ?? [];
+      if (known.length) imagesBySlug.set(record.slug, known);
       continue;
     }
 
