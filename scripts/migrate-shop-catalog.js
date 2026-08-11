@@ -733,17 +733,20 @@ async function seedAssetCache(assetCache) {
 
 /**
  * Choose the cover photo for each collection: the first image of a
- * representative product in it. Preference order is featured, then in stock,
- * then whatever comes first, so a collection is not fronted by a sold-out item.
- * Ordering is by slug rather than catalog order so the pick is stable between
- * runs and does not shuffle the shop page.
+ * representative product in it.
+ *
+ * Availability outranks being featured. A featured product can sell out, and
+ * fronting a brand with something nobody can buy is worse than fronting it with
+ * an ordinary item that is in stock — so `featured` only breaks ties among
+ * products of the same availability. Ordering is by slug rather than catalog
+ * order so the pick is stable between runs and does not shuffle the shop page.
  *
  * Without this every collection card falls back to the generic outline icon in
  * shop/index.astro, which is what the "Browse by Brand" grid was showing.
  */
 function pickCollectionCovers(records, imagesBySlug) {
   const rank = (record) =>
-    FEATURED_SLUGS.has(record.slug) ? 0 : record.inStock ? 1 : 2;
+    (record.inStock ? 0 : 2) + (FEATURED_SLUGS.has(record.slug) ? 0 : 1);
   const covers = new Map();
 
   [...records]
