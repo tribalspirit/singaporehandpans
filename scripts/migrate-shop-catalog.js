@@ -42,6 +42,7 @@ const PRUNE = process.argv.includes('--prune');
 
 // Must match the paths shopClient.ts reads from.
 const PRODUCTS_PATH = 'shop/products/';
+const CURRENCY = 'SGD';
 const COLLECTIONS_PATH = 'shop/collections/';
 
 const TOKEN = process.env.STORYBLOK_MANAGEMENT_TOKEN;
@@ -398,7 +399,7 @@ function buildProductRecords(shopifyProducts) {
         {
           slug: capSlug(baseSlug),
           name: title,
-          price: variant ? Number(variant.price.amount) : 0,
+          price: variant ? variantPrice(variant, title) : 0,
           inStock: node.availableForSale,
           brand,
           productType,
@@ -413,7 +414,7 @@ function buildProductRecords(shopifyProducts) {
       return {
         slug: variantSlug,
         name: `${title} — ${variant.title}`,
-        price: Number(variant.price.amount),
+        price: variantPrice(variant, title),
         inStock: variant.availableForSale,
         brand,
         productType,
@@ -422,6 +423,25 @@ function buildProductRecords(shopifyProducts) {
       };
     });
   });
+}
+
+/**
+ * Read a variant's price, refusing anything that is not SGD.
+ *
+ * The Storyblok field is `price_sgd` and checkout charges its number as SGD, so
+ * a store-currency or Shopify Markets change that started returning USD would
+ * silently mis-charge every customer. There is no conversion to do here — the
+ * right response is to stop and have someone look.
+ */
+function variantPrice(variant, title) {
+  const { amount, currencyCode } = variant.price;
+  if (currencyCode !== CURRENCY) {
+    throw new Error(
+      `"${title}" is priced in ${currencyCode}, not ${CURRENCY}. ` +
+        'price_sgd would be charged as SGD — aborting rather than mis-charging.'
+    );
+  }
+  return Number(amount);
 }
 
 /**
@@ -763,6 +783,7 @@ async function migrateProducts(
       parentId,
       existing,
       existingContent,
+      dryRunImageCount: record.images.length,
       content: {
         component: 'product',
         name: record.name,
@@ -831,8 +852,24 @@ async function upsertStory({
   content,
   existing,
   existingContent,
+  dryRunImageCount = 0,
 }) {
   const found = existing.get(fullSlug);
+
+  // Never publish an editor's work-in-progress. The merge base is draft
+  // content, so a story with saved-but-unpublished edits would have those edits
+  // folded into this payload and pushed live by `publish: 1` — a catalog sync
+  // silently publishing something nobody approved. Skip it and say so; the
+  // product syncs on the next run once the draft is published or discarded.
+  if (found?.unpublished_changes) {
+    warnings.push(
+      `Skipped ${fullSlug} — it has unpublished editor changes. ` +
+        'Publish or discard them in Storyblok, then re-run to sync it.'
+    );
+    console.log(`  ⏭️  skipped ${fullSlug} (unpublished editor changes)`);
+    return;
+  }
+
   // Merge over whatever is already there so fields the migration does not
   // manage survive. `shop_collection.image` is the concrete case: it exists in
   // the schema for editors to set and is never written here, so a replacing
@@ -849,7 +886,8 @@ async function upsertStory({
       console.log(
         `      price=${content.price_sgd} type=${content.product_type} ` +
           `brand=${content.brand} stock=${content.in_stock} ` +
-          `imgs=${content.images.length} desc=${content.description.length}ch`
+          `imgs=${content.images.length || dryRunImageCount} ` +
+          `desc=${content.description.length}ch`
       );
       // Omitted for existing products, whose editor-set value is preserved.
       console.log(
