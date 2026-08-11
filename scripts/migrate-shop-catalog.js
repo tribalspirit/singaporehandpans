@@ -53,6 +53,16 @@ if (!TOKEN || !SPACE) {
   console.error('❌ Missing STORYBLOK_MANAGEMENT_TOKEN or STORYBLOK_SPACE_ID');
   process.exit(1);
 }
+// Required, not optional: existing story content is read through the delivery
+// API, and updates merge over it. Without this token the merge would start from
+// an empty map and every PUT would strip CMS-only fields (collection images,
+// editor-curated `featured` and `seo_description`) instead of preserving them.
+if (!process.env.STORYBLOK_TOKEN) {
+  console.error(
+    '❌ Missing STORYBLOK_TOKEN — needed to read existing content before updating it'
+  );
+  process.exit(1);
+}
 if (!SHOP_DOMAIN || !SHOP_TOKEN) {
   console.error(
     '❌ Missing PUBLIC_SHOPIFY_STORE_DOMAIN or PUBLIC_SHOPIFY_STOREFRONT_TOKEN'
@@ -730,8 +740,24 @@ async function migrateProducts(
       }
     }
 
+    const fullSlug = `${PRODUCTS_PATH}${record.slug}`;
+
+    // `featured` and `seo_description` are merchandising controls owned by the
+    // editor — the schema calls the latter an override, and the homepage rail
+    // treats the former as an editorial pick. Seed them when first creating a
+    // product, then leave them alone: re-imposing them on every sync would undo
+    // curation each time the catalog is refreshed. Everything else is
+    // Shopify-sourced and is meant to be overwritten.
+    const isNew = !existingContent?.has(fullSlug);
+    const editorial = isNew
+      ? {
+          featured: FEATURED_SLUGS.has(record.slug),
+          seo_description: seoDescription(record.description),
+        }
+      : {};
+
     await upsertStory({
-      fullSlug: `${PRODUCTS_PATH}${record.slug}`,
+      fullSlug,
       name: record.name,
       slug: record.slug,
       parentId,
@@ -746,8 +772,7 @@ async function migrateProducts(
         brand: record.brand,
         product_type: record.productType,
         in_stock: record.inStock,
-        featured: FEATURED_SLUGS.has(record.slug),
-        seo_description: seoDescription(record.description),
+        ...editorial,
       },
     });
   }
