@@ -725,6 +725,7 @@ async function fetchPublishedProductState() {
       images: story.content?.images ?? [],
       inStock: story.content?.in_stock !== false,
       featured: story.content?.featured === true,
+      brand: story.content?.brand ?? '',
     });
   });
   return bySlug;
@@ -773,6 +774,47 @@ async function seedAssetCache(assetCache) {
  * Without this every collection card falls back to the generic outline icon in
  * shop/index.astro, which is what the "Browse by Brand" grid was showing.
  */
+/**
+ * Add products that exist only in Storyblok to the cover candidate pool.
+ *
+ * `records` holds what Shopify returned, so a product authored directly in the
+ * CMS — the point of moving the catalog there — could never front its brand.
+ * That matters most for a collection whose Shopify products have all been
+ * deleted: it is still maintained, so without this its cover would be cleared
+ * and never re-set even though a perfectly good published product remains.
+ *
+ * Only published state is used, and their images are fed into the same map the
+ * ranking reads from.
+ */
+function withCmsAuthoredProducts(
+  records,
+  publishedState,
+  imagesBySlug,
+  stockBySlug,
+  featuredBySlug
+) {
+  const known = new Set(records.map((record) => record.slug));
+  const extra = [];
+
+  publishedState.forEach((state, slug) => {
+    if (known.has(slug) || !state.brand || !state.images.length) return;
+    // Published values throughout: this run is not writing these products, so
+    // ranking them on draft state could move a cover on the strength of an edit
+    // nobody has published.
+    imagesBySlug.set(slug, state.images);
+    stockBySlug.set(slug, state.inStock);
+    featuredBySlug.set(slug, state.featured);
+    extra.push({
+      slug,
+      brand: state.brand,
+      inStock: state.inStock,
+      name: slug,
+    });
+  });
+
+  return [...records, ...extra];
+}
+
 function pickCollectionCovers(
   records,
   imagesBySlug,
@@ -1193,13 +1235,14 @@ async function main() {
   console.log('\nProducts:');
   const assetCache = new Map();
   if (!DRY_RUN) await seedAssetCache(assetCache);
+  const publishedState = await fetchPublishedProductState();
   const { imagesBySlug, stockBySlug, featuredBySlug } = await migrateProducts(
     records,
     productsId,
     existing,
     assetCache,
     existingContent,
-    await fetchPublishedProductState()
+    publishedState
   );
   await reconcileOrphanProducts(records, existing);
 
@@ -1210,7 +1253,13 @@ async function main() {
     existing,
     existingContent,
     pickCollectionCovers(
-      records,
+      withCmsAuthoredProducts(
+        records,
+        publishedState,
+        imagesBySlug,
+        stockBySlug,
+        featuredBySlug
+      ),
       imagesBySlug,
       stockBySlug,
       featuredBySlug,
