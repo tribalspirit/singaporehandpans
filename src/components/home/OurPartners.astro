@@ -20,7 +20,16 @@ if (shopEnabled) {
       Astro.locals.runtime?.env?.STORYBLOK_TOKEN ??
       import.meta.env.STORYBLOK_TOKEN;
     const { collections } = await fetchAllCollections(storyblokToken);
-    partners = collections.filter((c) => c.image && c.productCount > 0);
+    /*
+     * Having an image is the curation signal here: a brand appears as a partner
+     * only once someone has uploaded its logo. Automatic collection covers must
+     * therefore be excluded — they are product photos the catalog migration
+     * picks for the shop's brand tiles, and counting them would parade every
+     * brand through this strip with a photo of a handpan captioned as its logo.
+     */
+    partners = collections.filter(
+      (c) => c.image && !c.imageIsAutoCover && c.productCount > 0
+    );
   } catch {
     // Fail silently — section will be hidden
   }
