@@ -245,10 +245,13 @@ const CATALOG_QUERY = `query Catalog($cursor: String) {
     edges { node {
       handle title productType vendor availableForSale descriptionHtml
       images(first: 12) { edges { node { url altText width height } } }
-      variants(first: 25) { edges { node {
-        title availableForSale price { amount currencyCode }
-        image { url altText width height }
-      } } }
+      variants(first: 100) {
+        pageInfo { hasNextPage }
+        edges { node {
+          title availableForSale price { amount currencyCode }
+          image { url altText width height }
+        } }
+      }
     } }
   }
 }`;
@@ -287,7 +290,23 @@ async function fetchShopifyCatalog() {
 
   for (let page = 1; page <= 50; page += 1) {
     const { edges, pageInfo } = await shopifyRequest({ cursor });
-    nodes.push(...edges.map((edge) => edge.node));
+    const batch = edges.map((edge) => edge.node);
+
+    // Refuse to continue on a truncated variant list rather than silently
+    // dropping variants: the missing ones would never become stories, and a
+    // later --prune would read them as deleted and unpublish live products.
+    const truncated = batch.filter(
+      (node) => node.variants.pageInfo.hasNextPage
+    );
+    if (truncated.length) {
+      throw new Error(
+        `Products with more than 100 variants are not supported: ${truncated
+          .map((node) => node.handle)
+          .join(', ')}`
+      );
+    }
+
+    nodes.push(...batch);
     if (!pageInfo.hasNextPage) return nodes;
     cursor = pageInfo.endCursor;
   }
@@ -484,12 +503,20 @@ async function seedAssetCache(assetCache) {
   }
 
   try {
-    const res = await fetch(
-      `https://api.storyblok.com/v2/cdn/stories?token=${deliveryToken}` +
-        `&version=draft&starts_with=${PRODUCTS_PATH}&content_type=product&per_page=100`
-    );
-    if (!res.ok) throw new Error(`delivery API ${res.status}`);
-    const { stories = [] } = await res.json();
+    // Paginated: seeding only the first page would silently re-upload every
+    // image referenced solely by later stories, on every run.
+    const stories = [];
+    for (let page = 1; page <= 50; page += 1) {
+      const res = await fetch(
+        `https://api.storyblok.com/v2/cdn/stories?token=${deliveryToken}` +
+          `&version=draft&starts_with=${PRODUCTS_PATH}&content_type=product` +
+          `&per_page=100&page=${page}`
+      );
+      if (!res.ok) throw new Error(`delivery API ${res.status}`);
+      const { stories: batch = [] } = await res.json();
+      stories.push(...batch);
+      if (batch.length < 100) break;
+    }
 
     stories.forEach((story) => {
       (story.content?.images ?? []).forEach((asset) => {
@@ -557,10 +584,15 @@ async function reconcileOrphanProducts(records, existing) {
     `\n⚠️  ${orphans.length} product story(ies) not present in Shopify:`
   );
   for (const [fullSlug, story] of orphans) {
-    const published = story.published && !story.unpublished_changes;
-    console.log(
-      `   ${fullSlug}${published ? '  [PUBLISHED — still purchasable]' : '  [draft]'}`
-    );
+    // `published` alone decides whether a live version is being served. A story
+    // with unpublished draft edits still serves its last published version, so
+    // it remains purchasable and must not be reported as a harmless draft.
+    const label = story.published
+      ? story.unpublished_changes
+        ? '  [PUBLISHED (with draft edits) — still purchasable]'
+        : '  [PUBLISHED — still purchasable]'
+      : '  [draft]';
+    console.log(`   ${fullSlug}${label}`);
 
     if (!PRUNE || DRY_RUN) continue;
     if (!story.published) continue;
