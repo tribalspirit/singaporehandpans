@@ -169,6 +169,28 @@ function mapi(method, endpoint, body) {
 /** Storyblok MAPI is rate limited; space out write calls. */
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Ceiling on generated slugs, matching MAX_SLUG_LENGTH in
+ * src/pages/api/shop/checkout.ts. A longer slug produces a product that browses
+ * and renders fine but whose Buy form is rejected by the checkout endpoint —
+ * visible but unbuyable, with nothing on the page to explain why.
+ */
+const MAX_SLUG_LENGTH = 120;
+
+/** Trim to the length cap on a hyphen boundary so words are not cut mid-token. */
+function capSlug(slug) {
+  if (slug.length <= MAX_SLUG_LENGTH) return slug;
+  const cut = slug.slice(0, MAX_SLUG_LENGTH);
+  const lastDash = cut.lastIndexOf('-');
+  const capped = (
+    lastDash > MAX_SLUG_LENGTH / 2 ? cut.slice(0, lastDash) : cut
+  ).replace(/-+$/, '');
+  warnings.push(
+    `Slug exceeded ${MAX_SLUG_LENGTH} chars and was trimmed: ${capped}`
+  );
+  return capped;
+}
+
 function slugify(value) {
   return value
     .normalize('NFKD')
@@ -244,7 +266,10 @@ const CATALOG_QUERY = `query Catalog($cursor: String) {
     pageInfo { hasNextPage endCursor }
     edges { node {
       handle title productType vendor availableForSale descriptionHtml
-      images(first: 12) { edges { node { url altText width height } } }
+      images(first: 50) {
+        pageInfo { hasNextPage }
+        edges { node { url altText width height } }
+      }
       variants(first: 100) {
         pageInfo { hasNextPage }
         edges { node {
@@ -295,6 +320,16 @@ async function fetchShopifyCatalog() {
     // Refuse to continue on a truncated variant list rather than silently
     // dropping variants: the missing ones would never become stories, and a
     // later --prune would read them as deleted and unpublish live products.
+    // An incomplete gallery is a quality problem, not a correctness one, so
+    // warn rather than abort — unlike the variant case immediately below.
+    batch
+      .filter((node) => node.images.pageInfo.hasNextPage)
+      .forEach((node) =>
+        warnings.push(
+          `"${node.title}" has more than 50 images; only the first 50 were copied`
+        )
+      );
+
     const truncated = batch.filter(
       (node) => node.variants.pageInfo.hasNextPage
     );
@@ -351,7 +386,7 @@ function buildProductRecords(shopifyProducts) {
       const variant = variants[0];
       return [
         {
-          slug: baseSlug,
+          slug: capSlug(baseSlug),
           name: title,
           price: variant ? Number(variant.price.amount) : 0,
           inStock: node.availableForSale,
@@ -364,7 +399,7 @@ function buildProductRecords(shopifyProducts) {
     }
 
     return variants.map((variant) => {
-      const variantSlug = `${baseSlug}-${slugify(variant.title)}`;
+      const variantSlug = capSlug(`${baseSlug}-${slugify(variant.title)}`);
       return {
         slug: variantSlug,
         name: `${title} — ${variant.title}`,
@@ -413,6 +448,32 @@ function assetFileName(sourceUrl) {
       .replace(/\.[a-z0-9]+$/i, '')
       .slice(0, 60)
   )}.jpg`;
+}
+
+/**
+ * Fail loudly if two records resolve to the same slug.
+ *
+ * Slugs come from titles, so two products titled identically — or normalising
+ * identically once `(Copy)` and punctuation are stripped, or after the length
+ * cap trims them — collide. Upserting keys on full_slug, so the second record
+ * would silently overwrite the first: one product lost, the other showing the
+ * wrong price and stock, with nothing in the output to say so.
+ */
+function assertUniqueSlugs(records) {
+  const seen = new Map();
+  const clashes = [];
+
+  records.forEach((record) => {
+    const previous = seen.get(record.slug);
+    if (previous) clashes.push(`${record.slug} (${previous} / ${record.name})`);
+    else seen.set(record.slug, record.name);
+  });
+
+  if (clashes.length) {
+    throw new Error(
+      `Duplicate product slugs would overwrite each other:\n   ${clashes.join('\n   ')}`
+    );
+  }
 }
 
 /** Storyblok 3-step signed upload; returns an asset object for content fields. */
@@ -493,9 +554,61 @@ async function uploadImage(image, assetCache) {
  * time) and, for assets uploaded before `source` was recorded, on the stable
  * filename derived from that URL.
  */
-async function seedAssetCache(assetCache) {
+/**
+ * Read existing stories, with content, via the delivery API. The management
+ * API's listing omits `content`, which both the asset cache and the
+ * CMS-field-preserving merge in `upsertStory` need. Paginated — reading only
+ * the first page would silently re-upload images and drop editor-authored
+ * fields for everything after it.
+ */
+async function fetchDraftStories(path, contentType) {
   const deliveryToken = process.env.STORYBLOK_TOKEN;
-  if (!deliveryToken) {
+  if (!deliveryToken) return null;
+
+  const stories = [];
+  for (let page = 1; page <= 50; page += 1) {
+    const res = await fetch(
+      `https://api.storyblok.com/v2/cdn/stories?token=${deliveryToken}` +
+        `&version=draft&starts_with=${path}&content_type=${contentType}` +
+        `&per_page=100&page=${page}`
+    );
+    if (!res.ok) throw new Error(`delivery API ${res.status}`);
+    const { stories: batch = [] } = await res.json();
+    stories.push(...batch);
+    if (batch.length < 100) break;
+  }
+  return stories;
+}
+
+/**
+ * Map full_slug -> existing content, so `upsertStory` can merge rather than
+ * replace. Without it, an editor-set `shop_collection.image` — a field the
+ * migration never writes — would be wiped on the next run.
+ */
+async function fetchExistingContent() {
+  const byFullSlug = new Map();
+  try {
+    const groups = await Promise.all([
+      fetchDraftStories(PRODUCTS_PATH, 'product'),
+      fetchDraftStories(COLLECTIONS_PATH, 'shop_collection'),
+    ]);
+    groups.forEach((stories) =>
+      (stories ?? []).forEach((story) => {
+        if (story.content) byFullSlug.set(story.full_slug, story.content);
+      })
+    );
+  } catch (error) {
+    // Non-fatal, but the operator must know CMS-only fields are at risk.
+    console.warn(
+      `⚠️  Could not read existing content (${error.message}) — ` +
+        'CMS-authored fields may be overwritten this run.'
+    );
+  }
+  return byFullSlug;
+}
+
+async function seedAssetCache(assetCache) {
+  if (!process.env.STORYBLOK_TOKEN) {
     console.log(
       'ℹ️  STORYBLOK_TOKEN not set — existing images cannot be reused.'
     );
@@ -503,20 +616,7 @@ async function seedAssetCache(assetCache) {
   }
 
   try {
-    // Paginated: seeding only the first page would silently re-upload every
-    // image referenced solely by later stories, on every run.
-    const stories = [];
-    for (let page = 1; page <= 50; page += 1) {
-      const res = await fetch(
-        `https://api.storyblok.com/v2/cdn/stories?token=${deliveryToken}` +
-          `&version=draft&starts_with=${PRODUCTS_PATH}&content_type=product` +
-          `&per_page=100&page=${page}`
-      );
-      if (!res.ok) throw new Error(`delivery API ${res.status}`);
-      const { stories: batch = [] } = await res.json();
-      stories.push(...batch);
-      if (batch.length < 100) break;
-    }
+    const stories = (await fetchDraftStories(PRODUCTS_PATH, 'product')) ?? [];
 
     stories.forEach((story) => {
       (story.content?.images ?? []).forEach((asset) => {
@@ -537,7 +637,12 @@ async function seedAssetCache(assetCache) {
   }
 }
 
-async function migrateCollections(collections, parentId, existing) {
+async function migrateCollections(
+  collections,
+  parentId,
+  existing,
+  existingContent
+) {
   for (const collection of collections) {
     await upsertStory({
       fullSlug: `${COLLECTIONS_PATH}${collection.slug}`,
@@ -545,6 +650,7 @@ async function migrateCollections(collections, parentId, existing) {
       slug: collection.slug,
       parentId,
       existing,
+      existingContent,
       content: {
         component: 'shop_collection',
         title: collection.title,
@@ -609,7 +715,13 @@ async function reconcileOrphanProducts(records, existing) {
   }
 }
 
-async function migrateProducts(records, parentId, existing, assetCache) {
+async function migrateProducts(
+  records,
+  parentId,
+  existing,
+  assetCache,
+  existingContent
+) {
   for (const record of records) {
     const images = [];
     if (!DRY_RUN) {
@@ -624,6 +736,7 @@ async function migrateProducts(records, parentId, existing, assetCache) {
       slug: record.slug,
       parentId,
       existing,
+      existingContent,
       content: {
         component: 'product',
         name: record.name,
@@ -689,10 +802,16 @@ async function upsertStory({
   parentId,
   content,
   existing,
+  existingContent,
 }) {
   const found = existing.get(fullSlug);
+  // Merge over whatever is already there so fields the migration does not
+  // manage survive. `shop_collection.image` is the concrete case: it exists in
+  // the schema for editors to set and is never written here, so a replacing
+  // PUT would silently wipe it on every run.
+  const merged = { ...(existingContent?.get(fullSlug) ?? {}), ...content };
   const payload = {
-    story: { name, slug, content, parent_id: parentId ?? undefined },
+    story: { name, slug, content: merged, parent_id: parentId ?? undefined },
     publish: 1,
   };
 
@@ -728,6 +847,7 @@ async function main() {
   console.log(`Fetched ${shopifyProducts.length} products from Shopify.`);
 
   const records = buildProductRecords(shopifyProducts);
+  assertUniqueSlugs(records);
   console.log(
     `Expanded to ${records.length} Storyblok products (colour variants split).\n`
   );
@@ -751,6 +871,7 @@ async function main() {
   console.log();
 
   const existing = await fetchExistingShopStories();
+  const existingContent = await fetchExistingContent();
 
   // Folders
   const shopId = await ensureFolder('shop', 'Shop', null, existing);
@@ -768,12 +889,23 @@ async function main() {
   );
 
   console.log('\nCollections:');
-  await migrateCollections(collections, collectionsId, existing);
+  await migrateCollections(
+    collections,
+    collectionsId,
+    existing,
+    existingContent
+  );
 
   console.log('\nProducts:');
   const assetCache = new Map();
   if (!DRY_RUN) await seedAssetCache(assetCache);
-  await migrateProducts(records, productsId, existing, assetCache);
+  await migrateProducts(
+    records,
+    productsId,
+    existing,
+    assetCache,
+    existingContent
+  );
   await reconcileOrphanProducts(records, existing);
 
   console.log(
