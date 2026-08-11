@@ -615,6 +615,33 @@ async function fetchDraftStories(path, contentType) {
  * replace. Without it, an editor-set `shop_collection.image` — a field the
  * migration never writes — would be wiped on the next run.
  */
+/**
+ * Confirm the delivery token addresses the same space the management token
+ * writes to.
+ *
+ * A valid preview token for a *different* space answers 200 with that space's
+ * (unrelated, usually empty) content, so nothing else here would notice: the
+ * merge base would come back empty and every update would strip CMS-authored
+ * fields from the real space. This is the one remaining way that can happen.
+ */
+async function assertSpacesMatch() {
+  const res = await fetch(
+    `https://api.storyblok.com/v2/cdn/spaces/me?token=${process.env.STORYBLOK_TOKEN}`
+  );
+  if (!res.ok) {
+    throw new Error(
+      `Could not verify STORYBLOK_TOKEN (delivery API ${res.status})`
+    );
+  }
+  const { space } = await res.json();
+  if (String(space?.id) !== String(SPACE)) {
+    throw new Error(
+      `STORYBLOK_TOKEN belongs to space ${space?.id}, but STORYBLOK_SPACE_ID is ${SPACE}. ` +
+        'Reading one space while writing another would overwrite CMS-authored fields.'
+    );
+  }
+}
+
 async function fetchExistingContent() {
   const byFullSlug = new Map();
   try {
@@ -939,6 +966,7 @@ async function main() {
     `\n🛒 Shopify → Storyblok catalog migration${DRY_RUN ? ' (DRY RUN)' : ''}\n`
   );
 
+  await assertSpacesMatch();
   const shopifyProducts = await fetchShopifyCatalog();
   console.log(`Fetched ${shopifyProducts.length} products from Shopify.`);
 
