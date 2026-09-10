@@ -19,6 +19,60 @@ export interface DiatonicTriad {
  * The first note in handpanNotes is assumed to be the tonic (ding).
  * Works with scales of 5-7 notes (pentatonic, hexatonic, heptatonic).
  */
+const DIATONIC_MODES = [
+  'major',
+  'minor',
+  'dorian',
+  'phrygian',
+  'lydian',
+  'mixolydian',
+  'locrian',
+] as const;
+
+/** The pitch classes of `handpanNotes`, deduplicated, in no particular order. */
+function uniquePitchClasses(handpanNotes: string[]): string[] {
+  return Array.from(new Set(handpanNotes.map(normalizeToPitchClass)));
+}
+
+/**
+ * Does this tuning match a seven-note mode rooted on its ding?
+ *
+ * Only then do diatonic labels mean anything. Roman numerals, "relative major"
+ * and circle-of-fifths ordering are claims about a seven-note tonal system; on
+ * the pentatonic and hexatonic tunings this catalog also ships — Akebono,
+ * Pygmy, Aegean, Integral — a scale position is just a position. Calling a
+ * pentatonic's third note "III" states a relationship that does not exist.
+ *
+ * The triads stay useful and are still offered either way. What this gates is
+ * the vocabulary used to describe them.
+ */
+export function isDiatonicScale(handpanNotes: string[]): boolean {
+  if (handpanNotes.length === 0) {
+    return false;
+  }
+
+  const pitchClasses = uniquePitchClasses(handpanNotes);
+  if (pitchClasses.length !== 7) {
+    return false;
+  }
+
+  const tonicPc = normalizeToPitchClass(handpanNotes[0]);
+  const handpanPcSet = new Set(pitchClasses);
+
+  return DIATONIC_MODES.some((mode) => {
+    const scale = Scale.get(`${tonicPc} ${mode}`);
+    if (!scale.notes || scale.notes.length !== 7) {
+      return false;
+    }
+
+    const scalePcSet = new Set(scale.notes.map(normalizeToPitchClass));
+    return (
+      scalePcSet.size === handpanPcSet.size &&
+      [...scalePcSet].every((pitchClass) => handpanPcSet.has(pitchClass))
+    );
+  });
+}
+
 function extractScalePitchClasses(handpanNotes: string[]): string[] {
   if (handpanNotes.length === 0) {
     return [];
@@ -35,15 +89,7 @@ function extractScalePitchClasses(handpanNotes: string[]): string[] {
 
   // For 7-note scales, try to identify using Tonal.js
   if (pcs.length === 7) {
-    for (const mode of [
-      'major',
-      'minor',
-      'dorian',
-      'phrygian',
-      'lydian',
-      'mixolydian',
-      'locrian',
-    ]) {
+    for (const mode of DIATONIC_MODES) {
       const scale = Scale.get(`${tonicPc} ${mode}`);
       if (scale.notes && scale.notes.length === 7) {
         const scalePcs = scale.notes.map(normalizeToPitchClass);
@@ -322,10 +368,16 @@ export function getDiatonicTriads(
   const tonicIsMinor = tonicTriad?.chord.displayName.endsWith('m') || false;
   const tonicPc = scalePcs[0];
 
+  // "Relative major" is a diatonic relationship. On a pentatonic or hexatonic
+  // tuning there are no diatonic degrees for it to hold between, so the claim
+  // is simply not made — the triad itself is still offered.
+  const scaleIsDiatonic = isDiatonicScale(handpanNotes);
+
   for (const triad of triads) {
     // isRelativeMajor: root is 3 semitones above tonic, quality is major, tonic is minor
     const intervalFromTonic = getIntervalInSemitones(tonicPc, triad.root);
     triad.isRelativeMajor =
+      scaleIsDiatonic &&
       intervalFromTonic === 3 &&
       tonicIsMinor &&
       !triad.chord.displayName.endsWith('m') &&

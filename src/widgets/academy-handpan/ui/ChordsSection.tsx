@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, useRef } from 'react';
 import { usePlayback } from './usePlayback';
 import { findPlayableChords, type PlayableChord } from '../theory/chords';
-import { getDiatonicTriads } from '../theory/diatonicTriads';
+import { getDiatonicTriads, isDiatonicScale } from '../theory/diatonicTriads';
 import {
   initializeAudio,
   isAudioInitialized,
@@ -57,6 +57,17 @@ export default function ChordsSection({
   React.useEffect(() => {
     clearPlaybackRef.current = clearPlayback;
   }, [clearPlayback]);
+
+  /**
+   * Roman numerals and the relative-major legend describe a seven-note tonal
+   * system. On the pentatonic and hexatonic tunings this catalog ships, a
+   * scale position is just a position, so the triads are shown without that
+   * vocabulary rather than labelled with degrees they do not have.
+   */
+  const scaleIsDiatonic = useMemo(
+    () => isDiatonicScale(availableNotes),
+    [availableNotes]
+  );
 
   const diatonicTriads = useMemo(() => {
     return getDiatonicTriads(availableNotes, availableNotes);
@@ -154,13 +165,19 @@ export default function ChordsSection({
       {diatonicTriads.length > 0 && (
         <div className={styles.triadsSection}>
           <h3 className={styles.sectionTitle}>
-            Main Triads (Circle of Fifths)
+            {scaleIsDiatonic
+              ? 'Main Triads (Circle of Fifths)'
+              : 'Triads in this scale'}
           </h3>
           <p className={styles.triadsLegend}>
-            <span className={styles.legendTonic}>■ Tonic (I)</span>
-            <span className={styles.legendRelative}>
-              ■ Relative Major (III)
+            <span className={styles.legendTonic}>
+              {scaleIsDiatonic ? '■ Tonic (I)' : '■ Ding'}
             </span>
+            {scaleIsDiatonic && (
+              <span className={styles.legendRelative}>
+                ■ Relative Major (III)
+              </span>
+            )}
           </p>
           <div className={styles.triadsRow}>
             {diatonicTriads.map(
@@ -177,6 +194,7 @@ export default function ChordsSection({
                   'VII',
                 ];
                 const degreeLabel = romanNumerals[degree] || degree.toString();
+                const showsDegree = scaleIsDiatonic;
                 return (
                   <button
                     key={chord.name}
@@ -191,9 +209,15 @@ export default function ChordsSection({
                       .join(' ')}
                     onClick={() => handleChordClick(chord)}
                     aria-pressed={isSelected}
-                    title={`Degree ${degreeLabel}`}
+                    title={
+                      showsDegree
+                        ? `Degree ${degreeLabel}`
+                        : `${chord.displayName} — playable in this scale`
+                    }
                   >
-                    <span className={styles.triadDegree}>{degreeLabel}</span>
+                    {showsDegree && (
+                      <span className={styles.triadDegree}>{degreeLabel}</span>
+                    )}
                     <span className={styles.triadName}>
                       {chord.displayName}
                     </span>

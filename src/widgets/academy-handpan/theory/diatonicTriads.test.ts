@@ -171,12 +171,12 @@ describe('diatonicTriads', () => {
       expect(getTriadNames(notes)).toEqual(['Am', 'C', 'Dm', 'F'].sort());
     });
 
-    it('should mark Dm as tonic and F as relative major', () => {
+    /** Hexatonic: F is offered, but not labelled a diatonic relative major. */
+    it('marks Dm as tonic but claims no relative major', () => {
       const triads = getDiatonicTriads(notes, notes);
       expect(triads.find((t) => t.isTonic)?.chord.displayName).toBe('Dm');
-      expect(triads.find((t) => t.isRelativeMajor)?.chord.displayName).toBe(
-        'F'
-      );
+      expect(triads.some((t) => t.isRelativeMajor)).toBe(false);
+      expect(getTriadNames(notes)).toContain('F');
     });
   });
 
@@ -215,12 +215,17 @@ describe('diatonicTriads', () => {
       expect(getTriadNames(notes)).toEqual(['Ab', 'Fm'].sort());
     });
 
-    it('should mark Fm as tonic and Ab as relative major', () => {
+    /**
+     * Ab is a real, playable triad here and is still offered. What changed is
+     * that it is no longer *labelled* the relative major: that is a diatonic
+     * relationship, and a five-note scale has no diatonic degrees for it to
+     * hold between. The ding stays marked as tonic.
+     */
+    it('marks Fm as tonic but claims no relative major', () => {
       const triads = getDiatonicTriads(notes, notes);
       expect(triads.find((t) => t.isTonic)?.chord.displayName).toBe('Fm');
-      expect(triads.find((t) => t.isRelativeMajor)?.chord.displayName).toBe(
-        'Ab'
-      );
+      expect(triads.some((t) => t.isRelativeMajor)).toBe(false);
+      expect(getTriadNames(notes)).toContain('Ab');
     });
   });
 
@@ -235,12 +240,12 @@ describe('diatonicTriads', () => {
       expect(getTriadNames(notes)).toEqual(['Bm', 'C#°', 'Em', 'G'].sort());
     });
 
-    it('should mark Em as tonic and G as relative major', () => {
+    /** Hexatonic: G is offered, but not labelled a diatonic relative major. */
+    it('marks Em as tonic but claims no relative major', () => {
       const triads = getDiatonicTriads(notes, notes);
       expect(triads.find((t) => t.isTonic)?.chord.displayName).toBe('Em');
-      expect(triads.find((t) => t.isRelativeMajor)?.chord.displayName).toBe(
-        'G'
-      );
+      expect(triads.some((t) => t.isRelativeMajor)).toBe(false);
+      expect(getTriadNames(notes)).toContain('G');
     });
   });
 
