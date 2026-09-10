@@ -2,14 +2,16 @@
 
 ## Overview
 
-The handpan widget supports **19 scale families** with **transposed variants**
+The handpan widget supports **15 scale families** with **transposed variants**
 across multiple keys and note counts, so users can explore handpans in different
 keys without a hand-written configuration for each one.
 
 > **Updated 2026-09-10.** An earlier version of this document claimed this work
 > "corrects the Pygmy scale". It did not — Pygmy shipped the minor pentatonic
 > until the correctness pass on branch `002-handpan-core-split`, which also
-> corrected Equinox and replaced the global ding octave. Verified interval sets
+> corrected Equinox and replaced the global ding octave. That pass also merged
+> the four families that duplicated another's pitch-class set (Aeolian, Equinox,
+> Mystic, Magic Voyage), taking the count from 19 to 15. Verified interval sets
 > and their sources are in [handpan-data-audit.md](handpan-data-audit.md), which
 > supersedes this document wherever the two disagree about scale data.
 
@@ -27,7 +29,7 @@ keys without a hand-written configuration for each one.
 - **After**: True minor pentatonic `[0, 3, 5, 7, 10]`
 - Now distinct and musically accurate
 
-### 3. Scale Families (19 Total)
+### 3. Scale Families (15 Total)
 
 #### Core Minor Families
 
@@ -177,7 +179,7 @@ What the suite covers for this area:
 - ✓ Ding octave follows the key (D3 for D, A2 for A) and stays within F2-G3
 - ✓ Pygmy and Equinox match published maker note lists
 - ✓ Every family's ring order agrees with its declared pitch-class set
-- ✓ All 19 families represented
+- ✓ All 15 families represented, none sharing a pitch-class set
 - ✓ Multiple keys per family
 - ✓ Multiple note counts per family+key
 - ✓ Correct config structure

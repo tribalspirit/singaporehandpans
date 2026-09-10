@@ -14,6 +14,11 @@ Academy handpan memorization widget implemented as a React island. Covers scale 
 - **Constraint**: Data-driven - new handpan = config change only
 - **Audio**: Tone.js synth-first
 
+> **Scale data:** [docs/features/handpan-data-audit.md](../../docs/features/handpan-data-audit.md)
+> is the source of truth for interval sets, aliases and their provenance.
+> Four families were merged in 2026-09 because they duplicated another's
+> pitch-class set; their ids still resolve via `MERGED_FAMILY_IDS`.
+
 ### Key Files
 
 ```
@@ -34,17 +39,16 @@ src/widgets/academy-handpan/
     └── Controls.module.scss
 ```
 
-## Scale Families (19 Total)
+## Scale Families (15 Total)
 
 ### Core Minor
 
 | Family       | Mode             | Description                |
 | ------------ | ---------------- | -------------------------- |
-| Kurd         | Natural Minor    | Most popular handpan scale |
+| Kurd         | Natural Minor    | Most popular handpan scale. Also sold as Aeolian and Annaziska |
 | Celtic Minor | Hexatonic Minor  | Smooth, meditative         |
-| Integral     | Hexatonic Minor  | b6+b7 color                |
-| Mystic       | Phrygian-ish     | Hexatonic minor            |
-| Pygmy        | Minor Pentatonic | Earthy/tribal              |
+| Integral     | Hexatonic Minor  | Minor without the 4th. Also sold as Equinox and Mystic |
+| Pygmy        | Pentatonic       | Root, maj2, min3, 5th, min7 — no 4th. Also sold as Magic Voyage |
 
 ### Dorian/Dreamy
 
@@ -131,7 +135,6 @@ resolveHandpanConfig({ familyId, key, noteCount }): HandpanConfig | null
 | Dorian         | D           |
 | Lydian         | F           |
 | Mixolydian     | G           |
-| Aeolian        | A           |
 
 ## Interaction Contract
 
@@ -234,8 +237,9 @@ resolveHandpanConfig({ familyId, key, noteCount }): HandpanConfig | null
 - Transposition (D Kurd → E Kurd)
 - O(1) config resolution
 - Layout geometry
-- Octave convention (D3 ding)
-- Pygmy distinct from Kurd
+- Ding octave follows the key (D3, but A2 and B2)
+- Pygmy and Equinox match published maker note lists
+- No two families share a pitch-class set
 - All interaction contracts
 
 ## Definition of Done

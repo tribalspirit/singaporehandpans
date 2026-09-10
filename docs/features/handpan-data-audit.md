@@ -2,7 +2,7 @@
 
 **Retrieved:** 2026-09-10 · **Applies to:** `src/widgets/academy-handpan/config/handpanFamilies.ts`
 
-Evidence review of the widget's 19 shipped scale families against maker-authored
+Evidence review of the widget's shipped scale families against maker-authored
 sources, plus expansion candidates. Written to support the correctness work on
 branch `002-handpan-core-split`.
 
@@ -86,78 +86,88 @@ Peter Pan) includes it. They should be a note-count variant, not two families.
 
 ---
 
-## 3. Open questions — these need a product decision
+## 3. Duplicate families — resolved by merging
 
-Each changes what appears in the catalog, so none were applied unilaterally.
+The catalog listed 19 families but held only 16 distinct pitch-class sets, so
+some entries were choices that sounded identical. All duplicates have now been
+merged, keeping the best-established name and naming the others in the
+description and aliases. **15 families remain.**
 
-### 3.1 Three families are the same scale
+| Merged away        | Into         | Shared set         | Why that name won                                                                                           |
+| ------------------ | ------------ | ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| Aeolian, Annaziska | **Kurd**     | `{0,2,3,5,7,8,10}` | Saraz calls all three one scale; Kurd is the most common handpan family                                     |
+| Equinox, Mystic    | **Integral** | `{0,2,3,7,8,10}`   | Widest sourced key coverage (7 Saraz variants + Isthmus) and the PANArt heritage name                       |
+| Magic Voyage       | **Pygmy**    | `{0,2,3,7,10}`     | Pygmy is far better established; HaganeNote itself calls Magic Voyage "very similar to the Low Pygmy scale" |
 
-Equinox, Integral and Mystic all reduce to `{0,2,3,7,8,10}`. They differ only in
-which tone field sits lowest. Isthmus says so directly: _"Mystic is a hexatonic
-minor scale, similar to the Integral, but its last note is different."_
+Two of these were only duplicates once their data was corrected:
 
-As shipped, the widget offers three entries that sound identical. Options: merge
-behind one set with a layout discriminator, or keep all three and explain the
-difference in the UI.
+- **Mystic** shipped `{0,1,3,5,7,10}`, which no maker publishes. Every real
+  listing — Isthmus `"D/ A Bb D E F A C"`, corroborated by Pures and Shaktipan —
+  is `{0,2,3,7,8,10}`, the Integral/Equinox set.
+- **Magic Voyage** shipped `{0,2,4,5,7,9,10}`, duplicating Mixolydian. All four
+  HaganeNote variants are the Pygmy set.
 
-### 3.2 Kurd, Aeolian and Annaziska are one scale
+Isthmus explains why the Integral group carried three names: _"Mystic is a
+hexatonic minor scale, similar to the Integral, but its last note is
+different."_ The names encoded **layout**, not pitch content. Integral therefore
+keeps the ring order sourced from Saraz's E Equinox listing — that is this
+scale's published 9-note form and maps exactly onto the widget's 9-note shell,
+whereas Saraz's Integral listings are 8-note instruments the widget does not
+offer.
 
-All `{0,2,3,5,7,8,10}`. Saraz says it in its own words: _"a full scale of C#
-Minor, which is sometimes also referred to as a 'Kurd', 'Aeolian', or 'Natural
-Minor' scale."_ The widget ships `kurd` and `aeolian` as separate families.
+Each canonical family carries the **union** of the merged families' supported
+keys, so no key disappeared from the selector, and every preset id the merged
+families published still resolves via `MERGED_FAMILY_IDS`. A guard test asserts
+no two families share a pitch-class set again.
 
-### 3.3 Magic Voyage is Pygmy
+## 3a. Still open — these need a product decision
 
-HaganeNote's four Magic Voyage variants all reduce to `{0,2,3,7,10}`, and the
-maker's own text says _"very similar to the Low Pygmy scale."_ The widget ships
-`[0,2,4,5,7,9,10]` for it — wrong by the same standard as Equinox. Correcting it
-would create a second entry identical to Pygmy, which is why it is listed here
-rather than fixed.
-
-### 3.4 No maker ships a scale called "Lydian"
+### No maker ships a scale called "Lydian"
 
 Absent from Saraz's 58-scale index, Isthmus's 55-scale list, HaganeNote and
 Shaktipan. The Lydian collection reaches handpans as **Aegean**, **Golden Gate**
-and **Sabye**. Recommend dropping or relabelling the `lydian` family.
+and **Sabye**. Recommend dropping or relabelling the `lydian` family. Left in
+place for now because it is not a duplicate of anything currently shipped.
 
-### 3.5 Akebono is named by its ding, not its root
+### Akebono is named by its ding, not its root
 
 Every listing at two makers names the instrument by the ding while the akebono
 pentatonic is rooted a **4th above** it. Storing the textbook `{0,2,3,7,8}` and
-labelling by ding would put every displayed Akebono a 4th off.
+labelling by ding would put every displayed Akebono a fourth off. Relevant only
+when Akebono is added.
 
----
+### Two families still carry unverified data
 
-## 4. Verification status of the 19 shipped families
+`aegean` ships `{0,2,4,7,9}` but sources give `{0,4,6,7,11}`; `onoleo` ships
+`{0,2,3,6,7,10}` but sources give `{0,4,5,7,8}` (with one conflicting blog).
+Neither is a duplicate, so neither was touched by the merge.
 
-| Family         | Set from ding              | Status                                                                          | Source                                      |
-| -------------- | -------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------- |
-| kurd           | `{0,2,3,5,7,8,10}`         | verified                                                                        | Saraz, Isthmus                              |
-| celtic-minor   | `{0,2,3,5,7,10}`           | verified (Amara is an alias)                                                    | Saraz, Isthmus                              |
-| integral       | `{0,2,3,7,8,10}`           | verified — same set as equinox/mystic                                           | Saraz, Isthmus                              |
-| mystic         | `{0,2,3,7,8,10}`           | verified — same set as equinox/integral                                         | Isthmus, Pures                              |
-| pygmy          | `{0,2,3,7,10}`             | **corrected**                                                                   | Saraz, Isthmus                              |
-| la-sirena      | `{0,2,3,7,9,10}`           | verified — Dorian minus the 4th                                                 | Saraz                                       |
-| ursa-minor     | `{0,2,3,5,7,8}`            | reported — no 7th at all                                                        | Pantheon Steel (fetch failed, snippet only) |
-| aegean         | `{0,4,6,7,11}`             | verified — not full Lydian at 9 notes                                           | Isthmus                                     |
-| oxalis         | `{0,2,4,7,9,11}` from root | verified — see §2.4                                                             | Saraz, HaganeNote                           |
-| hijaz          | `{0,1,4,5,7,8,10}`         | verified, but most instruments sold as "Hijaz" are ding-on-tonic harmonic minor | Saraz                                       |
-| harmonic-minor | `{0,2,3,5,7,8,11}`         | verified                                                                        | Saraz, Shaktipan                            |
-| onoleo         | `{0,4,5,7,8}`              | reported, **conflicting** — one blog gives Celtic Minor instead                 | Shaktipan                                   |
-| equinox        | `{0,2,3,7,8,10}`           | **corrected**                                                                   | Saraz, Isthmus                              |
-| magic-voyage   | `{0,2,3,7,10}`             | **wrong as shipped** — see §3.3                                                 | HaganeNote                                  |
-| ionian         | `{0,2,4,5,7,9,11}`         | verified, but rarely shipped complete                                           | Saraz                                       |
-| dorian         | `{0,2,3,5,7,9,10}`         | verified (Jibuk is an alias)                                                    | Saraz, Isthmus                              |
-| lydian         | —                          | **UNVERIFIED** — see §3.4                                                       | none                                        |
-| mixolydian     | `{0,2,4,5,7,9,10}`         | verified; 8-note variants drop the 4th                                          | Saraz                                       |
-| aeolian        | `{0,2,3,5,7,8,10}`         | verified — same set as kurd                                                     | Saraz                                       |
+## 4. Verification status of the shipped families
 
----
+Fifteen families after the merge in §3.
+
+| Family         | Set from ding                                 | Status                                                                          | Source                                      |
+| -------------- | --------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------- |
+| kurd           | `{0,2,3,5,7,8,10}`                            | verified — absorbed Aeolian and Annaziska                                       | Saraz, Isthmus                              |
+| celtic-minor   | `{0,2,3,5,7,10}`                              | verified (Amara is an alias)                                                    | Saraz, Isthmus                              |
+| integral       | `{0,2,3,7,8,10}`                              | verified — absorbed Equinox and Mystic                                          | Saraz, Isthmus                              |
+| pygmy          | `{0,2,3,7,10}`                                | **corrected** — absorbed Magic Voyage                                           | Saraz, Isthmus                              |
+| la-sirena      | `{0,2,3,7,9,10}`                              | verified — Dorian minus the 4th                                                 | Saraz                                       |
+| ursa-minor     | `{0,2,3,5,7,8}`                               | reported — no 7th at all                                                        | Pantheon Steel (fetch failed, snippet only) |
+| aegean         | ships `{0,2,4,7,9}`, sourced `{0,4,6,7,11}`   | **unverified as shipped** — see §3a                                             | Isthmus                                     |
+| oxalis         | `{0,2,4,7,9,11}` from root                    | verified — see §2.4                                                             | Saraz, HaganeNote                           |
+| hijaz          | `{0,1,4,5,7,8,10}`                            | verified, but most instruments sold as "Hijaz" are ding-on-tonic harmonic minor | Saraz                                       |
+| harmonic-minor | `{0,2,3,5,7,8,11}`                            | verified                                                                        | Saraz, Shaktipan                            |
+| onoleo         | ships `{0,2,3,6,7,10}`, sourced `{0,4,5,7,8}` | **unverified as shipped**, and sources conflict — see §3a                       | Shaktipan                                   |
+| ionian         | `{0,2,4,5,7,9,11}`                            | verified, but rarely shipped complete                                           | Saraz                                       |
+| dorian         | `{0,2,3,5,7,9,10}`                            | verified (Jibuk is an alias)                                                    | Saraz, Isthmus                              |
+| lydian         | —                                             | **UNVERIFIED** — no maker ships this name, see §3a                              | none                                        |
+| mixolydian     | `{0,2,4,5,7,9,10}`                            | verified; 8-note variants drop the 4th                                          | Saraz                                       |
 
 ## 5. Expansion candidates
 
 Ready to add, all `verified`: **Sabye** `{0,2,4,5,7,9,11}`, **Akebono**
-`{0,1,5,7,8}` from ding (see §3.5), **Golden Gate** `{0,2,4,6,7,11}`.
+`{0,1,5,7,8}` from ding (see §3a), **Golden Gate** `{0,2,4,6,7,11}`.
 
 Aliases rather than new families: **Annaziska** → kurd, **Amara** →
 celtic-minor, **Ashakiran/Asha** → sabye (identical note lists), **Jibuk** →
