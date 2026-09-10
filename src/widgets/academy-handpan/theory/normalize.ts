@@ -20,23 +20,53 @@ export function parseNote(noteStr: string): ParsedNote {
   };
 }
 
-const ENHARMONIC_MAP: Record<string, string> = {
-  'A#': 'Bb',
-  'C#': 'C#',
-  'D#': 'Eb',
-  'F#': 'F#',
-  'G#': 'Ab',
-};
+/**
+ * One canonical name per pitch class, indexed by chroma.
+ *
+ * Which spelling is canonical does not matter for comparison, only that it is
+ * the *same* one for every enharmonic spelling of a pitch. These twelve are
+ * kept from the previous table so chord display names are unchanged.
+ */
+const CANONICAL_PITCH_CLASS_NAMES = [
+  'C',
+  'C#',
+  'D',
+  'Eb',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'Ab',
+  'A',
+  'Bb',
+  'B',
+];
 
+/**
+ * Reduce a note to one canonical name per pitch class, ignoring octave.
+ *
+ * This must be *total*: every spelling of a pitch has to land on the same
+ * name. An earlier version mapped A#/D#/G# to flats but left C#/F# as sharps
+ * and passed Db/Gb/Cb/E# through untouched, so two spellings of one pitch
+ * canonicalised differently and every set comparison built on it disagreed
+ * with itself. Tonal returns Ab7sus4 as Ab/Db/Eb/Gb; a C# Kurd holds those
+ * pitches spelled C#/D#/F#; the subset check failed and the chord vanished
+ * from that key while staying available in D.
+ *
+ * Deriving from chroma rather than a lookup table makes it total by
+ * construction, including double accidentals.
+ *
+ * This is for *comparison only*. Display spelling is a separate decision and
+ * belongs to `core/spelling/keySpelling.ts`, which is key-aware.
+ */
 export function normalizeToPitchClass(noteStr: string): PitchClass {
   const parsed = note(noteStr);
-  const pc = parsed.pc || parsed.name || noteStr;
 
-  if (ENHARMONIC_MAP[pc]) {
-    return ENHARMONIC_MAP[pc];
+  if (parsed.chroma !== undefined && parsed.chroma !== null) {
+    return CANONICAL_PITCH_CLASS_NAMES[parsed.chroma];
   }
 
-  return pc;
+  return parsed.pc || parsed.name || noteStr;
 }
 
 export function getPitchClassSet(notes: string[]): Set<PitchClass> {
