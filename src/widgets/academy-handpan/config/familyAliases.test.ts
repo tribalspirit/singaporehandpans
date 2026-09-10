@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   HANDPAN_FAMILIES,
   MERGED_FAMILY_IDS,
+  EXCLUDED_FAMILY_IDS,
   resolveFamilyId,
   migrateLegacyPresetId,
   getHandpanFamilyById,
@@ -137,6 +138,41 @@ describe('merged families keep the union of their keys', () => {
       expect([...(family?.supportedKeys ?? [])].sort(), familyId).toEqual(
         [...keys].sort()
       );
+    }
+  });
+});
+
+/**
+ * Guards for the unsourced-family removal.
+ *
+ * The widget's rule is that it does not present a tuning it cannot source.
+ * These families shipped interval sets no maker publishes, so they were removed
+ * rather than left in place with a warning.
+ */
+describe('unsourced families stay out of the catalog', () => {
+  it('publishes no family whose data could not be verified', () => {
+    const liveIds = new Set(HANDPAN_FAMILIES.map((family) => family.id));
+
+    for (const excludedId of Object.keys(EXCLUDED_FAMILY_IDS)) {
+      expect(liveIds.has(excludedId), `${excludedId} is still shipping`).toBe(
+        false
+      );
+    }
+  });
+
+  it('records why each was removed, so it can be restored when sourced', () => {
+    for (const [excludedId, reason] of Object.entries(EXCLUDED_FAMILY_IDS)) {
+      expect(reason.length, excludedId).toBeGreaterThan(40);
+    }
+  });
+
+  it('does not resolve an excluded id to some other family', () => {
+    // Unlike a merged id, an excluded one has no canonical replacement: the
+    // scale is simply not offered, and saying so is better than silently
+    // substituting a different scale.
+    for (const excludedId of Object.keys(EXCLUDED_FAMILY_IDS)) {
+      expect(getHandpanFamilyById(excludedId)).toBeUndefined();
+      expect(getHandpanConfig(`${excludedId}-d-9`)).toBeUndefined();
     }
   });
 });

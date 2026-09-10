@@ -81,10 +81,10 @@ describe('Handpan Scale Verification', () => {
     const familyIds = new Set(HANDPAN_CONFIGS.map((c) => c.familyId));
 
     /**
-     * 15 families, down from 19. Aeolian merged into Kurd, Equinox and Mystic
-     * into Integral, and Magic Voyage into Pygmy — each pair shared a
-     * pitch-class set, so they were catalog entries that sounded identical.
-     * The merged-away ids still resolve; see `familyAliases.test.ts`.
+     * 11 families. Four were merged into the family whose pitch-class set they
+     * duplicated (Aeolian, Equinox, Mystic, Magic Voyage) and four were removed
+     * because their data could not be sourced (Lydian, Ursa Minor, Aegean,
+     * Onoleo). See `familyAliases.test.ts` for both guards.
      */
     const expectedFamilies = [
       'kurd',
@@ -92,15 +92,11 @@ describe('Handpan Scale Verification', () => {
       'integral',
       'pygmy',
       'la-sirena',
-      'ursa-minor',
-      'aegean',
       'oxalis',
       'hijaz',
       'harmonic-minor',
-      'onoleo',
       'ionian',
       'dorian',
-      'lydian',
       'mixolydian',
     ];
 

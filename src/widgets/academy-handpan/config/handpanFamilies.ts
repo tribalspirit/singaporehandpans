@@ -274,46 +274,6 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   },
 
   {
-    id: 'ursa-minor',
-    name: 'Ursa Minor',
-    description:
-      'Minor-leaning hexatonic family used commercially. Layout emphasizes 5th, b6, b7 and repeats tonic.',
-    aliases: ['Ursa'],
-    makers: ['Pantheon Steel'],
-    modeHint: 'minor',
-    intervalsPcSemitones: [0, 2, 5, 7, 8, 10],
-    orderedRingIntervalsByNoteCount: {
-      9: [7, 8, 10, 0, 2, 5, 7, 10],
-      10: [7, 8, 10, 0, 2, 5, 7, 10, 5],
-      13: [7, 8, 10, 0, 2, 5, 7, 10, 0, 2, 5, 7],
-    },
-    suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['D', 'C#', 'E', 'F#', 'G'],
-    defaultKey: 'D',
-    defaultNoteCount: 9,
-  },
-
-  {
-    id: 'aegean',
-    name: 'Aegean',
-    description:
-      'Major/lydian-leaning pentatonic family (often credited to Pantheon Steel). Bright/open. Layout repeats tonic and 5th for 9/10.',
-    aliases: ['Major Pentatonic', 'Aegean (Pantheon)'],
-    makers: ['Pantheon Steel'],
-    modeHint: 'major',
-    intervalsPcSemitones: [0, 2, 4, 7, 9],
-    orderedRingIntervalsByNoteCount: {
-      9: [7, 9, 0, 2, 4, 7, 9, 0],
-      10: [7, 9, 0, 2, 4, 7, 9, 0, 2],
-      13: [7, 9, 0, 2, 4, 7, 9, 0, 2, 4, 7, 9],
-    },
-    suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['C', 'D', 'E', 'F#', 'G', 'A'],
-    defaultKey: 'D',
-    defaultNoteCount: 9,
-  },
-
-  {
     id: 'oxalis',
     name: 'Oxalis',
     description:
@@ -371,25 +331,6 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   },
 
   {
-    id: 'onoleo',
-    name: 'Onoleo',
-    description:
-      'Modern exotic family used by some makers/apps. Canonical layout is "dreamy" and kept distinct from other families.',
-    aliases: ['Modern Exotic', 'Onoleo (App)'],
-    modeHint: 'exotic',
-    intervalsPcSemitones: [0, 2, 3, 6, 7, 10],
-    orderedRingIntervalsByNoteCount: {
-      9: [7, 10, 0, 2, 3, 6, 7, 10],
-      10: [7, 10, 0, 2, 3, 6, 7, 10, 2],
-      13: [7, 10, 0, 2, 3, 6, 7, 10, 0, 2, 3, 6],
-    },
-    suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['B', 'C#', 'D', 'E', 'F#'],
-    defaultKey: 'D',
-    defaultNoteCount: 9,
-  },
-
-  {
     id: 'ionian',
     name: 'Ionian',
     description: 'Major scale (Ionian). Bright and familiar.',
@@ -426,24 +367,6 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   },
 
   {
-    id: 'lydian',
-    name: 'Lydian',
-    description: 'Lydian mode. Major with raised 4th (dreamy/cinematic).',
-    aliases: ['Lydian Mode'],
-    modeHint: 'major',
-    intervalsPcSemitones: [0, 2, 4, 6, 7, 9, 11],
-    orderedRingIntervalsByNoteCount: {
-      9: [7, 9, 11, 0, 2, 4, 6, 7],
-      10: [7, 9, 11, 0, 2, 4, 6, 7, 9],
-      13: [7, 9, 11, 0, 2, 4, 6, 7, 9, 11, 0, 2],
-    },
-    suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['C', 'D', 'E', 'F', 'G', 'A'],
-    defaultKey: 'F',
-    defaultNoteCount: 9,
-  },
-
-  {
     id: 'mixolydian',
     name: 'Mixolydian',
     description: 'Mixolydian mode. Major with flat 7th (folk/rock brightness).',
@@ -461,6 +384,30 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     defaultNoteCount: 9,
   },
 ];
+
+/**
+ * Families removed from the catalog because their data could not be verified.
+ *
+ * The widget's rule is that it does not present a tuning it cannot source. Each
+ * of these shipped an interval set that no maker publishes, and none is a
+ * reference-note rotation of a real scale the way Oxalis turned out to be — the
+ * step patterns simply do not match, so they were invented rather than
+ * mismeasured.
+ *
+ * The verified sets are recorded in docs/features/handpan-data-audit.md. Any of
+ * these can return once its data is sourced, which is what the reason strings
+ * below are for. Sources retrieved 2026-09-10.
+ */
+export const EXCLUDED_FAMILY_IDS: Record<string, string> = {
+  lydian:
+    'No maker ships a scale under this name. Absent from Saraz (58 scales), Isthmus (55), HaganeNote and Shaktipan. The Lydian collection reaches handpans as Aegean, Golden Gate and Sabye instead.',
+  'ursa-minor':
+    'Shipped {0,2,5,7,8,10}; sources give {0,2,3,5,7,8}, a minor hexatonic with no 7th at all. Only reported confidence — the Pantheon Steel maker page refused a TLS handshake, so the set rests on search snippets.',
+  aegean:
+    'Shipped {0,2,4,7,9}; Isthmus and Milosc i Spokoj both give {0,4,6,7,11}. The shipped set is not a rotation of the sourced one.',
+  onoleo:
+    'Shipped {0,2,3,6,7,10}; sources give {0,4,5,7,8}, and even those conflict — one blog gives Celtic Minor instead. No Saraz, Isthmus or HaganeNote page exists.',
+};
 
 /**
  * Families that were merged into another because they are the same scale.

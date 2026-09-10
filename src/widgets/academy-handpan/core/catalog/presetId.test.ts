@@ -71,8 +71,8 @@ describe('preset catalog golden contract', () => {
   it('covers every family in the catalog', () => {
     const families = new Set(currentSnapshot().map((p) => p.familyId));
 
-    // 15 since Aeolian, Equinox, Mystic and Magic Voyage were merged into the
-    // families whose pitch-class set they duplicated.
-    expect(families.size).toBe(15);
+    // 11: four families merged into the one whose pitch-class set they
+    // duplicated, and four removed because their data could not be sourced.
+    expect(families.size).toBe(11);
   });
 });
