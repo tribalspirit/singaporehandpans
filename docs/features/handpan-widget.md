@@ -74,6 +74,38 @@ initial bundle. Consequences for callers:
   read the module through `peekTone()` and no-op when nothing is loaded.
   `ScaleInfoPanel` relies on this, calling `stopArpeggio()` from a mount effect.
 
+## Styling
+
+The widget paints only through its own `--shp-*` token layer, defined on the
+widget root in `styles/_widget-tokens.scss`. Every token falls back to a literal,
+so the widget renders correctly on a page with no design tokens of its own —
+verified by stripping all 129 site custom properties at runtime, which collapses
+the surrounding page while leaving the widget intact.
+
+To restyle it, override the tokens on the widget root. This is the supported
+surface; do not target the hashed CSS-module class names.
+
+```css
+.handpan-host {
+  --shp-color-primary: #b46f3c;
+  --shp-color-surface: #fffaf3;
+  --shp-spacing-md: 1.25rem;
+  --shp-font-family-heading: 'Your Serif', Georgia, serif;
+}
+```
+
+`styles/tokens.test.ts` enforces the layer: no stylesheet may reference a custom
+property outside the namespace, every consumed token must be defined, and every
+definition must carry a literal fallback rather than only a site token.
+
+## Layering
+
+`config/`, `theory/` and `core/` must stay free of React, Tone.js and the `ui/`,
+`audio/` and `styles/` directories. Dependencies point one way — `ui` uses
+`theory`/`config`, never the reverse. An ESLint `no-restricted-imports` override
+enforces this; test files are excluded, since they legitimately render
+components.
+
 ## Test coverage
 
 | Level                         | Location                              |
@@ -99,3 +131,9 @@ These are the failures the current tests exist to prevent:
 - A family's ring order sounding a pitch class it does not declare.
 - A ding falling outside the F2–G3 range makers actually build.
 - A pad's accessible name losing pitch when numeric notation is shown.
+- Roman numerals or a "relative major" claim appearing on a pentatonic or
+  hexatonic tuning, where no diatonic degrees exist for them to describe.
+- Chord names contradicting the pads — a C# tuning showing `G#3` and `Abm7`.
+- A pitch class canonicalising two ways, which silently drops chords in some
+  keys but not others.
+- A stylesheet re-coupling the widget to the host page's design tokens.
