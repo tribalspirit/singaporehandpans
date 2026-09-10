@@ -527,8 +527,16 @@ async function auditPage(
     // Run audit checks
     // Polyfill esbuild's __name helper which doesn't exist in the browser context
     await page.evaluate(() => {
-      if (typeof (globalThis as any).__name === 'undefined') {
-        (globalThis as any).__name = (fn: any) => fn;
+      // esbuild emits calls to a `__name` helper that does not exist inside the
+      // page. Declaring the shape beats `any`: it says what is being added and
+      // keeps the assignment checked.
+      type EsbuildGlobal = typeof globalThis & {
+        __name?: <T>(fn: T) => T;
+      };
+      const scope = globalThis as EsbuildGlobal;
+
+      if (typeof scope.__name === 'undefined') {
+        scope.__name = (fn) => fn;
       }
     });
     const isMobile = isMobileOrTablet(viewportName);

@@ -4,7 +4,14 @@ Complete guide for setting up your development environment for Singapore Handpan
 
 ## Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20.19+ and npm
+
+  Set by the toolchain, not by preference: `sass` requires `>=20.19.0` and
+  `playwright` requires `>=20`. The previous "18+" here had not been true for
+  some time — `npm install` on Node 18 emits unsupported-engine errors. The
+  `engines` field in `package.json` now states the same minimum so npm warns
+  rather than leaving it to be discovered.
+
 - Git
 - A code editor (VS Code recommended)
 - Storyblok account (free tier available)

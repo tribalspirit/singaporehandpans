@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect, useId } from 'react';
 import { usePlayback } from './usePlayback';
 import { initializeAudio, isAudioInitialized, playNote } from '../audio/engine';
 import { playArpeggio, stopArpeggio } from '../audio/scheduler';
@@ -23,6 +23,7 @@ export default function ScaleInfoPanel({
   scaleNotes,
   onChordSelect,
 }: ScaleInfoPanelProps) {
+  const layoutTooltipId = useId();
   const {
     state: playbackState,
     setNoteActive,
@@ -180,16 +181,37 @@ export default function ScaleInfoPanel({
       <div className={styles.scaleContent}>
         <div className={styles.descriptionWrapper}>
           <p className={styles.scaleDescription}>{scaleInfo.description}</p>
+          {/*
+            A button, not a span. This tooltip carries the only disclosure that
+            the layout is representative rather than a real maker's, and on a
+            non-focusable element revealed by :hover alone it was unreachable
+            without a mouse — the people most reliant on the disclosure were the
+            ones who could not get to it.
+          */}
           <div className={styles.infoTooltipWrapper}>
-            <span className={styles.infoIcon} aria-label="Layout information">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <button
+              type="button"
+              className={styles.infoIcon}
+              aria-label="Layout information"
+              aria-describedby={layoutTooltipId}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="16" x2="12" y2="12" />
                 <line x1="12" y1="8" x2="12.01" y2="8" />
               </svg>
-            </span>
-            <div className={styles.tooltip}>
-              Note: This virtual handpan layout is representative. Actual note positions may vary depending on the manufacturer and specific model.
+            </button>
+            <div className={styles.tooltip} id={layoutTooltipId} role="note">
+              Note: This virtual handpan layout is representative. Actual note
+              positions may vary depending on the manufacturer and specific
+              model.
             </div>
           </div>
         </div>

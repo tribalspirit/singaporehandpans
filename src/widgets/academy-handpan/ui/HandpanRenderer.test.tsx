@@ -83,21 +83,15 @@ describe('HandpanRenderer', () => {
     expect(label).toContain('ding');
   });
 
-  it('discloses that the layout is schematic, not a maker layout', () => {
+  /**
+   * The schematic disclosure lives in the scale panel's info tooltip, not
+   * under the pan. The caption here duplicated it, so it was removed; see
+   * `ScaleInfoPanel` for the disclosure and its keyboard-reachability test.
+   */
+  it('does not repeat the layout disclosure under the pan', () => {
     render(<HandpanRenderer config={dKurd9()} />);
 
-    const note = screen.getByText(/Schematic layout/i);
-    expect(note.textContent).toMatch(/not a verified maker layout/i);
-  });
-
-  it('links the diagram to its schematic disclosure for assistive tech', () => {
-    const { container } = render(<HandpanRenderer config={dKurd9()} />);
-
-    const described = container.querySelector('[aria-describedby]');
-    const targetId = described?.getAttribute('aria-describedby');
-
-    expect(targetId).toBeTruthy();
-    expect(container.querySelector(`#${targetId}`)).not.toBeNull();
+    expect(screen.queryByText(/Schematic layout/i)).toBeNull();
   });
 
   it('reports the clicked pad to its caller', async () => {
