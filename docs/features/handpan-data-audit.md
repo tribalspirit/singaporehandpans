@@ -89,9 +89,10 @@ Peter Pan) includes it. They should be a note-count variant, not two families.
 ## 3. Duplicate families — resolved by merging
 
 The catalog listed 19 families but held only 16 distinct pitch-class sets, so
-some entries were choices that sounded identical. All duplicates have now been
+some entries were choices that sounded identical. All duplicates have been
 merged, keeping the best-established name and naming the others in the
-description and aliases. **15 families remain.**
+description and aliases. A guard test now catches any new collision — it caught
+the Ionian/Sabye one before it shipped.
 
 | Merged away        | Into         | Shared set         | Why that name won                                                                                           |
 | ------------------ | ------------ | ------------------ | ----------------------------------------------------------------------------------------------------------- |
@@ -122,9 +123,9 @@ no two families share a pitch-class set again.
 
 ## 3a. Unsourced families — removed
 
-The widget does not present a tuning it cannot back with a source. Four families
-shipped interval sets that no maker publishes and have been removed. **11
-families remain.**
+The widget does not present a tuning it cannot back with a source. Families shipping
+interval sets that no maker publishes were removed. Three remain removed;
+**Aegean was later restored with corrected data** (§5a).
 
 | Removed      | Shipped            | Sourced         | Why                                                                                   |
 | ------------ | ------------------ | --------------- | ------------------------------------------------------------------------------------- |
@@ -147,16 +148,17 @@ Unlike a merged family, an excluded one gets no canonical replacement —
 better than silently substituting a different one. `EXCLUDED_FAMILY_IDS` in
 `handpanFamilies.ts` records the reason for each, so any can return once sourced.
 
-**Aegean is the nearest to recoverable:** Isthmus publishes an explicit note
-list (`"C Aegean: C / E G B C E F# G B"`) and Miłość i Spokój agrees, so
-correcting it to `{0,4,6,7,11}` would make it verified rather than dropped. Note
-that at 9 notes it is a five-note set — root, maj3, #4, 5, maj7 — and only
-larger builds add the 2nd and 6th to reach full Lydian.
+**Aegean was recoverable and has been restored** with `{0,4,6,7,11}` — see §5a.
+Note that at 9 notes it is a five-note set (root, maj3, #4, 5, maj7); only larger
+builds add the 2nd and 6th toward Lydian, and they do so with bottom notes this
+widget cannot model.
 
 ## 4. Verification status of the shipped families
 
-Twelve families: 19 originally, minus four merged as duplicates (§3), minus
-four removed as unsourced (§3a), plus Akebono (§5).
+Fourteen families: 19 originally, minus five merged as duplicates (§3, §5a),
+minus three removed as unsourced (§3a), plus four added from maker listings
+(§5, §5a). Every shipped interval set matches a maker-published note list, and a
+test checks that mechanically rather than relying on this table.
 
 | Family         | Set from ding              | Status                                                                          | Source                     |
 | -------------- | -------------------------- | ------------------------------------------------------------------------------- | -------------------------- |
@@ -165,16 +167,15 @@ four removed as unsourced (§3a), plus Akebono (§5).
 | integral       | `{0,2,3,7,8,10}`           | verified — absorbed Equinox and Mystic                                          | Saraz, Isthmus             |
 | pygmy          | `{0,2,3,7,10}`             | verified — corrected, absorbed Magic Voyage                                     | Saraz, Isthmus             |
 | la-sirena      | `{0,2,3,7,9,10}`           | verified — Dorian minus the 4th                                                 | Saraz                      |
+| akebono        | `{0,1,5,7,8}`              | verified — 9 notes only, see §5                                                 | Saraz, Isthmus, HaganeNote |
+| aegean         | `{0,4,6,7,11}`             | verified — corrected and restored, see §5a                                      | Isthmus, Miłość i Spokój   |
+| sabye          | `{0,2,4,5,7,9,11}`         | verified — absorbed Ionian; Ashakiran is an alias                               | Saraz, HaganeNote, Isthmus |
+| golden-gate    | `{0,2,4,6,7,11}`           | verified — C only, 8 notes                                                      | Isthmus                    |
 | oxalis         | `{0,2,4,7,9,11}` from root | verified — see §2.4                                                             | Saraz, HaganeNote          |
 | hijaz          | `{0,1,4,5,7,8,10}`         | verified, but most instruments sold as "Hijaz" are ding-on-tonic harmonic minor | Saraz                      |
 | harmonic-minor | `{0,2,3,5,7,8,11}`         | verified                                                                        | Saraz, Shaktipan           |
-| ionian         | `{0,2,4,5,7,9,11}`         | verified, but rarely shipped complete                                           | Saraz                      |
 | dorian         | `{0,2,3,5,7,9,10}`         | verified (Jibuk is an alias)                                                    | Saraz, Isthmus             |
-| akebono        | `{0,1,5,7,8}`              | verified — 9 notes only, see §5                                                 | Saraz, Isthmus, HaganeNote |
 | mixolydian     | `{0,2,4,5,7,9,10}`         | verified; 8-note variants drop the 4th                                          | Saraz                      |
-
-Every shipped family's interval set now matches a maker-published note list. A
-test compares the two mechanically rather than relying on this table.
 
 ## 5. Akebono — added, and the naming trap it did not fall into
 
@@ -232,15 +233,42 @@ extrapolating a layout — exactly what §3a removed other families for.
 Saraz's documented bottom notes for Akebono are consistently a semitone above
 the ding: F#/`(G)`, G/`(Ab)`, D/`(Eb)`, E/`(F)`.
 
-## 5a. Remaining expansion candidates
+## 5a. Aegean restored, Sabye and Golden Gate added
 
-Ready to add, all `verified`: **Sabye** `{0,2,4,5,7,9,11}`, **Golden Gate**
-`{0,2,4,6,7,11}`.
+**Aegean** returns with `{0,4,6,7,11}`, in A, C and D at 9 and 10 notes. It had
+shipped `{0,2,4,7,9}`, a major pentatonic no maker publishes. Isthmus
+(`"C Aegean: C / E G B C E F# G B"`) and Miłość i Spokój (`"D3 | F#3, A3, C#4,
+D4, F#4, G#4, A4, C#5, D5"`) agree, and both ring orders reproduce those exactly.
 
-Aliases rather than new families: **Annaziska** → kurd, **Amara** →
-celtic-minor, **Ashakiran/Asha** → sabye (identical note lists), **Jibuk** →
-dorian, **Romanian Hijaz** → harmonic-minor Hijaz, **Low Pygmy** → a Pygmy ding
-variant.
+**Sabye** `{0,2,4,5,7,9,11}`, in C–A at 9 notes. Saraz (`"E/ A, B, C#, D#, E,
+F#, G#, B"`) and HaganeNote (`"D/ G A B C# D E F# A"`) publish note lists that
+derive to an _identical_ ring order. Isthmus publishes the same list under the
+name **Ashakiran**, character for character, so Ashakiran and Asha are aliases
+rather than a separate family.
+
+**Golden Gate** `{0,2,4,6,7,11}`, in C at 8 notes — Aegean plus the 2nd, from
+Isthmus `"C3 / E3 G3 B3 C4 D4 F#4 G4"`. Shipped in C alone because C is the only
+attested ding; transposition is musically well defined, so more keys can be
+added whenever wanted.
+
+### Sabye absorbed Ionian
+
+Adding Sabye tripped the duplicate-pitch-class guard: `ionian` shipped the same
+seven notes. Sabye is canonical rather than Ionian because it is the name
+handpan makers publish the complete diatonic set under — Saraz's own "C Major"
+listings are _six-note subsets_ (`{0,2,4,5,7,11}` and `{0,2,4,5,7,9}`), not this
+set — and because two makers derive an identical Sabye ring order while the
+Ionian ring order was never sourced. `Ionian` and `Major` are aliases, which the
+scale panel displays.
+
+That the guard caught this is the point: a duplicate that would have shipped as
+two identical-sounding entries was found mechanically, not by review.
+
+### Still not shipped
+
+Aliases rather than families: **Annaziska** → kurd, **Amara** → celtic-minor,
+**Jibuk** → dorian, **Romanian Hijaz** → harmonic-minor Hijaz, **Low Pygmy** → a
+Pygmy ding variant.
 
 `reported` only, so out under the current rule: **Raga Desh** `{0,4,5,7,10}`.
 

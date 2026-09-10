@@ -16,8 +16,10 @@ Academy handpan memorization widget implemented as a React island. Covers scale 
 
 > **Scale data:** [docs/features/handpan-data-audit.md](../../docs/features/handpan-data-audit.md)
 > is the source of truth for interval sets, aliases and their provenance.
-> Four families were merged in 2026-09 because they duplicated another's
-> pitch-class set; their ids still resolve via `MERGED_FAMILY_IDS`.
+> Five families were merged in 2026-09 because they duplicated another's
+> pitch-class set (ids still resolve via `MERGED_FAMILY_IDS`), three were
+> removed as unsourced (`EXCLUDED_FAMILY_IDS`), and four were added from maker
+> listings: Akebono, Aegean, Sabye and Golden Gate.
 
 ### Key Files
 
@@ -39,7 +41,7 @@ src/widgets/academy-handpan/
     └── Controls.module.scss
 ```
 
-## Scale Families (15 Total)
+## Scale Families (14 Total)
 
 ### Core Minor
 
