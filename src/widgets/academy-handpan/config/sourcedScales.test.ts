@@ -79,6 +79,84 @@ describe('sourced scale fixtures', () => {
       expect(classes).not.toContain('A'); // perfect 4th above E
     });
   });
+
+  describe('Akebono', () => {
+    /** Isthmus: "F#/ B C# D F# G B C# D" */
+    it('matches the Isthmus F# Akebono 9 listing', () => {
+      expect(notesFor('akebono', 'F#', 9)).toEqual([
+        'F#3',
+        'B3',
+        'C#4',
+        'D4',
+        'F#4',
+        'G4',
+        'B4',
+        'C#5',
+        'D5',
+      ]);
+    });
+
+    /** HaganeNote: "D/ G A Bb D Eb G A Bb" */
+    it('matches the HaganeNote D Akebono listing', () => {
+      expect(notesFor('akebono', 'D', 9)).toEqual([
+        'D3',
+        'G3',
+        'A3',
+        'Bb3',
+        'D4',
+        'Eb4',
+        'G4',
+        'A4',
+        'Bb4',
+      ]);
+    });
+
+    /** HaganeNote: "(F3), Bb3, C4, Db4, F4, Gb4, Bb4, C5, Db5" */
+    it('matches the HaganeNote F Akebono listing, flats and all', () => {
+      expect(notesFor('akebono', 'F', 9)).toEqual([
+        'F3',
+        'Bb3',
+        'C4',
+        'Db4',
+        'F4',
+        'Gb4',
+        'Bb4',
+        'C5',
+        'Db5',
+      ]);
+    });
+
+    /** HaganeNote: "E/ A B C E F A B C" */
+    it('matches the HaganeNote E Akebono listing', () => {
+      expect(pitchClasses(notesFor('akebono', 'E', 9))).toEqual([
+        'E',
+        'A',
+        'B',
+        'C',
+        'E',
+        'F',
+        'A',
+        'B',
+        'C',
+      ]);
+    });
+
+    /**
+     * The ding is the root, as every handpan maker states. The 4th above it is
+     * the tonal centre, which is a separate idea and deliberately not encoded
+     * as the tonic — doing so would name the instrument something no maker
+     * sells.
+     */
+    it('roots the scale on the ding, not on the 4th above it', () => {
+      const notes = notesFor('akebono', 'F#', 9);
+      expect(notes[0]).toBe('F#3');
+
+      const classes = new Set(pitchClasses(notes));
+      expect(classes).toContain('G'); // flat 2nd above the ding
+      expect(classes).toContain('B'); // the 4th, its tonal centre
+      expect(classes).not.toContain('A'); // no natural 2nd - not Hirajoshi-from-F#
+    });
+  });
 });
 
 /**
@@ -98,6 +176,7 @@ const SOURCED_PITCH_CLASS_SETS: Record<string, number[]> = {
   integral: [0, 2, 3, 7, 8, 10],
   pygmy: [0, 2, 3, 7, 10],
   'la-sirena': [0, 2, 3, 7, 9, 10],
+  akebono: [0, 1, 5, 7, 8],
   // Oxalis is measured from the tone-circle root, not the ding — see §2.4.
   oxalis: [0, 2, 4, 7, 9, 11],
   hijaz: [0, 1, 4, 5, 7, 8, 10],

@@ -274,6 +274,47 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   },
 
   {
+    id: 'akebono',
+    name: 'Akebono',
+    /**
+     * Japanese pentatonic, rooted on the ding.
+     *
+     * Handpan makers name this instrument by its ding and state that the ding
+     * is the root — Isthmus and MAG both write "The 'ding' is the root note of
+     * the scale, followed by the fourth and fifth degrees." Eighteen listings
+     * across Saraz, Isthmus, HaganeNote, Vibe and Chirp are unanimous on
+     * {0,1,5,7,8} measured from the ding.
+     *
+     * The perfect 4th above the ding is where the scale resolves, which is why
+     * Isthmus says "F# Akebono plays flawlessly in B Minor" and Saraz files it
+     * under "B Minor / F# Akebono". That is a tonal centre, not the name: the
+     * catalog follows the makers so an owner finds the instrument they bought.
+     * Note that piano scale dictionaries root Akebono differently — tongue-drum
+     * maker Guda publishes these same notes a 4th up, as "key of A" where
+     * HaganeNote says "E Akebono".
+     *
+     * Ring order reproduces Isthmus "F#/ B C# D F# G B C# D" exactly.
+     *
+     * 9 notes only. Makers do build 10- and 11-note Akebonos, but they reach
+     * those counts with bottom notes, which this widget cannot yet represent —
+     * no all-top-shell 10-note Akebono appears in any listing found.
+     * Sources retrieved 2026-09-10; see docs/features/handpan-data-audit.md.
+     */
+    description:
+      'Japanese pentatonic — root, flat 2nd, 4th, 5th and flat 6th. Spare and contemplative. Also known as In, Miyako-bushi or Sakura. The 4th above the ding acts as its tonal centre, so an F# Akebono sits comfortably in B minor.',
+    aliases: ['In', 'Miyako-bushi', 'Sakura', 'Hon-kumoi-joshi'],
+    modeHint: 'exotic',
+    intervalsPcSemitones: [0, 1, 5, 7, 8],
+    orderedRingIntervalsByNoteCount: {
+      9: [5, 7, 8, 0, 1, 5, 7, 8],
+    },
+    suggestedNoteCounts: [9],
+    supportedKeys: ['C#', 'D', 'E', 'F', 'F#', 'G'],
+    defaultKey: 'F#',
+    defaultNoteCount: 9,
+  },
+
+  {
     id: 'oxalis',
     name: 'Oxalis',
     description:

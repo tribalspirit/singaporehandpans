@@ -71,8 +71,8 @@ describe('preset catalog golden contract', () => {
   it('covers every family in the catalog', () => {
     const families = new Set(currentSnapshot().map((p) => p.familyId));
 
-    // 11: four families merged into the one whose pitch-class set they
-    // duplicated, and four removed because their data could not be sourced.
-    expect(families.size).toBe(11);
+    // 12: four merged into the family whose pitch-class set they duplicated,
+    // four removed as unsourced, and Akebono added from maker listings.
+    expect(families.size).toBe(12);
   });
 });
