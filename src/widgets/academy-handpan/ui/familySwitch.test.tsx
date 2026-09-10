@@ -46,4 +46,50 @@ describe('switching scale family', () => {
     // And the widget is still rendering something usable afterwards.
     expect(screen.getByLabelText(/select scale family/i)).toBeDefined();
   });
+
+  /**
+   * A keyboard user must not lose their place.
+   *
+   * Setting the family alone left one render with the previous key and shell,
+   * which resolves to nothing and takes the "no configuration" early return.
+   * That unmounted the controls and dropped focus to the document body, forcing
+   * the user to restart navigation. Family and defaults are applied together
+   * now, so the config never passes through an unresolvable state.
+   */
+  it('keeps focus on the selector across an incompatible switch', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+
+    const familySelect = screen.getByLabelText(/select scale family/i);
+    familySelect.focus();
+    expect(document.activeElement).toBe(familySelect);
+
+    // Kurd defaults to D/9; Golden Gate offers only C/8.
+    await user.selectOptions(familySelect, 'golden-gate');
+
+    expect(document.activeElement).toBe(
+      screen.getByLabelText(/select scale family/i)
+    );
+  });
+
+  it('never leaves the widget without a resolvable configuration', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+
+    const familySelect = screen.getByLabelText(/select scale family/i);
+
+    for (const family of [
+      'golden-gate',
+      'akebono',
+      'sabye',
+      'aegean',
+      'kurd',
+    ]) {
+      await user.selectOptions(familySelect, family);
+      // The fallback copy only renders when nothing resolves.
+      expect(
+        screen.queryByText(/No handpan configuration available/i)
+      ).toBeNull();
+    }
+  });
 });

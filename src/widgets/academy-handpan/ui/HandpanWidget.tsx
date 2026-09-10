@@ -81,13 +81,28 @@ function HandpanWidgetContent() {
     };
   }, [selectedHandpan]);
 
+  // `handleFamilyChange` applies the family and its defaults together, so this
+  // only has to cover a familyId arriving from somewhere else — an initial
+  // selection that does not resolve, say. Skipping it while the current
+  // selection is valid is what keeps the controls mounted, and focus with them.
   useEffect(() => {
+    if (
+      resolveHandpanConfig({
+        familyId,
+        key: selectedKey,
+        noteCount: selectedNoteCount,
+      })
+    ) {
+      return;
+    }
+
     const defaults = getDefaultSelection(familyId);
     setSelectedKey(defaults.key);
     setSelectedNoteCount(defaults.noteCount);
     setSelectedChord(null);
     playback.clearPlayback();
-  }, [familyId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [familyId, selectedKey, selectedNoteCount]);
 
   const selectedNotesForHandpan = useMemo<Set<string>>(() => {
     if (!selectedHandpan || !selectedChord) return new Set();
@@ -188,6 +203,27 @@ function HandpanWidgetContent() {
     setSelectedChord(null);
   }, []);
 
+  /**
+   * Change family and its defaults together.
+   *
+   * Setting the family alone left one render with the previous key and shell —
+   * Kurd's D/9 against Golden Gate's C/8 — which resolves to nothing and takes
+   * the "no configuration" early return. That unmounted the controls, and a
+   * keyboard user lost focus to the document body mid-navigation. React batches
+   * these, so the config never passes through an unresolvable state.
+   */
+  const handleFamilyChange = useCallback(
+    (nextFamilyId: string) => {
+      const defaults = getDefaultSelection(nextFamilyId);
+      setFamilyId(nextFamilyId);
+      setSelectedKey(defaults.key);
+      setSelectedNoteCount(defaults.noteCount);
+      setSelectedChord(null);
+      playback.clearPlayback();
+    },
+    [playback]
+  );
+
   /*
    * Start fetching Tone.js on pointerdown, before the click that will need it.
    * Tone is kept out of the initial bundle, so without this the first gesture
@@ -227,7 +263,7 @@ function HandpanWidgetContent() {
             <select
               id="family-select"
               value={familyId}
-              onChange={(e) => setFamilyId(e.target.value)}
+              onChange={(e) => handleFamilyChange(e.target.value)}
               className={styles.select}
               aria-label="Select scale family"
             >
