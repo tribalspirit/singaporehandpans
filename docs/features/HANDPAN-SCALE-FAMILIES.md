@@ -2,57 +2,83 @@
 
 ## Overview
 
-The handpan widget now supports **19 scale families** with **transposed variants** across multiple keys and note counts. This implementation fixes octave conventions, corrects the Pygmy scale, and enables users to explore handpans in different keys without manually defining each configuration.
+The handpan widget supports **14 scale families** with **transposed variants**
+across multiple keys and note counts, so users can explore handpans in different
+keys without a hand-written configuration for each one.
+
+> **Updated 2026-09-10.** An earlier version of this document claimed this work
+> "corrects the Pygmy scale". It did not — Pygmy shipped the minor pentatonic
+> until the correctness pass on branch `002-handpan-core-split`, which also
+> corrected Equinox and replaced the global ding octave. That pass also merged
+> the families that duplicated another's pitch-class set (Aeolian, Equinox,
+> Mystic, Magic Voyage, Ionian), removed three whose data could not be sourced
+> (Lydian, Ursa Minor, Onoleo), and added four from maker listings (Akebono,
+> Aegean corrected, Sabye, Golden Gate) — 19 to 14. Verified interval sets
+> and their sources are in [handpan-data-audit.md](handpan-data-audit.md), which
+> supersedes this document wherever the two disagree about scale data.
 
 ## Key Changes
 
 ### 1. Fixed Octave Convention
 
-- **Ding octave**: Changed from octave 4 to octave 3 (industry standard)
+- **Ding octave**: changed from octave 4 to octave 3
 - Example: D Kurd ding is now `D3` instead of `D4`
 - All ring notes adjusted accordingly (spanning octaves 3-5)
 
-### 2. Fixed Pygmy Scale
+**Superseded in 2026-09.** A single octave for every key is not how instruments
+are built: every A-ding and B-ding handpan makers sell is A2 or B2. The octave
+now follows the key, giving a continuous G#2-G3 band. See
+[handpan-data-audit.md](handpan-data-audit.md) §2.3.
 
-- **Before**: Identical to D Kurd (incorrect)
-- **After**: True minor pentatonic `[0, 3, 5, 7, 10]`
-- Now distinct and musically accurate
+### 2. Fixed Pygmy Scale — superseded
 
-### 3. Scale Families (19 Total)
+- **Originally**: identical to D Kurd (incorrect)
+- **This pass changed it to**: the minor pentatonic `[0, 3, 5, 7, 10]`
+- **Corrected again in 2026-09**: `[0, 2, 3, 7, 10]`
 
-#### Core Minor Families
+That second correction matters: the minor pentatonic has a perfect 4th where
+Pygmy has a major 2nd, and Pygmy has no 4th at all. Saraz publishes
+`"F2/ F, G, Ab, C, Eb, F, G, C"`, and Isthmus, Shaktipan and HaganeNote agree.
+See [handpan-data-audit.md](handpan-data-audit.md) §2.1.
 
-- **Kurd** (Natural Minor/Aeolian) - Most popular handpan scale
-- **Celtic Minor** (Amara) - Hexatonic minor, smooth and meditative
-- **Integral** (PANArt) - Hexatonic minor with distinct b6+b7 color
-- **Mystic** - Phrygian-ish hexatonic minor
-- **Pygmy** - Minor pentatonic (earthy/tribal)
+### 3. Scale Families (14 Total)
 
-#### Dorian/Dreamy
+The catalog as it actually ships. Interval sets and their sources are in
+[handpan-data-audit.md](handpan-data-audit.md), which is the source of truth; a
+test compares every shipped set against it mechanically.
 
-- **La Sirena** (Pantheon Steel) - Dorian hexatonic
-- **Ursa Minor** (Pantheon Steel) - Minor hexatonic variant
+#### Minor
 
-#### Major/Lydian
+- **Kurd** (Natural Minor) — the most popular handpan scale. Absorbed Aeolian and Annaziska
+- **Celtic Minor** — hexatonic minor, smooth and meditative. Amara is an alias
+- **Integral** — minor without the 4th. Absorbed Equinox and Mystic
+- **Pygmy** — root, maj2, min3, 5th, min7, and no 4th. Absorbed Magic Voyage
+- **La Sirena** — Dorian minus the 4th
+- **Harmonic Minor** — natural minor with a raised 7th
 
-- **Aegean** (Pantheon Steel) - Major pentatonic
-- **Oxalis** - Major hexatonic with maj7
-- **Ionian** - Classic major scale
-- **Lydian** - Major with raised 4th
+#### Major / bright
 
-#### Mixed Modes
+- **Sabye** — the complete diatonic major set. Absorbed Ionian; Ashakiran and Asha are aliases
+- **Aegean** — maj3, #4, 5th, maj7; fills toward Lydian on larger builds
+- **Golden Gate** — Aegean plus the 2nd. Eight notes, C only
+- **Oxalis** — major with maj7, measured from the tone-circle root rather than the ding
+- **Mixolydian** — major with a flat 7th
+- **Dorian** — Jibuk is an alias
 
-- **Dorian** - Minor with major 6th
-- **Mixolydian** - Major with flat 7th
-- **Equinox** - Mixed mood (Mixolydian-like)
-- **Magic Voyage** - Storytelling blend
+#### Exotic
 
-#### Exotic/Eastern
+- **Akebono** — Japanese pentatonic, ding-rooted; resolves to the 4th above
+- **Hijaz** (Phrygian Dominant) — Middle Eastern flavour
 
-- **Hijaz** (Phrygian Dominant) - Middle Eastern flavor
-- **Harmonic Minor** - Natural minor with raised 7th
-- **Onoleo** - Modern exotic/dreamy
-- **Aeolian** - Natural minor (alternative label to Kurd)
+#### Removed
+
+**Lydian**, **Ursa Minor** and **Onoleo** shipped interval sets no maker
+publishes and were removed; `EXCLUDED_FAMILY_IDS` records why. Do not re-add one
+without a maker-published note list.
+
+Merged-away ids — `aeolian`, `equinox`, `mystic`, `magic-voyage`, `ionian` —
+still resolve through `MERGED_FAMILY_IDS`, for the keys and shells they actually
+published.
 
 ### 4. Plan B: Transposition Support
 
@@ -122,7 +148,12 @@ getAvailableNoteCountsForFamilyAndKey('kurd', 'D');
   aliases?: string[];            // ['Natural Minor', 'Aeolian']
   makers?: string[];             // ['Pantheon Steel']
   modeHint?: 'minor' | 'major' | 'mixed' | 'exotic';
-  intervalsPcSemitones: number[]; // [0, 2, 3, 5, 7, 8, 10]
+  // Declared pitch-class set. Documentation and validation only — note
+  // generation is driven entirely by orderedRingIntervalsByNoteCount, and a
+  // test asserts the two agree.
+  intervalsPcSemitones?: number[]; // [0, 2, 3, 5, 7, 8, 10]
+  // The actual generator input: ring note order per note count.
+  orderedRingIntervalsByNoteCount?: Record<number, number[]>;
   suggestedNoteCounts: number[]; // [9, 10, 13]
   supportedKeys: PitchClass[];   // ['D', 'E', 'F#', ...]
 }
@@ -157,11 +188,13 @@ getAvailableNoteCountsForFamilyAndKey('kurd', 'D');
 
 ## Testing
 
-All 113 tests passing:
+Run `npx vitest run` for the current count rather than trusting a number here.
+What the suite covers for this area:
 
-- ✓ Octave convention (D3 for D scales)
-- ✓ Pygmy distinct from Kurd
-- ✓ All 19 families represented
+- ✓ Ding octave follows the key (D3 for D, A2 for A) and stays within F2-G3
+- ✓ Pygmy and Equinox match published maker note lists
+- ✓ Every family's ring order agrees with its declared pitch-class set
+- ✓ All 14 families represented, none sharing a pitch-class set
 - ✓ Multiple keys per family
 - ✓ Multiple note counts per family+key
 - ✓ Correct config structure
@@ -178,22 +211,19 @@ Add ability to reinterpret the same pitch set with different tonic (modal playin
 - Requires: tonic override in chord/scale analysis
 - Not implemented in this phase (as requested)
 
-### UI Enhancement
+### UI Enhancement — shipped
 
-Consider updating the handpan selector to use the new grouping:
-
-1. First dropdown: Select family (Kurd, Aegean, Hijaz, etc.)
-2. Second dropdown: Select key (D, E, F#, etc.)
-3. Third dropdown: Select note count (9, 10, 13)
-
-This can be done using the new `uiHelpers` functions.
+The three-step family / key / note-count selector described here as future work
+has shipped, in `ui/HandpanWidget.tsx`, plus a fourth control for note-name vs
+numeric labelling. It is backed by `config/handpanSelectorModel.ts`, not by
+`uiHelpers.ts` — `uiHelpers.ts` is currently referenced only by its own test.
 
 ## Migration Notes
 
 ### Backward Compatibility
 
 - Existing imports still work: `getAllHandpanConfigs()`, `getHandpanConfig(id)`
-- Widget UI unchanged (still shows all configs in single dropdown)
+- The widget uses the family / key / note-count selector, not a single dropdown
 - Chord/scale analysis continues to work with generated configs
 
 ### Breaking Changes

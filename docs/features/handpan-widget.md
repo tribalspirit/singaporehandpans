@@ -1,2 +1,148 @@
-# 🧪 Handpan Widget – Interaction & Highlighting Test MatrixThis document defines the **authoritative behavioral contract** for the Handpan Memorization widget.Any implementation that does not satisfy **ALL** tests below is considered **incorrect**, even if it “looks fine”.---## 🔑 Definitions### PadA visual note on the handpan layout (e.g. `D4`, `A4`, `D5`).### Scale NoteA note badge in the **Scale Notes** section (exact note string).### Pitch Class (PC)Note name without octave (e.g. `D`, `F`, `A`).---## 🧠 Playback State Model (Baseline)| Field | Meaning ||----|----|| `activePadNote` | EXACT note (with octave). Single-note interactions only || `activePitchClasses` | Array of pitch classes. Chord interactions only || `isPlaying` | Transport state |### Invariant Rules- `activePadNote !== null` ⇒ `activePitchClasses === null`- `activePitchClasses !== null` ⇒ `activePadNote === null`- **Never highlight by pitch class during single-note interaction**---# 1️⃣ Handpan Pad Clicks### Test 1.1 — Basic pad click (single octave)**Action**- Click pad `D4`**Expected**- `activePadNote = "D4"`- `activePitchClasses = null`- Highlighted pads: `["D4"]`- Highlighted scale notes: `["D4"]`- ❌ `D5` NOT highlighted---### Test 1.2 — Pad click with multiple octave pads present**Setup**- Layout contains `D4` and `D5`**Action**- Click `D5`**Expected**- Highlighted pads: `["D5"]`- Highlighted scale notes: `["D5"]`- ❌ `D4` NOT highlighted---# 2️⃣ Scale Note Clicks### Test 2.1 — Scale note exists as pad**Action**- Click scale note `A4`**Expected**- `activePadNote = "A4"`- Highlighted pads: `["A4"]`- Highlighted scale notes: `["A4"]`---### Test 2.2 — Scale note does NOT exist as pad**Setup**- Scale note list contains `D4`- Layout contains only `D5`**Action**- Click scale note `D4`**Expected**- `activePadNote = "D4"`- Highlighted pads: `["D5"]` (mapped best pad)- Highlighted scale notes: `["D4"]`- ❌ No multi-pad highlight---# 3️⃣ Scale Playback (Play Button)### Test 3.1 — Sequential playback highlights exact notes**Action**- Click **Play** in Scale Info**For each step**- `activePadNote = step.note`- `activePitchClasses = null`**Expected**- Exactly **ONE** pad highlighted per step- Exactly **ONE** scale note highlighted per step- Pads and scale notes move in sync---### Test 3.2 — Playback reset**Action**- Playback completes**Expected**- `activePadNote = null`- `activePitchClasses = null`- No pads highlighted- No scale notes highlighted---# 4️⃣ Chord Selection (NO playback)### Test 4.1 — Basic triad selection**Action**- Select chord **Dm****Expected**- `activePadNote = null`- `activePitchClasses = ["D", "F", "A"]`- Highlighted pads:  - ALL `D*`, `F*`, `A*` pads (all octaves)- Highlighted scale notes:  - All notes with pitch classes D, F, A---### Test 4.2 — Chord deselection**Action**- Click selected chord again**Expected**- `activePadNote = null`- `activePitchClasses = null`- No highlights anywhere---# 5️⃣ Chord Playback — Simultaneous### Test 5.1 — Simultaneous chord play**Action**- Select chord → Click **Play (Simultaneous)****Expected**- During playback:  - `activePitchClasses = chord.pitchClasses`  - All chord pads highlighted- After playback:  - All highlights cleared---# 6️⃣ Chord Playback — Arpeggio### Test 6.1 — Arpeggio highlights pitch classes**Action**- Select chord → Play arpeggio**On each step**- `activePadNote = null`- `activePitchClasses = [currentPitchClass]`**Expected**- All pads matching current pitch class highlighted- Scale notes matching pitch class highlighted- ❌ No octave-specific highlighting---# 7️⃣ Interaction Priority Rules### Test 7.1 — Manual click overrides chord highlight**Setup**- Chord selected (pads highlighted)**Action**- Click pad `A4`**Expected**- Chord highlight CLEARED- `activePadNote = "A4"`- Only `A4` highlighted---### Test 7.2 — Scale click overrides chord highlight**Setup**- Chord selected**Action**- Click scale note `F5`**Expected**- Chord highlight CLEARED- Only mapped pad for `F5` highlighted---# 8️⃣ Regression Guards (CRITICAL)### ❌ Forbidden behaviors (tests must FAIL if these occur)- Clicking `D4` highlights `D5`- Scale playback highlights multiple pads at once- Pitch-class logic used when `activePadNote` is set- Exact-note logic used when `activePitchClasses` is set- Highlight logic duplicated across components---## ✅ Definition of DoneAll tests above pass for:- Every handpan type- Every scale- Every chord category- Multiple octave layoutsIf even **one** test fails, the implementation is **not correct**.---## 🔒 Contract StatementThis matrix is the **single source of truth**.No refactor, optimization, or “improvement” may violate it.
+# Handpan Widget — Interaction & Highlighting Contract
 
+Behavioural contract for the Academy handpan widget
+(`src/widgets/academy-handpan/`). Rewritten 2026-09-10 to match the shipped
+code; the previous version described state fields that never existed and an
+arpeggio rule the code contradicted.
+
+## Playback state model
+
+Defined in [`ui/types.ts`](../../src/widgets/academy-handpan/ui/types.ts) and
+owned by `PlaybackContext`:
+
+| Field                | Meaning                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| `intent`             | Which interaction owns the highlight: `none`, `note`, `scalePlayback`, `chordPlayback` |
+| `activeNote`         | Exact note with octave. Single-note interactions                                       |
+| `activePitchClasses` | Pitch classes without octave. Chord selection                                          |
+| `activeNotes`        | Exact notes with octave. Chord playback                                                |
+| `isPlaying`          | Transport state                                                                        |
+
+`intent` is the discriminator. Read the field that matches the current intent
+rather than inferring from which fields are populated.
+
+## Highlight resolution
+
+`HandpanWidget` derives the highlighted pad set centrally, so no component
+duplicates the logic:
+
+- `note` and `scalePlayback` — match the **exact** note. When the scale note has
+  no pad at that octave, `pickBestPadNoteForPc` maps it to the nearest pad.
+- `chordPlayback` — match `activeNotes` exactly when present, otherwise fall
+  back to pitch-class matching.
+- Chord _selection_ (not playback) highlights by exact note string.
+
+## Arpeggio playback highlights exact notes
+
+`ChordsSection` calls `setChordNotesActive([step.note])` on each step, so an
+arpeggio highlights **one pad per step**, not every octave of that pitch class.
+
+This is the opposite of what the previous version of this document claimed. The
+code is the contract; the old text was never backed by an executable test.
+
+## Notation
+
+Pads are labelled by pitch (`D3`) or by sequence index (`1`), selected in the
+widget header. Sequence index is derived from data, not render order: the ding
+is 1, remaining fields ascend by pitch.
+
+The numeric label is a **sequence index, not a scale degree**. A scale-degree
+mode would be a distinct third notation rather than an overload of this one.
+
+**The accessible name never varies with notation.** `padAccessibleName` takes no
+notation argument, so a pad always reads as `"Pad 1, D3, top shell, ding"`
+whichever label is on screen. Asserted in `ui/HandpanRenderer.test.tsx`.
+
+## Layout provenance
+
+Tone-field positions are **computed, not sourced**. No maker drawing or
+photograph backs them. The renderer therefore shows a visible caption saying so,
+linked by `aria-describedby`.
+
+Any future layout taken from a real maker source must be marked as such and must
+not silently inherit this schematic treatment. See
+[handpan-data-audit.md](handpan-data-audit.md).
+
+## Audio
+
+Tone.js loads on first user gesture, not with the page, keeping it out of the
+initial bundle. Consequences for callers:
+
+- `playNote` / `playChord` / `playArpeggio` require `initializeAudio()` first
+  and throw otherwise.
+- `stopArpeggio` and `isArpeggioPlaying` are safe before initialisation — they
+  read the module through `peekTone()` and no-op when nothing is loaded.
+  `ScaleInfoPanel` relies on this, calling `stopArpeggio()` from a mount effect.
+
+## Styling
+
+The widget paints only through its own token layer, defined on the widget root
+in `styles/_widget-tokens.scss`, in two tiers: `--shp-*` is the public surface a
+host sets, and `--_shp-*` is what the stylesheets read, resolved from the public
+name, then the site token, then a literal.
+
+The split is load-bearing. A single tier declaring `--shp-*` on the root would
+beat the same property inherited from a host's wrapper — a locally specified
+custom property always wins over an inherited one — so an override placed on an
+ancestor was silently ignored. Set `--shp-*`; never `--_shp-*`. Every token falls back to a literal,
+so the widget renders correctly on a page with no design tokens of its own —
+verified by stripping all 129 site custom properties at runtime, which collapses
+the surrounding page while leaving the widget intact.
+
+To restyle it, override the tokens on the widget root. This is the supported
+surface; do not target the hashed CSS-module class names.
+
+```css
+.handpan-host {
+  --shp-color-primary: #b46f3c;
+  --shp-color-surface: #fffaf3;
+  --shp-spacing-md: 1.25rem;
+  --shp-font-family-heading: 'Your Serif', Georgia, serif;
+}
+```
+
+`styles/tokens.test.ts` enforces the layer: stylesheets may read only the
+private tier, every consumed token must be defined, every definition must carry
+a literal fallback rather than only a site token, and every private token must
+resolve from its public counterpart first — that last one is what keeps a host
+override working.
+
+## Layering
+
+`config/`, `theory/` and `core/` must stay free of React, Tone.js and the `ui/`,
+`audio/` and `styles/` directories. Dependencies point one way — `ui` uses
+`theory`/`config`, never the reverse. An ESLint `no-restricted-imports` override
+enforces this; test files are excluded, since they legitimately render
+components.
+
+## Test coverage
+
+| Level                         | Location                              |
+| ----------------------------- | ------------------------------------- |
+| Catalog golden contract       | `core/catalog/presetId.test.ts`       |
+| Sourced scale fixtures        | `config/sourcedScales.test.ts`        |
+| Family interval invariants    | `config/handpanFamilies.test.ts`      |
+| Pitch spelling                | `core/spelling/keySpelling.test.ts`   |
+| Pad labelling & accessibility | `core/notation/padLabel.test.ts`      |
+| DOM & keyboard behaviour      | `ui/HandpanRenderer.test.tsx` (jsdom) |
+| Chord theory                  | `theory/chords*.test.ts`              |
+
+Component tests set `// @vitest-environment jsdom` per file; the project default
+stays `node`.
+
+## Regression guards
+
+These are the failures the current tests exist to prevent:
+
+- An extended chord template becoming unreachable through interval ordering.
+- `isSubset` rejecting a chord whose pitch classes span the whole tuning.
+- Pitch spelling drifting from the selected key (C# minor must not show `Ab`).
+- A family's ring order sounding a pitch class it does not declare.
+- A ding falling outside the F2–G3 range makers actually build.
+- A pad's accessible name losing pitch when numeric notation is shown.
+- Roman numerals or a "relative major" claim appearing on a pentatonic or
+  hexatonic tuning, where no diatonic degrees exist for them to describe.
+- Chord names contradicting the pads — a C# tuning showing `G#3` and `Abm7`.
+- A pitch class canonicalising two ways, which silently drops chords in some
+  keys but not others.
+- A stylesheet re-coupling the widget to the host page's design tokens.

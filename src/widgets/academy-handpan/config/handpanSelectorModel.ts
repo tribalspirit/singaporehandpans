@@ -1,5 +1,11 @@
 import type { HandpanConfig, PitchClass } from './types';
-import { HANDPAN_FAMILIES, getAllHandpanFamilies } from './handpanFamilies';
+import {
+  HANDPAN_FAMILIES,
+  MERGED_FAMILY_HISTORY,
+  getAllHandpanFamilies,
+  resolveFamilyId,
+  resolveLegacySelection,
+} from './handpanFamilies';
 import { HANDPAN_CONFIGS } from './handpans';
 
 export interface FamilyOption {
@@ -26,6 +32,12 @@ function initializeConfigIndex() {
   }
 }
 
+/** Family lookup that accepts merged-away ids such as `aeolian` or `mystic`. */
+function findFamily(familyId: string) {
+  const canonicalId = resolveFamilyId(familyId);
+  return HANDPAN_FAMILIES.find((family) => family.id === canonicalId);
+}
+
 export function getFamilyOptions(): FamilyOption[] {
   return getAllHandpanFamilies().map((family) => ({
     id: family.id,
@@ -33,21 +45,58 @@ export function getFamilyOptions(): FamilyOption[] {
   }));
 }
 
+/**
+ * Keys this family offers.
+ *
+ * A merged-away id gets the keys *it* published, not the canonical family's.
+ * The survivor carries the union of every merged family's keys, so returning
+ * that would offer options `resolveHandpanConfig` then rejects — Equinox never
+ * published C#, F or F#, but Integral does. Options and resolution have to
+ * agree or the selector can offer a choice that resolves to nothing.
+ */
 export function getKeyOptions(familyId: string): PitchClass[] {
-  const family = HANDPAN_FAMILIES.find((f) => f.id === familyId);
+  const history = MERGED_FAMILY_HISTORY[familyId];
+  if (history) {
+    return history.keys as PitchClass[];
+  }
+
+  const family = findFamily(familyId);
   return family?.supportedKeys || [];
 }
 
+/** Shells this family offers; a merged-away id gets the ones it published. */
 export function getNoteCountOptions(familyId: string): number[] {
-  const family = HANDPAN_FAMILIES.find((f) => f.id === familyId);
+  const history = MERGED_FAMILY_HISTORY[familyId];
+  if (history) {
+    return [...history.noteCounts];
+  }
+
+  const family = findFamily(familyId);
   return family?.suggestedNoteCounts || [];
 }
 
+/**
+ * The selection a family opens on.
+ *
+ * A merged-away id gets its *own* former default, not the survivor's.
+ * Inheriting the canonical family's silently changed the instrument for anyone
+ * restoring a legacy id — `equinox` would open on D rather than its own G,
+ * `ionian` on E rather than C — which is the same mismatch the key and shell
+ * options were corrected for.
+ */
 export function getDefaultSelection(familyId: string): {
   key: PitchClass;
   noteCount: number;
 } {
-  const family = HANDPAN_FAMILIES.find((f) => f.id === familyId);
+  const history = MERGED_FAMILY_HISTORY[familyId];
+  if (history) {
+    return {
+      key: history.defaultKey as PitchClass,
+      noteCount: history.defaultNoteCount,
+    };
+  }
+
+  const family = findFamily(familyId);
 
   if (!family) {
     return { key: 'D', noteCount: 9 };
@@ -68,7 +117,19 @@ export function resolveHandpanConfig(
 ): HandpanConfig | null {
   initializeConfigIndex();
 
-  const key = `${selection.familyId}:${selection.key}:${selection.noteCount}`;
+  // Migrate family *and* shell. Canonicalising only the family left a
+  // selection like { ionian, D, 13 } resolving to nothing, since Sabye offers
+  // 9 notes only — the same gap `getHandpanConfig` covers for string ids.
+  const migrated = resolveLegacySelection(
+    selection.familyId,
+    selection.key,
+    selection.noteCount
+  );
+  if (!migrated) {
+    return null;
+  }
+
+  const key = `${migrated.familyId}:${selection.key}:${migrated.noteCount}`;
   return CONFIG_INDEX.get(key) || null;
 }
 

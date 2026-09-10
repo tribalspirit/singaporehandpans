@@ -1,0 +1,176 @@
+// Widget token layer, in two tiers.
+//
+// `--shp-*` is the public surface. A host sets it — on the widget root or on
+// any ancestor — and it inherits down. `--_shp-*` is what the stylesheets
+// actually read, resolved here from the public name, then the site token, then
+// a literal.
+//
+// The split is load-bearing, not cosmetic. A single tier declaring `--shp-x`
+// on the widget root would beat the same property inherited from a host's
+// wrapper, because a locally specified custom property always wins over an
+// inherited one. A consumer following the documented example was therefore
+// silently ignored. Reading the public name into a private one is what lets an
+// override on an ancestor take effect while still falling back correctly.
+//
+// Because every fallback chain ends in a literal, the widget also renders
+// correctly on a page that defines no design tokens at all.
+//
+// Declared once on the widget root; custom properties inherit through the DOM,
+// so every component inside picks them up regardless of CSS-module hashing.
+
+@mixin shp-tokens {
+  // Spacing
+  --_shp-spacing-2xl: var(--shp-spacing-2xl, var(--spacing-2xl, 3rem));
+  --_shp-spacing-lg: var(--shp-spacing-lg, var(--spacing-lg, 1.5rem));
+  --_shp-spacing-md: var(--shp-spacing-md, var(--spacing-md, 1rem));
+  --_shp-spacing-sm: var(--shp-spacing-sm, var(--spacing-sm, 0.75rem));
+  --_shp-spacing-xl: var(--shp-spacing-xl, var(--spacing-xl, 2rem));
+  --_shp-spacing-xs: var(--shp-spacing-xs, var(--spacing-xs, 0.5rem));
+
+  // Colour
+  --_shp-color-accent: var(--shp-color-accent, var(--color-accent, #211b16));
+  --_shp-color-accent-dark: var(
+    --shp-color-accent-dark,
+    var(--color-accent-dark, #5e3c21)
+  );
+  --_shp-color-accent-light: var(
+    --shp-color-accent-light,
+    var(--color-accent-light, #e5ddd2)
+  );
+  --_shp-color-border: var(--shp-color-border, var(--color-border, #d8cec0));
+  --_shp-color-error: var(--shp-color-error, var(--color-error, #9c3b2e));
+  --_shp-color-gray-100: var(
+    --shp-color-gray-100,
+    var(--color-gray-100, #efe9e0)
+  );
+  --_shp-color-gray-200: var(
+    --shp-color-gray-200,
+    var(--color-gray-200, #e5ddd2)
+  );
+  --_shp-color-gray-400: var(
+    --shp-color-gray-400,
+    var(--color-gray-400, #bfb3a2)
+  );
+  --_shp-color-gray-50: var(--shp-color-gray-50, var(--color-gray-50, #f7f3ed));
+  --_shp-color-gray-500: var(
+    --shp-color-gray-500,
+    var(--color-gray-500, #7a6e5e)
+  );
+  --_shp-color-gray-800: var(
+    --shp-color-gray-800,
+    var(--color-gray-800, #302923)
+  );
+  --_shp-color-gray-900: var(
+    --shp-color-gray-900,
+    var(--color-gray-900, #211b16)
+  );
+  --_shp-color-info: var(--shp-color-info, var(--color-info, #5f6b74));
+  --_shp-color-primary: var(--shp-color-primary, var(--color-primary, #8a5a33));
+  --_shp-color-primary-dark: var(
+    --shp-color-primary-dark,
+    var(--color-primary-dark, #5e3c21)
+  );
+  --_shp-color-primary-light: var(
+    --shp-color-primary-light,
+    var(--color-primary-light, #c9a882)
+  );
+  --_shp-color-surface: var(--shp-color-surface, var(--color-surface, #fffdfa));
+  --_shp-color-text-muted: var(
+    --shp-color-text-muted,
+    var(--color-text-muted, #6b6b6b)
+  );
+  --_shp-color-text-primary: var(
+    --shp-color-text-primary,
+    var(--color-text-primary, #211b16)
+  );
+  --_shp-color-text-secondary: var(
+    --shp-color-text-secondary,
+    var(--color-text-secondary, #5f544b)
+  );
+  --_shp-color-white: var(--shp-color-white, var(--color-white, #fffdfa));
+
+  // Typography
+  --_shp-font-family-heading: var(
+    --shp-font-family-heading,
+    var(--font-family-heading, 'Newsreader', Georgia, 'Times New Roman', serif)
+  );
+  --_shp-font-family-mono: var(
+    --shp-font-family-mono,
+    var(--font-family-mono, 'IBM Plex Mono', 'SFMono-Regular', monospace)
+  );
+  --_shp-font-family-serif: var(
+    --shp-font-family-serif,
+    var(--font-family-serif, serif)
+  );
+  --_shp-font-size-2xl: var(
+    --shp-font-size-2xl,
+    var(--font-size-2xl, clamp(1.4375rem, 1.28rem + 0.8vw, 1.75rem))
+  );
+  --_shp-font-size-3xl: var(
+    --shp-font-size-3xl,
+    var(--font-size-3xl, clamp(1.75rem, 1.4rem + 1.75vw, 2.375rem))
+  );
+  --_shp-font-size-base: var(
+    --shp-font-size-base,
+    var(--font-size-base, clamp(0.9375rem, 0.91rem + 0.14vw, 1rem))
+  );
+  --_shp-font-size-lg: var(
+    --shp-font-size-lg,
+    var(--font-size-lg, clamp(1.0625rem, 1.02rem + 0.23vw, 1.1875rem))
+  );
+  --_shp-font-size-sm: var(
+    --shp-font-size-sm,
+    var(--font-size-sm, clamp(0.8125rem, 0.79rem + 0.11vw, 0.875rem))
+  );
+  --_shp-font-size-xl: var(
+    --shp-font-size-xl,
+    var(--font-size-xl, clamp(1.1875rem, 1.11rem + 0.34vw, 1.375rem))
+  );
+  --_shp-font-size-xs: var(
+    --shp-font-size-xs,
+    var(--font-size-xs, clamp(0.6875rem, 0.66rem + 0.14vw, 0.75rem))
+  );
+  --_shp-font-weight-light: var(
+    --shp-font-weight-light,
+    var(--font-weight-light, 300)
+  );
+  --_shp-font-weight-medium: var(
+    --shp-font-weight-medium,
+    var(--font-weight-medium, 500)
+  );
+  --_shp-font-weight-semibold: var(
+    --shp-font-weight-semibold,
+    var(--font-weight-semibold, 500)
+  );
+  --_shp-line-height-relaxed: var(
+    --shp-line-height-relaxed,
+    var(--line-height-relaxed, 1.65)
+  );
+
+  // Radius, shadow, motion
+  --_shp-border-radius-md: var(
+    --shp-border-radius-md,
+    var(--border-radius-md, 2px)
+  );
+  --_shp-border-radius-sm: var(
+    --shp-border-radius-sm,
+    var(--border-radius-sm, 2px)
+  );
+  --_shp-radius-sm: var(--shp-radius-sm, var(--radius-sm, 2px));
+  --_shp-shadow-lg: var(
+    --shp-shadow-lg,
+    var(--shadow-lg, 0 0 0 1px rgba(33, 27, 22, 0.24))
+  );
+  --_shp-shadow-md: var(
+    --shp-shadow-md,
+    var(--shadow-md, 0 0 0 1px rgba(33, 27, 22, 0.2))
+  );
+  --_shp-shadow-sm: var(
+    --shp-shadow-sm,
+    var(--shadow-sm, 0 0 0 1px rgba(33, 27, 22, 0.1))
+  );
+  --_shp-transition-base: var(
+    --shp-transition-base,
+    var(--transition-base, 240ms cubic-bezier(0.4, 0, 0.2, 1))
+  );
+}

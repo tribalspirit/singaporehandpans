@@ -21,9 +21,28 @@ export function isSubset(
   const candidateChroma = toPcSet(candidateNotes);
   const availableChroma = toPcSet(availableNotes);
 
-  const isSubsetFn = Pcset.isSubsetOf(availableChroma);
-  const result = isSubsetFn(candidateChroma);
-  return Boolean(result);
+  /**
+   * Inclusive subset: candidate ⊆ available.
+   *
+   * `Pcset.isSubsetOf` is a *proper* subset test — it returns false when the
+   * two sets are equal — which silently dropped every chord spanning the whole
+   * tuning. Comparing the chroma bitmaps directly keeps the equal case true.
+   * Each chroma is a 12-character string of '0'/'1', one per pitch class.
+   */
+  for (
+    let pitchClass = 0;
+    pitchClass < candidateChroma.length;
+    pitchClass += 1
+  ) {
+    if (
+      candidateChroma[pitchClass] === '1' &&
+      availableChroma[pitchClass] !== '1'
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export function isSuperset(
