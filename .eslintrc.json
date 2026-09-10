@@ -6,7 +6,7 @@
     "plugin:jsx-a11y/recommended"
   ],
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "react-hooks"],
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module"
@@ -40,7 +40,9 @@
       {
         "ul": ["list"]
       }
-    ]
+    ],
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
   },
   "overrides": [
     {

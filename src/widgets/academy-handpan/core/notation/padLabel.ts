@@ -45,7 +45,20 @@ export function buildPadIdentities(
   for (const pad of layout) {
     identities.set(pad.id, {
       sequenceIndex: sequenceByNote.get(pad.note) ?? 0,
-      shell: pad.role === 'bottom' ? 'bottom' : 'top',
+      /*
+       * Every field on a schematic layout is on the top shell.
+       *
+       * `generateHandpanLayout` marks the lowest-drawn ring pad with role
+       * `bottom`, but that comes from `slot.y > CENTER_Y + 0.1` — where the pad
+       * happens to be drawn, not where it sits on the instrument. Reading it as
+       * a shell announced an ordinary top-shell field as "bottom shell" to
+       * screen reader users on every preset, which is worse than saying nothing
+       * because these layouts explicitly do not model maker bottom notes.
+       *
+       * A real bottom shell has to come from the tuning data. When a preset
+       * carries it, set it here from that — never from geometry.
+       */
+      shell: 'top',
       role: pad.role === 'ding' ? 'ding' : 'tone field',
     });
   }

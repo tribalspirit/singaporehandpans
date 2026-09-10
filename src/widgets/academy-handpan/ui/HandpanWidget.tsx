@@ -188,10 +188,6 @@ function HandpanWidgetContent() {
     setSelectedChord(null);
   }, []);
 
-  if (!selectedHandpan) {
-    return <div>No handpan configuration available.</div>;
-  }
-
   /*
    * Start fetching Tone.js on pointerdown, before the click that will need it.
    * Tone is kept out of the initial bundle, so without this the first gesture
@@ -204,6 +200,15 @@ function HandpanWidgetContent() {
       // Warming is an optimisation; initializeAudio reports real failures.
     });
   }, []);
+
+  // Every hook must be declared above this point. A family switch leaves the
+  // previous key/shell in state for one render — Golden Gate is C/8 only, so
+  // Kurd's D/9 cannot resolve — and any hook below this return would be skipped
+  // on exactly that render, which React reports as "Rendered fewer hooks than
+  // expected". Guarded by `familySwitch.test.tsx`.
+  if (!selectedHandpan) {
+    return <div>No handpan configuration available.</div>;
+  }
 
   return (
     <div className={styles.handpanWidget} onPointerDown={handleWarmAudio}>

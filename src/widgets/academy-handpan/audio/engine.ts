@@ -55,10 +55,19 @@ export function warmAudioModule(): Promise<unknown> {
     return Promise.resolve(Tone);
   }
   if (!warmPromise) {
-    warmPromise = import('tone').then((module) => {
-      Tone = module;
-      return module;
-    });
+    warmPromise = import('tone')
+      .then((module) => {
+        Tone = module;
+        return module;
+      })
+      .catch((error) => {
+        // Drop the rejected promise so a later gesture can retry. Caching it
+        // would hand the same rejection to every subsequent call — the pointer
+        // handler swallows it, so audio would simply never work again until
+        // reload. Same permanent-failure shape as the unbounded start poll.
+        warmPromise = null;
+        throw error;
+      });
   }
   return warmPromise;
 }

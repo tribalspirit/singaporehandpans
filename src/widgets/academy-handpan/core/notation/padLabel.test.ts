@@ -53,6 +53,41 @@ describe('pad labelling', () => {
   });
 
   /**
+   * Shell is instrument data, never geometry.
+   *
+   * `generateHandpanLayout` marks the lowest-drawn ring pad with role
+   * `bottom` purely because it sits below centre on screen. Reading that as a
+   * shell announced an ordinary top-shell field as "bottom shell" to screen
+   * reader users on all 216 presets — while these schematic layouts explicitly
+   * do not model maker bottom notes at all.
+   *
+   * Until a preset carries real bottom-shell data, every field is top shell.
+   */
+  it('never calls a schematic pad a bottom-shell field', () => {
+    const config = dKurd9();
+    const identities = buildPadIdentities(config.layout, config.notes);
+
+    for (const pad of config.layout) {
+      expect(
+        identities.get(pad.id)?.shell,
+        `${pad.note} (drawn at y=${pad.y.toFixed(2)})`
+      ).toBe('top');
+      expect(padAccessibleName(pad, identities.get(pad.id))).not.toContain(
+        'bottom shell'
+      );
+    }
+  });
+
+  it('does not derive shell from a pad drawn low on the layout', () => {
+    const config = dKurd9();
+    const lowest = [...config.layout].sort((a, b) => b.y - a.y)[0];
+    const identities = buildPadIdentities(config.layout, config.notes);
+
+    // The lowest-drawn pad is exactly the one the old heuristic mislabelled.
+    expect(identities.get(lowest.id)?.shell).toBe('top');
+  });
+
+  /**
    * The accessible name must not depend on the visual notation: switching the
    * sighted view to numbers must not strip pitch from assistive technology.
    */

@@ -56,3 +56,51 @@ describe('waitForRunningContext', () => {
     expect(getState.mock.calls.length).toBe(callsAtGiveUp);
   });
 });
+
+/**
+ * A failed module load must not be cached.
+ *
+ * `warmAudioModule` memoises its import so repeated pointerdowns share one
+ * request. If a transient failure were memoised too, every later call would
+ * receive the same rejection — and since the pointer handler deliberately
+ * swallows it, audio would never recover until reload. That is the same
+ * permanent-failure shape as an unbounded start poll, reached a different way.
+ */
+describe('memoised loads must not cache a failure', () => {
+  async function makeWarmer(loader: () => Promise<string>) {
+    let cached: Promise<string> | null = null;
+    return () => {
+      if (!cached) {
+        cached = loader().catch((error) => {
+          cached = null;
+          throw error;
+        });
+      }
+      return cached;
+    };
+  }
+
+  it('retries after a failure instead of replaying it', async () => {
+    let attempt = 0;
+    const loader = vi.fn(async () => {
+      attempt += 1;
+      if (attempt === 1) throw new Error('network');
+      return 'loaded';
+    });
+
+    const warm = await makeWarmer(loader);
+
+    await expect(warm()).rejects.toThrow('network');
+    await expect(warm()).resolves.toBe('loaded');
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+
+  it('still shares a single in-flight request on success', async () => {
+    const loader = vi.fn(async () => 'loaded');
+    const warm = await makeWarmer(loader);
+
+    await Promise.all([warm(), warm(), warm()]);
+
+    expect(loader).toHaveBeenCalledTimes(1);
+  });
+});
