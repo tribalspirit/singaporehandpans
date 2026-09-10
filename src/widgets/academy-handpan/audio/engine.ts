@@ -1,23 +1,61 @@
-import * as Tone from 'tone';
+/**
+ * Tone.js is loaded on demand rather than imported statically.
+ *
+ * It is by far the heaviest dependency in this widget, and none of it is
+ * needed until the visitor actually asks for sound. Browser autoplay policy
+ * already forces initialisation behind a user gesture, so the dynamic import
+ * costs nothing extra in practice while keeping Tone out of the page's initial
+ * JavaScript. `import type` is erased at build time and adds no runtime cost.
+ */
+import type * as ToneModule from 'tone';
 
+let Tone: typeof ToneModule | null = null;
 let isInitialized = false;
-let synth: Tone.PolySynth | null = null;
+let synth: ToneModule.PolySynth | null = null;
 let initializationPromise: Promise<void> | null = null;
+
+/**
+ * The loaded Tone module. Throws if audio has not been initialised, which is
+ * the same precondition every playback function here already enforces.
+ */
+export function getTone(): typeof ToneModule {
+  if (!Tone) {
+    throw new Error('Audio not initialized. Call initializeAudio() first.');
+  }
+  return Tone;
+}
+
+/**
+ * The loaded Tone module, or null if audio has never been initialised.
+ *
+ * Teardown and status helpers run on mount and on scale changes — before the
+ * visitor has made any gesture — so they must not demand that Tone be present.
+ * With nothing loaded there is by definition nothing playing to stop.
+ */
+export function peekTone(): typeof ToneModule | null {
+  return Tone;
+}
 
 export async function initializeAudio(): Promise<void> {
   if (initializationPromise) {
     return initializationPromise;
   }
 
-  if (isInitialized && synth && Tone.context.state === 'running') {
+  if (isInitialized && synth && Tone && Tone.context.state === 'running') {
     return;
   }
 
   initializationPromise = (async () => {
     try {
+      if (!Tone) {
+        Tone = await import('tone');
+      }
+      // Local binding so the closures below narrow past the mutable module ref.
+      const tone = Tone;
+
       if (
-        Tone.context.state === 'suspended' ||
-        Tone.context.state === 'closed'
+        tone.context.state === 'suspended' ||
+        tone.context.state === 'closed'
       ) {
         isInitialized = false;
         if (synth) {
@@ -26,12 +64,12 @@ export async function initializeAudio(): Promise<void> {
         }
       }
 
-      await Tone.start();
+      await tone.start();
 
-      if (Tone.context.state !== 'running') {
+      if (tone.context.state !== 'running') {
         await new Promise<void>((resolve) => {
           const checkState = () => {
-            if (Tone.context.state === 'running') {
+            if (tone.context.state === 'running') {
               resolve();
             } else {
               setTimeout(checkState, 50);
@@ -41,9 +79,9 @@ export async function initializeAudio(): Promise<void> {
         });
       }
 
-      if (Tone.context.state !== 'running') {
+      if (tone.context.state !== 'running') {
         throw new Error(
-          `Audio context failed to start. State: ${Tone.context.state}`
+          `Audio context failed to start. State: ${tone.context.state}`
         );
       }
 
@@ -51,7 +89,7 @@ export async function initializeAudio(): Promise<void> {
         synth.dispose();
       }
 
-      synth = new Tone.PolySynth(Tone.Synth, {
+      synth = new tone.PolySynth(tone.Synth, {
         oscillator: {
           type: 'sine',
         },
@@ -81,6 +119,8 @@ export function playNote(note: string, durationMs: number = 500): void {
     throw new Error('Audio not initialized. Call initializeAudio() first.');
   }
 
+  const Tone = getTone();
+
   if (Tone.context.state === 'suspended') {
     Tone.context.resume().then(() => {
       if (synth) {
@@ -104,6 +144,8 @@ export function playChord(notes: string[], durationMs: number = 1000): void {
     throw new Error('Audio not initialized. Call initializeAudio() first.');
   }
 
+  const Tone = getTone();
+
   if (Tone.context.state === 'suspended') {
     Tone.context.resume().then(() => {
       if (synth) {
@@ -126,6 +168,8 @@ export function playArpeggio(
   if (!isInitialized || !synth) {
     throw new Error('Audio not initialized. Call initializeAudio() first.');
   }
+
+  const Tone = getTone();
 
   const playNotes = () => {
     if (!synth) return;
