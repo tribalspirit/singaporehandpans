@@ -1,6 +1,6 @@
 import * as Scale from '@tonaljs/scale';
 import { note } from '@tonaljs/core';
-import { normalizeToPitchClass } from './normalize';
+import { normalizeToPitchClass, spellPitchClassAsTuned } from './normalize';
 import { assignAllOctavesToPitchClasses, sortNotesByPitch } from './utils';
 import { isSubset } from './pcset';
 import type { PlayableChord } from './chords';
@@ -193,15 +193,19 @@ function tryBuildTriad(
     return null;
   }
 
+  // Spell the root as the tuning spells it, so the triad list agrees with the
+  // pads and with the added-note chords, which are built on a separate path.
+  const displayRoot = spellPitchClassAsTuned(rootPc, availableNotes);
+
   let displayName = '';
   if (quality === 'major') {
-    displayName = rootPc;
+    displayName = displayRoot;
   } else if (quality === 'minor') {
-    displayName = `${rootPc}m`;
+    displayName = `${displayRoot}m`;
   } else if (quality === 'diminished') {
-    displayName = `${rootPc}°`;
+    displayName = `${displayRoot}°`;
   } else if (quality === 'augmented') {
-    displayName = `${rootPc}+`;
+    displayName = `${displayRoot}+`;
   }
 
   const chord: PlayableChord = {

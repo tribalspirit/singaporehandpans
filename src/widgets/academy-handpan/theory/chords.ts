@@ -1,7 +1,7 @@
 import * as Chord from '@tonaljs/chord';
 import { note } from '@tonaljs/core';
 import { isSubset, stableSort } from './pcset';
-import { normalizeToPitchClass } from './normalize';
+import { normalizeToPitchClass, spellPitchClassAsTuned } from './normalize';
 import { assignAllOctavesToPitchClasses, sortNotesByPitch } from './utils';
 
 export interface PlayableChord {
@@ -216,7 +216,8 @@ function arraysEqual(a: number[], b: number[]): boolean {
 
 function analyzeChordPcset(
   pitchClasses: string[],
-  scaleTonic?: string
+  scaleTonic?: string,
+  tuningNotes?: string[]
 ): {
   rootPc: string;
   displayName: string;
@@ -247,9 +248,13 @@ function analyzeChordPcset(
           priority > bestMatch.priority ||
           (priority === bestMatch.priority && candidateRoot === scaleTonic)
         ) {
+          const displayRoot = tuningNotes
+            ? spellPitchClassAsTuned(candidateRoot, tuningNotes)
+            : candidateRoot;
+
           bestMatch = {
             rootPc: candidateRoot,
-            displayName: template.displayName(candidateRoot),
+            displayName: template.displayName(displayRoot),
             category: template.category,
             priority,
           };
@@ -354,6 +359,9 @@ function extractScaleTonic(availableNotes: string[]): string | undefined {
 export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
   const candidates = buildChordCandidates(availableNotes);
   const scaleTonic = extractScaleTonic(availableNotes);
+  // Chord names are spelled the way this tuning spells its own notes, so the
+  // chord list never contradicts the pads.
+  const keySpelling = availableNotes;
 
   const chordsByPcset = new Map<string, PlayableChord>();
 
@@ -365,7 +373,11 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
       continue;
     }
 
-    const analyzed = analyzeChordPcset(candidate.pitchClasses, scaleTonic);
+    const analyzed = analyzeChordPcset(
+      candidate.pitchClasses,
+      scaleTonic,
+      keySpelling
+    );
 
     if (!analyzed) {
       continue;

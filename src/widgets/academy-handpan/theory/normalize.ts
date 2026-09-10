@@ -76,3 +76,30 @@ export function getPitchClassSet(notes: string[]): Set<PitchClass> {
 export function hasPitchClass(note: string, pitchClass: PitchClass): boolean {
   return normalizeToPitchClass(note) === pitchClass;
 }
+
+/**
+ * Spell a canonical pitch class the way this tuning already spells it.
+ *
+ * Chord names are built from canonical pitch classes, which are a fixed twelve
+ * names chosen for comparison. Displaying those directly contradicts the pads:
+ * a C# tuning whose pads read G# would name its chord Abm7.
+ *
+ * Re-deriving the spelling from the tonic is not reliable either, because the
+ * tritone is legitimately either an augmented 4th or a diminished 5th — a D
+ * tuning whose pad reads Ab would get G# back. Reading the spelling off the
+ * tuning's own notes sidesteps that: the chord root is by construction a pitch
+ * the instrument has, so its name is whatever that pad is called.
+ */
+export function spellPitchClassAsTuned(
+  canonicalPitchClass: string,
+  availableNotes: string[]
+): string {
+  for (const noteStr of availableNotes) {
+    const spelled = noteStr.replace(/\d+$/, '');
+    if (normalizeToPitchClass(spelled) === canonicalPitchClass) {
+      return spelled;
+    }
+  }
+
+  return canonicalPitchClass;
+}
