@@ -174,8 +174,16 @@
 
 .scaleInfoSection {
   width: 100%;
+  /*
+   * `min-width: 0` is what keeps this grid track from being forced wider by its
+   * content; `overflow: hidden` was belt-and-braces and clipped the layout
+   * tooltip, which is the only place the "representative layout" disclosure
+   * appears now that the caption under the pan is gone. Clipping a disclosure
+   * at narrow widths defeats it, so this track allows overflow while the widget
+   * root still contains the page.
+   */
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .chordsSectionWrapper {
