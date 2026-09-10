@@ -155,39 +155,94 @@ larger builds add the 2nd and 6th to reach full Lydian.
 
 ## 4. Verification status of the shipped families
 
-Eleven families: 19 originally, minus four merged as duplicates (§3) and four
-removed as unsourced (§3a).
+Twelve families: 19 originally, minus four merged as duplicates (§3), minus
+four removed as unsourced (§3a), plus Akebono (§5).
 
-| Family         | Set from ding              | Status                                                                          | Source            |
-| -------------- | -------------------------- | ------------------------------------------------------------------------------- | ----------------- |
-| kurd           | `{0,2,3,5,7,8,10}`         | verified — absorbed Aeolian and Annaziska                                       | Saraz, Isthmus    |
-| celtic-minor   | `{0,2,3,5,7,10}`           | verified (Amara is an alias)                                                    | Saraz, Isthmus    |
-| integral       | `{0,2,3,7,8,10}`           | verified — absorbed Equinox and Mystic                                          | Saraz, Isthmus    |
-| pygmy          | `{0,2,3,7,10}`             | verified — corrected, absorbed Magic Voyage                                     | Saraz, Isthmus    |
-| la-sirena      | `{0,2,3,7,9,10}`           | verified — Dorian minus the 4th                                                 | Saraz             |
-| oxalis         | `{0,2,4,7,9,11}` from root | verified — see §2.4                                                             | Saraz, HaganeNote |
-| hijaz          | `{0,1,4,5,7,8,10}`         | verified, but most instruments sold as "Hijaz" are ding-on-tonic harmonic minor | Saraz             |
-| harmonic-minor | `{0,2,3,5,7,8,11}`         | verified                                                                        | Saraz, Shaktipan  |
-| ionian         | `{0,2,4,5,7,9,11}`         | verified, but rarely shipped complete                                           | Saraz             |
-| dorian         | `{0,2,3,5,7,9,10}`         | verified (Jibuk is an alias)                                                    | Saraz, Isthmus    |
-| mixolydian     | `{0,2,4,5,7,9,10}`         | verified; 8-note variants drop the 4th                                          | Saraz             |
+| Family         | Set from ding              | Status                                                                          | Source                     |
+| -------------- | -------------------------- | ------------------------------------------------------------------------------- | -------------------------- |
+| kurd           | `{0,2,3,5,7,8,10}`         | verified — absorbed Aeolian and Annaziska                                       | Saraz, Isthmus             |
+| celtic-minor   | `{0,2,3,5,7,10}`           | verified (Amara is an alias)                                                    | Saraz, Isthmus             |
+| integral       | `{0,2,3,7,8,10}`           | verified — absorbed Equinox and Mystic                                          | Saraz, Isthmus             |
+| pygmy          | `{0,2,3,7,10}`             | verified — corrected, absorbed Magic Voyage                                     | Saraz, Isthmus             |
+| la-sirena      | `{0,2,3,7,9,10}`           | verified — Dorian minus the 4th                                                 | Saraz                      |
+| oxalis         | `{0,2,4,7,9,11}` from root | verified — see §2.4                                                             | Saraz, HaganeNote          |
+| hijaz          | `{0,1,4,5,7,8,10}`         | verified, but most instruments sold as "Hijaz" are ding-on-tonic harmonic minor | Saraz                      |
+| harmonic-minor | `{0,2,3,5,7,8,11}`         | verified                                                                        | Saraz, Shaktipan           |
+| ionian         | `{0,2,4,5,7,9,11}`         | verified, but rarely shipped complete                                           | Saraz                      |
+| dorian         | `{0,2,3,5,7,9,10}`         | verified (Jibuk is an alias)                                                    | Saraz, Isthmus             |
+| akebono        | `{0,1,5,7,8}`              | verified — 9 notes only, see §5                                                 | Saraz, Isthmus, HaganeNote |
+| mixolydian     | `{0,2,4,5,7,9,10}`         | verified; 8-note variants drop the 4th                                          | Saraz                      |
 
 Every shipped family's interval set now matches a maker-published note list. A
 test compares the two mechanically rather than relying on this table.
 
-## 5. Expansion candidates
+## 5. Akebono — added, and the naming trap it did not fall into
 
-Ready to add, all `verified`: **Sabye** `{0,2,4,5,7,9,11}`, **Akebono**
-`{0,1,5,7,8}` from ding (see §3a), **Golden Gate** `{0,2,4,6,7,11}`.
+Added 2026-09-10 as `{0,1,5,7,8}` from the ding, at 9 notes, in C#, D, E, F, F#
+and G. Eighteen listings across Saraz, Isthmus, HaganeNote, Vibe and Chirp agree
+on that set.
+
+**An earlier draft of this document got Akebono wrong.** It warned that makers
+name the instrument by its ding while the pentatonic is rooted a 4th above, so a
+ding-rooted model would render every Akebono a fourth off. Deeper research
+refuted the part that mattered: handpan makers name by the ding **and state the
+ding is the root**.
+
+> "The 'ding' is the root note of the scale, followed by the fourth and fifth
+> degrees." — Isthmus / MAG
+
+What is true is subtler. The 4th above the ding is where the scale _resolves_:
+
+> "can also be thought about as a minor scale based on the 4th scale degree of
+> the center note. For example, F# Akebono plays flawlessly in B Minor."
+> — Isthmus
+
+Saraz goes further and declines to pick a tonic at all — _"The scale has no
+tonic or 'root' note so any note in the scale can be used at the root"_ — filing
+the instrument under the page title **"B Minor / F# Akebono"**.
+
+So the P4 is a **tonal centre, not a name**. It is recorded in the family's
+description rather than encoded as the tonic, because rooting the family a
+fourth up would list the instrument under a name no handpan maker sells.
+
+### Where the disagreement actually is
+
+Not between handpan makers — they are unanimous — but between handpans and other
+instruments:
+
+| Source               | Same notes published as | Set from that root                                        |
+| -------------------- | ----------------------- | --------------------------------------------------------- |
+| HaganeNote (handpan) | "E Akebono"             | `{0,1,5,7,8}`                                             |
+| Guda (tongue drum)   | "Akebono, key of A"     | `{0,2,3,7,8}` (Hirajōshi)                                 |
+| Piano dictionaries   | "Akebono II"            | `{0,1,5,7,8}` — matches handpans                          |
+| Piano dictionaries   | "Akebono I"             | `{0,2,3,7,9}` (Kumoi) — appears in **no** handpan listing |
+
+Worth knowing when cross-referencing a piano scale chart, but handpan naming is
+consistent and the catalog follows it.
+
+### Why 9 notes only
+
+Makers do build 8-, 10- and 11-note Akebonos, but the larger ones reach their
+count with **bottom notes**, which the widget cannot yet represent. Counting
+top-shell notes only, every listing lands on 8 or 9, and 9 is the count four
+makers publish as an all-top layout (Isthmus, HaganeNote ×2, Vibe). No all-top
+10-note Akebono appears in any listing found, so offering one would have meant
+extrapolating a layout — exactly what §3a removed other families for.
+
+Saraz's documented bottom notes for Akebono are consistently a semitone above
+the ding: F#/`(G)`, G/`(Ab)`, D/`(Eb)`, E/`(F)`.
+
+## 5a. Remaining expansion candidates
+
+Ready to add, all `verified`: **Sabye** `{0,2,4,5,7,9,11}`, **Golden Gate**
+`{0,2,4,6,7,11}`.
 
 Aliases rather than new families: **Annaziska** → kurd, **Amara** →
 celtic-minor, **Ashakiran/Asha** → sabye (identical note lists), **Jibuk** →
 dorian, **Romanian Hijaz** → harmonic-minor Hijaz, **Low Pygmy** → a Pygmy ding
 variant.
 
-`reported` only: **Raga Desh** `{0,4,5,7,10}`.
-
----
+`reported` only, so out under the current rule: **Raga Desh** `{0,4,5,7,10}`.
 
 ## 6. Gaps — could not verify
 
@@ -231,8 +286,11 @@ and its per-scale pages (pygmy, equinox, oxalista, sabye, kurd, celtic-minor,
 integral, la-sirena, hijaz, akebono, aeolian, annaziska, d-dorian, e-mixolydian,
 c-major) · [Isthmus Instruments — What is a handpan scale](https://www.isthmusinstruments.com/isthmus-handpan-blog/what-is-a-handpan-scale)
 (55 scales with note lists) · [Isthmus C Golden Gate](https://www.isthmusinstruments.com/buy-handpan/c-golden-gate-handpan)
+· [Isthmus Akebono](https://www.isthmusinstruments.com/buy-handpan/akebono-handpan)
+· [Saraz Akebono](https://www.sarazhandpans.com/handpan-scales/akebono/)
+· [Saraz B Minor / F# Akebono](https://www.sarazhandpans.com/handpan-scales/b-minor-f-sharp-akebono/)
 · [HaganeNote store](https://www.haganenote.com/store/) (oxalis, magic-voyage,
-romanian-hijaz, sabye, hijaz, aeolian) · [Shaktipan scales](https://shaktipan.com/en/scales/)
+romanian-hijaz, sabye, hijaz, aeolian, akebono, f-akebono) · [Shaktipan scales](https://shaktipan.com/en/scales/)
 
 **Specialist / retailer** (used for `reported` and corroboration):
 [Pures Music](https://www.puresmusic.com/collections/handpan-mystic-scale) ·
