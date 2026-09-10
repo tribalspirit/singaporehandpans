@@ -67,7 +67,8 @@ describe('widget token layer', () => {
     for (const [, name, value] of layer.matchAll(
       /^\s*(--shp-[a-z0-9-]+):\s*([^;]+);/gm
     )) {
-      if (!/var\(--[a-z0-9-]+,\s*\S/.test(value)) {
+      // Whitespace-tolerant: prettier wraps long declarations across lines.
+      if (!/var\(\s*--[a-z0-9-]+\s*,\s*\S/.test(value)) {
         withoutFallback.push(`${name}: ${value.trim()}`);
       }
     }
