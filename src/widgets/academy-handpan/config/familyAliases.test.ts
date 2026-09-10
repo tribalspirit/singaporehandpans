@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   HANDPAN_FAMILIES,
   MERGED_FAMILY_IDS,
+  MERGED_FAMILY_HISTORY,
   EXCLUDED_FAMILY_IDS,
   resolveFamilyId,
   migrateLegacyPresetId,
@@ -70,23 +71,25 @@ describe('merged family ids stay resolvable', () => {
   });
 
   /**
-   * The canonical family carries the union of the merged families' keys, so
-   * every preset id that used to exist still maps to a real preset rather than
-   * quietly returning nothing.
+   * Every preset id a merged family used to publish must still resolve.
+   *
+   * This previously iterated the *canonical* family's current keys and note
+   * counts, which is the wrong set: it silently skipped any shell the surviving
+   * family no longer offers. Ionian published 9, 10 and 13 notes and Sabye is
+   * documented only at 9, so `ionian-c-10` and `ionian-d-13` resolved to
+   * nothing while this test passed. Iterating the merged family's own published
+   * shape is what actually checks the contract.
    */
   it('resolves every preset id the merged families used to publish', () => {
     const unresolved: string[] = [];
 
-    for (const [legacyId, canonicalId] of Object.entries(MERGED_FAMILY_IDS)) {
-      const canonical = HANDPAN_FAMILIES.find((f) => f.id === canonicalId);
-      expect(
-        canonical,
-        `missing canonical family ${canonicalId}`
-      ).toBeDefined();
-      if (!canonical) continue;
+    for (const legacyId of Object.keys(MERGED_FAMILY_IDS)) {
+      const history = MERGED_FAMILY_HISTORY[legacyId];
+      expect(history, `no history recorded for ${legacyId}`).toBeDefined();
+      if (!history) continue;
 
-      for (const key of canonical.supportedKeys) {
-        for (const noteCount of canonical.suggestedNoteCounts) {
+      for (const key of history.keys) {
+        for (const noteCount of history.noteCounts) {
           const legacyPresetId = `${legacyId}-${key
             .toLowerCase()
             .replace('#', 's')}-${noteCount}`;
@@ -99,6 +102,22 @@ describe('merged family ids stay resolvable', () => {
     }
 
     expect(unresolved).toEqual([]);
+  });
+
+  it('keeps the scale right when an old shell no longer exists', () => {
+    // Sabye is only documented at 9 notes, so a 13-note Ionian id falls back to
+    // Sabye's default shell rather than resolving to nothing.
+    const migrated = getHandpanConfig('ionian-d-13');
+
+    expect(migrated).toBeDefined();
+    expect(migrated?.familyId).toBe('sabye');
+    expect(migrated?.tonicPc).toBe('D');
+  });
+
+  it('records history for every merged family', () => {
+    expect(Object.keys(MERGED_FAMILY_HISTORY).sort()).toEqual(
+      Object.keys(MERGED_FAMILY_IDS).sort()
+    );
   });
 
   it('rewrites a merged preset id onto its canonical family', () => {

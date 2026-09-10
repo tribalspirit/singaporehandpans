@@ -3,6 +3,7 @@ import { PlaybackProvider } from './PlaybackContext';
 import { usePlayback } from './usePlayback';
 import HandpanRenderer from './HandpanRenderer';
 import type { NotationMode } from '../core/notation/padLabel';
+import { warmAudioModule } from '../audio/engine';
 import ScaleInfoPanel from './ScaleInfoPanel';
 import ChordsSection from './ChordsSection';
 import type { HandpanPad, PitchClass } from '../config/types';
@@ -191,8 +192,21 @@ function HandpanWidgetContent() {
     return <div>No handpan configuration available.</div>;
   }
 
+  /*
+   * Start fetching Tone.js on pointerdown, before the click that will need it.
+   * Tone is kept out of the initial bundle, so without this the first gesture
+   * waits on a ~340 KB download and the browser's user activation can expire
+   * mid-flight, which on stricter engines leaves audio blocked. Passive
+   * visitors who never touch the widget still never load it.
+   */
+  const handleWarmAudio = useCallback(() => {
+    void warmAudioModule().catch(() => {
+      // Warming is an optimisation; initializeAudio reports real failures.
+    });
+  }, []);
+
   return (
-    <div className={styles.handpanWidget}>
+    <div className={styles.handpanWidget} onPointerDown={handleWarmAudio}>
       <div className={styles.header}>
         <h2 className={styles.title}>Chord Explorer</h2>
         <div className={styles.selector}>

@@ -45,34 +45,36 @@ src/widgets/academy-handpan/
 
 ### Core Minor
 
-| Family       | Mode             | Description                |
-| ------------ | ---------------- | -------------------------- |
-| Kurd         | Natural Minor    | Most popular handpan scale. Also sold as Aeolian and Annaziska |
-| Celtic Minor | Hexatonic Minor  | Smooth, meditative         |
-| Integral     | Hexatonic Minor  | Minor without the 4th. Also sold as Equinox and Mystic |
-| Pygmy        | Pentatonic       | Root, maj2, min3, 5th, min7 — no 4th. Also sold as Magic Voyage |
+| Family       | Mode             | Description                                                     |
+| ------------ | ---------------- | --------------------------------------------------------------- |
+| Kurd         | Natural Minor    | Most popular handpan scale. Also sold as Aeolian and Annaziska    |
+| Celtic Minor | Hexatonic Minor  | Smooth, meditative. Amara is an alias                             |
+| Integral     | Hexatonic Minor  | Minor without the 4th. Also sold as Equinox and Mystic            |
+| Pygmy        | Pentatonic       | Root, maj2, min3, 5th, min7 — no 4th. Also sold as Magic Voyage   |
 
 ### Dorian/Dreamy
 
-| Family     | Maker          | Description      |
-| ---------- | -------------- | ---------------- |
-| La Sirena  | Pantheon Steel | Dorian hexatonic |
-| Ursa Minor | Pantheon Steel | Minor hexatonic  |
+| Family    | Mode            | Description                    |
+| --------- | --------------- | ------------------------------ |
+| La Sirena | Dorian hexatonic | Dorian minus the 4th          |
+| Dorian    | Dorian          | Jibuk is an alias              |
 
-### Major/Lydian
+### Major/Bright
 
-| Family | Mode             | Description    |
-| ------ | ---------------- | -------------- |
-| Aegean | Major Pentatonic | Pantheon Steel |
-| Oxalis | Major + maj7     | Hexatonic      |
-| Ionian | Classic Major    | Full scale     |
-| Lydian | Major + #4       | Raised 4th     |
+| Family      | Mode                | Description                                              |
+| ----------- | ------------------- | -------------------------------------------------------- |
+| Sabye       | Full diatonic major | Absorbed Ionian. Ashakiran and Asha are aliases           |
+| Aegean      | maj3 / #4 / 5 / maj7 | Bright and suspended; fills toward Lydian on big builds  |
+| Golden Gate | Aegean + the 2nd    | Eight notes, C only — the sole attested ding              |
+| Oxalis      | Major + maj7        | Hexatonic. Measured from the tone-circle root, not the ding |
+| Mixolydian  | Major with b7       | 8-note variants drop the 4th                              |
 
 ### Mixed/Exotic
 
-| Family         | Mode              | Description    |
-| -------------- | ----------------- | -------------- |
-| Hijaz          | Phrygian Dominant | Middle Eastern |
+| Family         | Mode              | Description                                  |
+| -------------- | ----------------- | -------------------------------------------- |
+| Akebono        | Japanese pentatonic | Ding-rooted; resolves to the 4th above     |
+| Hijaz          | Phrygian Dominant | Middle Eastern                               |
 | Harmonic Minor | Minor + nat7      | Raised 7th     |
 | Dorian         | Minor + nat6      | Major 6th      |
 | Mixolydian     | Major + b7        | Flat 7th       |
@@ -124,19 +126,34 @@ resolveHandpanConfig({ familyId, key, noteCount }): HandpanConfig | null
 
 ### Default Keys by Family
 
-| Family         | Default Key |
-| -------------- | ----------- |
-| Kurd           | D           |
-| Celtic Minor   | D           |
-| Pygmy          | F           |
-| La Sirena      | E           |
-| Aegean         | D           |
-| Hijaz          | D           |
-| Harmonic Minor | C           |
-| Ionian         | C           |
-| Dorian         | D           |
-| Lydian         | F           |
-| Mixolydian     | G           |
+| Family         | Default Key | Note counts |
+| -------------- | ----------- | ----------- |
+| Kurd           | D           | 9, 10, 13   |
+| Celtic Minor   | D           | 9, 10, 13   |
+| Integral       | D           | 9, 10, 13   |
+| Pygmy          | F           | 9, 10, 13   |
+| La Sirena      | E           | 9, 10, 13   |
+| Akebono        | F#          | 9 only      |
+| Aegean         | C           | 9, 10       |
+| Sabye          | E           | 9 only      |
+| Golden Gate    | C           | 8 only      |
+| Oxalis         | D           | 9, 10, 13   |
+| Hijaz          | D           | 9, 10, 13   |
+| Harmonic Minor | C           | 9, 10, 13   |
+| Dorian         | D           | 9, 10, 13   |
+| Mixolydian     | G           | 9, 10, 13   |
+
+Akebono, Sabye and Golden Gate ship at the counts makers actually publish as
+all-top-shell layouts. Larger real builds reach their counts with bottom notes,
+which the widget does not model, so extrapolating one would have invented a
+layout.
+
+### Removed families
+
+Lydian, Ursa Minor and Onoleo shipped interval sets no maker publishes and were
+removed; `EXCLUDED_FAMILY_IDS` records why. Do not re-add them without a
+maker-published note list — see
+[handpan-data-audit.md](../../docs/features/handpan-data-audit.md).
 
 ## Interaction Contract
 

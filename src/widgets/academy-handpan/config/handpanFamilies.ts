@@ -549,6 +549,39 @@ export const MERGED_FAMILY_IDS: Record<string, string> = {
   ionian: 'sabye',
 };
 
+/**
+ * What each merged-away family used to publish.
+ *
+ * Recorded because the canonical family does not always offer the same shells.
+ * Ionian published 9, 10 and 13 notes; Sabye is only documented at 9, so
+ * `ionian-c-13` has no exact counterpart. Rewriting the id alone therefore
+ * resolved to nothing — the migration looked like it worked and silently did
+ * not.
+ *
+ * Keeping the old shape here lets `getHandpanConfig` fall back to the canonical
+ * family's default shell for a count that no longer exists, so an old id still
+ * yields the right scale rather than nothing, and lets the compatibility test
+ * assert against what actually used to exist rather than against the surviving
+ * family's current options — which is what let the gap through in the first
+ * place.
+ */
+export const MERGED_FAMILY_HISTORY: Record<
+  string,
+  { keys: readonly string[]; noteCounts: readonly number[] }
+> = {
+  aeolian: {
+    keys: ['D', 'E', 'F#', 'G', 'A', 'C', 'C#'],
+    noteCounts: [9, 10, 13],
+  },
+  equinox: { keys: ['G', 'D', 'C', 'E', 'A'], noteCounts: [9, 10, 13] },
+  mystic: { keys: ['D', 'C#', 'E', 'F', 'G', 'A'], noteCounts: [9, 10, 13] },
+  'magic-voyage': {
+    keys: ['D', 'E', 'F', 'G', 'A', 'C'],
+    noteCounts: [9, 10, 13],
+  },
+  ionian: { keys: ['C', 'D', 'E', 'F', 'G', 'A'], noteCounts: [9, 10, 13] },
+};
+
 /** Canonical id for a family id that may be a merged-away name. */
 export function resolveFamilyId(familyId: string): string {
   return MERGED_FAMILY_IDS[familyId] ?? familyId;

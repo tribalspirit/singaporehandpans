@@ -8,11 +8,13 @@
  * JavaScript. `import type` is erased at build time and adds no runtime cost.
  */
 import type * as ToneModule from 'tone';
+import { waitForRunningContext } from './waitForRunning';
 
 let Tone: typeof ToneModule | null = null;
 let isInitialized = false;
 let synth: ToneModule.PolySynth | null = null;
 let initializationPromise: Promise<void> | null = null;
+let warmPromise: Promise<unknown> | null = null;
 
 /**
  * The loaded Tone module. Throws if audio has not been initialised, which is
@@ -36,6 +38,31 @@ export function peekTone(): typeof ToneModule | null {
   return Tone;
 }
 
+/**
+ * Load the Tone module without touching the audio context.
+ *
+ * Keeping Tone out of the initial bundle means the first gesture would
+ * otherwise have to wait for a ~340 KB download before it can resume the audio
+ * context — and a browser's user activation can expire in the meantime, which
+ * on stricter engines leaves audio blocked.
+ *
+ * Calling this on pointerdown, before the click completes, gives the download a
+ * head start while costing nothing for visitors who never play anything. Safe
+ * to call repeatedly: the import is cached and the promise is shared.
+ */
+export function warmAudioModule(): Promise<unknown> {
+  if (Tone) {
+    return Promise.resolve(Tone);
+  }
+  if (!warmPromise) {
+    warmPromise = import('tone').then((module) => {
+      Tone = module;
+      return module;
+    });
+  }
+  return warmPromise;
+}
+
 export async function initializeAudio(): Promise<void> {
   if (initializationPromise) {
     return initializationPromise;
@@ -48,7 +75,7 @@ export async function initializeAudio(): Promise<void> {
   initializationPromise = (async () => {
     try {
       if (!Tone) {
-        Tone = await import('tone');
+        await warmAudioModule();
       }
       // Local binding so the closures below narrow past the mutable module ref.
       const tone = Tone;
@@ -66,20 +93,13 @@ export async function initializeAudio(): Promise<void> {
 
       await tone.start();
 
-      if (tone.context.state !== 'running') {
-        await new Promise<void>((resolve) => {
-          const checkState = () => {
-            if (tone.context.state === 'running') {
-              resolve();
-            } else {
-              setTimeout(checkState, 50);
-            }
-          };
-          setTimeout(checkState, 100);
-        });
-      }
+      // Bounded: an unbounded poll here never settled when the context refused
+      // to start, which left `initializationPromise` pending forever and killed
+      // audio until reload. Failing instead makes the next gesture retry, and by
+      // then the module is cached so the slow path is gone.
+      const started = await waitForRunningContext(() => tone.context.state);
 
-      if (tone.context.state !== 'running') {
+      if (!started) {
         throw new Error(
           `Audio context failed to start. State: ${tone.context.state}`
         );
