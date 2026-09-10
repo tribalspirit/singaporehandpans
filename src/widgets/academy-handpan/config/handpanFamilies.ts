@@ -315,6 +315,98 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   },
 
   {
+    id: 'aegean',
+    name: 'Aegean',
+    /**
+     * Restored 2026-09-10 with corrected data.
+     *
+     * This family previously shipped {0,2,4,7,9} — a major pentatonic that no
+     * maker publishes — and was removed for that reason. Two sources give
+     * {0,4,6,7,11}: root, major 3rd, sharp 4th, 5th, major 7th.
+     *
+     * Isthmus: "C Aegean: C / E G B C E F# G B"
+     * Milosc i Spokoj: "D Aegean 10 - D3 | F#3, A3, C#4, D4, F#4, G#4, A4,
+     * C#5, D5"
+     *
+     * Both ring orders below reproduce those listings exactly. Note this is a
+     * five-note set at 9 and 10 notes, not full Lydian — larger builds add the
+     * 2nd and 6th, but they do so with bottom notes this widget cannot model.
+     */
+    description:
+      'Bright and suspended: root, major 3rd, sharp 4th, 5th and major 7th. The raised 4th gives it a floating, unresolved quality. Larger builds fill it out toward Lydian.',
+    aliases: ['Athena'],
+    modeHint: 'major',
+    intervalsPcSemitones: [0, 4, 6, 7, 11],
+    orderedRingIntervalsByNoteCount: {
+      9: [4, 7, 11, 0, 4, 6, 7, 11],
+      10: [4, 7, 11, 0, 4, 6, 7, 11, 0],
+    },
+    suggestedNoteCounts: [9, 10],
+    supportedKeys: ['A', 'C', 'D'],
+    defaultKey: 'C',
+    defaultNoteCount: 9,
+  },
+
+  {
+    id: 'sabye',
+    name: 'Sabye',
+    /**
+     * Diatonic seven-note family. Saraz and HaganeNote publish note lists that
+     * derive to the identical ring order, which is strong corroboration:
+     *
+     * Saraz:      "E/ A, B, C#, D#, E, F#, G#, B"
+     * HaganeNote: "D/ G A B C# D E F# A"
+     *
+     * Isthmus publishes the same note list under the name Ashakiran
+     * ("D / G A B C# D E F# A"), character for character, so Ashakiran and Asha
+     * are recorded as aliases rather than a separate family.
+     *
+     * HaganeNote explains why it reads as Lydian rather than Ionian: "The Sabye
+     * handpan scale is a diatonic version of a Lydian modal scale. The root
+     * note is the second lower note of the scale, while the ding is its perfect
+     * fifth." As with Akebono, that is a tonal centre rather than the name.
+     */
+    description:
+      'The complete major scale, warm and familiar. On handpans this seven-note set is sold as Sabye — or as Ashakiran or Asha — rather than as Ionian: makers who list a "Major" pan publish six-note subsets instead. Named by its ding, though it resolves to the 4th above, which is why makers describe it as Lydian.',
+    aliases: ['Ionian', 'Major', 'Ashakiran', 'Asha'],
+    modeHint: 'major',
+    intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 11],
+    orderedRingIntervalsByNoteCount: {
+      9: [5, 7, 9, 11, 0, 2, 4, 7],
+    },
+    suggestedNoteCounts: [9],
+    supportedKeys: ['C', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'A'],
+    defaultKey: 'E',
+    defaultNoteCount: 9,
+  },
+
+  {
+    id: 'golden-gate',
+    name: 'Golden Gate',
+    /**
+     * Isthmus: "C3 / E3 G3 B3 C4 D4 F#4 G4" — eight notes, the only listing
+     * found, and the only key found. The ring order reproduces it exactly.
+     *
+     * Shipped in C alone because C is the only ding attested. Transposing the
+     * set to other keys is musically well defined, so more keys can be added
+     * whenever that is wanted; leaving it at C keeps the catalog to what is
+     * actually documented.
+     */
+    description:
+      'Eight-note major with a raised 4th — Aegean plus the 2nd. Open and cinematic, with the sharp 4th lending an unresolved lift.',
+    aliases: [],
+    modeHint: 'major',
+    intervalsPcSemitones: [0, 2, 4, 6, 7, 11],
+    orderedRingIntervalsByNoteCount: {
+      8: [4, 7, 11, 0, 2, 6, 7],
+    },
+    suggestedNoteCounts: [8],
+    supportedKeys: ['C'],
+    defaultKey: 'C',
+    defaultNoteCount: 8,
+  },
+
+  {
     id: 'oxalis',
     name: 'Oxalis',
     description:
@@ -367,24 +459,6 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     },
     suggestedNoteCounts: [9, 10, 13],
     supportedKeys: ['C', 'C#', 'D', 'E', 'F', 'F#', 'G', 'A'],
-    defaultKey: 'C',
-    defaultNoteCount: 9,
-  },
-
-  {
-    id: 'ionian',
-    name: 'Ionian',
-    description: 'Major scale (Ionian). Bright and familiar.',
-    aliases: ['Major', 'Ionian Mode'],
-    modeHint: 'major',
-    intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 11],
-    orderedRingIntervalsByNoteCount: {
-      9: [7, 9, 11, 0, 2, 4, 5, 7],
-      10: [7, 9, 11, 0, 2, 4, 5, 7, 9],
-      13: [7, 9, 11, 0, 2, 4, 5, 7, 9, 11, 0, 2],
-    },
-    suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['C', 'D', 'E', 'F', 'G', 'A'],
     defaultKey: 'C',
     defaultNoteCount: 9,
   },
@@ -444,8 +518,6 @@ export const EXCLUDED_FAMILY_IDS: Record<string, string> = {
     'No maker ships a scale under this name. Absent from Saraz (58 scales), Isthmus (55), HaganeNote and Shaktipan. The Lydian collection reaches handpans as Aegean, Golden Gate and Sabye instead.',
   'ursa-minor':
     'Shipped {0,2,5,7,8,10}; sources give {0,2,3,5,7,8}, a minor hexatonic with no 7th at all. Only reported confidence — the Pantheon Steel maker page refused a TLS handshake, so the set rests on search snippets.',
-  aegean:
-    'Shipped {0,2,4,7,9}; Isthmus and Milosc i Spokoj both give {0,4,6,7,11}. The shipped set is not a rotation of the sourced one.',
   onoleo:
     'Shipped {0,2,3,6,7,10}; sources give {0,4,5,7,8}, and even those conflict — one blog gives Celtic Minor instead. No Saraz, Isthmus or HaganeNote page exists.',
 };
@@ -454,8 +526,15 @@ export const EXCLUDED_FAMILY_IDS: Record<string, string> = {
  * Families that were merged into another because they are the same scale.
  *
  * Kurd/Aeolian/Annaziska and Integral/Equinox/Mystic each reduce to a single
- * pitch-class set, and Magic Voyage is Pygmy. Keeping them as separate catalog
- * entries meant offering choices that sounded identical.
+ * pitch-class set, Magic Voyage is Pygmy, and Ionian is the same seven notes as
+ * Sabye. Keeping them as separate catalog entries meant offering choices that
+ * sounded identical.
+ *
+ * Sabye wins that last one rather than Ionian because it is the name handpan
+ * makers publish the complete diatonic set under — Saraz's own "C Major"
+ * listings are six-note subsets, not this set — and because two makers derive
+ * an identical ring order for Sabye while the Ionian ring order was never
+ * sourced.
  *
  * The old ids stay resolvable so nothing that already references one silently
  * returns nothing. Each canonical family carries the union of the merged
@@ -467,6 +546,7 @@ export const MERGED_FAMILY_IDS: Record<string, string> = {
   equinox: 'integral',
   mystic: 'integral',
   'magic-voyage': 'pygmy',
+  ionian: 'sabye',
 };
 
 /** Canonical id for a family id that may be a merged-away name. */

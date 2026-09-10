@@ -81,10 +81,11 @@ describe('Handpan Scale Verification', () => {
     const familyIds = new Set(HANDPAN_CONFIGS.map((c) => c.familyId));
 
     /**
-     * 12 families. Four were merged into the family whose pitch-class set they
-     * duplicated (Aeolian, Equinox, Mystic, Magic Voyage), four were removed
-     * because their data could not be sourced (Lydian, Ursa Minor, Aegean,
-     * Onoleo), and Akebono was added from maker listings.
+     * 14 families. Five were merged into the family whose pitch-class set they
+     * duplicated (Aeolian, Equinox, Mystic, Magic Voyage, Ionian), three were
+     * removed because their data could not be sourced (Lydian, Ursa Minor,
+     * Onoleo), and four were added from maker listings (Akebono, Aegean
+     * corrected and restored, Sabye, Golden Gate).
      * See `familyAliases.test.ts` for both guards.
      */
     const expectedFamilies = [
@@ -94,10 +95,12 @@ describe('Handpan Scale Verification', () => {
       'pygmy',
       'la-sirena',
       'akebono',
+      'aegean',
+      'sabye',
+      'golden-gate',
       'oxalis',
       'hijaz',
       'harmonic-minor',
-      'ionian',
       'dorian',
       'mixolydian',
     ];

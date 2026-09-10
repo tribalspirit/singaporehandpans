@@ -157,6 +157,117 @@ describe('sourced scale fixtures', () => {
       expect(classes).not.toContain('A'); // no natural 2nd - not Hirajoshi-from-F#
     });
   });
+
+  describe('Aegean', () => {
+    /** Isthmus: "C Aegean: C / E G B C E F# G B" */
+    it('matches the Isthmus C Aegean 9 listing', () => {
+      expect(notesFor('aegean', 'C', 9)).toEqual([
+        'C3',
+        'E3',
+        'G3',
+        'B3',
+        'C4',
+        'E4',
+        'F#4',
+        'G4',
+        'B4',
+      ]);
+    });
+
+    /** Milosc i Spokoj: "D3 | F#3, A3, C#4, D4, F#4, G#4, A4, C#5, D5" */
+    it('matches the Milosc i Spokoj D Aegean 10 listing', () => {
+      expect(notesFor('aegean', 'D', 10)).toEqual([
+        'D3',
+        'F#3',
+        'A3',
+        'C#4',
+        'D4',
+        'F#4',
+        'G#4',
+        'A4',
+        'C#5',
+        'D5',
+      ]);
+    });
+
+    /**
+     * The set it previously shipped, {0,2,4,7,9}, was a major pentatonic with
+     * no sharp 4th and no major 7th. Guard both notes that define the real one.
+     */
+    it('has the sharp 4th and major 7th the old data lacked', () => {
+      const classes = new Set(pitchClasses(notesFor('aegean', 'C', 9)));
+      expect(classes).toContain('F#'); // sharp 4th
+      expect(classes).toContain('B'); // major 7th
+      expect(classes).not.toContain('D'); // the old set's 2nd
+    });
+  });
+
+  describe('Sabye', () => {
+    /** Saraz: "E/ A, B, C#, D#, E, F#, G#, B" */
+    it('matches the Saraz E Sabye listing', () => {
+      expect(notesFor('sabye', 'E', 9)).toEqual([
+        'E3',
+        'A3',
+        'B3',
+        'C#4',
+        'D#4',
+        'E4',
+        'F#4',
+        'G#4',
+        'B4',
+      ]);
+    });
+
+    /** HaganeNote: "D/ G A B C# D E F# A" — and Isthmus, as Ashakiran */
+    it('matches the HaganeNote D Sabye listing', () => {
+      expect(pitchClasses(notesFor('sabye', 'D', 9))).toEqual([
+        'D',
+        'G',
+        'A',
+        'B',
+        'C#',
+        'D',
+        'E',
+        'F#',
+        'A',
+      ]);
+    });
+
+    it('is the complete diatonic set', () => {
+      const classes = new Set(pitchClasses(notesFor('sabye', 'D', 9)));
+      expect(classes.size).toBe(7);
+    });
+  });
+
+  describe('Golden Gate', () => {
+    /** Isthmus: "C3 / E3 G3 B3 C4 D4 F#4 G4" */
+    it('matches the Isthmus C Golden Gate 8 listing', () => {
+      expect(notesFor('golden-gate', 'C', 8)).toEqual([
+        'C3',
+        'E3',
+        'G3',
+        'B3',
+        'C4',
+        'D4',
+        'F#4',
+        'G4',
+      ]);
+    });
+
+    /** Aegean plus the 2nd — the one interval that separates them. */
+    it('is Aegean with the 2nd added', () => {
+      const goldenGate = new Set(pitchClasses(notesFor('golden-gate', 'C', 8)));
+      const aegean = new Set(pitchClasses(notesFor('aegean', 'C', 9)));
+
+      expect(goldenGate).toContain('D');
+      expect(aegean).not.toContain('D');
+      for (const pitchClass of aegean) {
+        expect(goldenGate, `aegean ${pitchClass} missing`).toContain(
+          pitchClass
+        );
+      }
+    });
+  });
 });
 
 /**
@@ -177,11 +288,13 @@ const SOURCED_PITCH_CLASS_SETS: Record<string, number[]> = {
   pygmy: [0, 2, 3, 7, 10],
   'la-sirena': [0, 2, 3, 7, 9, 10],
   akebono: [0, 1, 5, 7, 8],
+  aegean: [0, 4, 6, 7, 11],
+  sabye: [0, 2, 4, 5, 7, 9, 11],
+  'golden-gate': [0, 2, 4, 6, 7, 11],
   // Oxalis is measured from the tone-circle root, not the ding — see §2.4.
   oxalis: [0, 2, 4, 7, 9, 11],
   hijaz: [0, 1, 4, 5, 7, 8, 10],
   'harmonic-minor': [0, 2, 3, 5, 7, 8, 11],
-  ionian: [0, 2, 4, 5, 7, 9, 11],
   dorian: [0, 2, 3, 5, 7, 9, 10],
   mixolydian: [0, 2, 4, 5, 7, 9, 10],
 };
