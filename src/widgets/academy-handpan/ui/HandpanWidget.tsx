@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { PlaybackProvider } from './PlaybackContext';
 import { usePlayback } from './usePlayback';
 import HandpanRenderer from './HandpanRenderer';
+import type { NotationMode } from '../core/notation/padLabel';
 import ScaleInfoPanel from './ScaleInfoPanel';
 import ChordsSection from './ChordsSection';
 import type { HandpanPad, PitchClass } from '../config/types';
@@ -49,6 +50,7 @@ function HandpanWidgetContent() {
   );
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('arpeggio');
   const [arpeggioBpm, setArpeggioBpm] = useState(120);
+  const [notation, setNotation] = useState<NotationMode>('note');
 
   const playback = usePlayback();
   const familyOptions = useMemo(() => getFamilyOptions(), []);
@@ -250,6 +252,21 @@ function HandpanWidgetContent() {
               ))}
             </select>
           </div>
+          <div className={styles.selectorRow}>
+            <label htmlFor="notation-select" className={styles.label}>
+              Labels:
+            </label>
+            <select
+              id="notation-select"
+              value={notation}
+              onChange={(e) => setNotation(e.target.value as NotationMode)}
+              className={styles.select}
+              aria-label="Select note labelling"
+            >
+              <option value="note">Note names</option>
+              <option value="number">Numbers</option>
+            </select>
+          </div>
         </div>
       </div>
       <div className={styles.topRow}>
@@ -260,6 +277,7 @@ function HandpanWidgetContent() {
             selectedNotes={selectedNotesForHandpan}
             activeNotes={activeNotes}
             onPadClick={handlePadClick}
+            notation={notation}
           />
         </div>
         <div className={styles.scaleInfoSection}>

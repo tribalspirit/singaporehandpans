@@ -52,6 +52,15 @@
     grid-template-columns: 2fr 1fr 1fr;
     align-items: end;
   }
+
+  /*
+   * The labelling control is the fourth in this row. Below 900px it wraps to a
+   * line of its own rather than squeezing four controls into the width, which
+   * would clip the longer scale-family names.
+   */
+  @media (min-width: 900px) {
+    grid-template-columns: 2fr 1fr 1fr 1.6fr;
+  }
 }
 
 .selectorRow {

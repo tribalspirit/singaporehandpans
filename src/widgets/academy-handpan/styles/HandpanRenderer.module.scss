@@ -3,9 +3,28 @@
 .handpanRenderer {
   width: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: var(--spacing-xl);
+}
+
+/*
+ * Provenance note for the diagram above.
+ *
+ * Positions are computed, not taken from a maker's drawing, so the caption
+ * stays visible rather than being hidden from sighted users and exposed only to
+ * assistive technology. Muted and small so it informs without competing with
+ * the instrument.
+ */
+.layoutNote {
+  margin: var(--spacing-sm) 0 0;
+  max-width: 46ch;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-muted, #6b6b6b);
+  text-wrap: balance;
 }
 
 .body {
