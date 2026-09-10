@@ -34,6 +34,24 @@ describe('isDiatonicScale', () => {
     expect(isDiatonicScale(notesFor('mixolydian', 'E', 9))).toBe(true);
   });
 
+  /**
+   * Seven-note scales rooted on their ding earn their degrees, church mode or
+   * not. A mode allowlist denied Harmonic Minor and Hijaz labels they had
+   * earned, presenting them like the pentatonic tunings the guard excludes.
+   */
+  it('accepts heptatonic scales that are not church modes', () => {
+    expect(isDiatonicScale(notesFor('harmonic-minor', 'C', 9))).toBe(true);
+    expect(isDiatonicScale(notesFor('hijaz', 'D', 9))).toBe(true);
+  });
+
+  /** A documented tonal centre away from the ding still withholds them. */
+  it('rejects a scale that resolves somewhere other than its ding', () => {
+    const sabye = notesFor('sabye', 'E', 9);
+
+    expect(isDiatonicScale(sabye)).toBe(true);
+    expect(isDiatonicScale(sabye, { dingIsTonalCentre: false })).toBe(false);
+  });
+
   it('rejects pentatonic tunings', () => {
     expect(isDiatonicScale(notesFor('akebono', 'F#', 9))).toBe(false);
     expect(isDiatonicScale(notesFor('pygmy', 'F', 9))).toBe(false);

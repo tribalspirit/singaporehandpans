@@ -19,6 +19,17 @@ export interface DiatonicTriad {
  * The first note in handpanNotes is assumed to be the tonic (ding).
  * Works with scales of 5-7 notes (pentatonic, hexatonic, heptatonic).
  */
+/**
+ * Seven-note scales whose degrees this catalog can label.
+ *
+ * Not only the church modes. Harmonic Minor and Hijaz are seven-note families
+ * rooted on their ding, so their degrees are as well defined as Kurd's — a
+ * church-mode allowlist denied them Roman numerals they had earned and
+ * presented them like the pentatonic tunings the guard exists to exclude.
+ *
+ * Hijaz is Phrygian dominant, the fifth mode of harmonic minor; Tonal knows
+ * both under these names.
+ */
 const DIATONIC_MODES = [
   'major',
   'minor',
@@ -27,6 +38,8 @@ const DIATONIC_MODES = [
   'lydian',
   'mixolydian',
   'locrian',
+  'harmonic minor',
+  'phrygian dominant',
 ] as const;
 
 /** The pitch classes of `handpanNotes`, deduplicated, in no particular order. */
