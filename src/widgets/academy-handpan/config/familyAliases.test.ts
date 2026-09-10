@@ -114,6 +114,60 @@ describe('merged family ids stay resolvable', () => {
     expect(migrated?.tonicPc).toBe('D');
   });
 
+  /**
+   * A shell that never existed must not resolve.
+   *
+   * The fallback for a dropped shell was unconditional, so any syntactically
+   * valid merged id resolved — `ionian-d-999` returned Sabye's default. That
+   * silently turns a malformed or stale link into a different instrument, which
+   * is worse than returning nothing.
+   */
+  it('rejects a shell count the legacy family never published', () => {
+    expect(getHandpanConfig('ionian-d-999')).toBeUndefined();
+    expect(getHandpanConfig('equinox-e-42')).toBeUndefined();
+    expect(getHandpanConfig('aeolian-d-7')).toBeUndefined();
+
+    // and the counts it did publish still resolve
+    expect(getHandpanConfig('ionian-d-13')).toBeDefined();
+    expect(getHandpanConfig('aeolian-d-13')).toBeDefined();
+  });
+
+  /**
+   * Structured selections must migrate the same way string ids do.
+   *
+   * `resolveHandpanConfig` canonicalised only the family, so a persisted
+   * selection of { ionian, D, 13 } resolved to nothing — Sabye offers 9 notes
+   * only — while the string id `ionian-d-13` resolved fine. Two sibling APIs
+   * disagreeing about the same migration is its own bug.
+   */
+  it('migrates a structured selection whose shell no longer exists', () => {
+    const migrated = resolveHandpanConfig({
+      familyId: 'ionian',
+      key: 'D',
+      noteCount: 13,
+    });
+
+    expect(migrated).not.toBeNull();
+    expect(migrated?.familyId).toBe('sabye');
+    expect(migrated?.tonicPc).toBe('D');
+  });
+
+  it('resolves a structured selection whose shell still exists', () => {
+    const migrated = resolveHandpanConfig({
+      familyId: 'aeolian',
+      key: 'D',
+      noteCount: 13,
+    });
+
+    expect(migrated?.id).toBe('kurd-d-13');
+  });
+
+  it('rejects a structured selection with a shell that never existed', () => {
+    expect(
+      resolveHandpanConfig({ familyId: 'ionian', key: 'D', noteCount: 999 })
+    ).toBeNull();
+  });
+
   it('records history for every merged family', () => {
     expect(Object.keys(MERGED_FAMILY_HISTORY).sort()).toEqual(
       Object.keys(MERGED_FAMILY_IDS).sort()

@@ -4,7 +4,16 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
- * The widget paints only through its own `--shp-*` token layer.
+ * The widget paints only through its own token layer, in two tiers.
+ *
+ * `--shp-*` is the public surface a host sets, on the widget root or any
+ * ancestor. `--_shp-*` is what the stylesheets read, resolved from the public
+ * name with the site token and then a literal as fallbacks.
+ *
+ * The split is not cosmetic. A single tier declaring `--shp-x` on the root
+ * would beat the same property inherited from a host's wrapper, because a
+ * locally specified custom property always wins over an inherited one — so the
+ * documented override was silently ignored until this was split.
  *
  * Every value falls back to the literal it currently resolves to, so the widget
  * renders identically with or without the site's global tokens — and a host
@@ -26,14 +35,14 @@ function moduleStylesheets(): string[] {
 }
 
 describe('widget token layer', () => {
-  it('references no custom property outside the --shp- namespace', () => {
+  it('reads only the private tier, never a site token directly', () => {
     const offenders: string[] = [];
 
     for (const file of moduleStylesheets()) {
       const contents = readFileSync(join(STYLES_DIR, file), 'utf8');
 
       for (const [, name] of contents.matchAll(/var\((--[a-z0-9-]+)/g)) {
-        if (!name.startsWith('--shp-')) {
+        if (!name.startsWith('--_shp-')) {
           offenders.push(`${file}: ${name}`);
         }
       }
@@ -42,16 +51,37 @@ describe('widget token layer', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('defines every --shp- token the stylesheets consume', () => {
+  /**
+   * The whole point of the split: an override on an ancestor must reach the
+   * widget. If a definition stopped reading its public name, a host setting
+   * `--shp-color-primary` on a wrapper would be silently ignored again.
+   */
+  it('resolves every private token from its public counterpart first', () => {
+    const layer = readFileSync(join(STYLES_DIR, '_widget-tokens.scss'), 'utf8');
+    const notOverridable: string[] = [];
+
+    for (const [, name, value] of layer.matchAll(
+      /^\s*(--_shp-[a-z0-9-]+):\s*([^;]+);/gm
+    )) {
+      const publicName = name.replace('--_shp-', '--shp-');
+      if (!value.includes(`var(${publicName},`)) {
+        notOverridable.push(name);
+      }
+    }
+
+    expect(notOverridable).toEqual([]);
+  });
+
+  it('defines every private token the stylesheets consume', () => {
     const layer = readFileSync(join(STYLES_DIR, '_widget-tokens.scss'), 'utf8');
     const defined = new Set(
-      [...layer.matchAll(/^\s*(--shp-[a-z0-9-]+):/gm)].map(([, name]) => name)
+      [...layer.matchAll(/^\s*(--_shp-[a-z0-9-]+):/gm)].map(([, name]) => name)
     );
 
     const undefinedTokens = new Set<string>();
     for (const file of moduleStylesheets()) {
       const contents = readFileSync(join(STYLES_DIR, file), 'utf8');
-      for (const [, name] of contents.matchAll(/var\((--shp-[a-z0-9-]+)/g)) {
+      for (const [, name] of contents.matchAll(/var\((--_shp-[a-z0-9-]+)/g)) {
         if (!defined.has(name)) undefinedTokens.add(`${file}: ${name}`);
       }
     }
@@ -65,7 +95,7 @@ describe('widget token layer', () => {
     const withoutFallback: string[] = [];
 
     for (const [, name, value] of layer.matchAll(
-      /^\s*(--shp-[a-z0-9-]+):\s*([^;]+);/gm
+      /^\s*(--_shp-[a-z0-9-]+):\s*([^;]+);/gm
     )) {
       // Whitespace-tolerant: prettier wraps long declarations across lines.
       if (!/var\(\s*--[a-z0-9-]+\s*,\s*\S/.test(value)) {

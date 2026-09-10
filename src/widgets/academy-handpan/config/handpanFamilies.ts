@@ -588,6 +588,63 @@ export function resolveFamilyId(familyId: string): string {
 }
 
 /**
+ * Did this merged-away family actually publish this shell?
+ *
+ * Guards the fallback for a shell the canonical family no longer offers. Only a
+ * count the legacy family really had may fall back; `ionian-d-999` never
+ * existed, and turning a malformed or stale id into a real instrument is worse
+ * than returning nothing.
+ */
+export function legacyFamilyPublished(
+  legacyFamilyId: string,
+  noteCount: number
+): boolean {
+  return (
+    MERGED_FAMILY_HISTORY[legacyFamilyId]?.noteCounts.includes(noteCount) ??
+    false
+  );
+}
+
+/**
+ * Migrate a structured selection whose family was merged away.
+ *
+ * The sibling to `migrateLegacyPresetId`, for callers holding
+ * `{ familyId, key, noteCount }` rather than a string id. Both paths must
+ * migrate the same way: canonicalising only the family left
+ * `{ ionian, D, 13 }` resolving to nothing, because Sabye offers 9 notes only.
+ *
+ * Returns the count to look up — the requested one where the canonical family
+ * still offers it, otherwise that family's default — or null when the shell was
+ * never published by the legacy family, so a nonsense count cannot resolve to a
+ * real instrument.
+ */
+export function resolveLegacySelection(
+  familyId: string,
+  noteCount: number
+): { familyId: string; noteCount: number } | null {
+  const canonicalId = resolveFamilyId(familyId);
+  const family = HANDPAN_FAMILIES.find((entry) => entry.id === canonicalId);
+  if (!family) {
+    return null;
+  }
+
+  if (family.suggestedNoteCounts.includes(noteCount)) {
+    return { familyId: canonicalId, noteCount };
+  }
+
+  // A shell the canonical family dropped only falls back when the merged-away
+  // family really published it.
+  if (canonicalId === familyId || !legacyFamilyPublished(familyId, noteCount)) {
+    return null;
+  }
+
+  return {
+    familyId: canonicalId,
+    noteCount: family.defaultNoteCount ?? family.suggestedNoteCounts[0],
+  };
+}
+
+/**
  * Rewrite a preset id whose family was merged away, e.g.
  * `equinox-e-9` -> `integral-e-9`. Returns null if nothing was rewritten.
  */

@@ -4,28 +4,28 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--shp-spacing-md);
+  gap: var(--_shp-spacing-md);
   overflow: hidden;
 
   @media (min-width: 768px) {
-    gap: var(--shp-spacing-xl);
+    gap: var(--_shp-spacing-xl);
   }
 }
 .chordControls {
   width: 100%;
   min-width: 0;
-  margin-bottom: var(--shp-spacing-md);
+  margin-bottom: var(--_shp-spacing-md);
 }
 .sectionTitle {
-  font-size: var(--shp-font-size-lg);
-  font-weight: var(--shp-font-weight-semibold);
-  color: var(--shp-color-text-primary);
-  margin: 0 0 var(--shp-spacing-sm);
+  font-size: var(--_shp-font-size-lg);
+  font-weight: var(--_shp-font-weight-semibold);
+  color: var(--_shp-color-text-primary);
+  margin: 0 0 var(--_shp-spacing-sm);
 }
 .sectionDescription {
-  font-size: var(--shp-font-size-sm);
-  color: var(--shp-color-text-secondary);
-  margin: 0 0 var(--shp-spacing-md);
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-text-secondary);
+  margin: 0 0 var(--_shp-spacing-md);
   font-style: italic;
 }
 .triadsSection {
@@ -36,47 +36,47 @@
 
 .triadsLegend {
   display: flex;
-  gap: var(--shp-spacing-md);
-  margin-bottom: var(--shp-spacing-sm);
-  font-size: var(--shp-font-size-sm);
-  color: var(--shp-color-text-secondary);
+  gap: var(--_shp-spacing-md);
+  margin-bottom: var(--_shp-spacing-sm);
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-text-secondary);
   flex-wrap: wrap;
 
   @media (max-width: 768px) {
-    font-size: var(--shp-font-size-xs);
-    gap: var(--shp-spacing-sm);
+    font-size: var(--_shp-font-size-xs);
+    gap: var(--_shp-spacing-sm);
   }
 }
 
 .legendTonic {
   display: flex;
   align-items: center;
-  gap: var(--shp-spacing-xs);
+  gap: var(--_shp-spacing-xs);
 
   &::before {
     content: '■';
     color: rgba(99, 102, 241, 0.8);
-    font-size: var(--shp-font-size-lg);
+    font-size: var(--_shp-font-size-lg);
   }
 }
 
 .legendRelative {
   display: flex;
   align-items: center;
-  gap: var(--shp-spacing-xs);
+  gap: var(--_shp-spacing-xs);
 
   &::before {
     content: '■';
     color: rgba(234, 179, 8, 0.8);
-    font-size: var(--shp-font-size-lg);
+    font-size: var(--_shp-font-size-lg);
   }
 }
 .triadsRow {
   display: flex;
-  gap: var(--shp-spacing-sm);
+  gap: var(--_shp-spacing-sm);
   overflow-x: auto;
   overflow-y: hidden;
-  padding: var(--shp-spacing-xs) 0;
+  padding: var(--_shp-spacing-xs) 0;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   width: 100%;
@@ -85,14 +85,14 @@
     height: 6px;
   }
   &::-webkit-scrollbar-track {
-    background: var(--shp-color-gray-100);
-    border-radius: var(--shp-radius-sm);
+    background: var(--_shp-color-gray-100);
+    border-radius: var(--_shp-radius-sm);
   }
   &::-webkit-scrollbar-thumb {
-    background: var(--shp-color-gray-400);
-    border-radius: var(--shp-radius-sm);
+    background: var(--_shp-color-gray-400);
+    border-radius: var(--_shp-radius-sm);
     &:hover {
-      background: var(--shp-color-gray-500);
+      background: var(--_shp-color-gray-500);
     }
   }
 }
@@ -103,13 +103,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--shp-spacing-xs);
-  padding: var(--shp-spacing-md);
-  background: var(--shp-color-white);
-  border: 2px solid var(--shp-color-border);
-  border-radius: var(--shp-border-radius-md);
+  gap: var(--_shp-spacing-xs);
+  padding: var(--_shp-spacing-md);
+  background: var(--_shp-color-white);
+  border: 2px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-md);
   cursor: pointer;
-  transition: all var(--shp-transition-base);
+  transition: all var(--_shp-transition-base);
   text-align: center;
   scroll-snap-align: start;
   touch-action: manipulation;
@@ -117,36 +117,36 @@
   @media (max-width: 768px) {
     min-width: 140px;
     max-width: 170px;
-    padding: var(--shp-spacing-md) var(--shp-spacing-lg);
+    padding: var(--_shp-spacing-md) var(--_shp-spacing-lg);
     min-height: 80px;
   }
 
   &:hover {
-    border-color: var(--shp-color-primary);
-    background: var(--shp-color-gray-50);
-    box-shadow: var(--shp-shadow-md);
+    border-color: var(--_shp-color-primary);
+    background: var(--_shp-color-gray-50);
+    box-shadow: var(--_shp-shadow-md);
   }
   &:focus {
-    outline: 2px solid var(--shp-color-primary);
+    outline: 2px solid var(--_shp-color-primary);
     outline-offset: 2px;
   }
 }
 .triadTileSelected {
-  border-color: var(--shp-color-primary);
-  background: var(--shp-color-primary-light);
-  color: var(--shp-color-gray-900);
+  border-color: var(--_shp-color-primary);
+  background: var(--_shp-color-primary-light);
+  color: var(--_shp-color-gray-900);
   .triadName,
   .triadNotes {
-    color: var(--shp-color-gray-900);
+    color: var(--_shp-color-gray-900);
   }
   &:hover {
-    background: var(--shp-color-gray-900);
-    color: var(--shp-color-white);
+    background: var(--_shp-color-gray-900);
+    color: var(--_shp-color-white);
     .triadName,
     .triadNotes,
     .chordName,
     .chordNotes {
-      color: var(--shp-color-white);
+      color: var(--_shp-color-white);
     }
   }
 }
@@ -165,7 +165,7 @@
     left: 2px;
     right: 2px;
     bottom: 2px;
-    border-radius: calc(var(--shp-border-radius-md) - 2px);
+    border-radius: calc(var(--_shp-border-radius-md) - 2px);
     background: linear-gradient(
       135deg,
       rgba(199, 210, 254, 0.15) 0%,
@@ -183,24 +183,24 @@
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
   }
   &.triadTileSelected {
-    border-color: var(--shp-color-primary);
-    background: var(--shp-color-primary-light);
-    color: var(--shp-color-gray-900);
+    border-color: var(--_shp-color-primary);
+    background: var(--_shp-color-primary-light);
+    color: var(--_shp-color-gray-900);
     &::before {
       display: none;
     }
     .triadName,
     .triadNotes {
-      color: var(--shp-color-gray-900);
+      color: var(--_shp-color-gray-900);
     }
     &:hover {
-      background: var(--shp-color-gray-900);
-      color: var(--shp-color-white);
+      background: var(--_shp-color-gray-900);
+      color: var(--_shp-color-white);
       .triadName,
       .triadNotes,
       .chordName,
       .chordNotes {
-        color: var(--shp-color-white);
+        color: var(--_shp-color-white);
       }
     }
   }
@@ -220,7 +220,7 @@
     left: 2px;
     right: 2px;
     bottom: 2px;
-    border-radius: calc(var(--shp-border-radius-md) - 2px);
+    border-radius: calc(var(--_shp-border-radius-md) - 2px);
     background: linear-gradient(
       135deg,
       rgba(254, 240, 138, 0.15) 0%,
@@ -237,24 +237,24 @@
     );
   }
   &.triadTileSelected {
-    border-color: var(--shp-color-primary);
-    background: var(--shp-color-primary-light);
-    color: var(--shp-color-gray-900);
+    border-color: var(--_shp-color-primary);
+    background: var(--_shp-color-primary-light);
+    color: var(--_shp-color-gray-900);
     &::before {
       display: none;
     }
     .triadName,
     .triadNotes {
-      color: var(--shp-color-gray-900);
+      color: var(--_shp-color-gray-900);
     }
     &:hover {
-      background: var(--shp-color-gray-900);
-      color: var(--shp-color-white);
+      background: var(--_shp-color-gray-900);
+      color: var(--_shp-color-white);
       .triadName,
       .triadNotes,
       .chordName,
       .chordNotes {
-        color: var(--shp-color-white);
+        color: var(--_shp-color-white);
       }
     }
   }
@@ -268,33 +268,33 @@
   }
 }
 .triadDegree {
-  font-size: var(--shp-font-size-xs);
-  font-weight: var(--shp-font-weight-medium);
-  color: var(--shp-color-text-secondary);
-  font-family: var(--shp-font-family-serif);
+  font-size: var(--_shp-font-size-xs);
+  font-weight: var(--_shp-font-weight-medium);
+  color: var(--_shp-color-text-secondary);
+  font-family: var(--_shp-font-family-serif);
   font-style: italic;
 
   @media (max-width: 768px) {
-    font-size: var(--shp-font-size-sm);
+    font-size: var(--_shp-font-size-sm);
   }
 }
 
 .triadName {
-  font-size: var(--shp-font-size-base);
-  font-weight: var(--shp-font-weight-semibold);
-  color: var(--shp-color-text-primary);
+  font-size: var(--_shp-font-size-base);
+  font-weight: var(--_shp-font-weight-semibold);
+  color: var(--_shp-color-text-primary);
 
   @media (max-width: 768px) {
-    font-size: var(--shp-font-size-lg);
+    font-size: var(--_shp-font-size-lg);
   }
 }
 .triadNotes {
-  font-size: var(--shp-font-size-xs);
-  color: var(--shp-color-text-secondary);
-  font-family: var(--shp-font-family-mono);
+  font-size: var(--_shp-font-size-xs);
+  color: var(--_shp-color-text-secondary);
+  font-family: var(--_shp-font-family-mono);
 
   @media (max-width: 768px) {
-    font-size: var(--shp-font-size-sm);
+    font-size: var(--_shp-font-size-sm);
   }
 }
 .fourNoteSection {
@@ -305,33 +305,33 @@
 .chordGroups {
   display: flex;
   flex-direction: column;
-  gap: var(--shp-spacing-lg);
+  gap: var(--_shp-spacing-lg);
   max-height: 500px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: var(--shp-spacing-sm);
+  padding-right: var(--_shp-spacing-sm);
   width: 100%;
   min-width: 0;
 }
 .chordGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--shp-spacing-sm);
+  gap: var(--_shp-spacing-sm);
 }
 .groupTitle {
-  font-size: var(--shp-font-size-base);
-  font-weight: var(--shp-font-weight-semibold);
-  color: var(--shp-color-text-secondary);
+  font-size: var(--_shp-font-size-base);
+  font-weight: var(--_shp-font-weight-semibold);
+  color: var(--_shp-color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0;
-  padding-bottom: var(--shp-spacing-xs);
-  border-bottom: 1px solid var(--shp-color-border);
+  padding-bottom: var(--_shp-spacing-xs);
+  border-bottom: 1px solid var(--_shp-color-border);
 }
 .chordGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--shp-spacing-sm);
+  gap: var(--_shp-spacing-sm);
   @media (min-width: 768px) {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   }
@@ -340,92 +340,92 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--shp-spacing-xs);
-  padding: var(--shp-spacing-sm) var(--shp-spacing-md);
-  background: var(--shp-color-white);
-  border: 2px solid var(--shp-color-border);
-  border-radius: var(--shp-border-radius-md);
+  gap: var(--_shp-spacing-xs);
+  padding: var(--_shp-spacing-sm) var(--_shp-spacing-md);
+  background: var(--_shp-color-white);
+  border: 2px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-md);
   cursor: pointer;
-  transition: all var(--shp-transition-base);
+  transition: all var(--_shp-transition-base);
   text-align: left;
   min-width: 0;
   touch-action: manipulation;
 
   @media (max-width: 768px) {
-    padding: var(--shp-spacing-md) var(--shp-spacing-lg);
+    padding: var(--_shp-spacing-md) var(--_shp-spacing-lg);
     min-height: 70px;
   }
 
   &:hover {
-    border-color: var(--shp-color-primary);
-    background: var(--shp-color-gray-50);
-    box-shadow: var(--shp-shadow-sm);
+    border-color: var(--_shp-color-primary);
+    background: var(--_shp-color-gray-50);
+    box-shadow: var(--_shp-shadow-sm);
   }
   &:focus {
-    outline: 2px solid var(--shp-color-primary);
+    outline: 2px solid var(--_shp-color-primary);
     outline-offset: 2px;
   }
 }
 .chordItemSelected {
-  border-color: var(--shp-color-primary);
-  background: var(--shp-color-primary-light);
-  color: var(--shp-color-gray-900);
+  border-color: var(--_shp-color-primary);
+  background: var(--_shp-color-primary-light);
+  color: var(--_shp-color-gray-900);
   .chordName,
   .chordNotes {
-    color: var(--shp-color-gray-900);
+    color: var(--_shp-color-gray-900);
   }
   &:hover {
-    background: var(--shp-color-gray-900);
-    color: var(--shp-color-white);
+    background: var(--_shp-color-gray-900);
+    color: var(--_shp-color-white);
     .triadName,
     .triadNotes,
     .chordName,
     .chordNotes {
-      color: var(--shp-color-white);
+      color: var(--_shp-color-white);
     }
   }
 }
 .chordName {
-  font-size: var(--shp-font-size-base);
-  font-weight: var(--shp-font-weight-semibold);
-  color: var(--shp-color-text-primary);
+  font-size: var(--_shp-font-size-base);
+  font-weight: var(--_shp-font-weight-semibold);
+  color: var(--_shp-color-text-primary);
 
   @media (max-width: 768px) {
-    font-size: var(--shp-font-size-lg);
+    font-size: var(--_shp-font-size-lg);
   }
 }
 .chordNotes {
-  font-size: var(--shp-font-size-sm);
-  color: var(--shp-color-text-secondary);
-  font-family: var(--shp-font-family-mono);
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-text-secondary);
+  font-family: var(--_shp-font-family-mono);
 
   @media (max-width: 768px) {
-    font-size: var(--shp-font-size-base);
+    font-size: var(--_shp-font-size-base);
   }
 }
 .emptyMessage {
   text-align: center;
-  padding: var(--shp-spacing-xl);
-  color: var(--shp-color-text-secondary);
-  font-size: var(--shp-font-size-base);
+  padding: var(--_shp-spacing-xl);
+  color: var(--_shp-color-text-secondary);
+  font-size: var(--_shp-font-size-base);
 }
 @media (max-width: 768px) {
   .triadsRow {
-    gap: var(--shp-spacing-xs);
+    gap: var(--_shp-spacing-xs);
   }
   .triadTile {
     min-width: 100px;
     max-width: 120px;
-    padding: var(--shp-spacing-sm);
+    padding: var(--_shp-spacing-sm);
   }
   .chordGroups {
     max-height: 400px;
   }
   .chordGrid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: var(--shp-spacing-xs);
+    gap: var(--_shp-spacing-xs);
   }
   .chordItem {
-    padding: var(--shp-spacing-xs) var(--shp-spacing-sm);
+    padding: var(--_shp-spacing-xs) var(--_shp-spacing-sm);
   }
 }

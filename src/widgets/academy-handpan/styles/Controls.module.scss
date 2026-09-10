@@ -4,12 +4,12 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--shp-spacing-lg);
+  gap: var(--_shp-spacing-lg);
   width: 100%;
-  padding: var(--shp-spacing-md);
-  background: var(--shp-color-white);
-  border: 2px solid var(--shp-color-border);
-  border-radius: var(--shp-border-radius-md);
+  padding: var(--_shp-spacing-md);
+  background: var(--_shp-color-white);
+  border: 2px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-md);
   flex-wrap: wrap;
 }
 
@@ -17,28 +17,28 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--shp-spacing-md);
+  gap: var(--_shp-spacing-md);
   flex: 1;
   min-width: 0;
 }
 
 .chordName {
-  font-size: var(--shp-font-size-lg);
-  font-weight: var(--shp-font-weight-medium);
-  color: var(--shp-color-primary);
+  font-size: var(--_shp-font-size-lg);
+  font-weight: var(--_shp-font-weight-medium);
+  color: var(--_shp-color-primary);
   white-space: nowrap;
 }
 
 .chordNotes {
-  font-size: var(--shp-font-size-sm);
-  color: var(--shp-color-text-secondary);
-  font-family: var(--shp-font-family-mono);
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-text-secondary);
+  font-family: var(--_shp-font-family-mono);
   white-space: nowrap;
 }
 
 .chordFormula {
-  font-size: var(--shp-font-size-xs);
-  color: var(--shp-color-text-secondary);
+  font-size: var(--_shp-font-size-xs);
+  color: var(--_shp-color-text-secondary);
   font-style: italic;
   white-space: nowrap;
 }
@@ -47,70 +47,70 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--shp-spacing-md);
+  gap: var(--_shp-spacing-md);
   flex-shrink: 0;
 }
 
 .modeToggle {
-  padding: var(--shp-spacing-xs) var(--shp-spacing-sm);
-  border: 2px solid var(--shp-color-border);
-  border-radius: var(--shp-border-radius-sm);
-  background: var(--shp-color-gray-100);
-  color: var(--shp-color-text-secondary);
-  font-size: var(--shp-font-size-xs);
-  font-weight: var(--shp-font-weight-medium);
+  padding: var(--_shp-spacing-xs) var(--_shp-spacing-sm);
+  border: 2px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-gray-100);
+  color: var(--_shp-color-text-secondary);
+  font-size: var(--_shp-font-size-xs);
+  font-weight: var(--_shp-font-weight-medium);
   cursor: pointer;
-  transition: all var(--shp-transition-base);
+  transition: all var(--_shp-transition-base);
   white-space: nowrap;
   touch-action: manipulation;
 
   @media (max-width: 768px) {
-    font-size: var(--shp-font-size-sm);
-    padding: var(--shp-spacing-sm) var(--shp-spacing-md);
+    font-size: var(--_shp-font-size-sm);
+    padding: var(--_shp-spacing-sm) var(--_shp-spacing-md);
     min-height: 40px;
   }
 
   &:hover {
-    border-color: var(--shp-color-primary);
-    background: var(--shp-color-gray-200);
+    border-color: var(--_shp-color-primary);
+    background: var(--_shp-color-gray-200);
   }
 
   &:focus {
-    outline: 2px solid var(--shp-color-primary);
+    outline: 2px solid var(--_shp-color-primary);
     outline-offset: 2px;
   }
 }
 
 .modeToggleArpeggio {
-  background: var(--shp-color-gray-900);
-  color: var(--shp-color-white);
-  border-color: var(--shp-color-primary);
-  font-weight: var(--shp-font-weight-semibold);
+  background: var(--_shp-color-gray-900);
+  color: var(--_shp-color-white);
+  border-color: var(--_shp-color-primary);
+  font-weight: var(--_shp-font-weight-semibold);
 
   &:hover {
-    background: var(--shp-color-gray-800);
-    border-color: var(--shp-color-primary-dark);
+    background: var(--_shp-color-gray-800);
+    border-color: var(--_shp-color-primary-dark);
   }
 }
 
 .modeToggleSimultaneous {
-  background: var(--shp-color-gray-200);
-  color: var(--shp-color-text-primary);
-  border-color: var(--shp-color-gray-400);
+  background: var(--_shp-color-gray-200);
+  color: var(--_shp-color-text-primary);
+  border-color: var(--_shp-color-gray-400);
 }
 
 .speedControl {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--shp-spacing-sm);
+  gap: var(--_shp-spacing-sm);
   min-width: 120px;
 }
 
 .speedLabel {
-  font-size: var(--shp-font-size-xs);
-  font-weight: var(--shp-font-weight-medium);
-  color: var(--shp-color-text-primary);
+  font-size: var(--_shp-font-size-xs);
+  font-weight: var(--_shp-font-weight-medium);
+  color: var(--_shp-color-text-primary);
   white-space: nowrap;
   min-width: 50px;
 }
@@ -118,8 +118,8 @@
 .slider {
   flex: 1;
   height: 6px;
-  border-radius: var(--shp-radius-sm);
-  background: var(--shp-color-gray-200);
+  border-radius: var(--_shp-radius-sm);
+  background: var(--_shp-color-gray-200);
   outline: none;
   cursor: pointer;
   appearance: none;
@@ -135,12 +135,12 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--shp-color-gray-900);
+    background: var(--_shp-color-gray-900);
     cursor: pointer;
-    transition: all var(--shp-transition-base);
+    transition: all var(--_shp-transition-base);
 
     &:hover {
-      background: var(--shp-color-gray-800);
+      background: var(--_shp-color-gray-800);
       transform: scale(1.1);
     }
   }
@@ -149,57 +149,57 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: var(--shp-color-gray-900);
+    background: var(--_shp-color-gray-900);
     cursor: pointer;
     border: none;
-    transition: all var(--shp-transition-base);
+    transition: all var(--_shp-transition-base);
 
     &:hover {
-      background: var(--shp-color-gray-800);
+      background: var(--_shp-color-gray-800);
       transform: scale(1.1);
     }
   }
 
   &:focus {
-    outline: 2px solid var(--shp-color-primary);
+    outline: 2px solid var(--_shp-color-primary);
     outline-offset: 2px;
   }
 }
 
 .playbackButtons {
   display: flex;
-  gap: var(--shp-spacing-sm);
+  gap: var(--_shp-spacing-sm);
 }
 
 .playButton,
 .stopButton {
   display: flex;
   align-items: center;
-  gap: var(--shp-spacing-xs);
-  padding: var(--shp-spacing-sm) var(--shp-spacing-md);
-  background: var(--shp-color-gray-900);
-  color: var(--shp-color-white);
+  gap: var(--_shp-spacing-xs);
+  padding: var(--_shp-spacing-sm) var(--_shp-spacing-md);
+  background: var(--_shp-color-gray-900);
+  color: var(--_shp-color-white);
   border: none;
-  border-radius: var(--shp-border-radius-md);
-  font-size: var(--shp-font-size-sm);
-  font-weight: var(--shp-font-weight-semibold);
+  border-radius: var(--_shp-border-radius-md);
+  font-size: var(--_shp-font-size-sm);
+  font-weight: var(--_shp-font-weight-semibold);
   cursor: pointer;
-  transition: all var(--shp-transition-base);
+  transition: all var(--_shp-transition-base);
   white-space: nowrap;
   touch-action: manipulation;
 
   @media (max-width: 768px) {
-    font-size: var(--shp-font-size-base);
-    padding: var(--shp-spacing-md) var(--shp-spacing-lg);
+    font-size: var(--_shp-font-size-base);
+    padding: var(--_shp-spacing-md) var(--_shp-spacing-lg);
     min-height: 48px;
   }
 
   &:hover {
-    background: var(--shp-color-gray-800);
+    background: var(--_shp-color-gray-800);
   }
 
   &:focus {
-    outline: 2px solid var(--shp-color-primary);
+    outline: 2px solid var(--_shp-color-primary);
     outline-offset: 2px;
   }
 
@@ -209,7 +209,7 @@
 }
 
 .stopButton {
-  background: var(--shp-color-error);
+  background: var(--_shp-color-error);
 
   &:hover {
     background: #c82333;
@@ -220,13 +220,13 @@
   .controls {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--shp-spacing-md);
+    gap: var(--_shp-spacing-md);
   }
 
   .chordInfo {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--shp-spacing-xs);
+    gap: var(--_shp-spacing-xs);
   }
 
   .controlsGroup {

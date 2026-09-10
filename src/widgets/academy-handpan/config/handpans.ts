@@ -2,6 +2,7 @@ import type { HandpanConfig } from './types';
 import {
   generateAllHandpanConfigs,
   getHandpanFamilyById,
+  legacyFamilyPublished,
   migrateLegacyPresetId,
 } from './handpanFamilies';
 
@@ -29,25 +30,43 @@ export function getHandpanConfig(id: string): HandpanConfig | undefined {
   // and 13 notes while Sabye is only documented at 9. Fall back to the family's
   // default shell so an old id still yields the right scale, rather than the
   // migration appearing to work and returning nothing.
-  const [familyId, key] = splitPresetId(migratedId);
-  const family = familyId ? getHandpanFamilyById(familyId) : undefined;
-  if (!family || !key) {
+  const parsed = splitPresetId(id);
+  if (!parsed) {
+    return undefined;
+  }
+
+  // Only a shell the legacy family actually published may fall back. Otherwise
+  // `ionian-d-999` would resolve to a real instrument, silently turning a
+  // malformed or stale id into a different one.
+  const [legacyFamilyId, key, noteCount] = parsed;
+  if (!legacyFamilyPublished(legacyFamilyId, noteCount)) {
+    return undefined;
+  }
+
+  const canonicalId = migrateLegacyPresetId(`${legacyFamilyId}-${key}-9`);
+  const canonicalFamilyId = canonicalId
+    ? splitPresetId(canonicalId)?.[0]
+    : null;
+  const family = canonicalFamilyId
+    ? getHandpanFamilyById(canonicalFamilyId)
+    : undefined;
+  if (!family) {
     return undefined;
   }
 
   const fallbackCount =
     family.defaultNoteCount ?? family.suggestedNoteCounts[0];
   return HANDPAN_CONFIGS.find(
-    (config) => config.id === `${familyId}-${key}-${fallbackCount}`
+    (config) => config.id === `${family.id}-${key}-${fallbackCount}`
   );
 }
 
 /** Split `family-key-count`, allowing hyphens inside the family id. */
 function splitPresetId(
   presetId: string
-): [familyId: string | null, key: string | null] {
+): [familyId: string, key: string, noteCount: number] | null {
   const match = presetId.match(/^(.*)-([a-g]s?)-(\d+)$/);
-  return match ? [match[1], match[2]] : [null, null];
+  return match ? [match[1], match[2], Number(match[3])] : null;
 }
 
 export function getAllHandpanConfigs(): HandpanConfig[] {

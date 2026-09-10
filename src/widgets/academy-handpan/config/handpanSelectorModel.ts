@@ -3,6 +3,7 @@ import {
   HANDPAN_FAMILIES,
   getAllHandpanFamilies,
   resolveFamilyId,
+  resolveLegacySelection,
 } from './handpanFamilies';
 import { HANDPAN_CONFIGS } from './handpans';
 
@@ -78,8 +79,18 @@ export function resolveHandpanConfig(
 ): HandpanConfig | null {
   initializeConfigIndex();
 
-  const canonicalFamilyId = resolveFamilyId(selection.familyId);
-  const key = `${canonicalFamilyId}:${selection.key}:${selection.noteCount}`;
+  // Migrate family *and* shell. Canonicalising only the family left a
+  // selection like { ionian, D, 13 } resolving to nothing, since Sabye offers
+  // 9 notes only — the same gap `getHandpanConfig` covers for string ids.
+  const migrated = resolveLegacySelection(
+    selection.familyId,
+    selection.noteCount
+  );
+  if (!migrated) {
+    return null;
+  }
+
+  const key = `${migrated.familyId}:${selection.key}:${migrated.noteCount}`;
   return CONFIG_INDEX.get(key) || null;
 }
 
