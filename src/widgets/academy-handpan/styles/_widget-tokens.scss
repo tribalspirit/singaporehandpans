@@ -1,0 +1,114 @@
+// Widget token layer.
+//
+// Every value the widget paints with is read from a `--shp-*` custom property
+// rather than straight from the site's global tokens. Each one falls back to
+// the literal it currently resolves to, so the widget renders identically
+// whether `src/styles/tokens.scss` is present or not.
+//
+// Two consequences worth stating:
+//
+//   1. The widget no longer *depends* on the host page defining design tokens.
+//      Dropped into a page without them it still looks like itself.
+//   2. A host that wants to restyle it has one documented surface to override
+//      — `--shp-*` on the widget root — instead of needing to know the site's
+//      internal token names or the hashed CSS-module class names.
+//
+// Astro injects `src/styles/tokens.scss` into every SCSS file automatically, so
+// deleting `@use` lines would prove nothing; routing every value through this
+// layer is what actually breaks the hard dependency.
+//
+// Defined once on the widget root. Custom properties inherit through the DOM,
+// so every component inside picks them up regardless of CSS-module hashing.
+
+@mixin shp-tokens {
+  // Spacing
+  --shp-spacing-2xl: var(--spacing-2xl, 3rem);
+  --shp-spacing-lg: var(--spacing-lg, 1.5rem);
+  --shp-spacing-md: var(--spacing-md, 1rem);
+  --shp-spacing-sm: var(--spacing-sm, 0.75rem);
+  --shp-spacing-xl: var(--spacing-xl, 2rem);
+  --shp-spacing-xs: var(--spacing-xs, 0.5rem);
+
+  // Colour
+  --shp-color-accent: var(--color-accent, #211b16);
+  --shp-color-accent-dark: var(--color-accent-dark, #5e3c21);
+  --shp-color-accent-light: var(--color-accent-light, #e5ddd2);
+  --shp-color-border: var(--color-border, #d8cec0);
+  --shp-color-error: var(--color-error, #9c3b2e);
+  --shp-color-gray-100: var(--color-gray-100, #efe9e0);
+  --shp-color-gray-200: var(--color-gray-200, #e5ddd2);
+  --shp-color-gray-400: var(--color-gray-400, #bfb3a2);
+  --shp-color-gray-50: var(--color-gray-50, #f7f3ed);
+  --shp-color-gray-500: var(--color-gray-500, #7a6e5e);
+  --shp-color-gray-800: var(--color-gray-800, #302923);
+  --shp-color-gray-900: var(--color-gray-900, #211b16);
+  --shp-color-info: var(--color-info, #5f6b74);
+  --shp-color-primary: var(--color-primary, #8a5a33);
+  --shp-color-primary-dark: var(--color-primary-dark, #5e3c21);
+  --shp-color-primary-light: var(--color-primary-light, #c9a882);
+  --shp-color-surface: var(--color-surface, #fffdfa);
+  --shp-color-text-muted: var(--color-text-muted, #6b6b6b);
+  --shp-color-text-primary: var(--color-text-primary, #211b16);
+  --shp-color-text-secondary: var(--color-text-secondary, #5f544b);
+  --shp-color-white: var(--color-white, #fffdfa);
+
+  // Typography
+  --shp-font-family-heading: var(
+    --font-family-heading,
+    'Newsreader',
+    Georgia,
+    'Times New Roman',
+    serif
+  );
+  --shp-font-family-mono: var(
+    --font-family-mono,
+    'IBM Plex Mono',
+    'SFMono-Regular',
+    monospace
+  );
+  --shp-font-family-serif: var(--font-family-serif, serif);
+  --shp-font-size-2xl: var(
+    --font-size-2xl,
+    clamp(1.4375rem, 1.28rem + 0.8vw, 1.75rem)
+  );
+  --shp-font-size-3xl: var(
+    --font-size-3xl,
+    clamp(1.75rem, 1.4rem + 1.75vw, 2.375rem)
+  );
+  --shp-font-size-base: var(
+    --font-size-base,
+    clamp(0.9375rem, 0.91rem + 0.14vw, 1rem)
+  );
+  --shp-font-size-lg: var(
+    --font-size-lg,
+    clamp(1.0625rem, 1.02rem + 0.23vw, 1.1875rem)
+  );
+  --shp-font-size-sm: var(
+    --font-size-sm,
+    clamp(0.8125rem, 0.79rem + 0.11vw, 0.875rem)
+  );
+  --shp-font-size-xl: var(
+    --font-size-xl,
+    clamp(1.1875rem, 1.11rem + 0.34vw, 1.375rem)
+  );
+  --shp-font-size-xs: var(
+    --font-size-xs,
+    clamp(0.6875rem, 0.66rem + 0.14vw, 0.75rem)
+  );
+  --shp-font-weight-light: var(--font-weight-light, 300);
+  --shp-font-weight-medium: var(--font-weight-medium, 500);
+  --shp-font-weight-semibold: var(--font-weight-semibold, 500);
+  --shp-line-height-relaxed: var(--line-height-relaxed, 1.65);
+
+  // Radius, shadow, motion
+  --shp-border-radius-md: var(--border-radius-md, 2px);
+  --shp-border-radius-sm: var(--border-radius-sm, 2px);
+  --shp-radius-sm: var(--radius-sm, 2px);
+  --shp-shadow-lg: var(--shadow-lg, 0 0 0 1px rgba(33, 27, 22, 0.24));
+  --shp-shadow-md: var(--shadow-md, 0 0 0 1px rgba(33, 27, 22, 0.2));
+  --shp-shadow-sm: var(--shadow-sm, 0 0 0 1px rgba(33, 27, 22, 0.1));
+  --shp-transition-base: var(
+    --transition-base,
+    240ms cubic-bezier(0.4, 0, 0.2, 1)
+  );
+}
