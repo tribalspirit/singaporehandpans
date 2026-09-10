@@ -235,6 +235,16 @@ function HandpanWidgetContent() {
    * changing the scale family or the label mode pulled 340 KB for someone who
    * only ever browsed the catalogue, which defeats the point of loading it
    * lazily at all.
+   *
+   * Both pointer *and* keyboard. Activating a pad with Enter or Space fires a
+   * click with no pointer event at all, so a pointer-only hook left keyboard
+   * users on the cold path this exists to avoid — the one where the download
+   * outlives the browser's user activation and the first note is silent.
+   *
+   * `onFocus` rather than `onKeyDown`: React's focus events bubble, so tabbing
+   * *to* a pad warms audio before the key is even pressed, and a plain
+   * container keeps its keyboard handling to the buttons inside it rather than
+   * pretending to be interactive itself.
    */
   const handleWarmAudio = useCallback(() => {
     void warmAudioModule().catch(() => {
@@ -329,7 +339,11 @@ function HandpanWidgetContent() {
           </div>
         </div>
       </div>
-      <div className={styles.topRow} onPointerDown={handleWarmAudio}>
+      <div
+        className={styles.topRow}
+        onPointerDown={handleWarmAudio}
+        onFocus={handleWarmAudio}
+      >
         <div className={styles.handpanSection}>
           <HandpanRenderer
             key={`${familyId}-${selectedKey}-${selectedNoteCount}`}
@@ -352,6 +366,7 @@ function HandpanWidgetContent() {
       <div
         className={styles.chordsSectionWrapper}
         onPointerDown={handleWarmAudio}
+        onFocus={handleWarmAudio}
       >
         <ChordsSection
           key={`${familyId}-${selectedKey}-${selectedNoteCount}`}

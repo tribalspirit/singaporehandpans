@@ -21,51 +21,64 @@ keys without a hand-written configuration for each one.
 
 ### 1. Fixed Octave Convention
 
-- **Ding octave**: Changed from octave 4 to octave 3 (industry standard)
+- **Ding octave**: changed from octave 4 to octave 3
 - Example: D Kurd ding is now `D3` instead of `D4`
 - All ring notes adjusted accordingly (spanning octaves 3-5)
 
-### 2. Fixed Pygmy Scale
+**Superseded in 2026-09.** A single octave for every key is not how instruments
+are built: every A-ding and B-ding handpan makers sell is A2 or B2. The octave
+now follows the key, giving a continuous G#2-G3 band. See
+[handpan-data-audit.md](handpan-data-audit.md) §2.3.
 
-- **Before**: Identical to D Kurd (incorrect)
-- **After**: True minor pentatonic `[0, 3, 5, 7, 10]`
-- Now distinct and musically accurate
+### 2. Fixed Pygmy Scale — superseded
+
+- **Originally**: identical to D Kurd (incorrect)
+- **This pass changed it to**: the minor pentatonic `[0, 3, 5, 7, 10]`
+- **Corrected again in 2026-09**: `[0, 2, 3, 7, 10]`
+
+That second correction matters: the minor pentatonic has a perfect 4th where
+Pygmy has a major 2nd, and Pygmy has no 4th at all. Saraz publishes
+`"F2/ F, G, Ab, C, Eb, F, G, C"`, and Isthmus, Shaktipan and HaganeNote agree.
+See [handpan-data-audit.md](handpan-data-audit.md) §2.1.
 
 ### 3. Scale Families (14 Total)
 
-#### Core Minor Families
+The catalog as it actually ships. Interval sets and their sources are in
+[handpan-data-audit.md](handpan-data-audit.md), which is the source of truth; a
+test compares every shipped set against it mechanically.
 
-- **Kurd** (Natural Minor/Aeolian) - Most popular handpan scale
-- **Celtic Minor** (Amara) - Hexatonic minor, smooth and meditative
-- **Integral** (PANArt) - Hexatonic minor with distinct b6+b7 color
-- **Mystic** - Phrygian-ish hexatonic minor
-- **Pygmy** - Minor pentatonic (earthy/tribal)
+#### Minor
 
-#### Dorian/Dreamy
+- **Kurd** (Natural Minor) — the most popular handpan scale. Absorbed Aeolian and Annaziska
+- **Celtic Minor** — hexatonic minor, smooth and meditative. Amara is an alias
+- **Integral** — minor without the 4th. Absorbed Equinox and Mystic
+- **Pygmy** — root, maj2, min3, 5th, min7, and no 4th. Absorbed Magic Voyage
+- **La Sirena** — Dorian minus the 4th
+- **Harmonic Minor** — natural minor with a raised 7th
 
-- **La Sirena** (Pantheon Steel) - Dorian hexatonic
-- **Ursa Minor** (Pantheon Steel) - Minor hexatonic variant
+#### Major / bright
 
-#### Major/Lydian
+- **Sabye** — the complete diatonic major set. Absorbed Ionian; Ashakiran and Asha are aliases
+- **Aegean** — maj3, #4, 5th, maj7; fills toward Lydian on larger builds
+- **Golden Gate** — Aegean plus the 2nd. Eight notes, C only
+- **Oxalis** — major with maj7, measured from the tone-circle root rather than the ding
+- **Mixolydian** — major with a flat 7th
+- **Dorian** — Jibuk is an alias
 
-- **Aegean** (Pantheon Steel) - Major pentatonic
-- **Oxalis** - Major hexatonic with maj7
-- **Ionian** - Classic major scale
-- **Lydian** - Major with raised 4th
+#### Exotic
 
-#### Mixed Modes
+- **Akebono** — Japanese pentatonic, ding-rooted; resolves to the 4th above
+- **Hijaz** (Phrygian Dominant) — Middle Eastern flavour
 
-- **Dorian** - Minor with major 6th
-- **Mixolydian** - Major with flat 7th
-- **Equinox** - Mixed mood (Mixolydian-like)
-- **Magic Voyage** - Storytelling blend
+#### Removed
 
-#### Exotic/Eastern
+**Lydian**, **Ursa Minor** and **Onoleo** shipped interval sets no maker
+publishes and were removed; `EXCLUDED_FAMILY_IDS` records why. Do not re-add one
+without a maker-published note list.
 
-- **Hijaz** (Phrygian Dominant) - Middle Eastern flavor
-- **Harmonic Minor** - Natural minor with raised 7th
-- **Onoleo** - Modern exotic/dreamy
-- **Aeolian** - Natural minor (alternative label to Kurd)
+Merged-away ids — `aeolian`, `equinox`, `mystic`, `magic-voyage`, `ionian` —
+still resolve through `MERGED_FAMILY_IDS`, for the keys and shells they actually
+published.
 
 ### 4. Plan B: Transposition Support
 
