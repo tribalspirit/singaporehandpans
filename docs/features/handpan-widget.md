@@ -76,8 +76,15 @@ initial bundle. Consequences for callers:
 
 ## Styling
 
-The widget paints only through its own `--shp-*` token layer, defined on the
-widget root in `styles/_widget-tokens.scss`. Every token falls back to a literal,
+The widget paints only through its own token layer, defined on the widget root
+in `styles/_widget-tokens.scss`, in two tiers: `--shp-*` is the public surface a
+host sets, and `--_shp-*` is what the stylesheets read, resolved from the public
+name, then the site token, then a literal.
+
+The split is load-bearing. A single tier declaring `--shp-*` on the root would
+beat the same property inherited from a host's wrapper — a locally specified
+custom property always wins over an inherited one — so an override placed on an
+ancestor was silently ignored. Set `--shp-*`; never `--_shp-*`. Every token falls back to a literal,
 so the widget renders correctly on a page with no design tokens of its own —
 verified by stripping all 129 site custom properties at runtime, which collapses
 the surrounding page while leaving the widget intact.
@@ -94,9 +101,11 @@ surface; do not target the hashed CSS-module class names.
 }
 ```
 
-`styles/tokens.test.ts` enforces the layer: no stylesheet may reference a custom
-property outside the namespace, every consumed token must be defined, and every
-definition must carry a literal fallback rather than only a site token.
+`styles/tokens.test.ts` enforces the layer: stylesheets may read only the
+private tier, every consumed token must be defined, every definition must carry
+a literal fallback rather than only a site token, and every private token must
+resolve from its public counterpart first — that last one is what keeps a host
+override working.
 
 ## Layering
 
