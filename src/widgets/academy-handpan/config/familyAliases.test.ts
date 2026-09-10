@@ -10,6 +10,7 @@ import {
 } from './handpanFamilies';
 import { getHandpanConfig } from './handpans';
 import {
+  getDefaultSelection,
   getKeyOptions,
   getNoteCountOptions,
   resolveHandpanConfig,
@@ -245,6 +246,33 @@ describe('merged family ids stay resolvable', () => {
     expect(
       resolveHandpanConfig({ familyId: 'kurd', key: 'D', noteCount: 99 })
     ).toBeNull();
+  });
+
+  /**
+   * A merged family opens on its own former default, not the survivor's.
+   *
+   * Inheriting the canonical default silently changed the selected instrument
+   * for anyone restoring a legacy id — `equinox` opened on D rather than its
+   * own G — the same mismatch the key and shell options were corrected for.
+   */
+  it('keeps each merged family its own default selection', () => {
+    for (const [legacyId, history] of Object.entries(MERGED_FAMILY_HISTORY)) {
+      const defaults = getDefaultSelection(legacyId);
+
+      expect(defaults.key, legacyId).toBe(history.defaultKey);
+      expect(defaults.noteCount, legacyId).toBe(history.defaultNoteCount);
+    }
+  });
+
+  it('opens every merged family on a selection that resolves', () => {
+    for (const legacyId of Object.keys(MERGED_FAMILY_IDS)) {
+      const defaults = getDefaultSelection(legacyId);
+
+      expect(
+        resolveHandpanConfig({ familyId: legacyId, ...defaults }),
+        `${legacyId} opens on ${defaults.key}/${defaults.noteCount}`
+      ).not.toBeNull();
+    }
   });
 
   it('records history for every merged family', () => {

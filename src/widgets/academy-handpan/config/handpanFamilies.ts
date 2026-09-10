@@ -576,14 +576,33 @@ export const MERGED_FAMILY_HISTORY: Record<
   aeolian: {
     keys: ['D', 'E', 'F#', 'G', 'A', 'C', 'C#'],
     noteCounts: [9, 10, 13],
+    defaultKey: 'A',
+    defaultNoteCount: 9,
   },
-  equinox: { keys: ['G', 'D', 'C', 'E', 'A'], noteCounts: [9, 10, 13] },
-  mystic: { keys: ['D', 'C#', 'E', 'F', 'G', 'A'], noteCounts: [9, 10, 13] },
+  equinox: {
+    keys: ['G', 'D', 'C', 'E', 'A'],
+    noteCounts: [9, 10, 13],
+    defaultKey: 'G',
+    defaultNoteCount: 9,
+  },
+  mystic: {
+    keys: ['D', 'C#', 'E', 'F', 'G', 'A'],
+    noteCounts: [9, 10, 13],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
+  },
   'magic-voyage': {
     keys: ['D', 'E', 'F', 'G', 'A', 'C'],
     noteCounts: [9, 10, 13],
+    defaultKey: 'D',
+    defaultNoteCount: 9,
   },
-  ionian: { keys: ['C', 'D', 'E', 'F', 'G', 'A'], noteCounts: [9, 10, 13] },
+  ionian: {
+    keys: ['C', 'D', 'E', 'F', 'G', 'A'],
+    noteCounts: [9, 10, 13],
+    defaultKey: 'C',
+    defaultNoteCount: 9,
+  },
 };
 
 /** Canonical id for a family id that may be a merged-away name. */

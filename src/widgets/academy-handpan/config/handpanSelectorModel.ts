@@ -75,10 +75,27 @@ export function getNoteCountOptions(familyId: string): number[] {
   return family?.suggestedNoteCounts || [];
 }
 
+/**
+ * The selection a family opens on.
+ *
+ * A merged-away id gets its *own* former default, not the survivor's.
+ * Inheriting the canonical family's silently changed the instrument for anyone
+ * restoring a legacy id — `equinox` would open on D rather than its own G,
+ * `ionian` on E rather than C — which is the same mismatch the key and shell
+ * options were corrected for.
+ */
 export function getDefaultSelection(familyId: string): {
   key: PitchClass;
   noteCount: number;
 } {
+  const history = MERGED_FAMILY_HISTORY[familyId];
+  if (history) {
+    return {
+      key: history.defaultKey as PitchClass,
+      noteCount: history.defaultNoteCount,
+    };
+  }
+
   const family = findFamily(familyId);
 
   if (!family) {
