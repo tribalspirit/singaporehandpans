@@ -153,8 +153,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     id: 'kurd',
     name: 'Kurd',
     description:
-      'Natural minor / Aeolian. Most common handpan family. Ring order includes tonic repetition (D4) in 9/10-note layouts.',
-    aliases: ['Natural Minor', 'Aeolian', 'Kurd Minor'],
+      'Natural minor. The most common handpan family, also sold as Aeolian, Annaziska or simply Natural Minor — Saraz describes all of these as the same scale. Ring order repeats the tonic in 9/10-note layouts.',
+    aliases: ['Aeolian', 'Annaziska', 'Natural Minor', 'Kurd Minor'],
     modeHint: 'minor',
     intervalsPcSemitones: [0, 2, 3, 5, 7, 8, 10],
     orderedRingIntervalsByNoteCount: {
@@ -191,38 +191,34 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   {
     id: 'integral',
     name: 'Integral',
+    /**
+     * Integral, Equinox and Mystic are one scale.
+     *
+     * All three reduce to {0,2,3,7,8,10} — natural minor without the 4th — and
+     * differ only in which tone field sits lowest. Isthmus says so directly:
+     * "Mystic is a hexatonic minor scale, similar to the Integral, but its last
+     * note is different." They were three catalog entries that sounded
+     * identical, so they are merged here under the most widely documented name.
+     *
+     * The ring order is taken from Saraz's E Equinox listing
+     * ("E/ G, B, C, D, E, F#, G, B"), because that is this scale's published
+     * 9-note form and maps exactly onto the widget's 9-note shell. Saraz's
+     * Integral listings are 8-note instruments, a shell the widget does not
+     * offer, so following them would have meant inventing the ninth note.
+     * Sources retrieved 2026-09-10; see docs/features/handpan-data-audit.md.
+     */
     description:
-      'PANArt-associated hexatonic minor family. Distinct from Kurd. Layout emphasizes 5th and b7 colors; repeats tonic for 9/10.',
-    aliases: ['PANArt Integral', 'Integral Minor'],
-    makers: ['PANArt'],
+      'Hexatonic minor: natural minor without the 4th. Reflective and open. Also sold as Equinox and as Mystic — the same six notes, laid out with a different field lowest.',
+    aliases: ['Equinox', 'Mystic', 'PANArt Integral', 'Integral Minor'],
     modeHint: 'minor',
     intervalsPcSemitones: [0, 2, 3, 7, 8, 10],
     orderedRingIntervalsByNoteCount: {
-      9: [7, 8, 10, 0, 2, 3, 7, 10],
-      10: [7, 8, 10, 0, 2, 3, 7, 10, 2],
-      13: [7, 8, 10, 0, 2, 3, 7, 10, 0, 2, 3, 7],
+      9: [3, 7, 8, 10, 0, 2, 3, 7],
+      10: [3, 7, 8, 10, 0, 2, 3, 7, 8],
+      13: [3, 7, 8, 10, 0, 2, 3, 7, 8, 10, 0, 2],
     },
     suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['D', 'C#', 'E', 'F', 'F#', 'G', 'A'],
-    defaultKey: 'D',
-    defaultNoteCount: 9,
-  },
-
-  {
-    id: 'mystic',
-    name: 'Mystic',
-    description:
-      'Hexatonic "mystic" minor color (phrygian-ish). Kept distinct from Celtic/Integral. Layout repeats tonic and b7 for 9/10.',
-    aliases: ['Mystic Minor'],
-    modeHint: 'minor',
-    intervalsPcSemitones: [0, 1, 3, 5, 7, 10],
-    orderedRingIntervalsByNoteCount: {
-      9: [7, 1, 10, 0, 3, 5, 7, 10],
-      10: [7, 1, 10, 0, 3, 5, 7, 10, 1],
-      13: [7, 1, 10, 0, 3, 5, 7, 10, 0, 1, 3, 5],
-    },
-    suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['D', 'C#', 'E', 'F', 'G', 'A'],
+    supportedKeys: ['C', 'C#', 'D', 'E', 'F', 'F#', 'G', 'A'],
     defaultKey: 'D',
     defaultNoteCount: 9,
   },
@@ -242,8 +238,8 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
      * The 9-note ring order below reproduces the Isthmus A2 listing exactly.
      */
     description:
-      'Earthy, tribal pentatonic: root, major 2nd, minor 3rd, 5th and minor 7th. Distinct from the minor pentatonic — it has no 4th.',
-    aliases: ['Low Pygmy', 'Pygmy Pentatonic'],
+      'Earthy, tribal pentatonic: root, major 2nd, minor 3rd, 5th and minor 7th. Distinct from the minor pentatonic — it has no 4th. Also sold as Magic Voyage, which HaganeNote itself calls "very similar to the Low Pygmy scale".',
+    aliases: ['Magic Voyage', 'Low Pygmy', 'Pygmy Pentatonic'],
     modeHint: 'minor',
     intervalsPcSemitones: [0, 2, 3, 7, 10],
     orderedRingIntervalsByNoteCount: {
@@ -252,7 +248,7 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
       13: [7, 0, 2, 3, 7, 10, 0, 2, 3, 7, 10, 0],
     },
     suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['F', 'F#', 'G', 'A', 'D', 'E'],
+    supportedKeys: ['C', 'D', 'E', 'F', 'F#', 'G', 'A'],
     defaultKey: 'F',
     defaultNoteCount: 9,
   },
@@ -394,55 +390,6 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   },
 
   {
-    id: 'equinox',
-    name: 'Equinox',
-    /**
-     * Corrected 2026-09-10 from maker sources. This family previously shipped a
-     * Mixolydian set with a MAJOR third, and its own description conceded the
-     * value was invented ("Implemented as Mixolydian-like pitch set"). Every
-     * real listing is a minor hexatonic: natural minor with the 4th removed.
-     *
-     * Saraz: "E/ G, B, C, D, E, F#, G, B" (page title "E Equinox Minor")
-     * Isthmus: "E Equinox: E/ G B C D E F# G B"
-     * Seven variants across two makers all agree.
-     * The 9-note ring order below reproduces the Saraz E listing exactly.
-     */
-    description:
-      'Minor hexatonic: natural minor without the 4th. Reflective, with a wide, open feel.',
-    aliases: ['Equinox Minor'],
-    modeHint: 'minor',
-    intervalsPcSemitones: [0, 2, 3, 7, 8, 10],
-    orderedRingIntervalsByNoteCount: {
-      9: [3, 7, 8, 10, 0, 2, 3, 7],
-      10: [3, 7, 8, 10, 0, 2, 3, 7, 8],
-      13: [3, 7, 8, 10, 0, 2, 3, 7, 8, 10, 0, 2],
-    },
-    suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['G', 'D', 'C', 'E', 'A'],
-    defaultKey: 'G',
-    defaultNoteCount: 9,
-  },
-
-  {
-    id: 'magic-voyage',
-    name: 'Magic Voyage',
-    description:
-      'Storytelling "bright with gentle pull" family found in catalogs. Ring order emphasizes 5th and b7 colors (mixolydian-like).',
-    aliases: ['Magic Voyage (Mixed)', 'Adventure Scale'],
-    modeHint: 'mixed',
-    intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 10],
-    orderedRingIntervalsByNoteCount: {
-      9: [7, 10, 0, 2, 4, 5, 7, 10],
-      10: [7, 10, 0, 2, 4, 5, 7, 10, 0],
-      13: [7, 10, 0, 2, 4, 5, 7, 9, 10, 0, 2, 4],
-    },
-    suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['D', 'E', 'F', 'G', 'A', 'C'],
-    defaultKey: 'D',
-    defaultNoteCount: 9,
-  },
-
-  {
     id: 'ionian',
     name: 'Ionian',
     description: 'Major scale (Ionian). Bright and familiar.',
@@ -513,26 +460,45 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     defaultKey: 'G',
     defaultNoteCount: 9,
   },
-
-  {
-    id: 'aeolian',
-    name: 'Aeolian',
-    description:
-      'Natural minor (Aeolian). Same pitch-class set as Kurd; provided as separate label for UI/search (layout identical to Kurd).',
-    aliases: ['Natural Minor', 'Aeolian Mode'],
-    modeHint: 'minor',
-    intervalsPcSemitones: [0, 2, 3, 5, 7, 8, 10],
-    orderedRingIntervalsByNoteCount: {
-      9: [7, 8, 10, 0, 2, 3, 5, 7],
-      10: [7, 8, 10, 0, 2, 3, 5, 7, 10],
-      13: [7, 8, 10, 0, 2, 3, 5, 7, 10, 0, 2, 3],
-    },
-    suggestedNoteCounts: [9, 10, 13],
-    supportedKeys: ['D', 'E', 'F#', 'G', 'A', 'C', 'C#'],
-    defaultKey: 'A',
-    defaultNoteCount: 9,
-  },
 ];
+
+/**
+ * Families that were merged into another because they are the same scale.
+ *
+ * Kurd/Aeolian/Annaziska and Integral/Equinox/Mystic each reduce to a single
+ * pitch-class set, and Magic Voyage is Pygmy. Keeping them as separate catalog
+ * entries meant offering choices that sounded identical.
+ *
+ * The old ids stay resolvable so nothing that already references one silently
+ * returns nothing. Each canonical family carries the union of the merged
+ * families' supported keys, so every legacy preset id maps to a real preset —
+ * asserted in `familyAliases.test.ts`.
+ */
+export const MERGED_FAMILY_IDS: Record<string, string> = {
+  aeolian: 'kurd',
+  equinox: 'integral',
+  mystic: 'integral',
+  'magic-voyage': 'pygmy',
+};
+
+/** Canonical id for a family id that may be a merged-away name. */
+export function resolveFamilyId(familyId: string): string {
+  return MERGED_FAMILY_IDS[familyId] ?? familyId;
+}
+
+/**
+ * Rewrite a preset id whose family was merged away, e.g.
+ * `equinox-e-9` -> `integral-e-9`. Returns null if nothing was rewritten.
+ */
+export function migrateLegacyPresetId(presetId: string): string | null {
+  for (const [legacyId, canonicalId] of Object.entries(MERGED_FAMILY_IDS)) {
+    const prefix = `${legacyId}-`;
+    if (presetId.startsWith(prefix)) {
+      return `${canonicalId}-${presetId.slice(prefix.length)}`;
+    }
+  }
+  return null;
+}
 
 export function generateAllHandpanConfigs(): HandpanConfig[] {
   const configs: HandpanConfig[] = [];
@@ -552,7 +518,8 @@ export function generateAllHandpanConfigs(): HandpanConfig[] {
 export function getHandpanFamilyById(
   id: string
 ): HandpanScaleFamilyTemplate | undefined {
-  return HANDPAN_FAMILIES.find((family) => family.id === id);
+  const canonicalId = resolveFamilyId(id);
+  return HANDPAN_FAMILIES.find((family) => family.id === canonicalId);
 }
 
 export function getAllHandpanFamilies(): HandpanScaleFamilyTemplate[] {
