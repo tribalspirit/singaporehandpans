@@ -62,6 +62,29 @@ describe('pcset', () => {
       const result = isSubset(['C4'], []);
       expect(result).toBe(false);
     });
+
+    /**
+     * Inclusive subset (candidate ⊆ available), not proper subset.
+     *
+     * Tonal's `Pcset.isSubsetOf` is a *proper* subset test and returns false
+     * when the two sets are equal. That silently hid every chord whose pitch
+     * classes spanned the whole tuning — reachable in production on pentatonic
+     * handpans such as Pygmy, where a five-note chord covers the entire scale.
+     */
+    it('should return true when candidate and available are the same set', () => {
+      const result = isSubset(['C4', 'E4', 'G4'], ['C4', 'E4', 'G4']);
+      expect(result).toBe(true);
+    });
+
+    it('should ignore octave duplication when comparing pitch classes', () => {
+      const result = isSubset(['C4', 'E4', 'G4'], ['G3', 'C4', 'E5', 'C6']);
+      expect(result).toBe(true);
+    });
+
+    it('should return true for a strict subset', () => {
+      const result = isSubset(['C4', 'E4'], ['C4', 'D4', 'E4', 'G4']);
+      expect(result).toBe(true);
+    });
   });
 
   describe('isSuperset', () => {

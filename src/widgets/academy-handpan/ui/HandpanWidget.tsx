@@ -2,6 +2,8 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { PlaybackProvider } from './PlaybackContext';
 import { usePlayback } from './usePlayback';
 import HandpanRenderer from './HandpanRenderer';
+import type { NotationMode } from '../core/notation/padLabel';
+import { warmAudioModule } from '../audio/engine';
 import ScaleInfoPanel from './ScaleInfoPanel';
 import ChordsSection from './ChordsSection';
 import type { HandpanPad, PitchClass } from '../config/types';
@@ -49,6 +51,7 @@ function HandpanWidgetContent() {
   );
   const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('arpeggio');
   const [arpeggioBpm, setArpeggioBpm] = useState(120);
+  const [notation, setNotation] = useState<NotationMode>('note');
 
   const playback = usePlayback();
   const familyOptions = useMemo(() => getFamilyOptions(), []);
@@ -185,6 +188,29 @@ function HandpanWidgetContent() {
     setSelectedChord(null);
   }, []);
 
+  /*
+   * Start fetching Tone.js on pointerdown, before the click that will need it.
+   * Tone is kept out of the initial bundle, so without this the first gesture
+   * waits on a ~340 KB download and the browser's user activation can expire
+   * mid-flight, which on stricter engines leaves audio blocked.
+   *
+   * Attached to the sound-producing surfaces only — the pan, the scale notes
+   * and the chords — never to the header. Putting it on the widget root meant
+   * changing the scale family or the label mode pulled 340 KB for someone who
+   * only ever browsed the catalogue, which defeats the point of loading it
+   * lazily at all.
+   */
+  const handleWarmAudio = useCallback(() => {
+    void warmAudioModule().catch(() => {
+      // Warming is an optimisation; initializeAudio reports real failures.
+    });
+  }, []);
+
+  // Every hook must be declared above this point. A family switch leaves the
+  // previous key/shell in state for one render — Golden Gate is C/8 only, so
+  // Kurd's D/9 cannot resolve — and any hook below this return would be skipped
+  // on exactly that render, which React reports as "Rendered fewer hooks than
+  // expected". Guarded by `familySwitch.test.tsx`.
   if (!selectedHandpan) {
     return <div>No handpan configuration available.</div>;
   }
@@ -250,9 +276,24 @@ function HandpanWidgetContent() {
               ))}
             </select>
           </div>
+          <div className={styles.selectorRow}>
+            <label htmlFor="notation-select" className={styles.label}>
+              Labels:
+            </label>
+            <select
+              id="notation-select"
+              value={notation}
+              onChange={(e) => setNotation(e.target.value as NotationMode)}
+              className={styles.select}
+              aria-label="Select note labelling"
+            >
+              <option value="note">Note names</option>
+              <option value="number">Numbers</option>
+            </select>
+          </div>
         </div>
       </div>
-      <div className={styles.topRow}>
+      <div className={styles.topRow} onPointerDown={handleWarmAudio}>
         <div className={styles.handpanSection}>
           <HandpanRenderer
             key={`${familyId}-${selectedKey}-${selectedNoteCount}`}
@@ -260,6 +301,7 @@ function HandpanWidgetContent() {
             selectedNotes={selectedNotesForHandpan}
             activeNotes={activeNotes}
             onPadClick={handlePadClick}
+            notation={notation}
           />
         </div>
         <div className={styles.scaleInfoSection}>
@@ -271,7 +313,10 @@ function HandpanWidgetContent() {
           />
         </div>
       </div>
-      <div className={styles.chordsSectionWrapper}>
+      <div
+        className={styles.chordsSectionWrapper}
+        onPointerDown={handleWarmAudio}
+      >
         <ChordsSection
           key={`${familyId}-${selectedKey}-${selectedNoteCount}`}
           availableNotes={selectedHandpan.notes}

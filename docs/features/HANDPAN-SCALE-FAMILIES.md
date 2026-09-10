@@ -2,7 +2,20 @@
 
 ## Overview
 
-The handpan widget now supports **19 scale families** with **transposed variants** across multiple keys and note counts. This implementation fixes octave conventions, corrects the Pygmy scale, and enables users to explore handpans in different keys without manually defining each configuration.
+The handpan widget supports **14 scale families** with **transposed variants**
+across multiple keys and note counts, so users can explore handpans in different
+keys without a hand-written configuration for each one.
+
+> **Updated 2026-09-10.** An earlier version of this document claimed this work
+> "corrects the Pygmy scale". It did not — Pygmy shipped the minor pentatonic
+> until the correctness pass on branch `002-handpan-core-split`, which also
+> corrected Equinox and replaced the global ding octave. That pass also merged
+> the families that duplicated another's pitch-class set (Aeolian, Equinox,
+> Mystic, Magic Voyage, Ionian), removed three whose data could not be sourced
+> (Lydian, Ursa Minor, Onoleo), and added four from maker listings (Akebono,
+> Aegean corrected, Sabye, Golden Gate) — 19 to 14. Verified interval sets
+> and their sources are in [handpan-data-audit.md](handpan-data-audit.md), which
+> supersedes this document wherever the two disagree about scale data.
 
 ## Key Changes
 
@@ -18,7 +31,7 @@ The handpan widget now supports **19 scale families** with **transposed variants
 - **After**: True minor pentatonic `[0, 3, 5, 7, 10]`
 - Now distinct and musically accurate
 
-### 3. Scale Families (19 Total)
+### 3. Scale Families (14 Total)
 
 #### Core Minor Families
 
@@ -122,7 +135,12 @@ getAvailableNoteCountsForFamilyAndKey('kurd', 'D');
   aliases?: string[];            // ['Natural Minor', 'Aeolian']
   makers?: string[];             // ['Pantheon Steel']
   modeHint?: 'minor' | 'major' | 'mixed' | 'exotic';
-  intervalsPcSemitones: number[]; // [0, 2, 3, 5, 7, 8, 10]
+  // Declared pitch-class set. Documentation and validation only — note
+  // generation is driven entirely by orderedRingIntervalsByNoteCount, and a
+  // test asserts the two agree.
+  intervalsPcSemitones?: number[]; // [0, 2, 3, 5, 7, 8, 10]
+  // The actual generator input: ring note order per note count.
+  orderedRingIntervalsByNoteCount?: Record<number, number[]>;
   suggestedNoteCounts: number[]; // [9, 10, 13]
   supportedKeys: PitchClass[];   // ['D', 'E', 'F#', ...]
 }
@@ -157,11 +175,13 @@ getAvailableNoteCountsForFamilyAndKey('kurd', 'D');
 
 ## Testing
 
-All 113 tests passing:
+Run `npx vitest run` for the current count rather than trusting a number here.
+What the suite covers for this area:
 
-- ✓ Octave convention (D3 for D scales)
-- ✓ Pygmy distinct from Kurd
-- ✓ All 19 families represented
+- ✓ Ding octave follows the key (D3 for D, A2 for A) and stays within F2-G3
+- ✓ Pygmy and Equinox match published maker note lists
+- ✓ Every family's ring order agrees with its declared pitch-class set
+- ✓ All 14 families represented, none sharing a pitch-class set
 - ✓ Multiple keys per family
 - ✓ Multiple note counts per family+key
 - ✓ Correct config structure
@@ -178,22 +198,19 @@ Add ability to reinterpret the same pitch set with different tonic (modal playin
 - Requires: tonic override in chord/scale analysis
 - Not implemented in this phase (as requested)
 
-### UI Enhancement
+### UI Enhancement — shipped
 
-Consider updating the handpan selector to use the new grouping:
-
-1. First dropdown: Select family (Kurd, Aegean, Hijaz, etc.)
-2. Second dropdown: Select key (D, E, F#, etc.)
-3. Third dropdown: Select note count (9, 10, 13)
-
-This can be done using the new `uiHelpers` functions.
+The three-step family / key / note-count selector described here as future work
+has shipped, in `ui/HandpanWidget.tsx`, plus a fourth control for note-name vs
+numeric labelling. It is backed by `config/handpanSelectorModel.ts`, not by
+`uiHelpers.ts` — `uiHelpers.ts` is currently referenced only by its own test.
 
 ## Migration Notes
 
 ### Backward Compatibility
 
 - Existing imports still work: `getAllHandpanConfigs()`, `getHandpanConfig(id)`
-- Widget UI unchanged (still shows all configs in single dropdown)
+- The widget uses the family / key / note-count selector, not a single dropdown
 - Chord/scale analysis continues to work with generated configs
 
 ### Breaking Changes

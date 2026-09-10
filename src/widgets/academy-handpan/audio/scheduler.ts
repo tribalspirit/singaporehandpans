@@ -1,4 +1,5 @@
-import * as Tone from 'tone';
+import type * as ToneModule from 'tone';
+import { getTone, peekTone } from './engine';
 import { playNote } from './engine';
 import { normalizeToPitchClass } from '../theory/normalize';
 
@@ -23,7 +24,7 @@ let currentArpeggio: {
   direction: ArpeggioDirection;
   onStep?: (step: PlaybackStep) => void;
   onComplete?: () => void;
-  scheduledEvents: Tone.ToneEvent[];
+  scheduledEvents: ToneModule.ToneEvent[];
 } | null = null;
 
 function getOrderedNotes(
@@ -42,6 +43,7 @@ function getOrderedNotes(
 }
 
 export function playArpeggio(options: ArpeggioOptions): void {
+  const Tone = getTone();
   stopArpeggio();
 
   const { notes, bpm, direction = 'up', onStep, onComplete } = options;
@@ -54,7 +56,7 @@ export function playArpeggio(options: ArpeggioOptions): void {
     Tone.Transport.bpm.value = bpm;
     const orderedNotes = getOrderedNotes(notes, direction);
     const noteDuration = Tone.Time('4n').toSeconds();
-    const scheduledEvents: Tone.ToneEvent[] = [];
+    const scheduledEvents: ToneModule.ToneEvent[] = [];
 
     orderedNotes.forEach((note, index) => {
       const event = new Tone.ToneEvent((_time) => {
@@ -106,6 +108,11 @@ export function playArpeggio(options: ArpeggioOptions): void {
 }
 
 export function stopArpeggio(): void {
+  const Tone = peekTone();
+  if (!Tone) {
+    currentArpeggio = null;
+    return;
+  }
   if (currentArpeggio) {
     currentArpeggio.scheduledEvents.forEach((event) => {
       event.dispose();
@@ -117,5 +124,9 @@ export function stopArpeggio(): void {
 }
 
 export function isArpeggioPlaying(): boolean {
+  const Tone = peekTone();
+  if (!Tone) {
+    return false;
+  }
   return currentArpeggio !== null && Tone.Transport.state === 'started';
 }

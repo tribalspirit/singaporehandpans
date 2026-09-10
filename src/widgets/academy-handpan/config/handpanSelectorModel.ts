@@ -1,5 +1,10 @@
 import type { HandpanConfig, PitchClass } from './types';
-import { HANDPAN_FAMILIES, getAllHandpanFamilies } from './handpanFamilies';
+import {
+  HANDPAN_FAMILIES,
+  getAllHandpanFamilies,
+  resolveFamilyId,
+  resolveLegacySelection,
+} from './handpanFamilies';
 import { HANDPAN_CONFIGS } from './handpans';
 
 export interface FamilyOption {
@@ -26,6 +31,12 @@ function initializeConfigIndex() {
   }
 }
 
+/** Family lookup that accepts merged-away ids such as `aeolian` or `mystic`. */
+function findFamily(familyId: string) {
+  const canonicalId = resolveFamilyId(familyId);
+  return HANDPAN_FAMILIES.find((family) => family.id === canonicalId);
+}
+
 export function getFamilyOptions(): FamilyOption[] {
   return getAllHandpanFamilies().map((family) => ({
     id: family.id,
@@ -34,12 +45,12 @@ export function getFamilyOptions(): FamilyOption[] {
 }
 
 export function getKeyOptions(familyId: string): PitchClass[] {
-  const family = HANDPAN_FAMILIES.find((f) => f.id === familyId);
+  const family = findFamily(familyId);
   return family?.supportedKeys || [];
 }
 
 export function getNoteCountOptions(familyId: string): number[] {
-  const family = HANDPAN_FAMILIES.find((f) => f.id === familyId);
+  const family = findFamily(familyId);
   return family?.suggestedNoteCounts || [];
 }
 
@@ -47,7 +58,7 @@ export function getDefaultSelection(familyId: string): {
   key: PitchClass;
   noteCount: number;
 } {
-  const family = HANDPAN_FAMILIES.find((f) => f.id === familyId);
+  const family = findFamily(familyId);
 
   if (!family) {
     return { key: 'D', noteCount: 9 };
@@ -68,7 +79,19 @@ export function resolveHandpanConfig(
 ): HandpanConfig | null {
   initializeConfigIndex();
 
-  const key = `${selection.familyId}:${selection.key}:${selection.noteCount}`;
+  // Migrate family *and* shell. Canonicalising only the family left a
+  // selection like { ionian, D, 13 } resolving to nothing, since Sabye offers
+  // 9 notes only — the same gap `getHandpanConfig` covers for string ids.
+  const migrated = resolveLegacySelection(
+    selection.familyId,
+    selection.key,
+    selection.noteCount
+  );
+  if (!migrated) {
+    return null;
+  }
+
+  const key = `${migrated.familyId}:${selection.key}:${migrated.noteCount}`;
   return CONFIG_INDEX.get(key) || null;
 }
 
