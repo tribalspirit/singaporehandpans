@@ -587,22 +587,36 @@ export function resolveFamilyId(familyId: string): string {
   return MERGED_FAMILY_IDS[familyId] ?? familyId;
 }
 
+/** `F#` -> `fs`, matching how a preset id spells a key. */
+export function keyToPresetIdSegment(key: string): string {
+  return key.toLowerCase().replace('#', 's');
+}
+
 /**
- * Did this merged-away family actually publish this shell?
+ * Did this merged-away family actually publish this key and shell?
  *
- * Guards the fallback for a shell the canonical family no longer offers. Only a
- * count the legacy family really had may fall back; `ionian-d-999` never
- * existed, and turning a malformed or stale id into a real instrument is worse
- * than returning nothing.
+ * Guards migration on both axes. The canonical family carries the *union* of
+ * the merged families' keys, so migrating without this check let a key the
+ * legacy family never had resolve anyway: Equinox published G, D, C, E and A,
+ * but `equinox-fs-9` found `integral-fs-9` because Integral's union includes
+ * F#. Turning a malformed or stale reference into a different instrument is
+ * worse than returning nothing.
  */
 export function legacyFamilyPublished(
   legacyFamilyId: string,
+  key: string,
   noteCount: number
 ): boolean {
-  return (
-    MERGED_FAMILY_HISTORY[legacyFamilyId]?.noteCounts.includes(noteCount) ??
-    false
+  const history = MERGED_FAMILY_HISTORY[legacyFamilyId];
+  if (!history) {
+    return false;
+  }
+
+  const keyMatches = history.keys.some(
+    (published) => keyToPresetIdSegment(published) === keyToPresetIdSegment(key)
   );
+
+  return keyMatches && history.noteCounts.includes(noteCount);
 }
 
 /**
@@ -620,6 +634,7 @@ export function legacyFamilyPublished(
  */
 export function resolveLegacySelection(
   familyId: string,
+  key: string,
   noteCount: number
 ): { familyId: string; noteCount: number } | null {
   const canonicalId = resolveFamilyId(familyId);
@@ -628,19 +643,24 @@ export function resolveLegacySelection(
     return null;
   }
 
-  if (family.suggestedNoteCounts.includes(noteCount)) {
-    return { familyId: canonicalId, noteCount };
+  // A family that was never merged resolves on its own terms.
+  if (canonicalId === familyId) {
+    return family.suggestedNoteCounts.includes(noteCount)
+      ? { familyId: canonicalId, noteCount }
+      : null;
   }
 
-  // A shell the canonical family dropped only falls back when the merged-away
-  // family really published it.
-  if (canonicalId === familyId || !legacyFamilyPublished(familyId, noteCount)) {
+  // A merged family may only resolve a key and shell it actually published —
+  // the canonical family's key union is wider than any one of them.
+  if (!legacyFamilyPublished(familyId, key, noteCount)) {
     return null;
   }
 
   return {
     familyId: canonicalId,
-    noteCount: family.defaultNoteCount ?? family.suggestedNoteCounts[0],
+    noteCount: family.suggestedNoteCounts.includes(noteCount)
+      ? noteCount
+      : (family.defaultNoteCount ?? family.suggestedNoteCounts[0]),
   };
 }
 

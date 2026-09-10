@@ -1,9 +1,8 @@
 import type { HandpanConfig } from './types';
 import {
   generateAllHandpanConfigs,
-  getHandpanFamilyById,
   legacyFamilyPublished,
-  migrateLegacyPresetId,
+  resolveLegacySelection,
 } from './handpanFamilies';
 
 export const HANDPAN_CONFIGS: HandpanConfig[] = generateAllHandpanConfigs();
@@ -14,50 +13,29 @@ export function getHandpanConfig(id: string): HandpanConfig | undefined {
     return direct;
   }
 
-  // Presets whose family was merged into another keep resolving, so an id
-  // held elsewhere does not quietly return nothing.
-  const migratedId = migrateLegacyPresetId(id);
-  if (!migratedId) {
-    return undefined;
-  }
-
-  const migrated = HANDPAN_CONFIGS.find((config) => config.id === migratedId);
-  if (migrated) {
-    return migrated;
-  }
-
-  // The canonical family may not offer the same shells: Ionian published 9, 10
-  // and 13 notes while Sabye is only documented at 9. Fall back to the family's
-  // default shell so an old id still yields the right scale, rather than the
-  // migration appearing to work and returning nothing.
   const parsed = splitPresetId(id);
   if (!parsed) {
     return undefined;
   }
 
-  // Only a shell the legacy family actually published may fall back. Otherwise
-  // `ionian-d-999` would resolve to a real instrument, silently turning a
-  // malformed or stale id into a different one.
+  // Presets whose family was merged into another keep resolving — but only for
+  // a key and shell that family actually published. The canonical family
+  // carries the union of the merged families' keys and may have dropped a
+  // shell, so migrating unchecked would turn a malformed or stale id into a
+  // different instrument rather than returning nothing.
   const [legacyFamilyId, key, noteCount] = parsed;
-  if (!legacyFamilyPublished(legacyFamilyId, noteCount)) {
+  if (!legacyFamilyPublished(legacyFamilyId, key, noteCount)) {
     return undefined;
   }
 
-  const canonicalId = migrateLegacyPresetId(`${legacyFamilyId}-${key}-9`);
-  const canonicalFamilyId = canonicalId
-    ? splitPresetId(canonicalId)?.[0]
-    : null;
-  const family = canonicalFamilyId
-    ? getHandpanFamilyById(canonicalFamilyId)
-    : undefined;
-  if (!family) {
+  const migrated = resolveLegacySelection(legacyFamilyId, key, noteCount);
+  if (!migrated) {
     return undefined;
   }
 
-  const fallbackCount =
-    family.defaultNoteCount ?? family.suggestedNoteCounts[0];
   return HANDPAN_CONFIGS.find(
-    (config) => config.id === `${family.id}-${key}-${fallbackCount}`
+    (config) =>
+      config.id === `${migrated.familyId}-${key}-${migrated.noteCount}`
   );
 }
 

@@ -64,7 +64,13 @@ describe('widget token layer', () => {
       /^\s*(--_shp-[a-z0-9-]+):\s*([^;]+);/gm
     )) {
       const publicName = name.replace('--_shp-', '--shp-');
-      if (!value.includes(`var(${publicName},`)) {
+      // Whitespace-tolerant: prettier wraps the longer declarations across
+      // lines, so the public name may not sit on the same line as `var(`.
+      const readsPublicFirst = new RegExp(`var\\(\\s*${publicName}\\s*,`).test(
+        value
+      );
+
+      if (!readsPublicFirst) {
         notOverridable.push(name);
       }
     }

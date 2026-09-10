@@ -168,6 +168,43 @@ describe('merged family ids stay resolvable', () => {
     ).toBeNull();
   });
 
+  /**
+   * A key the merged family never published must not resolve.
+   *
+   * The canonical family carries the *union* of the merged families' keys, so
+   * migrating without checking let a key that never existed resolve anyway:
+   * Equinox published G, D, C, E and A, but `equinox-fs-9` found
+   * `integral-fs-9` because Integral's union includes F#.
+   */
+  it('rejects a key the legacy family never published', () => {
+    expect(getHandpanConfig('equinox-fs-9')).toBeUndefined();
+    expect(getHandpanConfig('equinox-f-9')).toBeUndefined();
+
+    // E was published by Equinox, so it still resolves
+    expect(getHandpanConfig('equinox-e-9')?.familyId).toBe('integral');
+  });
+
+  it('rejects a structured selection with an unpublished key', () => {
+    expect(
+      resolveHandpanConfig({ familyId: 'equinox', key: 'F#', noteCount: 9 })
+    ).toBeNull();
+
+    expect(
+      resolveHandpanConfig({ familyId: 'equinox', key: 'E', noteCount: 9 })
+        ?.familyId
+    ).toBe('integral');
+  });
+
+  it('leaves an unmerged family unaffected by the migration path', () => {
+    // A live family must resolve on its own terms, never through the history.
+    expect(
+      resolveHandpanConfig({ familyId: 'kurd', key: 'D', noteCount: 9 })?.id
+    ).toBe('kurd-d-9');
+    expect(
+      resolveHandpanConfig({ familyId: 'kurd', key: 'D', noteCount: 99 })
+    ).toBeNull();
+  });
+
   it('records history for every merged family', () => {
     expect(Object.keys(MERGED_FAMILY_HISTORY).sort()).toEqual(
       Object.keys(MERGED_FAMILY_IDS).sort()

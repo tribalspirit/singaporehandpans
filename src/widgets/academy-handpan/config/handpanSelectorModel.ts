@@ -84,6 +84,7 @@ export function resolveHandpanConfig(
   // 9 notes only — the same gap `getHandpanConfig` covers for string ids.
   const migrated = resolveLegacySelection(
     selection.familyId,
+    selection.key,
     selection.noteCount
   );
   if (!migrated) {
