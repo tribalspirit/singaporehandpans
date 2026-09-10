@@ -47,3 +47,39 @@ export async function waitForRunningContext(
     setTimeout(check, pollIntervalMs);
   });
 }
+
+/**
+ * Bound any awaited step of audio start-up.
+ *
+ * Bounding the state poll was not enough. `Tone.start()` resolves only once the
+ * underlying `AudioContext.resume()` does, and autoplay policy can leave that
+ * pending indefinitely — in which case execution never reaches the poll at all,
+ * the initialisation promise never settles, and every later gesture reuses the
+ * stuck promise. The fix has to sit on each await that can hang, not on the one
+ * that happened to hang first.
+ *
+ * Rejecting lets the caller's `finally` clear its in-flight handle, so the next
+ * gesture starts fresh rather than inheriting a dead promise.
+ */
+export async function withTimeout<T>(
+  work: Promise<T>,
+  timeoutMs: number,
+  label: string
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const expiry = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${timeoutMs}ms`)),
+      timeoutMs
+    );
+  });
+
+  try {
+    return await Promise.race([work, expiry]);
+  } finally {
+    if (timer !== undefined) {
+      clearTimeout(timer);
+    }
+  }
+}

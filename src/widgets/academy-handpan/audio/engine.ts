@@ -8,7 +8,14 @@
  * JavaScript. `import type` is erased at build time and adds no runtime cost.
  */
 import type * as ToneModule from 'tone';
-import { waitForRunningContext } from './waitForRunning';
+import {
+  CONTEXT_START_TIMEOUT_MS,
+  waitForRunningContext,
+  withTimeout,
+} from './waitForRunning';
+
+/** A cold module fetch on a slow connection, bounded so it cannot hang. */
+const MODULE_LOAD_TIMEOUT_MS = 15000;
 
 let Tone: typeof ToneModule | null = null;
 let isInitialized = false;
@@ -84,7 +91,11 @@ export async function initializeAudio(): Promise<void> {
   initializationPromise = (async () => {
     try {
       if (!Tone) {
-        await warmAudioModule();
+        await withTimeout(
+          warmAudioModule(),
+          MODULE_LOAD_TIMEOUT_MS,
+          'Loading the audio engine'
+        );
       }
       // Local binding so the closures below narrow past the mutable module ref.
       const tone = Tone;
@@ -100,12 +111,21 @@ export async function initializeAudio(): Promise<void> {
         }
       }
 
-      await tone.start();
+      // Bounded, because `Tone.start()` resolves only when the underlying
+      // `AudioContext.resume()` does, and autoplay policy can leave that
+      // pending indefinitely. Bounding only the state poll below was not
+      // enough: execution never reached it, so `initializationPromise` stayed
+      // pending forever and every later gesture reused the stuck promise —
+      // exactly the failure the poll's bound was meant to remove.
+      await withTimeout(
+        tone.start(),
+        CONTEXT_START_TIMEOUT_MS,
+        'Starting the audio context'
+      );
 
-      // Bounded: an unbounded poll here never settled when the context refused
-      // to start, which left `initializationPromise` pending forever and killed
-      // audio until reload. Failing instead makes the next gesture retry, and by
-      // then the module is cached so the slow path is gone.
+      // Bounded for the same reason: a context that never reaches `running`
+      // must fail rather than poll forever, so the next gesture can retry
+      // against a module that is by then cached.
       const started = await waitForRunningContext(() => tone.context.state);
 
       if (!started) {
