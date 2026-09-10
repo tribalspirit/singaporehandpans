@@ -8,7 +8,46 @@ import { generateHandpanLayout } from './layoutHelpers';
 import { note } from '@tonaljs/core';
 import { spellIntervalFromTonic } from '../core/spelling/keySpelling';
 
-const DING_OCTAVE = 3;
+/**
+ * Octave of the ding for a given tonic pitch class.
+ *
+ * This was a flat `DING_OCTAVE = 3`, which put every instrument in one octave
+ * regardless of key. Real instruments do not work that way: across Saraz,
+ * Isthmus, Shaktipan and Pures Music listings, every A-ding and B-ding handpan
+ * is A2 or B2 — eleven independent citations, none for A3 or B3 as a standard
+ * ding — while C through G ding at octave 3 (C3, C#3, D3, E3, F#3, G3 all
+ * attested).
+ *
+ * The result is a continuous G#2-G3 band rather than a jump back down at A.
+ *
+ * Makers also build deliberate "low" variants (F2 Low Pygmy, Low G2 Oxalista)
+ * that drop F/F#/G to octave 2. Those are separate instruments rather than a
+ * different reading of these keys, so they belong in the catalog as their own
+ * presets rather than as a rule here. Sources retrieved 2026-09-10.
+ */
+const DING_OCTAVE_BY_PITCH_CLASS: Record<string, number> = {
+  C: 3,
+  'C#': 3,
+  Db: 3,
+  D: 3,
+  'D#': 3,
+  Eb: 3,
+  E: 3,
+  F: 3,
+  'F#': 3,
+  Gb: 3,
+  G: 3,
+  'G#': 2,
+  Ab: 2,
+  A: 2,
+  'A#': 2,
+  Bb: 2,
+  B: 2,
+};
+
+function dingOctaveFor(tonicPc: PitchClass): number {
+  return DING_OCTAVE_BY_PITCH_CLASS[tonicPc] ?? 3;
+}
 
 function noteToMidi(noteStr: Note): number {
   const tonalNote = note(noteStr);
@@ -31,7 +70,8 @@ function buildNotesFromOrderedRingIntervals(
   tonicPc: PitchClass,
   ringIntervals: number[]
 ): Note[] {
-  const ding = `${tonicPc}${DING_OCTAVE}` as Note;
+  const dingOctave = dingOctaveFor(tonicPc);
+  const ding = `${tonicPc}${dingOctave}` as Note;
   const notes: Note[] = [ding];
 
   let prev = ding;
@@ -39,7 +79,7 @@ function buildNotesFromOrderedRingIntervals(
     // Spell by scale degree so the letter follows the selected key, rather
     // than a fixed sharp/flat table that renders C# minor with Ab and Eb.
     const nextPc = spellIntervalFromTonic(tonicPc, semis);
-    let candidate = `${nextPc}${DING_OCTAVE}` as Note;
+    let candidate = `${nextPc}${dingOctave}` as Note;
 
     while (noteToMidi(candidate) <= noteToMidi(prev)) {
       candidate = bumpOctave(candidate);
