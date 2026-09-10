@@ -6,49 +6,9 @@ import type {
 } from './types';
 import { generateHandpanLayout } from './layoutHelpers';
 import { note } from '@tonaljs/core';
-
-const PITCH_CLASS_TO_SEMITONE: Record<PitchClass, number> = {
-  C: 0,
-  'C#': 1,
-  Db: 1,
-  D: 2,
-  'D#': 3,
-  Eb: 3,
-  E: 4,
-  F: 5,
-  'F#': 6,
-  Gb: 6,
-  G: 7,
-  'G#': 8,
-  Ab: 8,
-  A: 9,
-  'A#': 10,
-  Bb: 10,
-  B: 11,
-};
-
-const SEMITONE_TO_PITCH_CLASS: string[] = [
-  'C',
-  'C#',
-  'D',
-  'Eb',
-  'E',
-  'F',
-  'F#',
-  'G',
-  'Ab',
-  'A',
-  'Bb',
-  'B',
-];
+import { spellIntervalFromTonic } from '../core/spelling/keySpelling';
 
 const DING_OCTAVE = 3;
-
-function transposePitchClass(pc: PitchClass, semitones: number): PitchClass {
-  const baseSemitone = PITCH_CLASS_TO_SEMITONE[pc];
-  const newSemitone = (baseSemitone + semitones) % 12;
-  return SEMITONE_TO_PITCH_CLASS[newSemitone] as PitchClass;
-}
 
 function noteToMidi(noteStr: Note): number {
   const tonalNote = note(noteStr);
@@ -76,7 +36,9 @@ function buildNotesFromOrderedRingIntervals(
 
   let prev = ding;
   for (const semis of ringIntervals) {
-    const nextPc = transposePitchClass(tonicPc, semis);
+    // Spell by scale degree so the letter follows the selected key, rather
+    // than a fixed sharp/flat table that renders C# minor with Ab and Eb.
+    const nextPc = spellIntervalFromTonic(tonicPc, semis);
     let candidate = `${nextPc}${DING_OCTAVE}` as Note;
 
     while (noteToMidi(candidate) <= noteToMidi(prev)) {
