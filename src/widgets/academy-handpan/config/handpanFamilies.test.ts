@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   buildHandpanConfigFromFamily,
   getHandpanFamilyById,
+  HANDPAN_FAMILIES,
 } from './handpanFamilies';
 
 describe('handpanFamilies', () => {
@@ -154,4 +155,53 @@ describe('handpanFamilies', () => {
       }
     });
   });
+});
+
+/**
+ * Consistency guard between a family's two interval representations.
+ *
+ * `orderedRingIntervalsByNoteCount` drives note generation; `intervalsPcSemitones`
+ * declares the pitch-class set the family claims to be. Nothing previously kept
+ * them in agreement — the pitch-class field was only read by a fallback
+ * generator that no family ever reached, so it could drift silently.
+ *
+ * Smaller shells legitimately omit notes (Magic Voyage's 9- and 10-note rings
+ * drop the 6th and are hexatonic in practice), so a reduced variant is allowed.
+ * What is never allowed is a ring sounding a pitch class the family does not
+ * declare, or a declared pitch class that no variant ever uses.
+ */
+describe('family interval representations agree', () => {
+  const toPitchClass = (semitone: number) => ((semitone % 12) + 12) % 12;
+
+  for (const family of HANDPAN_FAMILIES) {
+    const declared = family.intervalsPcSemitones;
+    if (!declared) continue;
+
+    const declaredSet = new Set(declared.map(toPitchClass));
+
+    it(`${family.id}: no variant sounds an undeclared pitch class`, () => {
+      for (const noteCount of family.suggestedNoteCounts) {
+        const ring = family.orderedRingIntervalsByNoteCount?.[noteCount];
+        expect(ring, `${family.id} noteCount=${noteCount}`).toBeDefined();
+
+        for (const interval of ring ?? []) {
+          expect(
+            declaredSet.has(toPitchClass(interval)),
+            `${family.id} noteCount=${noteCount} sounds undeclared pitch class ${toPitchClass(interval)}`
+          ).toBe(true);
+        }
+      }
+    });
+
+    it(`${family.id}: its largest variant spans the full declared set`, () => {
+      const largest = Math.max(...family.suggestedNoteCounts);
+      const ring = family.orderedRingIntervalsByNoteCount?.[largest] ?? [];
+      const spanned = new Set([0, ...ring.map(toPitchClass)]);
+
+      expect(
+        [...spanned].sort((a, b) => a - b),
+        `${family.id} noteCount=${largest}`
+      ).toEqual([...declaredSet].sort((a, b) => a - b));
+    });
+  }
 });

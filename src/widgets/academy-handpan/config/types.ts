@@ -35,7 +35,16 @@ export interface HandpanScaleFamilyTemplate {
   aliases?: string[];
   makers?: string[];
   modeHint?: 'minor' | 'major' | 'mixed' | 'exotic';
+  /**
+   * The family's declared pitch-class set, as semitones above the tonic.
+   *
+   * This is documentation-and-validation only: note generation is driven
+   * entirely by `orderedRingIntervalsByNoteCount`. `handpanFamilies.test.ts`
+   * asserts the two agree, so a ring order can never drift from the pitch-class
+   * set the family claims to be.
+   */
   intervalsPcSemitones?: number[];
+  /** Ring note order (excluding the ding), as semitones above the tonic. */
   orderedRingIntervalsByNoteCount?: Record<number, number[]>;
   suggestedNoteCounts: number[];
   supportedKeys: PitchClass[];

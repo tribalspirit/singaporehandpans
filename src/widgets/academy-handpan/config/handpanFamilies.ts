@@ -90,128 +90,6 @@ function buildNotesFromOrderedRingIntervals(
   return notes;
 }
 
-function buildNotesFromIntervals(
-  tonicPc: PitchClass,
-  intervalsPcSemitones: number[],
-  targetNoteCount: number
-): Note[] {
-  const tonicSemitone = PITCH_CLASS_TO_SEMITONE[tonicPc];
-  const uniquePcs = intervalsPcSemitones.map(
-    (interval) => (tonicSemitone + interval) % 12
-  );
-
-  const pcToName = (pcValue: number): string => {
-    const pcNames: Record<number, string> = {
-      0: 'C',
-      1: tonicPc.includes('#') ? 'C#' : 'Db',
-      2: 'D',
-      3: tonicPc.includes('#') ? 'D#' : 'Eb',
-      4: 'E',
-      5: 'F',
-      6: tonicPc.includes('#') ? 'F#' : 'Gb',
-      7: 'G',
-      8: tonicPc.includes('#') ? 'G#' : 'Ab',
-      9: 'A',
-      10: tonicPc.includes('#') ? 'A#' : 'Bb',
-      11: 'B',
-    };
-    return pcNames[pcValue];
-  };
-
-  const ding: Note = `${tonicPc}${DING_OCTAVE}`;
-  const notes: Note[] = [ding];
-
-  const midiBase = tonicSemitone + DING_OCTAVE * 12;
-
-  const ringNotesNeeded = targetNoteCount - 1;
-  const pcCount = uniquePcs.length;
-
-  if (ringNotesNeeded <= 0) {
-    return notes;
-  }
-
-  if (pcCount === 0) {
-    return notes;
-  }
-
-  const tonicPcValue = tonicSemitone % 12;
-  const nonTonicPcs = uniquePcs.filter((pc) => pc !== tonicPcValue);
-
-  const fifthInterval = 7;
-  const fifthPc = (tonicPcValue + fifthInterval) % 12;
-  const hasFifth = nonTonicPcs.includes(fifthPc);
-
-  const ringMidiValues: number[] = [];
-  const usedPcs = new Map<number, number>();
-
-  let currentMidi = hasFifth
-    ? fifthPc + DING_OCTAVE * 12
-    : nonTonicPcs[0] + DING_OCTAVE * 12;
-
-  if (currentMidi <= midiBase) {
-    currentMidi += 12;
-  }
-  currentMidi--;
-
-  while (ringMidiValues.length < ringNotesNeeded) {
-    let nextMidi = -1;
-    let nextPc = -1;
-
-    for (const pc of nonTonicPcs) {
-      const timesUsed = usedPcs.get(pc) || 0;
-      if (timesUsed >= 2) continue;
-
-      const octave = Math.floor(currentMidi / 12);
-      let candidateMidi = pc + octave * 12;
-
-      if (candidateMidi <= currentMidi) {
-        candidateMidi += 12;
-      }
-
-      if (octave > DING_OCTAVE + 3) continue;
-
-      if (nextMidi === -1 || candidateMidi < nextMidi) {
-        nextMidi = candidateMidi;
-        nextPc = pc;
-      }
-    }
-
-    if (nextMidi === -1) {
-      if (hasFifth) {
-        const timesUsed = usedPcs.get(fifthPc) || 0;
-        if (timesUsed < 3) {
-          const octave = Math.floor(currentMidi / 12);
-          let candidateMidi = fifthPc + octave * 12;
-          if (candidateMidi <= currentMidi) {
-            candidateMidi += 12;
-          }
-          if (octave <= DING_OCTAVE + 3) {
-            nextMidi = candidateMidi;
-            nextPc = fifthPc;
-          }
-        }
-      }
-    }
-
-    if (nextMidi === -1) break;
-
-    ringMidiValues.push(nextMidi);
-    usedPcs.set(nextPc, (usedPcs.get(nextPc) || 0) + 1);
-    currentMidi = nextMidi;
-  }
-
-  ringMidiValues.sort((a, b) => a - b);
-
-  for (const midi of ringMidiValues) {
-    const pc = midi % 12;
-    const octave = Math.floor(midi / 12);
-    const noteName = `${pcToName(pc)}${octave}`;
-    notes.push(noteName);
-  }
-
-  return notes;
-}
-
 export function buildHandpanConfigFromFamily(
   template: HandpanScaleFamilyTemplate,
   tonicPc: PitchClass,
@@ -237,15 +115,9 @@ export function buildHandpanConfigFromFamily(
     }
 
     notes = buildNotesFromOrderedRingIntervals(tonicPc, ringIntervals);
-  } else if (template.intervalsPcSemitones) {
-    notes = buildNotesFromIntervals(
-      tonicPc,
-      template.intervalsPcSemitones,
-      noteCount
-    );
   } else {
     throw new Error(
-      `Family ${template.id} must have either orderedRingIntervalsByNoteCount or intervalsPcSemitones`
+      `Family ${template.id} must define orderedRingIntervalsByNoteCount`
     );
   }
 
