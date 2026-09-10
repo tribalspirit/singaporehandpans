@@ -19,17 +19,28 @@
   "rules": {
     "@typescript-eslint/no-unused-vars": [
       "error",
-      { "argsIgnorePattern": "^_" }
+      {
+        "argsIgnorePattern": "^_"
+      }
     ],
     "@typescript-eslint/no-explicit-any": "warn",
     "prefer-const": "error",
     "no-var": "error",
     "no-multiple-empty-lines": [
       "error",
-      { "max": 1, "maxEOF": 0, "maxBOF": 0 }
+      {
+        "max": 1,
+        "maxEOF": 0,
+        "maxBOF": 0
+      }
     ],
     "eol-last": ["error", "always"],
-    "jsx-a11y/no-redundant-roles": ["error", { "ul": ["list"] }]
+    "jsx-a11y/no-redundant-roles": [
+      "error",
+      {
+        "ul": ["list"]
+      }
+    ]
   },
   "overrides": [
     {
@@ -38,6 +49,55 @@
       "parserOptions": {
         "parser": "@typescript-eslint/parser",
         "extraFileExtensions": [".astro"]
+      }
+    },
+    {
+      "files": [
+        "src/widgets/academy-handpan/core/**/*.ts",
+        "src/widgets/academy-handpan/config/**/*.ts",
+        "src/widgets/academy-handpan/theory/**/*.ts"
+      ],
+      "excludedFiles": ["**/*.test.ts", "**/*.test.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "react",
+                "message": "The handpan data and theory layers must stay framework-free. Keep React in ui/."
+              },
+              {
+                "name": "react-dom",
+                "message": "The handpan data and theory layers must stay framework-free. Keep React in ui/."
+              },
+              {
+                "name": "tone",
+                "message": "The handpan data and theory layers must stay audio-free. Keep Tone.js in audio/, where it is also lazily imported."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["**/ui/**", "../ui/*", "./ui/*"],
+                "message": "Data and theory must not depend on the UI layer. Dependencies point one way: ui -> theory/config, never back."
+              },
+              {
+                "group": ["**/audio/**", "../audio/*", "./audio/*"],
+                "message": "Data and theory must not depend on the audio layer."
+              },
+              {
+                "group": [
+                  "**/styles/**",
+                  "../styles/*",
+                  "./styles/*",
+                  "*.scss",
+                  "**/*.scss"
+                ],
+                "message": "Data and theory must not import styles."
+              }
+            ]
+          }
+        ]
       }
     }
   ]
