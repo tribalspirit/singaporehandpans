@@ -1,6 +1,7 @@
 import type { HandpanConfig, PitchClass } from './types';
 import {
   HANDPAN_FAMILIES,
+  MERGED_FAMILY_HISTORY,
   getAllHandpanFamilies,
   resolveFamilyId,
   resolveLegacySelection,
@@ -44,12 +45,32 @@ export function getFamilyOptions(): FamilyOption[] {
   }));
 }
 
+/**
+ * Keys this family offers.
+ *
+ * A merged-away id gets the keys *it* published, not the canonical family's.
+ * The survivor carries the union of every merged family's keys, so returning
+ * that would offer options `resolveHandpanConfig` then rejects — Equinox never
+ * published C#, F or F#, but Integral does. Options and resolution have to
+ * agree or the selector can offer a choice that resolves to nothing.
+ */
 export function getKeyOptions(familyId: string): PitchClass[] {
+  const history = MERGED_FAMILY_HISTORY[familyId];
+  if (history) {
+    return history.keys as PitchClass[];
+  }
+
   const family = findFamily(familyId);
   return family?.supportedKeys || [];
 }
 
+/** Shells this family offers; a merged-away id gets the ones it published. */
 export function getNoteCountOptions(familyId: string): number[] {
+  const history = MERGED_FAMILY_HISTORY[familyId];
+  if (history) {
+    return [...history.noteCounts];
+  }
+
   const family = findFamily(familyId);
   return family?.suggestedNoteCounts || [];
 }

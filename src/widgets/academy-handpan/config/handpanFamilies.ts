@@ -144,6 +144,7 @@ export function buildHandpanConfigFromFamily(
     scaleDescription: template.description,
     scaleMoodTags: [template.modeHint || 'versatile'],
     scaleTypicalKeys: template.supportedKeys,
+    tonalCentreOffsetSemitones: template.tonalCentreOffsetSemitones,
     makers: template.makers,
   };
 }
@@ -371,6 +372,9 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     aliases: ['Ionian', 'Major', 'Ashakiran', 'Asha'],
     modeHint: 'major',
     intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 11],
+    // HaganeNote: "The root note is the second lower note of the scale, while
+    // the ding is its perfect fifth." Named by the ding, resolves a 4th above.
+    tonalCentreOffsetSemitones: 5,
     orderedRingIntervalsByNoteCount: {
       9: [5, 7, 9, 11, 0, 2, 4, 7],
     },

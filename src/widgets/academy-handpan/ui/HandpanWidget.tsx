@@ -326,6 +326,9 @@ function HandpanWidgetContent() {
           onPlaybackModeChange={setPlaybackMode}
           arpeggioBpm={arpeggioBpm}
           onArpeggioBpmChange={setArpeggioBpm}
+          dingIsTonalCentre={
+            (selectedHandpan.tonalCentreOffsetSemitones ?? 0) === 0
+          }
         />
       </div>
     </div>

@@ -115,6 +115,48 @@ describe('merged family ids stay resolvable', () => {
   });
 
   /**
+   * Options and resolution must agree.
+   *
+   * This previously asserted a merged id got the *canonical* family's options —
+   * which is the bug: the survivor carries the union of every merged family's
+   * keys, so the selector offered choices that then resolved to nothing.
+   * Equinox never published C#, F or F#; Integral does.
+   */
+  it('offers a merged family only the options it published', () => {
+    expect([...getKeyOptions('equinox')].sort()).toEqual(
+      [...MERGED_FAMILY_HISTORY.equinox.keys].sort()
+    );
+    expect(getNoteCountOptions('ionian')).toEqual([
+      ...MERGED_FAMILY_HISTORY.ionian.noteCounts,
+    ]);
+  });
+
+  it('resolves every option it offers, for every merged family', () => {
+    const broken: string[] = [];
+
+    for (const legacyId of Object.keys(MERGED_FAMILY_IDS)) {
+      for (const key of getKeyOptions(legacyId)) {
+        for (const noteCount of getNoteCountOptions(legacyId)) {
+          if (!resolveHandpanConfig({ familyId: legacyId, key, noteCount })) {
+            broken.push(`${legacyId} ${key}/${noteCount}`);
+          }
+        }
+      }
+    }
+
+    expect(broken).toEqual([]);
+  });
+
+  it('still resolves a merged selection to the canonical family', () => {
+    const viaLegacy = resolveHandpanConfig({
+      familyId: 'equinox',
+      key: 'E',
+      noteCount: 9,
+    });
+    expect(viaLegacy?.id).toBe('integral-e-9');
+  });
+
+  /**
    * A shell that never existed must not resolve.
    *
    * The fallback for a dropped shell was unconditional, so any syntactically
@@ -216,18 +258,6 @@ describe('merged family ids stay resolvable', () => {
     expect(migrateLegacyPresetId('aeolian-d-9')).toBe('kurd-d-9');
     expect(migrateLegacyPresetId('magic-voyage-d-9')).toBe('pygmy-d-9');
     expect(migrateLegacyPresetId('kurd-d-9')).toBeNull();
-  });
-
-  it('serves selector options for a merged id', () => {
-    expect(getKeyOptions('mystic')).toEqual(getKeyOptions('integral'));
-    expect(getNoteCountOptions('aeolian')).toEqual(getNoteCountOptions('kurd'));
-
-    const viaLegacy = resolveHandpanConfig({
-      familyId: 'equinox',
-      key: 'E',
-      noteCount: 9,
-    });
-    expect(viaLegacy?.id).toBe('integral-e-9');
   });
 });
 

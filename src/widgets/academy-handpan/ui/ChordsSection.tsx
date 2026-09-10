@@ -22,6 +22,11 @@ interface ChordsSectionProps {
   onPlaybackModeChange: (mode: PlaybackMode) => void;
   arpeggioBpm: number;
   onArpeggioBpmChange: (bpm: number) => void;
+  /**
+   * False when the catalog records that this tuning resolves somewhere other
+   * than its ding, which makes ding-rooted Roman numerals unsupportable.
+   */
+  dingIsTonalCentre?: boolean;
 }
 
 export default function ChordsSection({
@@ -32,6 +37,7 @@ export default function ChordsSection({
   onPlaybackModeChange,
   arpeggioBpm,
   onArpeggioBpmChange,
+  dingIsTonalCentre = true,
 }: ChordsSectionProps) {
   const {
     state: playbackState,
@@ -65,13 +71,15 @@ export default function ChordsSection({
    * vocabulary rather than labelled with degrees they do not have.
    */
   const scaleIsDiatonic = useMemo(
-    () => isDiatonicScale(availableNotes),
-    [availableNotes]
+    () => isDiatonicScale(availableNotes, { dingIsTonalCentre }),
+    [availableNotes, dingIsTonalCentre]
   );
 
   const diatonicTriads = useMemo(() => {
-    return getDiatonicTriads(availableNotes, availableNotes);
-  }, [availableNotes]);
+    return getDiatonicTriads(availableNotes, availableNotes, {
+      dingIsTonalCentre,
+    });
+  }, [availableNotes, dingIsTonalCentre]);
 
   const addedNoteChords = useMemo(() => {
     const allChords = findPlayableChords(availableNotes);

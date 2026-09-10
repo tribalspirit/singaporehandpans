@@ -46,8 +46,20 @@ function uniquePitchClasses(handpanNotes: string[]): string[] {
  * The triads stay useful and are still offered either way. What this gates is
  * the vocabulary used to describe them.
  */
-export function isDiatonicScale(handpanNotes: string[]): boolean {
+export function isDiatonicScale(
+  handpanNotes: string[],
+  options: { dingIsTonalCentre?: boolean } = {}
+): boolean {
   if (handpanNotes.length === 0) {
+    return false;
+  }
+
+  // A scale that resolves somewhere other than its ding cannot be given Roman
+  // numerals rooted on the ding. E Sabye's notes are the E major set, so the
+  // mode match below succeeds and E would be labelled "Tonic (I)" — while the
+  // catalog's own data records that it resolves to A, the 4th above. Asserting
+  // both at once contradicts ourselves on screen.
+  if (options.dingIsTonalCentre === false) {
     return false;
   }
 
@@ -345,7 +357,8 @@ function orderTriadsByCircleOfFifths(
  */
 export function getDiatonicTriads(
   handpanNotes: string[],
-  availableNotes: string[]
+  availableNotes: string[],
+  options: { dingIsTonalCentre?: boolean } = {}
 ): DiatonicTriad[] {
   const scalePcs = extractScalePitchClasses(handpanNotes);
 
@@ -375,7 +388,7 @@ export function getDiatonicTriads(
   // "Relative major" is a diatonic relationship. On a pentatonic or hexatonic
   // tuning there are no diatonic degrees for it to hold between, so the claim
   // is simply not made — the triad itself is still offered.
-  const scaleIsDiatonic = isDiatonicScale(handpanNotes);
+  const scaleIsDiatonic = isDiatonicScale(handpanNotes, options);
 
   for (const triad of triads) {
     // isRelativeMajor: root is 3 semitones above tonic, quality is major, tonic is minor
