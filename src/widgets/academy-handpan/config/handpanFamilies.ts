@@ -190,15 +190,26 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   {
     id: 'pygmy',
     name: 'Pygmy',
+    /**
+     * Corrected 2026-09-10 from maker sources. This family previously shipped
+     * the minor pentatonic [0,3,5,7,10], which has a perfect 4th where Pygmy
+     * has a major 2nd and no major 2nd at all — a different pitch-class set,
+     * not a rotation.
+     *
+     * Saraz: "F2/ F, G, Ab, C, Eb, F, G, C"
+     * Isthmus: "A2 Pygmy: A2 / E A B C E G A B"
+     * Corroborated by Shaktipan and HaganeNote across four makers.
+     * The 9-note ring order below reproduces the Isthmus A2 listing exactly.
+     */
     description:
-      'Minor pentatonic family. Earthy/tribal. 9/10-note layouts use repeats of tonic and 5th; remains distinct from Kurd.',
-    aliases: ['Minor Pentatonic', 'Pygmy Pentatonic'],
+      'Earthy, tribal pentatonic: root, major 2nd, minor 3rd, 5th and minor 7th. Distinct from the minor pentatonic — it has no 4th.',
+    aliases: ['Low Pygmy', 'Pygmy Pentatonic'],
     modeHint: 'minor',
-    intervalsPcSemitones: [0, 3, 5, 7, 10],
+    intervalsPcSemitones: [0, 2, 3, 7, 10],
     orderedRingIntervalsByNoteCount: {
-      9: [7, 10, 0, 3, 5, 7, 10, 0],
-      10: [7, 10, 0, 3, 5, 7, 10, 0, 3],
-      13: [7, 10, 0, 3, 5, 7, 10, 0, 3, 5, 7, 10],
+      9: [7, 0, 2, 3, 7, 10, 0, 2],
+      10: [7, 0, 2, 3, 7, 10, 0, 2, 3],
+      13: [7, 0, 2, 3, 7, 10, 0, 2, 3, 7, 10, 0],
     },
     suggestedNoteCounts: [9, 10, 13],
     supportedKeys: ['F', 'F#', 'G', 'A', 'D', 'E'],
@@ -345,15 +356,26 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   {
     id: 'equinox',
     name: 'Equinox',
+    /**
+     * Corrected 2026-09-10 from maker sources. This family previously shipped a
+     * Mixolydian set with a MAJOR third, and its own description conceded the
+     * value was invented ("Implemented as Mixolydian-like pitch set"). Every
+     * real listing is a minor hexatonic: natural minor with the 4th removed.
+     *
+     * Saraz: "E/ G, B, C, D, E, F#, G, B" (page title "E Equinox Minor")
+     * Isthmus: "E Equinox: E/ G B C D E F# G B"
+     * Seven variants across two makers all agree.
+     * The 9-note ring order below reproduces the Saraz E listing exactly.
+     */
     description:
-      'Mixed mood family used commercially. Implemented as Mixolydian-like pitch set with a handpan-friendly ring order.',
-    aliases: ['Mixolydian-ish', 'Equinox (Mixed)'],
-    modeHint: 'mixed',
-    intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 10],
+      'Minor hexatonic: natural minor without the 4th. Reflective, with a wide, open feel.',
+    aliases: ['Equinox Minor'],
+    modeHint: 'minor',
+    intervalsPcSemitones: [0, 2, 3, 7, 8, 10],
     orderedRingIntervalsByNoteCount: {
-      9: [7, 10, 0, 2, 4, 5, 9, 7],
-      10: [7, 10, 0, 2, 4, 5, 9, 7, 10],
-      13: [7, 10, 0, 2, 4, 5, 7, 9, 10, 0, 2, 4],
+      9: [3, 7, 8, 10, 0, 2, 3, 7],
+      10: [3, 7, 8, 10, 0, 2, 3, 7, 8],
+      13: [3, 7, 8, 10, 0, 2, 3, 7, 8, 10, 0, 2],
     },
     suggestedNoteCounts: [9, 10, 13],
     supportedKeys: ['G', 'D', 'C', 'E', 'A'],
