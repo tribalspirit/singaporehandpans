@@ -22,22 +22,29 @@ Community posts were used as leads only, never as sole evidence.
 
 ---
 
-## 1. The structural finding: makers disagree on the reference note
+## 1. The structural finding: an interval array needs a reference note
 
-An interval array is meaningless without declaring what it is measured from.
-Three conventions are in active use, all documented:
+An interval array is meaningless without declaring what it is measured from,
+and not every source measures from the same place.
 
-| Convention                       | Example (verbatim)                                      |
-| -------------------------------- | ------------------------------------------------------- |
-| Ding **is** the root             | `F2/ F, G, Ab, C, Eb, F, G, C` (Saraz F2 Pygmy)         |
-| Ding is the **5th** of the root  | `D/ G A Bb C D Eb F G` (HaganeNote Aeolian → G Aeolian) |
-| Ding is a **4th below** the root | `G/ C D Eb G Ab C D Eb` (Saraz Akebono → C Akebono)     |
+| Convention                       | Example (verbatim)                                                                         | Where it holds                             |
+| -------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| Ding **is** the root             | `F2/ F, G, Ab, C, Eb, F, G, C` (Saraz F2 Pygmy)                                            | The handpan default                        |
+| Ding is the **5th** of the root  | `D/ G A Bb C D Eb F G` (HaganeNote Aeolian → G Aeolian)                                    | Stated by the maker, for Aeolian and Sabye |
+| The same notes named a 4th apart | Guda publishes handpan Akebono's notes as "key of A" where HaganeNote calls it "E Akebono" | Between handpans and **other instruments** |
 
-HaganeNote states it outright: _"The root note is the second lower note of the
-scale, while the ding is its perfect fifth."_
+HaganeNote states the second outright: _"The root note is the second lower note
+of the scale, while the ding is its perfect fifth."_
+
+**Akebono is not an example of the ding sitting below the root.** An earlier
+draft of this document listed it as one; §5 records why that was wrong. Handpan
+makers name Akebono by its ding _and_ state the ding is the root — the 4th above
+is where it resolves, which is a tonal centre, not the reference note. Modelling
+it as ding-below-root would name every instrument a fourth off from what its
+owner bought.
 
 This matters directly — it is why one of the three families originally suspected
-of being wrong turned out not to be.
+of being wrong (Oxalis, §2.4) turned out not to be.
 
 ---
 

@@ -192,8 +192,13 @@ function HandpanWidgetContent() {
    * Start fetching Tone.js on pointerdown, before the click that will need it.
    * Tone is kept out of the initial bundle, so without this the first gesture
    * waits on a ~340 KB download and the browser's user activation can expire
-   * mid-flight, which on stricter engines leaves audio blocked. Passive
-   * visitors who never touch the widget still never load it.
+   * mid-flight, which on stricter engines leaves audio blocked.
+   *
+   * Attached to the sound-producing surfaces only — the pan, the scale notes
+   * and the chords — never to the header. Putting it on the widget root meant
+   * changing the scale family or the label mode pulled 340 KB for someone who
+   * only ever browsed the catalogue, which defeats the point of loading it
+   * lazily at all.
    */
   const handleWarmAudio = useCallback(() => {
     void warmAudioModule().catch(() => {
@@ -211,7 +216,7 @@ function HandpanWidgetContent() {
   }
 
   return (
-    <div className={styles.handpanWidget} onPointerDown={handleWarmAudio}>
+    <div className={styles.handpanWidget}>
       <div className={styles.header}>
         <h2 className={styles.title}>Chord Explorer</h2>
         <div className={styles.selector}>
@@ -288,7 +293,7 @@ function HandpanWidgetContent() {
           </div>
         </div>
       </div>
-      <div className={styles.topRow}>
+      <div className={styles.topRow} onPointerDown={handleWarmAudio}>
         <div className={styles.handpanSection}>
           <HandpanRenderer
             key={`${familyId}-${selectedKey}-${selectedNoteCount}`}
@@ -308,7 +313,10 @@ function HandpanWidgetContent() {
           />
         </div>
       </div>
-      <div className={styles.chordsSectionWrapper}>
+      <div
+        className={styles.chordsSectionWrapper}
+        onPointerDown={handleWarmAudio}
+      >
         <ChordsSection
           key={`${familyId}-${selectedKey}-${selectedNoteCount}`}
           availableNotes={selectedHandpan.notes}

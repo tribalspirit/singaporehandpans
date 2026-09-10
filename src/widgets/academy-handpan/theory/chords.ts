@@ -10,7 +10,17 @@ export interface PlayableChord {
   notes: string[];
   pitchClasses: string[];
   category: 'basic' | 'advanced';
+  /** Canonical root, for comparison and grouping identity. */
   rootPc?: string;
+  /**
+   * The root spelled as this tuning spells it, for display.
+   *
+   * `rootPc` is canonical, so on a C# tuning it reads Ab where the pads read
+   * G#. Rendering it directly put an "A♭" heading above chords named "G#m7" —
+   * the same contradiction the chord names were fixed to remove, relocated to
+   * the group label.
+   */
+  displayRootPc?: string;
 }
 
 interface ChordCandidate {
@@ -410,6 +420,7 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
         pitchClasses: candidate.pitchClasses,
         category: analyzed.category,
         rootPc: analyzed.rootPc,
+        displayRootPc: spellPitchClassAsTuned(analyzed.rootPc, availableNotes),
       });
     }
   }

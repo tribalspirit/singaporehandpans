@@ -83,7 +83,10 @@ export default function ChordsSection({
     );
     const grouped = new Map<string, PlayableChord[]>();
     for (const chord of filtered) {
-      const root = chord.rootPc || chord.pitchClasses[0] || '';
+      // Group by the tuned spelling so the heading agrees with the chord names
+      // beneath it and with the pads.
+      const root =
+        chord.displayRootPc || chord.rootPc || chord.pitchClasses[0] || '';
       if (!grouped.has(root)) {
         grouped.set(root, []);
       }
