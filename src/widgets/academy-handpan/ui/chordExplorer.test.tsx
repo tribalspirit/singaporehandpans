@@ -4,6 +4,7 @@ import { render, screen, cleanup, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import HandpanWidget from './HandpanWidget';
 import { stopArpeggio } from '../audio/scheduler';
+import { warmAudioModule } from '../audio/engine';
 
 /*
  * Audio is an external system, stubbed at its module boundary.
@@ -191,6 +192,61 @@ describe('Chord Explorer first paint', () => {
     await user.click(screen.getByRole('button', { name: /^Kurd/ }));
 
     expect(stopArpeggio).toHaveBeenCalled();
+  });
+
+  /**
+   * Every control that makes a sound must prefetch Tone before the click that
+   * needs it.
+   *
+   * Tone is ~340 KB and out of the initial bundle, so a cold control starts
+   * the import inside `initializeAudio` and the browser's user activation can
+   * expire mid-download — on stricter engines the first press is simply
+   * silent. The family preview buttons sit in the header and the chord Play
+   * button sits outside the views, so neither is covered by the wrappers that
+   * warm the pan and the chord list.
+   */
+  describe('prefetches audio from every sound-producing control', () => {
+    it('warms on the family preview buttons', async () => {
+      const user = userEvent.setup();
+      render(<HandpanWidget />);
+
+      await user.click(screen.getByRole('button', { name: /^change$/i }));
+      vi.mocked(warmAudioModule).mockClear();
+
+      await user.hover(screen.getByRole('button', { name: /^preview kurd$/i }));
+      await user.click(screen.getByRole('button', { name: /^preview kurd$/i }));
+
+      expect(warmAudioModule).toHaveBeenCalled();
+    });
+
+    it('warms on the chord action bar Play button', async () => {
+      const user = userEvent.setup();
+      render(<HandpanWidget />);
+
+      // Pick a chord so the bar's Play is enabled, then reset the counter so
+      // only the bar's own warming can satisfy the assertion.
+      await user.click(screen.getByRole('tab', { name: /chords/i }));
+      await user.click(screen.getByRole('button', { name: /^Dm tonic/ }));
+      vi.mocked(warmAudioModule).mockClear();
+
+      await user.click(screen.getByRole('button', { name: /^play$/i }));
+
+      expect(warmAudioModule).toHaveBeenCalled();
+    });
+
+    /** And the cold pickers beside them stay cold. */
+    it('does not warm on the pickers that make no sound', async () => {
+      const user = userEvent.setup();
+      render(<HandpanWidget />);
+
+      await user.click(screen.getByRole('button', { name: /^change$/i }));
+      vi.mocked(warmAudioModule).mockClear();
+
+      await user.click(screen.getByRole('button', { name: /^E$/ }));
+      await user.click(screen.getByRole('radio', { name: /numbers/i }));
+
+      expect(warmAudioModule).not.toHaveBeenCalled();
+    });
   });
 
   /** Finding 3: the layout caveat is reachable without a pointer. */

@@ -14,6 +14,12 @@ interface ChordActionBarProps {
   isPlaying: boolean;
   onPlay: () => void;
   onStop: () => void;
+  /**
+   * Starts fetching the audio module. The bar sits outside the warmed views,
+   * and while Play is disabled until a chord is picked from inside them, that
+   * is an implicit dependency — warm on the control that makes the sound.
+   */
+  onWarmAudio: () => void;
 }
 
 /**
@@ -34,6 +40,7 @@ export default function ChordActionBar({
   isPlaying,
   onPlay,
   onStop,
+  onWarmAudio,
 }: ChordActionBarProps) {
   const optionsId = useId();
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
@@ -131,6 +138,8 @@ export default function ChordActionBar({
               type="button"
               className={styles.playButton}
               onClick={onPlay}
+              onPointerDown={onWarmAudio}
+              onFocus={onWarmAudio}
               disabled={!selectedChord}
             >
               <svg

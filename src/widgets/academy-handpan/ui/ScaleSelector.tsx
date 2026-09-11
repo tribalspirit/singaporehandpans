@@ -24,6 +24,12 @@ interface ScaleSelectorProps {
   notation: NotationMode;
   onNotationChange: (notation: NotationMode) => void;
   onPreviewFamily: (option: FamilyPreviewOption) => void;
+  /**
+   * Starts fetching the audio module. Wired to the preview buttons only —
+   * picking a family or a pad label makes no sound and must not pull ~340 KB
+   * for someone browsing the catalogue.
+   */
+  onWarmAudio: () => void;
   previewingFamilyId: string | null;
   /** Set when a family switch could not keep the user's key. */
   notice: string | null;
@@ -53,6 +59,7 @@ export default function ScaleSelector({
   notation,
   onNotationChange,
   onPreviewFamily,
+  onWarmAudio,
   previewingFamilyId,
   notice,
 }: ScaleSelectorProps) {
@@ -144,6 +151,8 @@ export default function ScaleSelector({
                     type="button"
                     className={styles.previewButton}
                     onClick={() => onPreviewFamily(option)}
+                    onPointerDown={onWarmAudio}
+                    onFocus={onWarmAudio}
                     aria-label={`Preview ${option.name}`}
                     data-playing={isPreviewing || undefined}
                   >

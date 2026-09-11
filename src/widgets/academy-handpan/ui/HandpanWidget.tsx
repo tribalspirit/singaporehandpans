@@ -285,11 +285,16 @@ function HandpanWidgetContent() {
    * waits on a ~340 KB download and the browser's user activation can expire
    * mid-flight, which on stricter engines leaves audio blocked.
    *
-   * Attached to the sound-producing surfaces only — the pan, the scale notes
-   * and the chords — never to the header. Putting it on the widget root meant
-   * changing the scale family or the label mode pulled 340 KB for someone who
-   * only ever browsed the catalogue, which defeats the point of loading it
-   * lazily at all.
+   * Attached to the sound-producing surfaces only, never to the widget root:
+   * doing that pulled 340 KB for someone who only ever browsed the catalogue,
+   * which defeats the point of loading it lazily at all.
+   *
+   * That rule is about controls, not containers. The pan, the scale notes and
+   * the chords are warmed by their wrappers because everything inside them
+   * makes sound. The scale sheet and the action bar are mixed, so the handler
+   * goes on the individual controls — the family preview buttons and the
+   * chord Play button — leaving the family, key, pad-count and label pickers
+   * beside them cold.
    *
    * Both pointer *and* keyboard. Activating a pad with Enter or Space fires a
    * click with no pointer event at all, so a pointer-only hook left keyboard
@@ -385,6 +390,7 @@ function HandpanWidgetContent() {
           notation={notation}
           onNotationChange={setNotation}
           onPreviewFamily={handlePreviewFamily}
+          onWarmAudio={handleWarmAudio}
           previewingFamilyId={previewingFamilyId}
           notice={familyNotice}
         />
@@ -466,6 +472,7 @@ function HandpanWidgetContent() {
         isPlaying={playback.state.isPlaying}
         onPlay={handlePlayChord}
         onStop={stop}
+        onWarmAudio={handleWarmAudio}
       />
     </div>
   );
