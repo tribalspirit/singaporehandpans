@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react';
 import { PlaybackProvider } from './PlaybackContext';
 import { usePlayback } from './usePlayback';
 import { useScaleAudio } from './useScaleAudio';
@@ -63,6 +69,18 @@ function HandpanWidgetContent() {
   const [previewingFamilyId, setPreviewingFamilyId] = useState<string | null>(
     null
   );
+  /**
+   * Invalidates in-flight previews.
+   *
+   * `playScale` awaits the audio module, which on a cold or throttled load
+   * takes long enough for the user to pick another family, key or shell. The
+   * change handlers call `stop()`, but there is no arpeggio to stop yet — so
+   * when the import finally resolved, the stale call scheduled the *previous*
+   * family's notes over the newly chosen instrument, and its preview button
+   * stayed lit. Bumping this on every selection change lets the resolved call
+   * see that it has been superseded and return.
+   */
+  const previewGenerationRef = useRef(0);
 
   const playback = usePlayback();
   const familyOptions = useMemo(() => getFamilyPreviewOptions(), []);
@@ -220,8 +238,23 @@ function HandpanWidgetContent() {
       if (!config) {
         return;
       }
+
+      const generation = previewGenerationRef.current;
       setPreviewingFamilyId(option.id);
-      void playScale(sortNotesByPitch([...config.notes]));
+
+      void (async () => {
+        await playScale(sortNotesByPitch([...config.notes]), () => {
+          // Re-checked after the audio module resolves, immediately before any
+          // note is scheduled.
+          const superseded = previewGenerationRef.current !== generation;
+          if (superseded) {
+            setPreviewingFamilyId((current) =>
+              current === option.id ? null : current
+            );
+          }
+          return !superseded;
+        });
+      })();
     },
     [playScale]
   );
@@ -245,6 +278,7 @@ function HandpanWidgetContent() {
       setSelectedKey(next.key);
       setSelectedNoteCount(next.noteCount);
       setSelectedChord(null);
+      previewGenerationRef.current += 1;
       // `stop()`, not `clearPlayback()`. Re-selecting the family already shown
       // leaves the selection — and so `selectionKey` — unchanged, so the effect
       // above does not fire. Clearing only the state would let the scheduled
@@ -265,6 +299,7 @@ function HandpanWidgetContent() {
       setSelectedKey(key);
       setSelectedChord(null);
       setFamilyNotice(null);
+      previewGenerationRef.current += 1;
       stop();
     },
     [stop]
@@ -274,6 +309,7 @@ function HandpanWidgetContent() {
     (noteCount: number) => {
       setSelectedNoteCount(noteCount);
       setSelectedChord(null);
+      previewGenerationRef.current += 1;
       stop();
     },
     [stop]
@@ -289,12 +325,12 @@ function HandpanWidgetContent() {
    * doing that pulled 340 KB for someone who only ever browsed the catalogue,
    * which defeats the point of loading it lazily at all.
    *
-   * That rule is about controls, not containers. The pan, the scale notes and
-   * the chords are warmed by their wrappers because everything inside them
-   * makes sound. The scale sheet and the action bar are mixed, so the handler
-   * goes on the individual controls — the family preview buttons and the
-   * chord Play button — leaving the family, key, pad-count and label pickers
-   * beside them cold.
+   * That rule is about controls, not containers. Only the stage is warmed by
+   * its wrapper, because the pan and Play scale are all it holds. Everywhere
+   * else the handler goes on the individual controls — the scale-note buttons,
+   * the family preview buttons, the chord Play button — so the tabs, the
+   * theory views, the About disclosure and the family, key, pad-count and
+   * label pickers all stay cold.
    *
    * Both pointer *and* keyboard. Activating a pad with Enter or Space fires a
    * click with no pointer event at all, so a pointer-only hook left keyboard
@@ -321,6 +357,7 @@ function HandpanWidgetContent() {
           <ScaleNotesRow
             notes={sortedScaleNotes}
             onNoteClick={handleNoteClick}
+            onWarmAudio={handleWarmAudio}
           />
         ),
       },
@@ -356,6 +393,7 @@ function HandpanWidgetContent() {
     selectedHandpan,
     sortedScaleNotes,
     handleNoteClick,
+    handleWarmAudio,
     familyId,
     selectedKey,
     selectedNoteCount,
@@ -450,11 +488,13 @@ function HandpanWidgetContent() {
         </p>
       </div>
 
-      <div
-        className={styles.views}
-        onPointerDown={handleWarmAudio}
-        onFocus={handleWarmAudio}
-      >
+      {/*
+        No warming on this region. It holds the tabs, the About disclosure and
+        the chord tiles, none of which make a sound — warming here meant merely
+        browsing the theory views pulled the whole audio module. The note
+        buttons inside it warm themselves, as does the action bar's Play.
+      */}
+      <div className={styles.views}>
         <WidgetTabs
           tabs={tabs}
           activeId={activeTabId}

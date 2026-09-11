@@ -1,10 +1,15 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, screen, cleanup, within } from '@testing-library/react';
+import { render, screen, cleanup, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import HandpanWidget from './HandpanWidget';
 import { stopArpeggio } from '../audio/scheduler';
-import { warmAudioModule } from '../audio/engine';
+import {
+  initializeAudio,
+  isAudioInitialized,
+  warmAudioModule,
+} from '../audio/engine';
+import { playArpeggio } from '../audio/scheduler';
 
 /*
  * Audio is an external system, stubbed at its module boundary.
@@ -100,6 +105,31 @@ describe('Chord Explorer first paint', () => {
 
     expect(screen.queryByText(/■ Tonic/)).toBeNull();
     expect(screen.queryByText(/■ Relative Major/)).toBeNull();
+  });
+
+  /**
+   * Case carries the quality, so getting it wrong states something false about
+   * the scale. D Kurd is natural minor: i ii° III iv v VI VII.
+   */
+  it('cases the degree labels by the triad quality', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('tab', { name: /chords/i }));
+
+    for (const [chord, degree] of [
+      ['E°', 'ii°'],
+      ['Gm', 'iv'],
+      ['Am', 'v'],
+      ['Bb', 'VI'],
+      ['C', 'VII'],
+    ]) {
+      const tile = screen.getByRole('button', {
+        name: new RegExp(
+          `^${chord.replace('°', '°')} ${degree.replace('°', '°')} `
+        ),
+      });
+      expect(within(tile).getByText(degree)).toBeDefined();
+    }
   });
 
   /**
@@ -206,6 +236,37 @@ describe('Chord Explorer first paint', () => {
    * warm the pan and the chord list.
    */
   describe('prefetches audio from every sound-producing control', () => {
+    it('warms on the scale note buttons', async () => {
+      const user = userEvent.setup();
+      render(<HandpanWidget />);
+      vi.mocked(warmAudioModule).mockClear();
+
+      await user.click(screen.getByRole('button', { name: /^play D3$/i }));
+
+      expect(warmAudioModule).toHaveBeenCalled();
+    });
+
+    /**
+     * Browsing the theory views must stay free. Warming the whole region meant
+     * opening a tab, or reading the About panel, pulled the entire audio module
+     * for a reader who never intended to make a sound.
+     */
+    it('does not warm when browsing the tabs or the theory views', async () => {
+      const user = userEvent.setup();
+      render(<HandpanWidget />);
+      vi.mocked(warmAudioModule).mockClear();
+
+      await user.click(screen.getByRole('tab', { name: /chords/i }));
+      await user.click(screen.getByRole('tab', { name: /about/i }));
+      await user.click(
+        screen.getByRole('button', { name: /about this layout/i })
+      );
+      await user.click(screen.getByRole('tab', { name: /chords/i }));
+      await user.click(screen.getByRole('button', { name: /^Dm tonic/ }));
+
+      expect(warmAudioModule).not.toHaveBeenCalled();
+    });
+
     it('warms on the family preview buttons', async () => {
       const user = userEvent.setup();
       render(<HandpanWidget />);
@@ -247,6 +308,47 @@ describe('Chord Explorer first paint', () => {
 
       expect(warmAudioModule).not.toHaveBeenCalled();
     });
+  });
+
+  /**
+   * A preview that loses the race must not play.
+   *
+   * `playScale` awaits the audio module. On a cold load that await outlives the
+   * user's next choice, and the change handlers cannot stop an arpeggio that
+   * has not been scheduled yet — so the resolved call would sound the previous
+   * family over the newly chosen instrument.
+   */
+  it('abandons a pending family preview when the selection changes', async () => {
+    const user = userEvent.setup();
+
+    // Hold the audio module unresolved so the preview is still in flight.
+    let releaseAudio: () => void = () => {};
+    vi.mocked(initializeAudio).mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          releaseAudio = () => resolve();
+        })
+    );
+    vi.mocked(isAudioInitialized).mockReturnValueOnce(false);
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+    vi.mocked(playArpeggio).mockClear();
+
+    await user.click(
+      screen.getByRole('button', { name: /^preview celtic minor$/i })
+    );
+    expect(playArpeggio).not.toHaveBeenCalled();
+
+    // The user moves on while the module is still loading.
+    await user.click(screen.getByRole('button', { name: /^E$/ }));
+
+    await act(async () => {
+      releaseAudio();
+      await Promise.resolve();
+    });
+
+    expect(playArpeggio).not.toHaveBeenCalled();
   });
 
   /** Finding 3: the layout caveat is reachable without a pointer. */

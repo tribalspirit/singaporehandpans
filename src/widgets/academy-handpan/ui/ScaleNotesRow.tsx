@@ -6,11 +6,14 @@ interface ScaleNotesRowProps {
   /** Already sorted by pitch; this component does not reorder. */
   notes: ReadonlyArray<string>;
   onNoteClick: (note: string) => void;
+  /** Starts fetching the audio module before the press that needs it. */
+  onWarmAudio: () => void;
 }
 
 export default function ScaleNotesRow({
   notes,
   onNoteClick,
+  onWarmAudio,
 }: ScaleNotesRowProps) {
   const { state } = usePlayback();
 
@@ -29,6 +32,8 @@ export default function ScaleNotesRow({
               type="button"
               className={`${styles.noteBadge} ${isActive ? styles.noteBadgeActive : ''}`}
               onClick={() => onNoteClick(note)}
+              onPointerDown={onWarmAudio}
+              onFocus={onWarmAudio}
               aria-label={`Play ${note}`}
             >
               {note}

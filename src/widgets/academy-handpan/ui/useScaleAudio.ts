@@ -79,33 +79,46 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
     }
   }, []);
 
-  const playScale = useCallback(async (notes: string[]) => {
-    if (notes.length === 0) {
-      return;
-    }
-    try {
-      if (!isAudioInitialized()) {
-        await initializeAudio();
+  /**
+   * `shouldProceed` is consulted after the audio module has loaded and before
+   * anything is scheduled. Loading can take long enough for the caller's
+   * request to be superseded — a different scale chosen meanwhile — and
+   * without this check the resolved call would play the old one over the new
+   * instrument.
+   */
+  const playScale = useCallback(
+    async (notes: string[], shouldProceed?: () => boolean) => {
+      if (notes.length === 0) {
+        return;
       }
-      stopArpeggio();
-      onBeforePlayRef.current?.();
-      setIsPlayingRef.current(true);
-      playArpeggio({
-        notes,
-        bpm: SCALE_PREVIEW_BPM,
-        direction: 'up',
-        onStep: (step) => {
-          setNoteActiveRef.current(step.note, 'scalePlayback');
-        },
-        onComplete: () => {
-          clearPlaybackRef.current();
-        },
-      });
-    } catch (error) {
-      console.error('Failed to play scale', error);
-      clearPlaybackRef.current();
-    }
-  }, []);
+      try {
+        if (!isAudioInitialized()) {
+          await initializeAudio();
+        }
+        if (shouldProceed && !shouldProceed()) {
+          return;
+        }
+        stopArpeggio();
+        onBeforePlayRef.current?.();
+        setIsPlayingRef.current(true);
+        playArpeggio({
+          notes,
+          bpm: SCALE_PREVIEW_BPM,
+          direction: 'up',
+          onStep: (step) => {
+            setNoteActiveRef.current(step.note, 'scalePlayback');
+          },
+          onComplete: () => {
+            clearPlaybackRef.current();
+          },
+        });
+      } catch (error) {
+        console.error('Failed to play scale', error);
+        clearPlaybackRef.current();
+      }
+    },
+    []
+  );
 
   /**
    * Sound a chord, either rolled one note at a time or struck together.

@@ -48,7 +48,12 @@ function getDegreeLabel(
   }
 
   const numeral = ROMAN_NUMERALS[degree] || String(degree);
-  const quality = Chord.get(chord.name).quality;
+  // `chord.name` is a synthetic identifier — "E-triad-2" — not a chord symbol,
+  // so Tonal reports its quality as "Unknown" and every degree fell through to
+  // the uppercase numeral: D Kurd printed II, IV and V where the scale has ii°,
+  // iv and v. `displayName` is the real symbol ("E°", "Gm"), tuned spelling and
+  // all, and Tonal parses it.
+  const quality = Chord.get(chord.displayName).quality;
 
   if (quality === 'Minor') {
     return numeral.toLowerCase();

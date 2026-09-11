@@ -70,14 +70,21 @@ $pad-tap-min: 2.75rem; // 44px
    * always wider than the floor, so the floor there is a layout intent rather
    * than an overflow.
    */
+  /*
+   * `min()` against the container, not a bare floor. The stage now gives the
+   * pan a 460px column, and a flat 500px minimum overflowed it by 20px on each
+   * side — spilling into the gap beside the Play column and quietly defeating
+   * the cap. Yielding to the container keeps the floor's intent wherever there
+   * is room for it.
+   */
   @media (min-width: 768px) {
     max-width: $pan-size-tablet;
-    min-width: $pan-min-tablet;
+    min-width: min($pan-min-tablet, 100%);
   }
 
   @media (min-width: 1024px) {
     max-width: $pan-size-desktop;
-    min-width: $pan-min-desktop;
+    min-width: min($pan-min-desktop, 100%);
   }
 }
 
