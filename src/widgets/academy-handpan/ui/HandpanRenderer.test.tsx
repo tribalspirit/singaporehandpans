@@ -84,9 +84,9 @@ describe('HandpanRenderer', () => {
   });
 
   /**
-   * The schematic disclosure lives in the scale panel's info tooltip, not
-   * under the pan. The caption here duplicated it, so it was removed; see
-   * `ScaleInfoPanel` for the disclosure and its keyboard-reachability test.
+   * The schematic disclosure lives in the About panel, not under the pan. The
+   * caption here duplicated it, so it was removed; see `ScaleAbout` for the
+   * disclosure, and `chordExplorer.test.tsx` for its reachability test.
    */
   it('does not repeat the layout disclosure under the pan', () => {
     render(<HandpanRenderer config={dKurd9()} />);

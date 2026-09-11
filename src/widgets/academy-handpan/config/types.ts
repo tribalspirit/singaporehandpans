@@ -34,7 +34,19 @@ export interface HandpanScaleFamilyTemplate {
   description: string;
   aliases?: string[];
   makers?: string[];
+  /**
+   * Internal classification, used to group and reason about families. It is not
+   * display copy — it used to be rendered straight into the UI's tag row, which
+   * is why a player was shown a single chip reading "minor".
+   */
   modeHint?: 'minor' | 'major' | 'mixed' | 'exotic';
+  /**
+   * Three or four plain words for how the family feels to play, written for
+   * someone choosing a scale by ear rather than by theory. Optional so a family
+   * added without them still renders; `buildHandpanConfigFromFamily` falls back
+   * to the mode hint.
+   */
+  moodTags?: string[];
   /**
    * The family's declared pitch-class set, as semitones above the tonic.
    *

@@ -1,0 +1,115 @@
+.about {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-md);
+  max-width: 68ch;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scaleName {
+  margin: 0;
+  font-family: var(--_shp-font-family-heading);
+  font-size: var(--_shp-font-size-2xl);
+  font-weight: var(--_shp-font-weight-light);
+  line-height: 1.1;
+  color: var(--_shp-color-text-primary);
+}
+
+.aliases {
+  margin: 0;
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-gray-500);
+}
+
+.description {
+  margin: 0;
+  font-size: var(--_shp-font-size-base);
+  line-height: var(--_shp-line-height-relaxed);
+  color: var(--_shp-color-text-secondary);
+  text-wrap: pretty;
+}
+
+.moodTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--_shp-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moodTag {
+  padding: 4px var(--_shp-spacing-sm);
+  border: 1px solid var(--_shp-color-border);
+  border-radius: 999px;
+  background: var(--_shp-color-gray-50);
+  font-size: var(--_shp-font-size-xs);
+  letter-spacing: 0.02em;
+  color: var(--_shp-color-text-secondary);
+}
+
+.layoutNote {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-xs);
+  padding-top: var(--_shp-spacing-sm);
+  border-top: 1px solid var(--_shp-color-border);
+}
+
+.layoutNoteToggle {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--_shp-spacing-xs);
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--_shp-color-primary);
+  font-family: inherit;
+  font-size: var(--_shp-font-size-sm);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--_shp-color-primary-dark);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.layoutNoteText {
+  margin: 0;
+  font-size: var(--_shp-font-size-sm);
+  line-height: var(--_shp-line-height-relaxed);
+  color: var(--_shp-color-text-secondary);
+  text-wrap: pretty;
+}
+
+/*
+ * Visually hidden, not removed.
+ *
+ * `display: none` (or the `hidden` attribute) would take the text out of the
+ * accessibility tree, and the button's aria-describedby would then resolve to
+ * nothing — losing the automatic announcement that is the whole reason a
+ * screen reader user hears this caveat without hunting for it.
+ */
+.layoutNoteTextCollapsed {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
