@@ -40,7 +40,6 @@ export default function HandpanRenderer({
   notation = 'note',
 }: HandpanRendererProps) {
   const padIdentities = buildPadIdentities(config.layout, config.notes);
-  const layoutNoteId = `handpan-layout-note-${config.id}`;
   const handlePadClick = (pad: HandpanPad) => {
     if (onPadClick) {
       onPadClick(pad);
@@ -49,7 +48,7 @@ export default function HandpanRenderer({
 
   return (
     <div className={styles.handpanRenderer}>
-      <div className={styles.body} aria-describedby={layoutNoteId}>
+      <div className={styles.body}>
         {showDebugGrid && (
           <>
             <div className={styles.debugCenter} />
@@ -101,16 +100,6 @@ export default function HandpanRenderer({
           );
         })}
       </div>
-      {/*
-        Tone-field positions here are computed, not sourced from a maker's
-        drawing or photograph. Saying so plainly keeps the diagram useful for
-        learning the note order without implying it depicts a real instrument's
-        physical layout.
-      */}
-      <p id={layoutNoteId} className={styles.layoutNote}>
-        Schematic layout &mdash; pad order is illustrative, not a verified maker
-        layout.
-      </p>
     </div>
   );
 }

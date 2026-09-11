@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { chromium, type Page } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 
@@ -31,7 +31,7 @@ const pages = [
 ];
 
 const captureScreenshot = async (
-  page: any,
+  page: Page,
   url: string,
   screenshotPath: string
 ) => {

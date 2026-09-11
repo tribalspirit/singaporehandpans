@@ -174,8 +174,16 @@
 
 .scaleInfoSection {
   width: 100%;
+  /*
+   * `min-width: 0` is what keeps this grid track from being forced wider by its
+   * content; `overflow: hidden` was belt-and-braces and clipped the layout
+   * tooltip, which is the only place the "representative layout" disclosure
+   * appears now that the caption under the pan is gone. Clipping a disclosure
+   * at narrow widths defeats it, so this track allows overflow while the widget
+   * root still contains the page.
+   */
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .chordsSectionWrapper {
@@ -191,4 +199,81 @@
   font-size: var(--_shp-font-size-base);
   background: var(--_shp-color-gray-50);
   border-radius: var(--_shp-border-radius-md);
+}
+
+/*
+ * Segmented control for the two labelling modes.
+ *
+ * Both options stay visible, so switching is one click rather than open-then-
+ * pick. Built on native radios: the input is visually hidden but still focused
+ * and operated by arrow keys, so keyboard behaviour and screen-reader grouping
+ * come for free rather than being reimplemented on divs.
+ */
+.notationToggle {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-md);
+  overflow: hidden;
+  background: var(--_shp-color-surface);
+
+  /* The focus ring belongs on the group, since the inputs are hidden. */
+  &:focus-within {
+    outline: 2px solid var(--_shp-color-accent);
+    outline-offset: 2px;
+  }
+}
+
+.notationOption {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--_shp-spacing-xs) var(--_shp-spacing-md);
+  min-height: 40px; /* comfortable touch target */
+  font-size: var(--_shp-font-size-sm);
+  font-weight: var(--_shp-font-weight-medium);
+  color: var(--_shp-color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--_shp-transition-base),
+    color var(--_shp-transition-base);
+
+  & + & {
+    border-left: 1px solid var(--_shp-color-border);
+  }
+
+  &:hover {
+    background: var(--_shp-color-gray-100);
+    color: var(--_shp-color-text-primary);
+  }
+}
+
+.notationOptionActive {
+  background: var(--_shp-color-gray-900);
+  color: var(--_shp-color-white);
+
+  &:hover {
+    background: var(--_shp-color-gray-800);
+    color: var(--_shp-color-white);
+  }
+}
+
+/*
+ * Hidden from sight, not from the accessibility tree or the keyboard — the
+ * radio still receives focus and arrow-key navigation, which is the reason for
+ * using real inputs here at all.
+ */
+.notationInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

@@ -110,6 +110,20 @@
   margin-top: 2px;
 }
 .infoIcon {
+  /* Button resets: it became a <button> so it can take keyboard focus. */
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-accent);
+    outline-offset: 2px;
+    border-radius: var(--_shp-border-radius-sm);
+  }
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -154,7 +168,12 @@
     border: 6px solid transparent;
     border-bottom-color: var(--_shp-color-gray-900);
   }
-  .infoTooltipWrapper:hover & {
+  /*
+   * Focus as well as hover. On :hover alone the disclosure was mouse-only,
+   * which excluded exactly the people most likely to need it.
+   */
+  .infoTooltipWrapper:hover &,
+  .infoTooltipWrapper:focus-within & {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -162,20 +181,28 @@
 }
 @media (max-width: 768px) {
   .tooltip {
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%) translateY(-4px);
-    min-width: 200px;
+    /*
+     * Anchored to the icon's right edge, as on desktop, rather than centred on
+     * it. Centring put a 200px tooltip half outside the panel — the icon sits
+     * at the right edge of the description — and `overflow: hidden` on the
+     * section then clipped it. That affected hover too, so it was not caused by
+     * adding focus support; it simply matters more now that this tooltip is the
+     * only place the layout disclosure appears.
+     */
+    right: 0;
+    left: auto;
+    min-width: 0;
+    width: max-content;
+    max-width: min(260px, calc(100vw - var(--_shp-spacing-xl)));
+
     &::before {
-      right: auto;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    .infoTooltipWrapper:hover & {
-      transform: translateX(-50%) translateY(0);
+      right: 6px;
+      left: auto;
+      transform: none;
     }
   }
 }
+
 .scaleTags {
   display: flex;
   flex-wrap: wrap;

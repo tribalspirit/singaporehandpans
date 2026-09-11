@@ -3,6 +3,12 @@ import { PlaybackProvider } from './PlaybackContext';
 import { usePlayback } from './usePlayback';
 import HandpanRenderer from './HandpanRenderer';
 import type { NotationMode } from '../core/notation/padLabel';
+
+const NOTATION_OPTIONS: ReadonlyArray<{ value: NotationMode; label: string }> =
+  [
+    { value: 'note', label: 'Notes' },
+    { value: 'number', label: 'Numbers' },
+  ];
 import { warmAudioModule } from '../audio/engine';
 import ScaleInfoPanel from './ScaleInfoPanel';
 import ChordsSection from './ChordsSection';
@@ -323,19 +329,45 @@ function HandpanWidgetContent() {
             </select>
           </div>
           <div className={styles.selectorRow}>
-            <label htmlFor="notation-select" className={styles.label}>
+            <span className={styles.label} id="notation-label">
               Labels:
-            </label>
-            <select
-              id="notation-select"
-              value={notation}
-              onChange={(e) => setNotation(e.target.value as NotationMode)}
-              className={styles.select}
-              aria-label="Select note labelling"
+            </span>
+            {/*
+              Two mutually exclusive options, so a segmented pair of radios
+              rather than a dropdown: both choices stay visible and switching
+              takes one click instead of open-then-pick. Native radios keep the
+              arrow-key behaviour and grouping semantics a custom toggle would
+              have to reimplement.
+            */}
+            <div
+              className={styles.notationToggle}
+              role="radiogroup"
+              aria-labelledby="notation-label"
             >
-              <option value="note">Note names</option>
-              <option value="number">Numbers</option>
-            </select>
+              {NOTATION_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className={[
+                    styles.notationOption,
+                    notation === option.value
+                      ? styles.notationOptionActive
+                      : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  <input
+                    type="radio"
+                    name="notation"
+                    value={option.value}
+                    checked={notation === option.value}
+                    onChange={() => setNotation(option.value)}
+                    className={styles.notationInput}
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
           </div>
         </div>
       </div>
