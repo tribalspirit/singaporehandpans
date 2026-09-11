@@ -243,17 +243,21 @@ function HandpanWidgetContent() {
       setPreviewingFamilyId(option.id);
 
       void (async () => {
-        await playScale(sortNotesByPitch([...config.notes]), () => {
+        const started = await playScale(
+          sortNotesByPitch([...config.notes]),
           // Re-checked after the audio module resolves, immediately before any
           // note is scheduled.
-          const superseded = previewGenerationRef.current !== generation;
-          if (superseded) {
-            setPreviewingFamilyId((current) =>
-              current === option.id ? null : current
-            );
-          }
-          return !superseded;
-        });
+          () => previewGenerationRef.current === generation
+        );
+
+        // Covers both ways nothing plays: superseded by a later choice, or
+        // audio failing outright. Either way `isPlaying` never goes true, so
+        // the effect that normally unlights the button never fires.
+        if (!started) {
+          setPreviewingFamilyId((current) =>
+            current === option.id ? null : current
+          );
+        }
       })();
     },
     [playScale]

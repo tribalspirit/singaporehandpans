@@ -85,18 +85,26 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
    * request to be superseded — a different scale chosen meanwhile — and
    * without this check the resolved call would play the old one over the new
    * instrument.
+   *
+   * Returns whether playback actually began. A caller that lit up a control on
+   * the way in needs to know when nothing started, because on the failure path
+   * `isPlaying` never goes true and so never transitions back to false — the
+   * control would stay lit forever over silence.
    */
   const playScale = useCallback(
-    async (notes: string[], shouldProceed?: () => boolean) => {
+    async (
+      notes: string[],
+      shouldProceed?: () => boolean
+    ): Promise<boolean> => {
       if (notes.length === 0) {
-        return;
+        return false;
       }
       try {
         if (!isAudioInitialized()) {
           await initializeAudio();
         }
         if (shouldProceed && !shouldProceed()) {
-          return;
+          return false;
         }
         stopArpeggio();
         onBeforePlayRef.current?.();
@@ -112,9 +120,11 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
             clearPlaybackRef.current();
           },
         });
+        return true;
       } catch (error) {
         console.error('Failed to play scale', error);
         clearPlaybackRef.current();
+        return false;
       }
     },
     []

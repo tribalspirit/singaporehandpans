@@ -62,9 +62,15 @@ export default function ChordActionBar({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOptionsOpen]);
 
-  const chordData = selectedChord ? Chord.get(selectedChord.name) : null;
-  const chordDetail =
-    chordData?.type || chordData?.intervals?.join(' ') || selectedChord?.name;
+  /*
+   * `displayName`, not `name`. A diatonic triad's `name` is a synthetic
+   * identifier — "D-triad-1" — which Tonal cannot parse, so `type` and
+   * `intervals` both came back empty and the fallback printed that internal id
+   * under the chord's own name. The last resort is the display name for the
+   * same reason: whatever happens, what the bar shows is a chord symbol.
+   */
+  const chordData = selectedChord ? Chord.get(selectedChord.displayName) : null;
+  const chordDetail = chordData?.type || chordData?.intervals?.join(' ') || '';
 
   return (
     <div className={styles.bar}>

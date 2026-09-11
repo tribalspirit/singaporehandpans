@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, screen, cleanup, within, act } from '@testing-library/react';
+import {
+  render,
+  screen,
+  cleanup,
+  within,
+  act,
+  waitFor,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import HandpanWidget from './HandpanWidget';
 import { stopArpeggio } from '../audio/scheduler';
@@ -349,6 +356,51 @@ describe('Chord Explorer first paint', () => {
     });
 
     expect(playArpeggio).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The action bar must never print an internal identifier.
+   *
+   * A diatonic triad's `name` is synthetic — "D-triad-1" — so Tonal returned
+   * no type and no intervals, and the detail line fell through to that raw id,
+   * rendering it under the chord's own name.
+   */
+  it('shows a real chord type in the action bar, never the internal id', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+
+    await user.click(screen.getByRole('tab', { name: /chords/i }));
+    await user.click(screen.getByRole('button', { name: /^Dm tonic/ }));
+
+    expect(screen.queryByText(/-triad-\d/)).toBeNull();
+    expect(screen.getByText('minor')).toBeDefined();
+  });
+
+  /**
+   * A preview that never starts must not leave its button lit.
+   *
+   * On the failure path `isPlaying` never goes true, so it never transitions
+   * back to false either, and the effect that normally unlights the button has
+   * nothing to react to.
+   */
+  it('unlights the preview button when audio fails to start', async () => {
+    const user = userEvent.setup();
+    vi.mocked(isAudioInitialized).mockReturnValueOnce(false);
+    vi.mocked(initializeAudio).mockRejectedValueOnce(
+      new Error('Starting the audio context timed out')
+    );
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+
+    const preview = screen.getByRole('button', { name: /^preview kurd$/i });
+    await user.click(preview);
+
+    await waitFor(() =>
+      expect(preview.getAttribute('data-playing')).toBeNull()
+    );
+    errorSpy.mockRestore();
   });
 
   /** Finding 3: the layout caveat is reachable without a pointer. */
