@@ -69,11 +69,26 @@
   font-size: var(--_shp-font-size-sm);
   color: var(--_shp-color-text-secondary);
 
-  // The live region stays in the DOM so announcements are reliable, but takes
-  // no vertical space while empty — an element that appears and disappears
-  // would reintroduce the layout shift this redesign removes.
+  /*
+   * Visually hidden while empty, never `display: none`.
+   *
+   * A live region has to be exposed to assistive tech *before* its content
+   * changes; `display: none` takes it out of the accessibility tree, so an
+   * update that both reveals and fills it in one render generally announces
+   * nothing — silencing the notice for exactly the users it is written for.
+   * Clipping keeps it exposed while taking no layout space, so there is still
+   * no shift when a notice appears.
+   */
   &:empty {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip-path: inset(50%);
+    overflow: hidden;
+    white-space: nowrap;
   }
 }
 

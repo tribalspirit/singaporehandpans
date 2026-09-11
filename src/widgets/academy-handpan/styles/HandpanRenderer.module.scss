@@ -33,7 +33,21 @@ $pan-size-tablet: 43.75rem; // 700px
 $pan-size-desktop: 50rem; // 800px
 $pan-min-tablet: 25rem; // 400px
 $pan-min-desktop: 31.25rem; // 500px
-$pad-size-min: clamp(1.5rem, 7.5vw, 2.25rem); // 24px → 36px, visual only
+/*
+ * A flat floor, not a viewport-scaled one.
+ *
+ * `clamp(1.5rem, 7.5vw, 2.25rem)` reached its 36px maximum at a 480px
+ * viewport, while the pan stops growing at its 340px cap — so from 480px to
+ * 767px the floor overtook the percentage geometry and expanded the four
+ * smallest pads of a 13-note layout to an identical 36px. That is the
+ * same-size flattening this model exists to remove, reintroduced at a
+ * different width.
+ *
+ * The floor only has to stop a pad becoming illegibly small; the pan's own cap
+ * already bounds how small that can get, and the tap target is delivered
+ * separately by `$pad-tap-min` below. Kept low enough to never bind.
+ */
+$pad-size-min: 1.25rem; // 20px, visual only
 $pad-tap-min: 2.75rem; // 44px
 
 .handpanRenderer {

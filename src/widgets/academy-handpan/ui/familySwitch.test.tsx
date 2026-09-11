@@ -121,6 +121,24 @@ describe('switching scale family', () => {
   });
 
   /**
+   * A live region has to be exposed *before* its content changes.
+   *
+   * Hiding the empty notice with `display: none` took it out of the
+   * accessibility tree, so the switch that both revealed and filled it in one
+   * render announced nothing — silent for exactly the users it is written for.
+   * It is clipped while empty instead, which keeps it exposed and still takes
+   * no layout space.
+   */
+  it('keeps the status region in the accessibility tree while empty', () => {
+    render(<HandpanWidget />);
+
+    const status = screen.getByRole('status');
+    expect(status.textContent).toBe('');
+    expect(status.hasAttribute('hidden')).toBe(false);
+    expect(status.getAttribute('aria-live')).toBe('polite');
+  });
+
+  /**
    * And when it genuinely cannot, the move is announced rather than applied in
    * silence — the user's key disappearing with no explanation was the defect.
    */
