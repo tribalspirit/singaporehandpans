@@ -143,3 +143,92 @@ export function getInitialSelection(): HandpanSelection {
     noteCount: defaults.noteCount,
   };
 }
+
+export interface FamilySwitchSelection {
+  key: PitchClass;
+  noteCount: number;
+  /**
+   * The key the user was on, set only when the new family could not offer it.
+   * The UI announces this; silently landing somewhere else is the defect.
+   */
+  movedFromKey?: PitchClass;
+}
+
+/**
+ * The selection to land on when switching family, preferring the one the user
+ * already had.
+ *
+ * Resetting to the new family's defaults unconditionally lost the key on every
+ * switch, so comparing "the same key across families" — the main reason to
+ * switch at all — was impossible. Key is preserved ahead of shell size: a
+ * player picks D because their pan is in D, whereas the pad count is a
+ * property of the layout they are browsing.
+ */
+export function getSelectionForFamily(
+  familyId: string,
+  current: { key: PitchClass; noteCount: number }
+): FamilySwitchSelection {
+  const defaults = getDefaultSelection(familyId);
+  const resolves = (key: PitchClass, noteCount: number) =>
+    resolveHandpanConfig({ familyId, key, noteCount }) !== null;
+
+  // Both carried over.
+  if (resolves(current.key, current.noteCount)) {
+    return { key: current.key, noteCount: current.noteCount };
+  }
+
+  // Key carried over, shell falls back to whatever this family opens on.
+  if (resolves(current.key, defaults.noteCount)) {
+    return { key: current.key, noteCount: defaults.noteCount };
+  }
+
+  // Key carried over on some other shell this family publishes.
+  for (const noteCount of getNoteCountOptions(familyId)) {
+    if (resolves(current.key, noteCount)) {
+      return { key: current.key, noteCount };
+    }
+  }
+
+  // Nothing in this family is in that key; say so rather than moving quietly.
+  return {
+    key: defaults.key,
+    noteCount: defaults.noteCount,
+    movedFromKey: current.key,
+  };
+}
+
+export interface FamilyPreviewOption extends FamilyOption {
+  /** Mood words for this family, joined for display. Empty when unknown. */
+  mood: string;
+  /** The selection that previews this family, for the audio preview button. */
+  preview: { key: PitchClass; noteCount: number };
+}
+
+/**
+ * Family options carrying the mood words the picker shows beside each name.
+ *
+ * Choosing a scale is a "how does it feel" decision, so the list needs more
+ * than a family name to choose from. The words come from the family's own
+ * default tuning rather than a second hand-maintained list, so they cannot
+ * drift from what the About panel says about the same scale.
+ *
+ * Built fresh per call, like `getFamilyOptions` above. A module-level cache
+ * would hand every caller the same array to mutate, and for a catalogue of
+ * this size it saves nothing worth that.
+ */
+export function getFamilyPreviewOptions(): FamilyPreviewOption[] {
+  return getFamilyOptions().map((option) => {
+    const preview = getDefaultSelection(option.id);
+    const config = resolveHandpanConfig({
+      familyId: option.id,
+      key: preview.key,
+      noteCount: preview.noteCount,
+    });
+
+    return {
+      ...option,
+      mood: (config?.scaleMoodTags ?? []).join(' · '),
+      preview,
+    };
+  });
+}

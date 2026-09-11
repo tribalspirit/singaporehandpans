@@ -1,0 +1,370 @@
+.selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-xs);
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--_shp-spacing-md);
+  flex-wrap: wrap;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  min-width: 0;
+}
+
+.summaryLabel {
+  font-family: var(--_shp-font-family-mono);
+  font-size: var(--_shp-font-size-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--_shp-color-gray-500);
+}
+
+.summaryValue {
+  font-family: var(--_shp-font-family-heading);
+  font-size: var(--_shp-font-size-xl);
+  font-weight: var(--_shp-font-weight-light);
+  line-height: 1.15;
+  color: var(--_shp-color-text-primary);
+  text-wrap: balance;
+}
+
+.changeButton {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: var(--_shp-spacing-xs) var(--_shp-spacing-md);
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-surface);
+  color: var(--_shp-color-text-primary);
+  font-family: inherit;
+  font-size: var(--_shp-font-size-sm);
+  font-weight: var(--_shp-font-weight-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--_shp-transition-base),
+    border-color var(--_shp-transition-base);
+
+  &:hover {
+    background: var(--_shp-color-gray-50);
+    border-color: var(--_shp-color-gray-400);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.notice {
+  margin: 0;
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-text-secondary);
+
+  // The live region stays in the DOM so announcements are reliable, but takes
+  // no vertical space while empty — an element that appears and disappears
+  // would reintroduce the layout shift this redesign removes.
+  &:empty {
+    display: none;
+  }
+}
+
+.sheet {
+  display: flex;
+
+  // `display: flex` here outranks the user-agent `[hidden] { display: none }`,
+  // which is a low-specificity rule. Without this the sheet renders open and
+  // the disclosure does nothing at all.
+  &[hidden] {
+    display: none;
+  }
+
+  flex-direction: column;
+  gap: var(--_shp-spacing-lg);
+  margin-top: var(--_shp-spacing-sm);
+  padding: var(--_shp-spacing-lg);
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-md);
+  background: var(--_shp-color-surface);
+  box-shadow: var(--_shp-shadow-sm);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-sm);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.groupTitle {
+  display: flex;
+  align-items: baseline;
+  gap: var(--_shp-spacing-xs);
+  flex-wrap: wrap;
+  padding: 0;
+  font-family: var(--_shp-font-family-mono);
+  font-size: var(--_shp-font-size-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--_shp-color-gray-500);
+}
+
+.groupHint {
+  letter-spacing: 0.04em;
+  text-transform: none;
+  // gray-400 on the surface is 2.03:1 at this size — it reads as decoration
+  // but it is the instruction that tells you the ▶ buttons preview by ear.
+  color: var(--_shp-color-gray-500);
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--_shp-spacing-xs);
+}
+
+.chip {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--_shp-spacing-sm);
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-surface);
+  color: var(--_shp-color-text-primary);
+  font-family: var(--_shp-font-family-mono);
+  font-size: var(--_shp-font-size-sm);
+  cursor: pointer;
+  transition:
+    background-color var(--_shp-transition-base),
+    border-color var(--_shp-transition-base),
+    color var(--_shp-transition-base);
+
+  &:hover {
+    border-color: var(--_shp-color-gray-400);
+    background: var(--_shp-color-gray-50);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.chipActive {
+  background: var(--_shp-color-accent);
+  border-color: var(--_shp-color-accent);
+  color: var(--_shp-color-white);
+
+  &:hover {
+    background: var(--_shp-color-accent);
+    border-color: var(--_shp-color-accent);
+  }
+}
+
+.familyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.familyRow {
+  display: flex;
+  align-items: stretch;
+  gap: var(--_shp-spacing-xs);
+}
+
+.previewButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-surface);
+  color: var(--_shp-color-primary);
+  cursor: pointer;
+  transition:
+    background-color var(--_shp-transition-base),
+    color var(--_shp-transition-base);
+
+  &:hover {
+    background: var(--_shp-color-gray-50);
+    color: var(--_shp-color-primary-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 2px;
+  }
+
+  &[data-playing] {
+    background: var(--_shp-color-primary);
+    border-color: var(--_shp-color-primary);
+    color: var(--_shp-color-white);
+  }
+}
+
+.familyChoice {
+  display: flex;
+  align-items: center;
+  gap: var(--_shp-spacing-sm);
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--_shp-spacing-xs) var(--_shp-spacing-md);
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-surface);
+  color: var(--_shp-color-text-primary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--_shp-transition-base),
+    border-color var(--_shp-transition-base);
+
+  &:hover {
+    background: var(--_shp-color-gray-50);
+    border-color: var(--_shp-color-gray-400);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.familyChoiceActive {
+  border-color: var(--_shp-color-accent);
+  background: var(--_shp-color-gray-100);
+}
+
+.familyName {
+  flex: 0 0 auto;
+  font-size: var(--_shp-font-size-base);
+  font-weight: var(--_shp-font-weight-medium);
+}
+
+.familyMood {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.familyCheck {
+  flex: 0 0 auto;
+  width: 1em;
+  color: var(--_shp-color-primary);
+}
+
+.notationToggle {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
+  overflow: hidden;
+}
+
+.notationOption {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 var(--_shp-spacing-md);
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--_shp-transition-base),
+    color var(--_shp-transition-base);
+
+  & + & {
+    border-left: 1px solid var(--_shp-color-border);
+  }
+
+  &:hover {
+    background: var(--_shp-color-gray-50);
+  }
+
+  // The visible focus ring has to come from the label, since the input itself
+  // is visually hidden.
+  &:focus-within {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: -2px;
+  }
+}
+
+.notationOptionActive {
+  background: var(--_shp-color-accent);
+  color: var(--_shp-color-white);
+
+  &:hover {
+    background: var(--_shp-color-accent);
+  }
+}
+
+.notationInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sheetFooter {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.doneButton {
+  min-height: 44px;
+  padding: var(--_shp-spacing-xs) var(--_shp-spacing-lg);
+  border: 1px solid var(--_shp-color-accent);
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-accent);
+  color: var(--_shp-color-white);
+  font-family: inherit;
+  font-size: var(--_shp-font-size-sm);
+  font-weight: var(--_shp-font-weight-medium);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .changeButton,
+  .chip,
+  .previewButton,
+  .familyChoice,
+  .notationOption {
+    transition: none;
+  }
+}

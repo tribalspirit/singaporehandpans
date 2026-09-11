@@ -1,5 +1,41 @@
 @use 'src/styles/tokens.scss';
 
+/*
+ * Sizing model, in one place.
+ *
+ * The pan is the only size decision: `$pan-size-*` caps its diameter, and every
+ * pad is a percentage of that diameter, written inline from the layout
+ * geometry. Pads therefore scale with the pan on their own — the ding is 20-24%
+ * of the pan and a ring pad is 8-14%, so the ding stays the largest pad at
+ * every width by construction.
+ *
+ * That invariant used to be broken by a 45px floor on the pad box. Below a
+ * ~375px pan the floor bound every ring pad at once, flattening them to one
+ * identical size and pushing the outer ones into the rim. There are now two
+ * floors instead, and they are deliberately different things:
+ *
+ *   $pad-size-min  the smallest *visible* pad. One fluid clamp, low enough that
+ *                  it never binds before the pan's own cap does, so the
+ *                  pitch-to-size differentiation survives.
+ *   $pad-tap-min   the smallest *tappable* area, held at 44px (WCAG 2.5.8 asks
+ *                  24px; 44px is the comfortable target). Delivered by a
+ *                  transparent ::after that extends past a smaller visual pad,
+ *                  so touch never dictates how the pan looks.
+ *
+ * These are Sass variables rather than custom properties on purpose: the token
+ * test in this directory reserves `var(--...)` inside the widget's module
+ * stylesheets for the `--_shp-*` layer, which is the host-overridable surface.
+ * Pad geometry is not something a host restyles, so it stays internal — but it
+ * still resolves from one named scale rather than repeated literals.
+ */
+$pan-size-mobile: 21.25rem; // 340px — the cap the review asks for
+$pan-size-tablet: 43.75rem; // 700px
+$pan-size-desktop: 50rem; // 800px
+$pan-min-tablet: 25rem; // 400px
+$pan-min-desktop: 31.25rem; // 500px
+$pad-size-min: clamp(1.5rem, 7.5vw, 2.25rem); // 24px → 36px, visual only
+$pad-tap-min: 2.75rem; // 44px
+
 .handpanRenderer {
   width: 100%;
   display: flex;
@@ -11,8 +47,7 @@
 .body {
   position: relative;
   width: 100%;
-  max-width: 600px;
-  min-width: 300px;
+  max-width: $pan-size-mobile;
   aspect-ratio: 1;
   background: radial-gradient(
     circle at center,
@@ -28,14 +63,21 @@
     inset 0 0 20px rgba(139, 69, 19, 0.2);
   margin: 0 auto;
 
+  /*
+   * No `min-width` below 768px. A floor wider than the column it sits in is
+   * what pushed the pan past its own container at 320px, clipping the rim and
+   * leaving the outer pads sitting on the cut edge. Above 768px the column is
+   * always wider than the floor, so the floor there is a layout intent rather
+   * than an overflow.
+   */
   @media (min-width: 768px) {
-    max-width: 700px;
-    min-width: 400px;
+    max-width: $pan-size-tablet;
+    min-width: $pan-min-tablet;
   }
 
   @media (min-width: 1024px) {
-    max-width: 800px;
-    min-width: 500px;
+    max-width: $pan-size-desktop;
+    min-width: $pan-min-desktop;
   }
 }
 
@@ -50,7 +92,14 @@
   );
   border: 3px solid #3d2817;
   cursor: pointer;
-  transition: all var(--_shp-transition-base);
+  // Named properties, not `all`: the pad's width and height are now fluid, and
+  // `all` would animate those layout-bound values on every resize.
+  transition:
+    background var(--_shp-transition-base),
+    border-color var(--_shp-transition-base),
+    box-shadow var(--_shp-transition-base),
+    opacity var(--_shp-transition-base),
+    transform var(--_shp-transition-base);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -59,11 +108,27 @@
     0 2px 8px rgba(0, 0, 0, 0.3),
     inset 0 1px 2px rgba(255, 255, 255, 0.1);
   touch-action: manipulation;
+  min-width: $pad-size-min;
+  min-height: $pad-size-min;
+
+  /*
+   * The tap target, decoupled from the visual pad. A ring pad can be 30px of
+   * bronze at 320px and still be a 44px target: this circle is transparent,
+   * centred on the pad and never smaller than the pad it covers.
+   */
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, #{$pad-tap-min});
+    height: max(100%, #{$pad-tap-min});
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+  }
 
   @media (max-width: 768px) {
     border-width: 2px;
-    min-width: 45px;
-    min-height: 45px;
   }
 
   &:hover {
@@ -100,9 +165,16 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   pointer-events: none;
   user-select: none;
+  line-height: 1;
 
+  /*
+   * The label follows the pad down. It used to be set *larger* on mobile than
+   * on desktop, which only worked while the 45px floor was inflating the pads
+   * underneath it; against a correctly sized ~30px pad a 16px "Bb3" runs past
+   * the bronze.
+   */
   @media (max-width: 768px) {
-    font-size: clamp(1rem, 3vw, 1.125rem);
+    font-size: clamp(0.75rem, 3.4vw, 1rem);
   }
 }
 
@@ -253,13 +325,5 @@
 @media (max-width: 768px) {
   .handpanRenderer {
     padding: var(--_shp-spacing-md);
-  }
-
-  .body {
-    max-width: 100%;
-  }
-
-  .pad {
-    border-width: 2px;
   }
 }

@@ -1,0 +1,216 @@
+// @vitest-environment jsdom
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { render, screen, cleanup, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import HandpanWidget from './HandpanWidget';
+import { stopArpeggio } from '../audio/scheduler';
+
+/*
+ * Audio is an external system, stubbed at its module boundary.
+ *
+ * These are tests about what the interface offers, not about sound. Tabbing
+ * into the views prefetches Tone, and real Tone in jsdom has no usable
+ * `Transport` — exercising it here would test the mock's fidelity rather than
+ * the widget. Playback itself is covered by the audio suites.
+ */
+vi.mock('../audio/engine', () => ({
+  initializeAudio: vi.fn().mockResolvedValue(undefined),
+  isAudioInitialized: vi.fn().mockReturnValue(true),
+  warmAudioModule: vi.fn().mockResolvedValue(undefined),
+  playNote: vi.fn(),
+  playChord: vi.fn(),
+}));
+vi.mock('../audio/scheduler', () => ({
+  playArpeggio: vi.fn(),
+  stopArpeggio: vi.fn(),
+  isArpeggioPlaying: vi.fn().mockReturnValue(false),
+}));
+
+/**
+ * The redesign's load-bearing claims, held as tests.
+ *
+ * Each case names the defect it prevents: the widget asked for three
+ * configuration decisions before it made a sound, buried Play in a secondary
+ * card, carried meaning in colour alone, and shoved the page down whenever a
+ * chord was selected.
+ */
+
+afterEach(cleanup);
+
+describe('Chord Explorer first paint', () => {
+  /** Finding 1 and 9: one line describing the instrument, not three selects. */
+  it('states the instrument in one line with configuration collapsed', () => {
+    render(<HandpanWidget />);
+
+    expect(screen.getByText('D Kurd · 9 notes')).toBeDefined();
+    expect(screen.getByRole('button', { name: /^change$/i })).toBeDefined();
+
+    // The pickers exist, but only once asked for.
+    expect(
+      screen.queryByRole('radiogroup', { name: /pad labels/i })
+    ).toBeNull();
+  });
+
+  /** Finding 2: the action that satisfies the page's job is a real button. */
+  it('offers Play scale as a top-level action', () => {
+    render(<HandpanWidget />);
+
+    expect(screen.getByRole('button', { name: /play scale/i })).toBeDefined();
+  });
+
+  /** Finding 6: the ~20 advanced voicings are not the default view. */
+  it('does not render advanced voicings until asked', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+
+    await user.click(screen.getByRole('tab', { name: /chords/i }));
+
+    const basic = screen.getByRole('tab', { name: /basic/i });
+    expect(basic.getAttribute('aria-selected')).toBe('true');
+
+    const advanced = screen.getByRole('tab', { name: /advanced/i });
+    expect(advanced.getAttribute('aria-selected')).toBe('false');
+
+    // The panel stays mounted so its analysis is not recomputed on every
+    // switch, but it is hidden: not visible, not reachable by keyboard.
+    const advancedPanel = document.getElementById(
+      advanced.getAttribute('aria-controls')!
+    );
+    expect(advancedPanel?.hasAttribute('hidden')).toBe(true);
+  });
+
+  /**
+   * Finding 5: tonic and relative major were pale indigo and pale yellow fills
+   * decoded by a legend. The words now ride on the tiles, and the legend is
+   * gone rather than merely supplemented.
+   */
+  it('labels chord degrees in text instead of colour', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('tab', { name: /chords/i }));
+
+    const tonic = screen.getByRole('button', { name: /^Dm tonic/ });
+    expect(within(tonic).getByText('tonic')).toBeDefined();
+    expect(
+      within(
+        screen.getByRole('button', { name: /^F relative major/ })
+      ).getByText('relative major')
+    ).toBeDefined();
+
+    expect(screen.queryByText(/■ Tonic/)).toBeNull();
+    expect(screen.queryByText(/■ Relative Major/)).toBeNull();
+  });
+
+  /**
+   * Finding 10: selecting a chord injected a control block above the list and
+   * pushed everything down. The bar is always present; only its contents
+   * change.
+   */
+  it('keeps the chord action bar present whether or not a chord is selected', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+
+    expect(
+      screen.getByText(/pick a chord to hear it and see it on the pan/i)
+    ).toBeDefined();
+    const playBefore = screen.getByRole('button', { name: /^play$/i });
+    expect(playBefore).toHaveProperty('disabled', true);
+
+    await user.click(screen.getByRole('tab', { name: /chords/i }));
+    await user.click(screen.getByRole('button', { name: /^Dm tonic/ }));
+
+    expect(
+      screen.queryByText(/pick a chord to hear it and see it on the pan/i)
+    ).toBeNull();
+    expect(screen.getByRole('button', { name: /^play$/i })).toHaveProperty(
+      'disabled',
+      false
+    );
+  });
+
+  /**
+   * Finding 11: the speed slider and the roll/strum choice are kept for the
+   * players who want them, but behind the bar's options disclosure rather than
+   * permanently occupying the action row.
+   */
+  it('keeps playback options available behind a disclosure', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+
+    const toggle = screen.getByRole('button', { name: /playback options/i });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    // Present but hidden, so neither control occupies the action row nor sits
+    // in the tab order until it is asked for.
+    const popover = document.getElementById(
+      toggle.getAttribute('aria-controls')!
+    );
+    expect(popover?.hasAttribute('hidden')).toBe(true);
+
+    await user.click(toggle);
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(popover?.hasAttribute('hidden')).toBe(false);
+    expect(screen.getByRole('radiogroup', { name: /sound/i })).toBeDefined();
+    expect(screen.getByRole('slider')).toBeDefined();
+  });
+
+  /**
+   * Changing the instrument must silence the instrument you left.
+   *
+   * The stop effect was keyed on `scaleName`, which is the *family* name and
+   * so survives a key or pad-count switch untouched — leaving an arpeggio for
+   * D sounding over a pan now drawn in E, driving `activeNote` for pads that
+   * are no longer on screen.
+   */
+  it('stops playback when the key changes', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+    vi.mocked(stopArpeggio).mockClear();
+
+    // Kurd opens on D; E is another key it publishes.
+    await user.click(screen.getByRole('button', { name: /^E$/ }));
+
+    expect(stopArpeggio).toHaveBeenCalled();
+  });
+
+  /**
+   * And re-selecting the family already shown leaves the selection unchanged,
+   * so nothing downstream reacts — the stop has to be explicit, or an in-flight
+   * preview keeps firing `onStep` and relights pads with no user action.
+   */
+  it('stops playback when the shown family is re-selected', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+    vi.mocked(stopArpeggio).mockClear();
+
+    await user.click(screen.getByRole('button', { name: /^Kurd/ }));
+
+    expect(stopArpeggio).toHaveBeenCalled();
+  });
+
+  /** Finding 3: the layout caveat is reachable without a pointer. */
+  it('exposes the layout caveat as a button, and to assistive tech at all times', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget />);
+
+    await user.click(screen.getByRole('tab', { name: /about/i }));
+
+    const toggle = screen.getByRole('button', { name: /about this layout/i });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    // Described at all times, so it is announced without being activated.
+    const describedBy = toggle.getAttribute('aria-describedby');
+    expect(describedBy).toBeTruthy();
+    expect(document.getElementById(describedBy!)?.textContent).toMatch(
+      /positions vary/i
+    );
+
+    await user.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  });
+});

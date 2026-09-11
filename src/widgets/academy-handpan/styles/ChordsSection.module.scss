@@ -1,431 +1,236 @@
-@use 'src/styles/tokens.scss';
 .chordsSection {
-  width: 100%;
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--_shp-spacing-md);
-  overflow: hidden;
-
-  @media (min-width: 768px) {
-    gap: var(--_shp-spacing-xl);
-  }
-}
-.chordControls {
-  width: 100%;
+  gap: var(--_shp-spacing-lg);
+  // No overflow clipping: the tiles' focus rings sit outside their box, and a
+  // clipped container swallowed them.
   min-width: 0;
-  margin-bottom: var(--_shp-spacing-md);
 }
-.sectionTitle {
-  font-size: var(--_shp-font-size-lg);
-  font-weight: var(--_shp-font-weight-semibold);
-  color: var(--_shp-color-text-primary);
-  margin: 0 0 var(--_shp-spacing-sm);
-}
+
 .sectionDescription {
+  margin: 0;
+  max-width: 62ch;
   font-size: var(--_shp-font-size-sm);
+  line-height: var(--_shp-line-height-relaxed);
   color: var(--_shp-color-text-secondary);
-  margin: 0 0 var(--_shp-spacing-md);
-  font-style: italic;
-}
-.triadsSection {
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
+  text-wrap: pretty;
 }
 
-.triadsLegend {
-  display: flex;
-  gap: var(--_shp-spacing-md);
-  margin-bottom: var(--_shp-spacing-sm);
-  font-size: var(--_shp-font-size-sm);
-  color: var(--_shp-color-text-secondary);
-  flex-wrap: wrap;
-
-  @media (max-width: 768px) {
-    font-size: var(--_shp-font-size-xs);
-    gap: var(--_shp-spacing-sm);
-  }
-}
-
-.legendTonic {
-  display: flex;
-  align-items: center;
-  gap: var(--_shp-spacing-xs);
-
-  &::before {
-    content: '■';
-    color: rgba(99, 102, 241, 0.8);
-    font-size: var(--_shp-font-size-lg);
-  }
-}
-
-.legendRelative {
-  display: flex;
-  align-items: center;
-  gap: var(--_shp-spacing-xs);
-
-  &::before {
-    content: '■';
-    color: rgba(234, 179, 8, 0.8);
-    font-size: var(--_shp-font-size-lg);
-  }
-}
-.triadsRow {
-  display: flex;
-  gap: var(--_shp-spacing-sm);
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: var(--_shp-spacing-xs) 0;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  width: 100%;
-  min-width: 0;
-  &::-webkit-scrollbar {
-    height: 6px;
-  }
-  &::-webkit-scrollbar-track {
-    background: var(--_shp-color-gray-100);
-    border-radius: var(--_shp-radius-sm);
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--_shp-color-gray-400);
-    border-radius: var(--_shp-radius-sm);
-    &:hover {
-      background: var(--_shp-color-gray-500);
-    }
-  }
-}
-.triadTile {
-  flex: 0 0 auto;
-  min-width: 120px;
-  max-width: 150px;
+.triadsSection,
+.advancedSection {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--_shp-spacing-xs);
-  padding: var(--_shp-spacing-md);
-  background: var(--_shp-color-white);
-  border: 2px solid var(--_shp-color-border);
-  border-radius: var(--_shp-border-radius-md);
-  cursor: pointer;
-  transition: all var(--_shp-transition-base);
-  text-align: center;
-  scroll-snap-align: start;
-  touch-action: manipulation;
+  gap: var(--_shp-spacing-md);
+  min-width: 0;
+}
 
-  @media (max-width: 768px) {
-    min-width: 140px;
-    max-width: 170px;
-    padding: var(--_shp-spacing-md) var(--_shp-spacing-lg);
-    min-height: 80px;
-  }
+/*
+ * A wrapping grid, not a horizontal scroller.
+ *
+ * The row used to scroll sideways inside a vertical scroll area inside the
+ * page — three scroll axes in one viewport, and a reliable source of "I could
+ * not scroll past it". Wrapping costs a little height and removes the axis.
+ */
+.triadsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--_shp-spacing-sm);
+}
+
+.triadTile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 88px;
+  padding: var(--_shp-spacing-sm) var(--_shp-spacing-md);
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-surface);
+  color: var(--_shp-color-text-primary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--_shp-transition-base),
+    border-color var(--_shp-transition-base),
+    transform var(--_shp-transition-base);
 
   &:hover {
-    border-color: var(--_shp-color-primary);
+    border-color: var(--_shp-color-gray-400);
     background: var(--_shp-color-gray-50);
-    box-shadow: var(--_shp-shadow-md);
+    transform: translateY(-1px);
   }
-  &:focus {
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
     outline: 2px solid var(--_shp-color-primary);
     outline-offset: 2px;
   }
 }
-.triadTileSelected {
-  border-color: var(--_shp-color-primary);
-  background: var(--_shp-color-primary-light);
-  color: var(--_shp-color-gray-900);
-  .triadName,
-  .triadNotes {
-    color: var(--_shp-color-gray-900);
-  }
-  &:hover {
-    background: var(--_shp-color-gray-900);
-    color: var(--_shp-color-white);
-    .triadName,
-    .triadNotes,
-    .chordName,
-    .chordNotes {
-      color: var(--_shp-color-white);
-    }
-  }
-}
-.triadTileTonic {
-  border-color: rgba(99, 102, 241, 0.4);
-  background: linear-gradient(
-    135deg,
-    rgba(199, 210, 254, 0.3) 0%,
-    rgba(165, 180, 252, 0.4) 100%
-  );
-  position: relative;
-  &::before {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    right: 2px;
-    bottom: 2px;
-    border-radius: calc(var(--_shp-border-radius-md) - 2px);
-    background: linear-gradient(
-      135deg,
-      rgba(199, 210, 254, 0.15) 0%,
-      rgba(165, 180, 252, 0.25) 100%
-    );
-    pointer-events: none;
-  }
-  &:hover {
-    border-color: rgba(99, 102, 241, 0.6);
-    background: linear-gradient(
-      135deg,
-      rgba(199, 210, 254, 0.4) 0%,
-      rgba(165, 180, 252, 0.5) 100%
-    );
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
-  }
-  &.triadTileSelected {
-    border-color: var(--_shp-color-primary);
-    background: var(--_shp-color-primary-light);
-    color: var(--_shp-color-gray-900);
-    &::before {
-      display: none;
-    }
-    .triadName,
-    .triadNotes {
-      color: var(--_shp-color-gray-900);
-    }
-    &:hover {
-      background: var(--_shp-color-gray-900);
-      color: var(--_shp-color-white);
-      .triadName,
-      .triadNotes,
-      .chordName,
-      .chordNotes {
-        color: var(--_shp-color-white);
-      }
-    }
-  }
-}
-.triadTileRelativeMajor {
-  border-color: rgba(234, 179, 8, 0.4);
-  background: linear-gradient(
-    135deg,
-    rgba(254, 240, 138, 0.3) 0%,
-    rgba(253, 224, 71, 0.4) 100%
-  );
-  position: relative;
-  &::before {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    right: 2px;
-    bottom: 2px;
-    border-radius: calc(var(--_shp-border-radius-md) - 2px);
-    background: linear-gradient(
-      135deg,
-      rgba(254, 240, 138, 0.15) 0%,
-      rgba(253, 224, 71, 0.25) 100%
-    );
-    pointer-events: none;
-  }
-  &:hover {
-    border-color: rgba(234, 179, 8, 0.6);
-    background: linear-gradient(
-      135deg,
-      rgba(254, 240, 138, 0.4) 0%,
-      rgba(253, 224, 71, 0.5) 100%
-    );
-  }
-  &.triadTileSelected {
-    border-color: var(--_shp-color-primary);
-    background: var(--_shp-color-primary-light);
-    color: var(--_shp-color-gray-900);
-    &::before {
-      display: none;
-    }
-    .triadName,
-    .triadNotes {
-      color: var(--_shp-color-gray-900);
-    }
-    &:hover {
-      background: var(--_shp-color-gray-900);
-      color: var(--_shp-color-white);
-      .triadName,
-      .triadNotes,
-      .chordName,
-      .chordNotes {
-        color: var(--_shp-color-white);
-      }
-    }
-  }
-  &.triadTileTonic {
-    border-color: rgba(99, 102, 241, 0.4);
-    background: linear-gradient(
-      135deg,
-      rgba(199, 210, 254, 0.3) 0%,
-      rgba(165, 180, 252, 0.4) 100%
-    );
-  }
-}
-.triadDegree {
-  font-size: var(--_shp-font-size-xs);
-  font-weight: var(--_shp-font-weight-medium);
-  color: var(--_shp-color-text-secondary);
-  font-family: var(--_shp-font-family-serif);
-  font-style: italic;
 
-  @media (max-width: 768px) {
-    font-size: var(--_shp-font-size-sm);
+.triadTileSelected {
+  background: var(--_shp-color-accent);
+  border-color: var(--_shp-color-accent);
+  color: var(--_shp-color-white);
+
+  &:hover {
+    background: var(--_shp-color-accent-dark);
+    border-color: var(--_shp-color-accent-dark);
+  }
+
+  .triadDegree {
+    color: var(--_shp-color-primary-light);
+  }
+
+  .triadNotes {
+    color: var(--_shp-color-gray-200);
   }
 }
 
 .triadName {
-  font-size: var(--_shp-font-size-base);
-  font-weight: var(--_shp-font-weight-semibold);
-  color: var(--_shp-color-text-primary);
-
-  @media (max-width: 768px) {
-    font-size: var(--_shp-font-size-lg);
-  }
+  font-family: var(--_shp-font-family-heading);
+  font-size: var(--_shp-font-size-xl);
+  font-weight: var(--_shp-font-weight-light);
+  line-height: 1.1;
 }
+
+// The label that replaced the colour legend. Its own line, quiet, and never
+// the only thing distinguishing one tile from another.
+.triadDegree {
+  font-family: var(--_shp-font-family-mono);
+  font-size: var(--_shp-font-size-xs);
+  letter-spacing: 0.08em;
+  color: var(--_shp-color-primary);
+}
+
 .triadNotes {
+  margin-top: auto;
+  font-family: var(--_shp-font-family-mono);
   font-size: var(--_shp-font-size-xs);
   color: var(--_shp-color-text-secondary);
-  font-family: var(--_shp-font-family-mono);
+}
 
-  @media (max-width: 768px) {
-    font-size: var(--_shp-font-size-sm);
-  }
-}
-.fourNoteSection {
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
 .chordGroups {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: var(--_shp-spacing-lg);
-  max-height: 500px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: var(--_shp-spacing-sm);
-  width: 100%;
-  min-width: 0;
+  // Deliberately no max-height. A 500px (400px mobile) scroll area here was
+  // the inner container that trapped the page scroll.
 }
+
 .chordGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--_shp-spacing-sm);
+  gap: var(--_shp-spacing-xs);
+  min-width: 0;
 }
+
 .groupTitle {
-  font-size: var(--_shp-font-size-base);
-  font-weight: var(--_shp-font-weight-semibold);
-  color: var(--_shp-color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   margin: 0;
   padding-bottom: var(--_shp-spacing-xs);
   border-bottom: 1px solid var(--_shp-color-border);
+  font-family: var(--_shp-font-family-mono);
+  font-size: var(--_shp-font-size-xs);
+  font-weight: var(--_shp-font-weight-medium);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--_shp-color-gray-500);
 }
+
 .chordGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--_shp-spacing-sm);
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-}
-.chordItem {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: var(--_shp-spacing-xs);
-  padding: var(--_shp-spacing-sm) var(--_shp-spacing-md);
-  background: var(--_shp-color-white);
-  border: 2px solid var(--_shp-color-border);
-  border-radius: var(--_shp-border-radius-md);
-  cursor: pointer;
-  transition: all var(--_shp-transition-base);
-  text-align: left;
-  min-width: 0;
-  touch-action: manipulation;
+}
 
-  @media (max-width: 768px) {
-    padding: var(--_shp-spacing-md) var(--_shp-spacing-lg);
-    min-height: 70px;
-  }
+.chordItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--_shp-spacing-sm);
+  min-height: 44px;
+  padding: var(--_shp-spacing-xs) var(--_shp-spacing-sm);
+  border: 1px solid transparent;
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-surface);
+  color: var(--_shp-color-text-primary);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--_shp-transition-base),
+    border-color var(--_shp-transition-base);
 
   &:hover {
-    border-color: var(--_shp-color-primary);
     background: var(--_shp-color-gray-50);
-    box-shadow: var(--_shp-shadow-sm);
+    border-color: var(--_shp-color-border);
   }
-  &:focus {
+
+  &:focus-visible {
     outline: 2px solid var(--_shp-color-primary);
     outline-offset: 2px;
   }
 }
+
 .chordItemSelected {
-  border-color: var(--_shp-color-primary);
-  background: var(--_shp-color-primary-light);
-  color: var(--_shp-color-gray-900);
-  .chordName,
-  .chordNotes {
-    color: var(--_shp-color-gray-900);
-  }
+  background: var(--_shp-color-accent);
+  border-color: var(--_shp-color-accent);
+  color: var(--_shp-color-white);
+
   &:hover {
-    background: var(--_shp-color-gray-900);
-    color: var(--_shp-color-white);
-    .triadName,
-    .triadNotes,
-    .chordName,
-    .chordNotes {
-      color: var(--_shp-color-white);
-    }
+    background: var(--_shp-color-accent-dark);
+    border-color: var(--_shp-color-accent-dark);
+  }
+
+  .chordNotes {
+    color: var(--_shp-color-gray-200);
   }
 }
+
 .chordName {
   font-size: var(--_shp-font-size-base);
-  font-weight: var(--_shp-font-weight-semibold);
-  color: var(--_shp-color-text-primary);
-
-  @media (max-width: 768px) {
-    font-size: var(--_shp-font-size-lg);
-  }
+  font-weight: var(--_shp-font-weight-medium);
 }
+
 .chordNotes {
+  font-family: var(--_shp-font-family-mono);
+  font-size: var(--_shp-font-size-xs);
+  color: var(--_shp-color-text-secondary);
+  white-space: nowrap;
+}
+
+.emptyMessage {
+  margin: 0;
+  padding: var(--_shp-spacing-lg);
+  border: 1px dashed var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
   font-size: var(--_shp-font-size-sm);
   color: var(--_shp-color-text-secondary);
-  font-family: var(--_shp-font-family-mono);
-
-  @media (max-width: 768px) {
-    font-size: var(--_shp-font-size-base);
-  }
-}
-.emptyMessage {
   text-align: center;
-  padding: var(--_shp-spacing-xl);
-  color: var(--_shp-color-text-secondary);
-  font-size: var(--_shp-font-size-base);
 }
-@media (max-width: 768px) {
+
+@media (max-width: 480px) {
   .triadsRow {
-    gap: var(--_shp-spacing-xs);
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   }
+
   .triadTile {
-    min-width: 100px;
-    max-width: 120px;
-    padding: var(--_shp-spacing-sm);
-  }
-  .chordGroups {
-    max-height: 400px;
-  }
-  .chordGrid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: var(--_shp-spacing-xs);
-  }
-  .chordItem {
+    min-height: 76px;
     padding: var(--_shp-spacing-xs) var(--_shp-spacing-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .triadTile,
+  .chordItem {
+    transition: none;
+  }
+
+  .triadTile:hover {
+    transform: none;
   }
 }

@@ -1,0 +1,140 @@
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-lg);
+}
+
+.tabList {
+  display: flex;
+  gap: var(--_shp-spacing-xs);
+  border-bottom: 1px solid var(--_shp-color-border);
+  // The list may overflow on narrow screens; it scrolls on its own axis only,
+  // and the page keeps vertical scroll.
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--_shp-spacing-xs);
+  flex: 0 0 auto;
+  padding: var(--_shp-spacing-sm) var(--_shp-spacing-md);
+  // Comfortable touch target without a fixed height that would clip descenders.
+  min-height: 44px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--_shp-color-text-secondary);
+  font-family: inherit;
+  font-size: var(--_shp-font-size-base);
+  font-weight: var(--_shp-font-weight-medium);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    color var(--_shp-transition-base),
+    background-color var(--_shp-transition-base);
+
+  // Drawn on a pseudo-element so the active state animates on transform
+  // rather than on a border width, which would shift the label by a pixel.
+  &::after {
+    content: '';
+    position: absolute;
+    inset-inline: var(--_shp-spacing-xs);
+    bottom: -1px;
+    height: 2px;
+    background: var(--_shp-color-primary);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform var(--_shp-transition-base);
+  }
+
+  &:hover {
+    color: var(--_shp-color-text-primary);
+    background: var(--_shp-color-gray-50);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: -2px;
+  }
+}
+
+.tabActive {
+  color: var(--_shp-color-text-primary);
+
+  &::after {
+    transform: scaleX(1);
+  }
+}
+
+.tabLabel {
+  white-space: nowrap;
+}
+
+.tabBadge {
+  font-family: var(--_shp-font-family-mono);
+  font-size: var(--_shp-font-size-xs);
+  color: var(--_shp-color-gray-500);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabPanel {
+  // No max-height and no overflow: the page owns vertical scroll. Nesting a
+  // scroll area here was a reliable source of "I could not scroll past it".
+
+  // An inactive panel is hidden by the attribute; declaring any `display` here
+  // would outrank the user-agent rule and show every panel at once.
+  &[hidden] {
+    display: none;
+  }
+  &:focus {
+    outline: none;
+  }
+}
+
+// A nested group inside a panel reads as a quieter set of pills, so the two
+// levels of tabbing are never mistaken for one.
+.tabs[data-variant='pills'] {
+  gap: var(--_shp-spacing-md);
+
+  .tabList {
+    border-bottom: 0;
+    gap: var(--_shp-spacing-xs);
+  }
+
+  .tab {
+    min-height: 36px;
+    padding: var(--_shp-spacing-xs) var(--_shp-spacing-md);
+    border: 1px solid var(--_shp-color-border);
+    border-radius: 999px;
+    font-size: var(--_shp-font-size-sm);
+
+    &::after {
+      display: none;
+    }
+  }
+
+  .tabActive {
+    background: var(--_shp-color-accent);
+    border-color: var(--_shp-color-accent);
+    color: var(--_shp-color-white);
+
+    &:hover {
+      background: var(--_shp-color-accent);
+      color: var(--_shp-color-white);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab,
+  .tab::after {
+    transition: none;
+  }
+}
