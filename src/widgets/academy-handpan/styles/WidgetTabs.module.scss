@@ -129,6 +129,15 @@
       background: var(--_shp-color-accent);
       color: var(--_shp-color-white);
     }
+
+    /*
+     * The badge's resting grey is chosen against the light pill; on the active
+     * pill's dark fill it drops to 3.42:1. Kept a step quieter than the label
+     * beside it — it is a count, not the name — while clearing 4.5:1.
+     */
+    .tabBadge {
+      color: var(--_shp-color-primary-light);
+    }
   }
 }
 

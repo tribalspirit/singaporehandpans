@@ -20,6 +20,14 @@
 
 @mixin shp-tokens {
   // Spacing
+  //
+  // `widget-pad` is the widget's own outer inset. It fluidly spans the same
+  // 1rem-to-2rem range the old breakpoint stepped between, so there is one
+  // definition to override rather than a value plus a media query.
+  --_shp-widget-pad: var(
+    --shp-widget-pad,
+    var(--widget-pad, clamp(1rem, 4vw, 2rem))
+  );
   --_shp-spacing-2xl: var(--shp-spacing-2xl, var(--spacing-2xl, 3rem));
   --_shp-spacing-lg: var(--shp-spacing-lg, var(--spacing-lg, 1.5rem));
   --_shp-spacing-md: var(--shp-spacing-md, var(--spacing-md, 1rem));

@@ -82,8 +82,15 @@
     border-color: var(--_shp-color-accent-dark);
   }
 
+  /*
+   * Not `primary-light`, which is the accent tint the degree carries on an
+   * unselected tile. Against the darker hover fill of a *selected* tile it
+   * measures 4.38:1 — under the 4.5 threshold, on the label that replaced the
+   * colour-only legend. This matches the treatment the advanced chord tiles
+   * already use for their own secondary text on the same background.
+   */
   .triadDegree {
-    color: var(--_shp-color-primary-light);
+    color: var(--_shp-color-gray-200);
   }
 
   .triadNotes {
