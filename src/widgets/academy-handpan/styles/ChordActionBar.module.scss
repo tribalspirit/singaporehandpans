@@ -6,6 +6,10 @@
   bottom: 0;
   z-index: 2;
   margin-top: var(--_shp-spacing-lg);
+  // Bleeds back out through the widget's padding so the divider reaches the
+  // card edge, the way a footer rule should; `.inner` puts the inset back on
+  // the content, keeping it aligned with everything above it.
+  margin-inline: calc(-1 * var(--_shp-widget-pad, 0px));
   border-top: 1px solid var(--_shp-color-border);
   background: var(--_shp-color-surface);
   box-shadow: 0 -1px 0 rgba(33, 27, 22, 0.04);
@@ -20,7 +24,10 @@
   // selected. A bar that grew on selection would reintroduce the layout shift
   // it exists to remove.
   min-height: 72px;
-  padding: var(--_shp-spacing-sm) var(--_shp-spacing-md);
+  padding-block: var(--_shp-spacing-sm);
+  // Exactly the widget's own inset, so the bar's content sits on the same
+  // vertical line as the title and the controls above it.
+  padding-inline: var(--_shp-widget-pad, 0px);
 }
 
 .chordInfo {

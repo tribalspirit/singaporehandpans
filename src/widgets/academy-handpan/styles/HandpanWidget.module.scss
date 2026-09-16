@@ -4,12 +4,34 @@
 .handpanWidget {
   @include shp-tokens;
 
+  /*
+   * The widget supplies its own horizontal inset.
+   *
+   * The section embedding it pads vertically only, on the standing assumption
+   * that the widget brings its own sides. When this rule lost its padding,
+   * every control sat flush against the card edge — on every engine, not just
+   * Safari.
+   *
+   * The value lives in the token layer so a host can override it, and because
+   * the action bar reads the same one to bleed back out to the card edge.
+   */
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--_shp-widget-pad);
+
   display: flex;
   flex-direction: column;
   gap: var(--_shp-spacing-lg);
-  // The bar at the foot of the widget is sticky, so the widget itself must not
-  // establish a clipping or scrolling context around it.
+
+  // Deliberately no `overflow: hidden`, which this rule used to carry: it
+  // would clip the sticky action bar out of its own scroll context.
   container-type: inline-size;
+
+  &,
+  & * {
+    box-sizing: border-box;
+  }
 }
 
 .header {
