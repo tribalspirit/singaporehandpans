@@ -12,17 +12,28 @@ import HandpanWidget from './HandpanWidget';
  * and grouping semantics come from the platform rather than being rebuilt on
  * divs — these tests hold that, since a styled custom toggle would silently
  * lose them.
+ *
+ * The control now lives inside the scale sheet rather than in the header: it
+ * describes how the instrument is drawn, which is a setting, not one of the
+ * three decisions a first-time visitor should meet before any sound. Opening
+ * the sheet is therefore part of reaching it.
  */
 
 afterEach(cleanup);
 
+async function openScaleSheet(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /^change$/i }));
+}
+
 function notationGroup() {
-  return screen.getByRole('radiogroup', { name: /labels/i });
+  return screen.getByRole('radiogroup', { name: /pad labels/i });
 }
 
 describe('notation toggle', () => {
-  it('offers both options as visible radios rather than a dropdown', () => {
+  it('offers both options as visible radios rather than a dropdown', async () => {
+    const user = userEvent.setup();
     render(<HandpanWidget />);
+    await openScaleSheet(user);
 
     const group = notationGroup();
     expect(within(group).getByRole('radio', { name: /notes/i })).toBeDefined();
@@ -34,8 +45,10 @@ describe('notation toggle', () => {
     expect(screen.queryByLabelText(/select note labelling/i)).toBeNull();
   });
 
-  it('starts on note names', () => {
+  it('starts on note names', async () => {
+    const user = userEvent.setup();
     render(<HandpanWidget />);
+    await openScaleSheet(user);
 
     const notes = within(notationGroup()).getByRole('radio', {
       name: /notes/i,
@@ -47,6 +60,7 @@ describe('notation toggle', () => {
   it('switches pad labels to numbers and back', async () => {
     const user = userEvent.setup();
     render(<HandpanWidget />);
+    await openScaleSheet(user);
 
     const ding = screen.getByRole('button', { name: /Pad 1, D3/ });
     expect(within(ding).getByText('D3')).toBeDefined();
@@ -74,8 +88,10 @@ describe('notation toggle', () => {
    *
    * The behaviour itself is verified in a browser.
    */
-  it('is built from focusable radios in a single group', () => {
+  it('is built from focusable radios in a single group', async () => {
+    const user = userEvent.setup();
     render(<HandpanWidget />);
+    await openScaleSheet(user);
 
     const radios = within(notationGroup()).getAllByRole(
       'radio'
@@ -96,6 +112,7 @@ describe('notation toggle', () => {
   it('keeps pad accessible names intact in numeric mode', async () => {
     const user = userEvent.setup();
     render(<HandpanWidget />);
+    await openScaleSheet(user);
 
     await user.click(
       within(notationGroup()).getByRole('radio', { name: /numbers/i })

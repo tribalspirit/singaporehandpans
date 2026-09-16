@@ -247,3 +247,102 @@ describe('family interval representations agree', () => {
     });
   }
 });
+
+/**
+ * Guards on the copy a player actually reads.
+ *
+ * The mood tag row used to render `[modeHint]`, so every scale in the catalog
+ * showed exactly one chip reading "minor" or "exotic" — an internal enum leaking
+ * into the UI as what looked like a broken filter. These assertions stop that
+ * regressing, and stop the descriptions sliding back into data-structure talk
+ * ("ring order", "layout repeats") that describes the config rather than the
+ * instrument.
+ */
+describe('player-facing scale copy', () => {
+  const MODE_HINTS = ['minor', 'major', 'mixed', 'exotic', 'versatile'];
+  const IMPLEMENTATION_PHRASES = [
+    'ring order',
+    'layout repeats',
+    'note-count',
+    'noteCount',
+  ];
+
+  for (const family of HANDPAN_FAMILIES) {
+    it(`${family.id}: declares three or four mood words`, () => {
+      expect(family.moodTags, `${family.id} has no moodTags`).toBeDefined();
+      expect(family.moodTags?.length).toBeGreaterThanOrEqual(3);
+      expect(family.moodTags?.length).toBeLessThanOrEqual(4);
+    });
+
+    it(`${family.id}: mood words are not the derived mode hint`, () => {
+      const tags = family.moodTags ?? [];
+
+      expect(
+        tags,
+        `${family.id} still carries the derived mode-hint tag row`
+      ).not.toEqual([family.modeHint]);
+
+      // "Exotic" is a fair word for Hijaz even though it doubles as a mode
+      // hint, so the guard is that the row cannot read as an enum dump — at
+      // least one word has to be something a player would say.
+      expect(
+        tags.some((tag) => !MODE_HINTS.includes(tag.toLowerCase())),
+        `${family.id} mood words are all mode-hint vocabulary`
+      ).toBe(true);
+
+      for (const tag of tags) {
+        // Sentence case, because these render as chips rather than prose.
+        expect(tag[0]).toBe(tag[0].toUpperCase());
+      }
+    });
+
+    it(`${family.id}: description is written about the instrument`, () => {
+      const lowered = family.description.toLowerCase();
+      for (const phrase of IMPLEMENTATION_PHRASES) {
+        expect(
+          lowered.includes(phrase.toLowerCase()),
+          `${family.id} description mentions implementation detail "${phrase}"`
+        ).toBe(false);
+      }
+    });
+  }
+
+  it('surfaces the family mood words on the built config', () => {
+    const kurd = getHandpanFamilyById('kurd');
+    expect(kurd?.moodTags).toBeDefined();
+
+    if (!kurd) return;
+
+    const config = buildHandpanConfigFromFamily(kurd, 'D', 9);
+    expect(config.scaleMoodTags).toEqual(kurd.moodTags);
+  });
+
+  it('never hands out the family template array itself', () => {
+    const kurd = getHandpanFamilyById('kurd');
+    expect(kurd).toBeDefined();
+
+    if (!kurd) return;
+
+    const config = buildHandpanConfigFromFamily(kurd, 'D', 9);
+    expect(config.scaleMoodTags).not.toBe(kurd.moodTags);
+  });
+
+  it('falls back to the mode hint when a family declares no mood words', () => {
+    const familyWithoutMoodTags = {
+      id: 'test-no-moods',
+      name: 'Test',
+      description: 'Test family',
+      modeHint: 'minor' as const,
+      orderedRingIntervalsByNoteCount: {
+        9: [7, 8, 10, 0, 2, 3, 5, 7],
+      },
+      suggestedNoteCounts: [9],
+      supportedKeys: ['D' as const],
+      defaultKey: 'D' as const,
+      defaultNoteCount: 9,
+    };
+
+    const config = buildHandpanConfigFromFamily(familyWithoutMoodTags, 'D', 9);
+    expect(config.scaleMoodTags).toEqual(['minor']);
+  });
+});

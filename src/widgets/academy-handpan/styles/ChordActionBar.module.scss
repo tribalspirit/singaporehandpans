@@ -1,0 +1,190 @@
+.bar {
+  // Sticky within the widget, not fixed to the viewport: the widget is embedded
+  // in a normal page, and a viewport-fixed bar would sit over unrelated content
+  // long after the reader had scrolled past the instrument.
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: var(--_shp-spacing-lg);
+  border-top: 1px solid var(--_shp-color-border);
+  background: var(--_shp-color-surface);
+  box-shadow: 0 -1px 0 rgba(33, 27, 22, 0.04);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--_shp-spacing-md);
+  // A fixed minimum so the bar is the same height whether or not a chord is
+  // selected. A bar that grew on selection would reintroduce the layout shift
+  // it exists to remove.
+  min-height: 72px;
+  padding: var(--_shp-spacing-sm) var(--_shp-spacing-md);
+}
+
+.chordInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--_shp-spacing-sm);
+  min-width: 0;
+}
+
+.chordName {
+  font-family: var(--_shp-font-family-heading);
+  font-size: var(--_shp-font-size-xl);
+  font-weight: var(--_shp-font-weight-light);
+  line-height: 1.1;
+  color: var(--_shp-color-text-primary);
+}
+
+.chordNotes {
+  font-family: var(--_shp-font-family-mono);
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-text-secondary);
+}
+
+.chordHighlightNote {
+  font-family: inherit;
+  color: var(--_shp-color-gray-500);
+
+  // Useful context on a roomy bar, redundant noise on a phone where the pan is
+  // right there.
+  @media (max-width: 640px) {
+    display: none;
+  }
+}
+
+.chordDetail {
+  flex-basis: 100%;
+  font-size: var(--_shp-font-size-xs);
+  color: var(--_shp-color-gray-500);
+}
+
+.placeholder {
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-gray-500);
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--_shp-spacing-xs);
+  flex: 0 0 auto;
+}
+
+.optionsWrapper {
+  position: relative;
+}
+
+.optionsToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-surface);
+  color: var(--_shp-color-text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--_shp-transition-base),
+    color var(--_shp-transition-base);
+
+  &:hover {
+    background: var(--_shp-color-gray-50);
+    color: var(--_shp-color-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 2px;
+  }
+
+  &[aria-expanded='true'] {
+    background: var(--_shp-color-gray-100);
+    color: var(--_shp-color-text-primary);
+  }
+}
+
+.optionsPopover {
+  // Guards against the same trap as the scale sheet: any `display` declared
+  // here would outrank the user-agent `[hidden]` rule and pin the popover open.
+  &[hidden] {
+    display: none;
+  }
+
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--_shp-spacing-xs));
+  z-index: 3;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 2 * var(--_shp-spacing-md)));
+  padding: var(--_shp-spacing-md);
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-md);
+  background: var(--_shp-color-surface);
+  box-shadow: var(--_shp-shadow-lg);
+}
+
+.playButton,
+.stopButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--_shp-spacing-xs);
+  // The single highest-emphasis control in view, and wide enough to be the
+  // obvious one-handed target.
+  min-width: 120px;
+  min-height: 48px;
+  padding: 0 var(--_shp-spacing-lg);
+  border: 1px solid var(--_shp-color-accent);
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-accent);
+  color: var(--_shp-color-white);
+  font-family: inherit;
+  font-size: var(--_shp-font-size-base);
+  font-weight: var(--_shp-font-weight-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--_shp-transition-base),
+    opacity var(--_shp-transition-base);
+
+  &:hover:not(:disabled) {
+    background: var(--_shp-color-accent-dark);
+    border-color: var(--_shp-color-accent-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    // Still legible rather than ghosted: it says what to do next, and a control
+    // faded to near-invisible fails contrast while communicating less.
+    background: var(--_shp-color-gray-200);
+    border-color: var(--_shp-color-border);
+    color: var(--_shp-color-text-secondary);
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 480px) {
+  .playButton,
+  .stopButton {
+    min-width: 96px;
+    padding: 0 var(--_shp-spacing-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .optionsToggle,
+  .playButton,
+  .stopButton {
+    transition: none;
+  }
+}

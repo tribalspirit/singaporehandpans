@@ -142,7 +142,11 @@ export function buildHandpanConfigFromFamily(
     scaleName: template.name,
     scaleAliases: template.aliases,
     scaleDescription: template.description,
-    scaleMoodTags: [template.modeHint || 'versatile'],
+    // Copied rather than passed through, so a consumer holding a config can
+    // never reach back into the shared family template.
+    scaleMoodTags: template.moodTags
+      ? [...template.moodTags]
+      : [template.modeHint ?? 'versatile'],
     scaleTypicalKeys: template.supportedKeys,
     tonalCentreOffsetSemitones: template.tonalCentreOffsetSemitones,
     makers: template.makers,
@@ -154,9 +158,10 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     id: 'kurd',
     name: 'Kurd',
     description:
-      'Natural minor. The most common handpan family, also sold as Aeolian, Annaziska or simply Natural Minor — Saraz describes all of these as the same scale. Ring order repeats the tonic in 9/10-note layouts.',
+      'The most common handpan family. Warm, unhurried and forgiving — almost anything you play on it sounds intentional. Natural minor, also sold as Aeolian, Annaziska or simply Natural Minor; Saraz describes all of these as the same scale.',
     aliases: ['Aeolian', 'Annaziska', 'Natural Minor', 'Kurd Minor'],
     modeHint: 'minor',
+    moodTags: ['Warm', 'Familiar', 'Forgiving'],
     intervalsPcSemitones: [0, 2, 3, 5, 7, 8, 10],
     orderedRingIntervalsByNoteCount: {
       9: [7, 8, 10, 0, 2, 3, 5, 7],
@@ -173,10 +178,11 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     id: 'celtic-minor',
     name: 'Celtic Minor',
     description:
-      'Hexatonic minor family often branded as Amara. Smooth, meditative. Layout repeats tonic and 5th for 9/10.',
+      'Natural minor with the flat 6th left out: one fewer point of tension, so it drifts and stays smooth. A hexatonic minor family, often branded as Amara.',
     aliases: ['Amara', 'Celtic', 'Celtic Amara'],
     makers: ['Pantheon Steel', 'Echo Sound Sculpture'],
     modeHint: 'minor',
+    moodTags: ['Meditative', 'Smooth', 'Gentle'],
     intervalsPcSemitones: [0, 2, 3, 5, 7, 10],
     orderedRingIntervalsByNoteCount: {
       9: [7, 10, 0, 2, 3, 5, 7, 10],
@@ -209,9 +215,10 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
      * Sources retrieved 2026-09-10; see docs/features/handpan-data-audit.md.
      */
     description:
-      'Hexatonic minor: natural minor without the 4th. Reflective and open. Also sold as Equinox and as Mystic — the same six notes, laid out with a different field lowest.',
+      'Minor, with the 4th taken out — that gap leaves more air between the notes and keeps it reflective. A hexatonic minor, also sold as Equinox and as Mystic: the same six notes, laid out with a different field lowest.',
     aliases: ['Equinox', 'Mystic', 'PANArt Integral', 'Integral Minor'],
     modeHint: 'minor',
+    moodTags: ['Reflective', 'Open', 'Spacious'],
     intervalsPcSemitones: [0, 2, 3, 7, 8, 10],
     orderedRingIntervalsByNoteCount: {
       9: [3, 7, 8, 10, 0, 2, 3, 7],
@@ -239,9 +246,10 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
      * The 9-note ring order below reproduces the Isthmus A2 listing exactly.
      */
     description:
-      'Earthy, tribal pentatonic: root, major 2nd, minor 3rd, 5th and minor 7th. Distinct from the minor pentatonic — it has no 4th. Also sold as Magic Voyage, which HaganeNote itself calls "very similar to the Low Pygmy scale".',
+      'Five notes with plenty of room between them — earthy, grounded, easy to wander around in. Root, major 2nd, minor 3rd, 5th and minor 7th; distinct from the minor pentatonic, which has a 4th where this has a 2nd. Also sold as Magic Voyage, which HaganeNote itself calls "very similar to the Low Pygmy scale".',
     aliases: ['Magic Voyage', 'Low Pygmy', 'Pygmy Pentatonic'],
     modeHint: 'minor',
+    moodTags: ['Earthy', 'Sparse', 'Easy'],
     intervalsPcSemitones: [0, 2, 3, 7, 10],
     orderedRingIntervalsByNoteCount: {
       9: [7, 0, 2, 3, 7, 10, 0, 2],
@@ -258,10 +266,11 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     id: 'la-sirena',
     name: 'La Sirena',
     description:
-      'Dreamy Dorian-leaning hexatonic (often credited to Pantheon Steel). Designed as Dorian without the 4th; repeats tonic and 5th.',
+      'Minor, but the major 6th lifts it — wistful rather than heavy. A Dorian hexatonic without the 4th, often credited to Pantheon Steel.',
     aliases: ['Dorian Hexatonic', 'Mermaid Scale'],
     makers: ['Pantheon Steel'],
     modeHint: 'mixed',
+    moodTags: ['Dreamy', 'Floating', 'Wistful'],
     intervalsPcSemitones: [0, 2, 3, 7, 9, 10],
     orderedRingIntervalsByNoteCount: {
       9: [7, 9, 10, 0, 2, 3, 7, 10],
@@ -302,9 +311,10 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
      * Sources retrieved 2026-09-10; see docs/features/handpan-data-audit.md.
      */
     description:
-      'Japanese pentatonic — root, flat 2nd, 4th, 5th and flat 6th. Spare and contemplative. Also known as In, Miyako-bushi or Sakura. The 4th above the ding acts as its tonal centre, so an F# Akebono sits comfortably in B minor.',
+      'Spare and still, with a half step sitting right above the root — the interval that gives it its Japanese colour. Root, flat 2nd, 4th, 5th and flat 6th; also known as In, Miyako-bushi or Sakura. The 4th above the ding acts as its tonal centre, so an F# Akebono sits comfortably in B minor.',
     aliases: ['In', 'Miyako-bushi', 'Sakura', 'Hon-kumoi-joshi'],
     modeHint: 'exotic',
+    moodTags: ['Spare', 'Contemplative', 'Haunting'],
     intervalsPcSemitones: [0, 1, 5, 7, 8],
     orderedRingIntervalsByNoteCount: {
       9: [5, 7, 8, 0, 1, 5, 7, 8],
@@ -334,9 +344,10 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
      * 2nd and 6th, but they do so with bottom notes this widget cannot model.
      */
     description:
-      'Bright and suspended: root, major 3rd, sharp 4th, 5th and major 7th. The raised 4th gives it a floating, unresolved quality. Larger builds fill it out toward Lydian.',
+      'Bright, and never quite lands — the raised 4th keeps it hanging in the air instead of settling. Root, major 3rd, sharp 4th, 5th and major 7th; larger builds fill it out toward Lydian.',
     aliases: ['Athena'],
     modeHint: 'major',
+    moodTags: ['Bright', 'Floating', 'Unresolved'],
     intervalsPcSemitones: [0, 4, 6, 7, 11],
     orderedRingIntervalsByNoteCount: {
       9: [4, 7, 11, 0, 4, 6, 7, 11],
@@ -368,9 +379,10 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
      * fifth." As with Akebono, that is a tonal centre rather than the name.
      */
     description:
-      'The complete major scale, warm and familiar. On handpans this seven-note set is sold as Sabye — or as Ashakiran or Asha — rather than as Ionian: makers who list a "Major" pan publish six-note subsets instead. Named by its ding, though it resolves to the 4th above, which is why makers describe it as Lydian.',
+      'The full major scale — every note you already know by ear, so melodies come out sounding like songs. On handpans this seven-note set is sold as Sabye, or as Ashakiran or Asha, rather than as Ionian: makers who list a "Major" pan publish six-note subsets instead. Named by its ding, though it resolves to the 4th above, which is why makers describe it as Lydian.',
     aliases: ['Ionian', 'Major', 'Ashakiran', 'Asha'],
     modeHint: 'major',
+    moodTags: ['Bright', 'Familiar', 'Songful'],
     intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 11],
     // HaganeNote: "The root note is the second lower note of the scale, while
     // the ding is its perfect fifth." Named by the ding, resolves a 4th above.
@@ -397,9 +409,10 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
      * actually documented.
      */
     description:
-      'Eight-note major with a raised 4th — Aegean plus the 2nd. Open and cinematic, with the sharp 4th lending an unresolved lift.',
+      'Wide open and cinematic, the sharp 4th giving it a lift that never quite resolves. An eight-note major with a raised 4th — Aegean plus the 2nd.',
     aliases: [],
     modeHint: 'major',
+    moodTags: ['Bright', 'Cinematic', 'Expansive'],
     intervalsPcSemitones: [0, 2, 4, 6, 7, 11],
     orderedRingIntervalsByNoteCount: {
       8: [4, 7, 11, 0, 2, 6, 7],
@@ -414,9 +427,10 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     id: 'oxalis',
     name: 'Oxalis',
     description:
-      'Major-leaning family with maj7 color. Lyrical/resolved. Layout repeats tonic and 5th; adds maj7 as a high color tone.',
+      'Settled and lyrical, with a major 7th up top that sweetens the chords rather than unsettling them. A major hexatonic — the 4th is left out.',
     aliases: ['Oxalis Major', 'Major + Maj7'],
     modeHint: 'major',
+    moodTags: ['Lyrical', 'Sweet', 'Resolved'],
     intervalsPcSemitones: [0, 2, 4, 7, 9, 11],
     orderedRingIntervalsByNoteCount: {
       9: [7, 9, 11, 0, 2, 4, 7, 11],
@@ -433,9 +447,10 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     id: 'hijaz',
     name: 'Hijaz',
     description:
-      'Phrygian Dominant (exotic / Middle Eastern flavor). Layout emphasizes b2→3 leap; repeats tonic for ring completeness.',
+      'Dramatic and unmistakably Middle Eastern — the stride from the flat 2nd up to the major 3rd is the sound the whole scale turns on. Phrygian dominant.',
     aliases: ['Phrygian Dominant', 'Hijaz Kar', 'Hijaz Mode'],
     modeHint: 'exotic',
+    moodTags: ['Exotic', 'Dramatic', 'Tense'],
     intervalsPcSemitones: [0, 1, 4, 5, 7, 8, 10],
     orderedRingIntervalsByNoteCount: {
       9: [7, 8, 10, 0, 1, 4, 5, 7],
@@ -452,9 +467,10 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
     id: 'harmonic-minor',
     name: 'Harmonic Minor',
     description:
-      'Natural minor with raised 7th. Often cross-labeled by mode (e.g., "C Harmonic Minor" shares pitch set with "G Hijaz" perspective).',
+      'Minor, with a raised 7th that leans hard back toward the root — it pulls where natural minor relaxes. Often cross-labelled by mode: a C Harmonic Minor holds the same seven notes as a G Hijaz.',
     aliases: ['Harmonic Minor Scale', 'G Hijaz (alias by mode)'],
     modeHint: 'exotic',
+    moodTags: ['Dramatic', 'Yearning', 'Classical'],
     intervalsPcSemitones: [0, 2, 3, 5, 7, 8, 11],
     orderedRingIntervalsByNoteCount: {
       9: [7, 8, 11, 0, 2, 3, 5, 7],
@@ -470,9 +486,11 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   {
     id: 'dorian',
     name: 'Dorian',
-    description: 'Dorian mode. Minor with brighter major 6th.',
+    description:
+      'Minor without the melancholy — the major 6th keeps it hopeful, and it is the mode behind a great deal of folk and jazz. Dorian mode.',
     aliases: ['Dorian Mode'],
     modeHint: 'mixed',
+    moodTags: ['Bittersweet', 'Hopeful', 'Groovy'],
     intervalsPcSemitones: [0, 2, 3, 5, 7, 9, 10],
     orderedRingIntervalsByNoteCount: {
       9: [7, 9, 10, 0, 2, 3, 5, 7],
@@ -488,9 +506,11 @@ export const HANDPAN_FAMILIES: HandpanScaleFamilyTemplate[] = [
   {
     id: 'mixolydian',
     name: 'Mixolydian',
-    description: 'Mixolydian mode. Major with flat 7th (folk/rock brightness).',
+    description:
+      'Bright without being sweet: major, but the flat 7th takes the polish off and lands it in folk and rock territory. Mixolydian mode.',
     aliases: ['Mixolydian Mode'],
     modeHint: 'mixed',
+    moodTags: ['Bright', 'Folky', 'Relaxed'],
     intervalsPcSemitones: [0, 2, 4, 5, 7, 9, 10],
     orderedRingIntervalsByNoteCount: {
       9: [7, 9, 10, 0, 2, 4, 5, 7],

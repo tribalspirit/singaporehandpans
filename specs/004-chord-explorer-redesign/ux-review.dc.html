@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#efe9e0; font-family:'Work Sans',system-ui,sans-serif; color:#211b16; -webkit-font-smoothing:antialiased; }
+  a { color:#8a5a33; text-decoration:none; border-bottom:1px solid rgba(138,90,51,.35); }
+  a:hover { color:#5e3c21; border-bottom-color:#5e3c21; }
+  * { box-sizing:border-box; }
+</style>
+</helmet>
+
+<section style="padding:64px 56px 120px;display:flex;flex-direction:column;gap:64px;max-width:2600px;">
+
+  <header style="max-width:900px;display:flex;flex-direction:column;gap:20px;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7a6e5e;">Singapore Handpan Studio · Academy</div>
+    <h1 style="font-family:'Newsreader',Georgia,serif;font-weight:300;font-size:58px;line-height:1.08;margin:0;letter-spacing:-.01em;">Chord Explorer — UX assessment &amp; redesign plan</h1>
+    <p style="font-size:19px;line-height:1.65;margin:0;color:#453d35;text-wrap:pretty;">The widget asks a first-time visitor to make three configuration decisions before it makes a single sound. Everything below is grounded in the shipped source: <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;">HandpanWidget</span>, <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;">ScaleInfoPanel</span>, <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;">ChordsSection</span>, <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;">Controls</span>.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+      <div style="background:#fffdfa;border:1px solid #d8cec0;padding:14px 18px;min-width:150px;">
+        <div style="font-family:'Newsreader',serif;font-size:34px;font-weight:300;line-height:1;">≈50</div>
+        <div style="font-size:13px;color:#5f544b;margin-top:6px;line-height:1.35;">tappable targets on first paint, mobile</div>
+      </div>
+      <div style="background:#fffdfa;border:1px solid #d8cec0;padding:14px 18px;min-width:150px;">
+        <div style="font-family:'Newsreader',serif;font-size:34px;font-weight:300;line-height:1;">4</div>
+        <div style="font-size:13px;color:#5f544b;margin-top:6px;line-height:1.35;">scroll regions nested inside one page</div>
+      </div>
+      <div style="background:#fffdfa;border:1px solid #d8cec0;padding:14px 18px;min-width:150px;">
+        <div style="font-family:'Newsreader',serif;font-size:34px;font-weight:300;line-height:1;">~2,300<span style="font-size:18px;">px</span></div>
+        <div style="font-size:13px;color:#5f544b;margin-top:6px;line-height:1.35;">mobile page height, default scale</div>
+      </div>
+      <div style="background:#211b16;color:#fffdfa;border:1px solid #211b16;padding:14px 18px;min-width:190px;">
+        <div style="font-family:'Newsreader',serif;font-size:34px;font-weight:300;line-height:1;">3 → 1</div>
+        <div style="font-size:13px;color:#d8cec0;margin-top:6px;line-height:1.35;">decisions before first sound, after redesign</div>
+      </div>
+    </div>
+  </header>
+
+  <div style="display:flex;flex-direction:column;gap:16px;max-width:1000px;background:#fffdfa;border:1px solid #d8cec0;padding:32px 36px;">
+    <h2 style="font-family:'Newsreader',serif;font-weight:400;font-size:26px;margin:0;">The one-line diagnosis</h2>
+    <p style="margin:0;font-size:17px;line-height:1.7;color:#302923;text-wrap:pretty;">The widget is built as a <strong style="font-weight:600;">configuration tool</strong> — pick family, pick key, pick pad count, then read four panels of theory. Your stated job is <strong style="font-weight:600;">“hear what a scale sounds like.”</strong> Those are different products. Every complaint about “too many controls” resolves the same way: make hearing the default, and make everything else something the user goes looking for.</p>
+    <p style="margin:0;font-size:17px;line-height:1.7;color:#302923;text-wrap:pretty;">Nothing below requires deleting features. It requires ranking them — and on mobile, hiding the bottom two thirds of that ranking behind one tap.</p>
+  </div>
+
+  <!-- ============ 1a CURRENT ============ -->
+  <div id="1a" style="display:flex;flex-direction:column;gap:24px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:#211b16;color:#fffdfa;padding:5px 9px;letter-spacing:.08em;">1a</span>
+      <h2 style="font-family:'Newsreader',serif;font-weight:400;font-size:32px;margin:0;">Today, annotated</h2>
+      <span style="font-size:15px;color:#5f544b;">Recreated from source at D Kurd 9 — the state every visitor lands on.</span>
+    </div>
+
+    <div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;">
+
+      <!-- DESKTOP RECREATION -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">Desktop · 1180px</div>
+        <div style="position:relative;width:1180px;background:#f7f3ed;border:1px solid #d8cec0;">
+          <div style="padding:32px;">
+            <div style="text-align:center;margin-bottom:32px;">
+              <h2 style="font-family:'Newsreader',serif;font-weight:300;font-size:38px;color:#8a5a33;margin:0 0 24px;">Chord Explorer</h2>
+              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;align-items:end;max-width:800px;margin:0 auto;position:relative;">
+                <div style="position:absolute;inset:-10px -12px;border:2px dashed #9c3b2e;pointer-events:none;"></div>
+                <div style="display:flex;flex-direction:column;gap:8px;text-align:left;">
+                  <label style="font-size:16px;font-weight:500;">Scale Family:</label>
+                  <div style="padding:12px 16px;border:2px solid #d8cec0;background:#fffdfa;font-size:14px;font-weight:500;display:flex;justify-content:space-between;">Kurd<span style="color:#7a6e5e;">▾</span></div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;text-align:left;">
+                  <label style="font-size:16px;font-weight:500;">Key:</label>
+                  <div style="padding:12px 16px;border:2px solid #d8cec0;background:#fffdfa;font-size:14px;font-weight:500;max-width:120px;display:flex;justify-content:space-between;">D<span style="color:#7a6e5e;">▾</span></div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;text-align:left;">
+                  <label style="font-size:16px;font-weight:500;">Pads:</label>
+                  <div style="padding:12px 16px;border:2px solid #d8cec0;background:#fffdfa;font-size:14px;font-weight:500;max-width:120px;display:flex;justify-content:space-between;">9<span style="color:#7a6e5e;">▾</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:minmax(280px,500px) 1fr;gap:32px;align-items:start;margin-bottom:32px;">
+              <div style="display:flex;justify-content:center;align-items:center;padding:32px;">
+                <div style="position:relative;width:100%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at center,#8b4513 0%,#654321 30%,#3d2817 60%,#1a1a1a 100%);box-shadow:0 0 40px rgba(0,0,0,.5),inset 0 0 60px rgba(0,0,0,.3);">
+                  <sc-for list="{{ pads }}" as="p" hint-placeholder-count="9">
+                    <div style="position:absolute;left:{{ p.x }};top:{{ p.y }};width:{{ p.w }};height:{{ p.w }};transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 30% 30%,#cd853f 0%,#8b4513 50%,#654321 100%);border:3px solid #3d2817;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3),inset 0 1px 2px rgba(255,255,255,.1);">
+                      <span style="font-size:15px;font-weight:500;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);">{{ p.n }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="background:#fffdfa;padding:24px;box-shadow:0 0 0 1px rgba(33,27,22,.1);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px;">
+                  <div style="flex:1;">
+                    <h3 style="font-family:'Newsreader',serif;font-weight:300;font-size:28px;color:#8a5a33;margin:0 0 8px;">Kurd</h3>
+                    <p style="font-size:14px;color:#5f544b;font-style:italic;margin:0;">Natural Minor, Aeolian, Kurd Minor</p>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:#211b16;color:#fffdfa;font-size:14px;font-weight:500;min-height:40px;">▶ Play</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                  <div style="display:flex;align-items:flex-start;gap:8px;">
+                    <p style="font-size:16px;line-height:1.65;margin:0;flex:1;">Natural minor / Aeolian. Most common handpan family. Ring order includes tonic repetition (D4) in 9/10-note layouts.</p>
+                    <span style="width:20px;height:20px;border-radius:50%;border:1.5px solid #5f6b74;color:#5f6b74;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px;">i</span>
+                  </div>
+                  <div style="display:flex;gap:8px;"><span style="font-size:12px;padding:4px 12px;background:#c9a882;color:#211b16;font-weight:500;">minor</span></div>
+                  <div style="margin-top:16px;padding-top:16px;border-top:1px solid #d8cec0;">
+                    <h4 style="font-size:16px;font-weight:500;margin:0 0 12px;">Scale Notes</h4>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                      <sc-for list="{{ scaleNotes }}" as="n" hint-placeholder-count="9">
+                        <span style="font-size:14px;padding:8px 12px;background:#efe9e0;border:1px solid #d8cec0;font-family:'IBM Plex Mono',monospace;font-weight:500;">{{ n }}</span>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:32px;">
+              <div>
+                <h3 style="font-size:19px;font-weight:500;margin:0 0 12px;">Main Triads (Circle of Fifths)</h3>
+                <p style="display:flex;gap:16px;margin:0 0 12px;font-size:14px;color:#5f544b;">
+                  <span style="display:flex;align-items:center;gap:8px;"><span style="color:rgba(99,102,241,.8);font-size:19px;">■</span>Tonic (I)</span>
+                  <span style="display:flex;align-items:center;gap:8px;"><span style="color:rgba(234,179,8,.8);font-size:19px;">■</span>Relative Major (III)</span>
+                </p>
+                <div style="display:flex;gap:12px;overflow:hidden;padding:4px 0;">
+                  <sc-for list="{{ triads }}" as="t" hint-placeholder-count="7">
+                    <div style="flex:0 0 auto;min-width:120px;max-width:150px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;background:{{ t.bg }};border:2px solid {{ t.bd }};text-align:center;">
+                      <span style="font-size:12px;font-weight:500;color:#5f544b;font-family:Georgia,serif;font-style:italic;">{{ t.d }}</span>
+                      <span style="font-size:16px;font-weight:500;">{{ t.n }}</span>
+                      <span style="font-size:12px;color:#5f544b;font-family:'IBM Plex Mono',monospace;">{{ t.s }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div>
+                <h3 style="font-size:19px;font-weight:500;margin:0 0 12px;">Added Note Chords</h3>
+                <p style="font-size:14px;color:#5f544b;margin:0 0 16px;font-style:italic;">Includes 7ths, 9ths, sus chords, add chords, and common handpan-friendly voicings.</p>
+                <div style="display:flex;flex-direction:column;gap:24px;max-height:500px;overflow:hidden;position:relative;">
+                  <sc-for list="{{ addedGroups }}" as="g" hint-placeholder-count="4">
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                      <h4 style="font-size:16px;font-weight:500;color:#5f544b;text-transform:uppercase;letter-spacing:.5px;margin:0;padding-bottom:8px;border-bottom:1px solid #d8cec0;">{{ g.root }}</h4>
+                      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+                        <sc-for list="{{ g.chords }}" as="c" hint-placeholder-count="3">
+                          <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 16px;background:#fffdfa;border:2px solid #d8cec0;">
+                            <span style="font-size:16px;font-weight:500;">{{ c.n }}</span>
+                            <span style="font-size:14px;color:#5f544b;font-family:'IBM Plex Mono',monospace;">{{ c.s }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-for>
+                  <div style="position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(to bottom,rgba(247,243,237,0),#f7f3ed);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- pins -->
+          <div style="position:absolute;left:112px;top:96px;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">1</div>
+          <div style="position:absolute;left:1015px;top:232px;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">2</div>
+          <div style="position:absolute;left:1074px;top:307px;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">3</div>
+          <div style="position:absolute;left:640px;top:424px;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">4</div>
+          <div style="position:absolute;left:328px;top:757px;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">5</div>
+          <div style="position:absolute;left:222px;top:947px;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">6</div>
+          <div style="position:absolute;left:600px;top:862px;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">7</div>
+          <div style="position:absolute;left:230px;top:460px;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">8</div>
+        </div>
+      </div>
+
+      <!-- MOBILE RECREATION -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">Mobile · 390px · full scroll</div>
+        <div style="position:relative;width:390px;background:#f7f3ed;border:1px solid #d8cec0;padding:16px 40px 16px 16px;">
+          <h2 style="font-family:'Newsreader',serif;font-weight:300;font-size:28px;color:#8a5a33;margin:0 0 16px;text-align:center;">Chord Explorer</h2>
+          <div style="position:relative;display:flex;flex-direction:column;gap:16px;margin-bottom:16px;">
+            <div style="position:absolute;right:-30px;top:0;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">9</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <label style="font-size:18px;font-weight:500;">Scale Family:</label>
+              <div style="padding:16px 24px;border:2px solid #d8cec0;background:#fffdfa;font-size:16px;min-height:48px;display:flex;justify-content:space-between;align-items:center;">Kurd<span style="color:#7a6e5e;">▾</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <label style="font-size:18px;font-weight:500;">Key:</label>
+              <div style="padding:16px 24px;border:2px solid #d8cec0;background:#fffdfa;font-size:16px;min-height:48px;display:flex;justify-content:space-between;align-items:center;">D<span style="color:#7a6e5e;">▾</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <label style="font-size:18px;font-weight:500;">Pads:</label>
+              <div style="padding:16px 24px;border:2px solid #d8cec0;background:#fffdfa;font-size:16px;min-height:48px;display:flex;justify-content:space-between;align-items:center;">9<span style="color:#7a6e5e;">▾</span></div>
+            </div>
+          </div>
+
+          <div style="padding:16px;display:flex;justify-content:center;">
+            <div style="position:relative;width:100%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at center,#8b4513 0%,#654321 30%,#3d2817 60%,#1a1a1a 100%);box-shadow:0 0 40px rgba(0,0,0,.5),inset 0 0 60px rgba(0,0,0,.3);">
+              <sc-for list="{{ pads }}" as="p" hint-placeholder-count="9">
+                <div style="position:absolute;left:{{ p.x }};top:{{ p.y }};width:{{ p.w }};height:{{ p.w }};min-width:45px;min-height:45px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 30% 30%,#cd853f 0%,#8b4513 50%,#654321 100%);border:2px solid #3d2817;display:flex;align-items:center;justify-content:center;">
+                  <span style="font-size:16px;font-weight:500;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);">{{ p.n }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:#fffdfa;padding:16px;box-shadow:0 0 0 1px rgba(33,27,22,.1);margin-bottom:16px;">
+            <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px;">
+              <div>
+                <h3 style="font-family:'Newsreader',serif;font-weight:300;font-size:22px;color:#8a5a33;margin:0 0 8px;">Kurd</h3>
+                <p style="font-size:14px;color:#5f544b;font-style:italic;margin:0;">Natural Minor, Aeolian, Kurd Minor</p>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 24px;background:#211b16;color:#fffdfa;font-size:16px;font-weight:500;min-height:48px;">▶ Play</div>
+            </div>
+            <p style="font-size:16px;line-height:1.65;margin:0 0 16px;">Natural minor / Aeolian. Most common handpan family. Ring order includes tonic repetition (D4) in 9/10-note layouts.</p>
+            <div style="display:flex;gap:8px;margin-bottom:16px;"><span style="font-size:12px;padding:4px 12px;background:#c9a882;font-weight:500;">minor</span></div>
+            <div style="padding-top:16px;border-top:1px solid #d8cec0;">
+              <h4 style="font-size:16px;font-weight:500;margin:0 0 12px;">Scale Notes</h4>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <sc-for list="{{ scaleNotes }}" as="n" hint-placeholder-count="9">
+                  <span style="font-size:16px;padding:12px 16px;min-width:44px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;background:#efe9e0;border:1px solid #d8cec0;font-family:'IBM Plex Mono',monospace;">{{ n }}</span>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div style="position:relative;border:2px dashed #9c3b2e;background:rgba(156,59,46,.05);padding:12px 14px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px;">
+            <div style="position:absolute;right:-32px;top:-2px;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">10</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9c3b2e;">Controls bar — injected on chord select</div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <span style="font-size:19px;font-weight:500;color:#8a5a33;">Dm</span>
+              <span style="font-size:14px;font-family:'IBM Plex Mono',monospace;color:#5f544b;">D4 F4 A4</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <div style="padding:8px 14px;background:#211b16;color:#fffdfa;font-size:13px;min-height:40px;display:flex;align-items:center;">Arpeggio</div>
+              <div style="position:relative;flex:1;min-width:150px;display:flex;align-items:center;gap:8px;">
+                <div style="position:absolute;right:-46px;top:-13px;display:{{ pinDisplay }};align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;">11</div>
+                <span style="font-size:12px;font-weight:500;white-space:nowrap;">120 BPM</span>
+                <div style="flex:1;height:6px;background:#e5ddd2;position:relative;"><div style="position:absolute;left:42%;top:-6px;width:18px;height:18px;border-radius:50%;background:#211b16;"></div></div>
+              </div>
+              <div style="padding:12px 20px;background:#211b16;color:#fffdfa;font-size:16px;font-weight:500;min-height:48px;display:flex;align-items:center;">▶ Play</div>
+            </div>
+          </div>
+
+          <h3 style="font-size:19px;font-weight:500;margin:0 0 8px;">Main Triads (Circle of Fifths)</h3>
+          <p style="display:flex;gap:12px;margin:0 0 8px;font-size:12px;color:#5f544b;flex-wrap:wrap;">
+            <span style="display:flex;align-items:center;gap:6px;"><span style="color:rgba(99,102,241,.8);font-size:18px;">■</span>Tonic (I)</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span style="color:rgba(234,179,8,.8);font-size:18px;">■</span>Relative Major (III)</span>
+          </p>
+          <div style="display:flex;gap:8px;overflow:hidden;margin-bottom:16px;position:relative;">
+            <sc-for list="{{ triads }}" as="t" hint-placeholder-count="7">
+              <div style="flex:0 0 auto;min-width:100px;max-width:120px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;background:{{ t.bg }};border:2px solid {{ t.bd }};text-align:center;">
+                <span style="font-size:14px;color:#5f544b;font-family:Georgia,serif;font-style:italic;">{{ t.d }}</span>
+                <span style="font-size:19px;font-weight:500;">{{ t.n }}</span>
+                <span style="font-size:14px;color:#5f544b;font-family:'IBM Plex Mono',monospace;">{{ t.s }}</span>
+              </div>
+            </sc-for>
+            <div style="position:absolute;right:0;top:0;bottom:0;width:56px;background:linear-gradient(to right,rgba(247,243,237,0),#f7f3ed);pointer-events:none;"></div>
+          </div>
+
+          <h3 style="font-size:19px;font-weight:500;margin:0 0 8px;">Added Note Chords</h3>
+          <p style="font-size:14px;color:#5f544b;margin:0 0 12px;font-style:italic;">Includes 7ths, 9ths, sus chords, add chords, and common handpan-friendly voicings.</p>
+          <div style="display:flex;flex-direction:column;gap:24px;max-height:400px;overflow:hidden;position:relative;">
+            <sc-for list="{{ addedGroups }}" as="g" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <h4 style="font-size:16px;font-weight:500;color:#5f544b;text-transform:uppercase;letter-spacing:.5px;margin:0;padding-bottom:8px;border-bottom:1px solid #d8cec0;">{{ g.root }}</h4>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;">
+                  <sc-for list="{{ g.chords }}" as="c" hint-placeholder-count="3">
+                    <div style="display:flex;flex-direction:column;gap:4px;padding:8px 12px;background:#fffdfa;border:2px solid #d8cec0;">
+                      <span style="font-size:19px;font-weight:500;">{{ c.n }}</span>
+                      <span style="font-size:16px;color:#5f544b;font-family:'IBM Plex Mono',monospace;">{{ c.s }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+            <div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(to bottom,rgba(247,243,237,0),#f7f3ed);"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- FINDINGS -->
+      <div style="width:620px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">Findings, ranked by cost to the user</div>
+        <sc-for list="{{ findings }}" as="f" hint-placeholder-count="11">
+          <div style="background:#fffdfa;border:1px solid #d8cec0;border-left:3px solid {{ f.sevColor }};padding:16px 18px;display:flex;gap:14px;align-items:flex-start;">
+            <span style="flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:#9c3b2e;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;">{{ f.id }}</span>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;gap:10px;align-items:baseline;margin-bottom:5px;flex-wrap:wrap;">
+                <strong style="font-size:16px;font-weight:600;">{{ f.title }}</strong>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:{{ f.sevColor }};">{{ f.sev }}</span>
+              </div>
+              <p style="margin:0 0 6px;font-size:15px;line-height:1.55;color:#453d35;text-wrap:pretty;">{{ f.body }}</p>
+              <p style="margin:0;font-size:14px;line-height:1.5;color:#7a6e5e;font-family:'IBM Plex Mono',monospace;">→ {{ f.fix }}</p>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ BENCHMARK ============ -->
+  <div style="display:flex;flex-direction:column;gap:20px;max-width:1600px;">
+    <h2 style="font-family:'Newsreader',serif;font-weight:400;font-size:32px;margin:0;">What comparable tools do</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;">
+      <sc-for list="{{ benchmarks }}" as="b" hint-placeholder-count="5">
+        <div style="background:#fffdfa;border:1px solid #d8cec0;padding:20px 22px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8a5a33;">{{ b.kind }}</div>
+          <strong style="font-size:18px;font-weight:600;">{{ b.name }}</strong>
+          <p style="margin:0;font-size:15px;line-height:1.6;color:#453d35;text-wrap:pretty;">{{ b.note }}</p>
+          <p style="margin:4px 0 0;font-size:14px;line-height:1.5;color:#5e6b54;font-weight:500;">{{ b.lesson }}</p>
+        </div>
+      </sc-for>
+    </div>
+    <div style="background:#e5ddd2;border:1px solid #d8cec0;padding:24px 28px;max-width:1000px;">
+      <p style="margin:0;font-size:17px;line-height:1.7;text-wrap:pretty;">The pattern across all of them: <strong style="font-weight:600;">one picker, one instrument, one play button above the fold</strong> — theory (degrees, formulas, voicings) lives below or behind a tab. None of them show a tempo slider before the user has chosen anything to play.</p>
+    </div>
+  </div>
+
+  <!-- ============ 1b / 1c REDESIGN ============ -->
+  <div style="display:flex;flex-direction:column;gap:24px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:#211b16;color:#fffdfa;padding:5px 9px;letter-spacing:.08em;">1b</span>
+      <h2 style="font-family:'Newsreader',serif;font-weight:400;font-size:32px;margin:0;">Proposed — mobile first</h2>
+      <span style="font-size:15px;color:#5f544b;">Three controls on load. Everything else is one tap away.</span>
+    </div>
+
+    <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">
+
+      <!-- M1 LISTEN -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">1 · Listen (default)</div>
+        <div style="width:390px;height:780px;background:#f7f3ed;border:1px solid #d8cec0;display:flex;flex-direction:column;">
+          <div style="padding:18px 20px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d8cec0;">
+            <span style="font-family:'Newsreader',serif;font-weight:400;font-size:20px;color:#211b16;">Chord Explorer</span>
+            <span style="width:34px;height:34px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;justify-content:center;font-size:15px;color:#5f544b;">?</span>
+          </div>
+
+          <button style="margin:16px 20px 0;padding:14px 16px;background:#fffdfa;border:1px solid #211b16;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;font-family:inherit;text-align:left;">
+            <span style="display:flex;flex-direction:column;gap:3px;">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">Your handpan</span>
+              <span style="font-size:20px;font-weight:500;font-family:'Newsreader',serif;">D Kurd · 9 notes</span>
+            </span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a5a33;white-space:nowrap;">Change</span>
+          </button>
+
+          <div style="padding:20px;">
+            <div style="position:relative;width:100%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at center,#8b4513 0%,#654321 30%,#3d2817 60%,#1a1a1a 100%);box-shadow:0 0 40px rgba(0,0,0,.5),inset 0 0 60px rgba(0,0,0,.3);">
+              <sc-for list="{{ padsNew }}" as="p" hint-placeholder-count="9">
+                <div style="position:absolute;left:{{ p.x }};top:{{ p.y }};width:{{ p.w }};height:{{ p.w }};min-width:48px;min-height:48px;transform:translate(-50%,-50%);border-radius:50%;background:{{ p.bg }};border:2px solid {{ p.bd }};display:flex;align-items:center;justify-content:center;box-shadow:{{ p.shadow }};">
+                  <span style="font-size:15px;font-weight:500;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);font-family:'IBM Plex Mono',monospace;">{{ p.n }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="padding:0 20px;text-align:center;">
+            <p style="margin:0;font-size:14px;color:#5f544b;line-height:1.5;">Tap any note to hear it — or play the whole scale.</p>
+          </div>
+
+          <div style="margin-top:auto;padding:16px 20px 20px;background:#fffdfa;border-top:1px solid #d8cec0;display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;gap:10px;">
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 20px;height:56px;background:#211b16;color:#fffdfa;font-size:17px;font-weight:600;">▶ Play scale</div>
+              <div style="width:56px;height:56px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;justify-content:center;font-size:18px;color:#453d35;">♫</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <div style="flex:1;height:44px;border:1px solid #211b16;background:#211b16;color:#fffdfa;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;">Listen</div>
+              <div style="flex:1;height:44px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;justify-content:center;font-size:14px;color:#453d35;">Chords</div>
+              <div style="flex:1;height:44px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;justify-content:center;font-size:14px;color:#453d35;">About</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- M2 PICKER SHEET -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">2 · Scale sheet (“Change”)</div>
+        <div style="position:relative;width:390px;height:780px;background:#3d332a;border:1px solid #d8cec0;overflow:hidden;">
+          <div style="position:absolute;inset:0;background:#f7f3ed;opacity:.25;"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;background:#fffdfa;border-top:1px solid #d8cec0;padding:18px 20px 22px;display:flex;flex-direction:column;gap:16px;max-height:660px;">
+            <div style="width:40px;height:4px;background:#d8cec0;border-radius:2px;margin:0 auto;"></div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;">
+              <h3 style="font-family:'Newsreader',serif;font-weight:400;font-size:22px;margin:0;">Choose a scale</h3>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a5a33;">Done</span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">Key</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <sc-for list="{{ keys }}" as="k" hint-placeholder-count="7">
+                  <div style="min-width:46px;height:44px;padding:0 12px;border:1px solid {{ k.bd }};background:{{ k.bg }};color:{{ k.fg }};display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;">{{ k.n }}</div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">Family — tap ▶ to preview</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <sc-for list="{{ families }}" as="f" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid {{ f.bd }};background:{{ f.bg }};">
+                    <div style="width:40px;height:40px;flex:0 0 40px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;justify-content:center;font-size:14px;">▶</div>
+                    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+                      <span style="font-size:16px;font-weight:600;">{{ f.n }}</span>
+                      <span style="font-size:13px;color:#5f544b;">{{ f.mood }}</span>
+                    </div>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ f.fg }};">{{ f.check }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid #d8cec0;">
+              <span style="font-size:14px;color:#5f544b;">Notes on your pan</span>
+              <div style="display:flex;gap:6px;">
+                <div style="height:40px;padding:0 16px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:14px;">9</div>
+                <div style="height:40px;padding:0 16px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#7a6e5e;">10</div>
+                <div style="height:40px;padding:0 16px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#7a6e5e;">13</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- M3 CHORDS -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">3 · Chords tab (opt-in)</div>
+        <div style="width:390px;height:780px;background:#f7f3ed;border:1px solid #d8cec0;display:flex;flex-direction:column;">
+          <div style="padding:18px 20px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d8cec0;">
+            <span style="font-family:'Newsreader',serif;font-weight:400;font-size:20px;">D Kurd · 9</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a5a33;">Change</span>
+          </div>
+
+          <div style="padding:16px 20px 0;">
+            <div style="position:relative;width:190px;aspect-ratio:1;margin:0 auto 14px;border-radius:50%;background:radial-gradient(circle at center,#8b4513 0%,#654321 30%,#3d2817 60%,#1a1a1a 100%);">
+              <sc-for list="{{ padsChord }}" as="p" hint-placeholder-count="9">
+                <div style="position:absolute;left:{{ p.x }};top:{{ p.y }};width:{{ p.w }};height:{{ p.w }};transform:translate(-50%,-50%);border-radius:50%;background:{{ p.bg }};border:2px solid {{ p.bd }};display:flex;align-items:center;justify-content:center;">
+                  <span style="font-size:10px;font-weight:500;color:#fff;font-family:'IBM Plex Mono',monospace;">{{ p.n }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="padding:0 20px;display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;">
+            <div style="display:flex;gap:8px;">
+              <div style="padding:8px 14px;background:#211b16;color:#fffdfa;font-size:13px;font-weight:500;">7 basic</div>
+              <div style="padding:8px 14px;border:1px solid #d8cec0;background:#fffdfa;font-size:13px;color:#453d35;">20 advanced</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <sc-for list="{{ chordTiles }}" as="c" hint-placeholder-count="6">
+                <div style="padding:12px 14px;border:1px solid {{ c.bd }};background:{{ c.bg }};display:flex;flex-direction:column;gap:4px;min-height:64px;justify-content:center;">
+                  <div style="display:flex;align-items:baseline;gap:7px;">
+                    <span style="font-size:17px;font-weight:600;color:{{ c.fg }};">{{ c.n }}</span>
+                    <span style="font-size:11px;font-family:Georgia,serif;font-style:italic;color:{{ c.dim }};">{{ c.d }}</span>
+                  </div>
+                  <span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:{{ c.dim }};">{{ c.s }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="margin-top:auto;padding:14px 20px 20px;background:#fffdfa;border-top:1px solid #d8cec0;display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:17px;font-weight:600;font-family:'Newsreader',serif;">Dm</div>
+                <div style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#5f544b;">D4 F4 A4</div>
+              </div>
+              <div style="height:48px;padding:0 18px;background:#211b16;color:#fffdfa;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;">▶ Play</div>
+              <div style="width:48px;height:48px;border:1px solid #d8cec0;display:flex;align-items:center;justify-content:center;font-size:16px;">≡</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <div style="flex:1;height:44px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;justify-content:center;font-size:14px;color:#453d35;">Listen</div>
+              <div style="flex:1;height:44px;border:1px solid #211b16;background:#211b16;color:#fffdfa;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;">Chords</div>
+              <div style="flex:1;height:44px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;justify-content:center;font-size:14px;color:#453d35;">About</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RATIONALE -->
+      <div style="width:460px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">Why this works</div>
+        <sc-for list="{{ rationale }}" as="r" hint-placeholder-count="6">
+          <div style="background:#fffdfa;border:1px solid #d8cec0;padding:16px 18px;">
+            <strong style="font-size:16px;font-weight:600;display:block;margin-bottom:5px;">{{ r.t }}</strong>
+            <p style="margin:0;font-size:15px;line-height:1.55;color:#453d35;text-wrap:pretty;">{{ r.b }}</p>
+          </div>
+        </sc-for>
+        <div style="background:#211b16;color:#fffdfa;padding:18px 20px;">
+          <strong style="font-size:16px;font-weight:600;display:block;margin-bottom:8px;">Controls removed from first paint</strong>
+          <p style="margin:0;font-size:15px;line-height:1.6;color:#d8cec0;">Pad-count select, BPM slider, arpeggio/simultaneous toggle, triad colour legend, Roman-numeral row, the 20-tile advanced grid, the hover-only tooltip. Mobile goes from ≈50 targets to <strong style="color:#fffdfa;">3 primary + 9 pads</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1c DESKTOP -->
+  <div id="1c" style="display:flex;flex-direction:column;gap:24px;">
+    <div style="display:flex;align-items:baseline;gap:14px;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;background:#211b16;color:#fffdfa;padding:5px 9px;letter-spacing:.08em;">1c</span>
+      <h2 style="font-family:'Newsreader',serif;font-weight:400;font-size:32px;margin:0;">Proposed — desktop</h2>
+      <span style="font-size:15px;color:#5f544b;">Same hierarchy, more room. Theory expands in place instead of stacking.</span>
+    </div>
+
+    <div style="width:1180px;background:#f7f3ed;border:1px solid #d8cec0;padding:36px 40px;">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #d8cec0;">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#7a6e5e;margin-bottom:6px;">Handpan Academy</div>
+          <h2 style="font-family:'Newsreader',serif;font-weight:300;font-size:36px;margin:0;">Chord Explorer</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="padding:11px 16px;border:1px solid #211b16;background:#fffdfa;font-size:15px;font-weight:500;display:flex;gap:10px;align-items:center;">D Kurd · 9 notes <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a5a33;">Change</span></div>
+          <div style="width:42px;height:42px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;justify-content:center;color:#5f544b;">?</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:520px 1fr;gap:44px;align-items:start;">
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          <div style="position:relative;width:100%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at center,#8b4513 0%,#654321 30%,#3d2817 60%,#1a1a1a 100%);box-shadow:0 0 40px rgba(0,0,0,.5),inset 0 0 60px rgba(0,0,0,.3);">
+            <sc-for list="{{ padsNew }}" as="p" hint-placeholder-count="9">
+              <div style="position:absolute;left:{{ p.x }};top:{{ p.y }};width:{{ p.w }};height:{{ p.w }};transform:translate(-50%,-50%);border-radius:50%;background:{{ p.bg }};border:3px solid {{ p.bd }};display:flex;align-items:center;justify-content:center;box-shadow:{{ p.shadow }};">
+                <span style="font-size:16px;font-weight:500;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);font-family:'IBM Plex Mono',monospace;">{{ p.n }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div style="flex:1;height:56px;background:#211b16;color:#fffdfa;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;font-weight:600;">▶ Play scale</div>
+            <div style="width:56px;height:56px;border:1px solid #d8cec0;background:#fffdfa;display:flex;align-items:center;justify-content:center;font-size:18px;">♫</div>
+          </div>
+          <p style="margin:0;font-size:14px;color:#5f544b;text-align:center;">Click a pad to hear it. Space plays the scale.</p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:22px;">
+          <div>
+            <h3 style="font-family:'Newsreader',serif;font-weight:400;font-size:28px;margin:0 0 6px;color:#8a5a33;">Kurd — D natural minor</h3>
+            <p style="margin:0;font-size:16px;line-height:1.65;color:#453d35;max-width:56ch;text-wrap:pretty;">The most common handpan family. Warm, unhurried, forgiving — almost anything you play on it sounds intentional.</p>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <sc-for list="{{ scaleNotes }}" as="n" hint-placeholder-count="9">
+              <span style="font-size:15px;padding:9px 14px;background:#fffdfa;border:1px solid #d8cec0;font-family:'IBM Plex Mono',monospace;font-weight:500;">{{ n }}</span>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;gap:0;border-bottom:1px solid #d8cec0;">
+            <div style="padding:12px 20px;border-bottom:2px solid #211b16;font-size:15px;font-weight:600;margin-bottom:-1px;">Chords</div>
+            <div style="padding:12px 20px;font-size:15px;color:#5f544b;">Theory</div>
+            <div style="padding:12px 20px;font-size:15px;color:#5f544b;">Practice</div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#7a6e5e;">The 7 chords in this scale</span>
+              <span style="font-size:14px;color:#8a5a33;">+ 20 advanced voicings</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+              <sc-for list="{{ chordTilesWide }}" as="c" hint-placeholder-count="7">
+                <div style="padding:14px 16px;border:1px solid {{ c.bd }};background:{{ c.bg }};display:flex;flex-direction:column;gap:5px;">
+                  <div style="display:flex;align-items:baseline;gap:8px;">
+                    <span style="font-size:18px;font-weight:600;color:{{ c.fg }};">{{ c.n }}</span>
+                    <span style="font-size:12px;font-family:Georgia,serif;font-style:italic;color:{{ c.dim }};">{{ c.d }}</span>
+                  </div>
+                  <span style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:{{ c.dim }};">{{ c.s }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:16px 18px;background:#fffdfa;border:1px solid #211b16;">
+              <div style="flex:1;">
+                <div style="font-family:'Newsreader',serif;font-size:20px;font-weight:500;">Dm <span style="font-size:13px;font-family:Georgia,serif;font-style:italic;color:#5f544b;">tonic</span></div>
+                <div style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:#5f544b;margin-top:3px;">D4 F4 A4 — highlighted on the pan</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <div style="height:44px;padding:0 14px;border:1px solid #d8cec0;display:flex;align-items:center;font-size:14px;color:#453d35;gap:8px;">Roll <span style="color:#7a6e5e;">/</span> <span style="color:#7a6e5e;">Strum</span></div>
+                <div style="height:44px;padding:0 20px;background:#211b16;color:#fffdfa;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;">▶ Play</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PLAN ============ -->
+  <div style="display:flex;flex-direction:column;gap:24px;max-width:1700px;">
+    <h2 style="font-family:'Newsreader',serif;font-weight:400;font-size:32px;margin:0;">Phased implementation plan</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;">
+      <sc-for list="{{ phases }}" as="ph" hint-placeholder-count="3">
+        <div style="background:#fffdfa;border:1px solid #d8cec0;border-top:3px solid {{ ph.color }};padding:26px 28px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:{{ ph.color }};">{{ ph.tag }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a6e5e;">{{ ph.effort }}</span>
+          </div>
+          <h3 style="font-family:'Newsreader',serif;font-weight:400;font-size:24px;margin:0;">{{ ph.title }}</h3>
+          <p style="margin:0;font-size:15px;line-height:1.6;color:#5f544b;text-wrap:pretty;">{{ ph.goal }}</p>
+          <div style="display:flex;flex-direction:column;gap:9px;padding-top:6px;border-top:1px solid #d8cec0;">
+            <sc-for list="{{ ph.items }}" as="it" hint-placeholder-count="5">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span style="color:#8a5a33;font-size:14px;line-height:1.5;">—</span>
+                <span style="font-size:15px;line-height:1.5;color:#302923;flex:1;text-wrap:pretty;">{{ it }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top:6px;padding:12px 14px;background:#efe9e0;font-size:14px;line-height:1.5;color:#453d35;"><strong style="font-weight:600;">Measure:</strong> {{ ph.measure }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background:#fffdfa;border:1px solid #d8cec0;padding:28px 32px;max-width:1000px;display:flex;flex-direction:column;gap:14px;">
+      <h3 style="font-family:'Newsreader',serif;font-weight:400;font-size:24px;margin:0;">Open questions before build</h3>
+      <sc-for list="{{ questions }}" as="q" hint-placeholder-count="4">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#8a5a33;margin-top:2px;">?</span>
+          <p style="margin:0;font-size:16px;line-height:1.6;color:#302923;flex:1;text-wrap:pretty;">{{ q }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:2600,&quot;height&quot;:1800},&quot;showAnnotations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Review&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const pct = (v) => v + '%';
+    const raw = [
+      ['D3', 50, 50, 24], ['A3', 55.56, 81.51, 14.4], ['Bb3', 31.65, 76.21, 14.37],
+      ['C4', 76.21, 68.35, 11.93], ['D4', 18.49, 55.56, 11.88], ['E4', 81.51, 44.44, 11.83],
+      ['F4', 23.79, 31.65, 11.81], ['G4', 68.35, 23.79, 11.76], ['A4', 44.44, 18.49, 11.71]
+    ];
+    const pads = raw.map(([n, x, y, w]) => ({ n, x: pct(x), y: pct(y), w: pct(w) }));
+
+    const bronze = 'radial-gradient(circle at 30% 30%,#c9a882 0%,#8a5a33 55%,#5e3c21 100%)';
+    const dark = 'radial-gradient(circle at 30% 30%,#8a7461 0%,#5e4a38 55%,#3d2f22 100%)';
+    const padsNew = raw.map(([n, x, y, w]) => ({
+      n, x: pct(x), y: pct(y), w: pct(w),
+      bg: n === 'D3' ? bronze : dark,
+      bd: n === 'D3' ? '#5e3c21' : '#2a2018',
+      shadow: n === 'D3' ? '0 0 22px rgba(201,168,130,.35),inset 0 1px 2px rgba(255,255,255,.25)' : '0 2px 8px rgba(0,0,0,.35),inset 0 1px 2px rgba(255,255,255,.08)'
+    }));
+    const chordNotes = new Set(['D4', 'F4', 'A4']);
+    const padsChord = raw.map(([n, x, y, w]) => ({
+      n, x: pct(x), y: pct(y), w: pct(w),
+      bg: chordNotes.has(n) ? bronze : 'radial-gradient(circle at 30% 30%,#5a4a3c 0%,#3d3128 60%,#2a2018 100%)',
+      bd: chordNotes.has(n) ? '#c9a882' : '#241c15'
+    }));
+
+    const tileBg = (kind) => kind === 'tonic'
+      ? { bg: 'linear-gradient(135deg,rgba(199,210,254,.3) 0%,rgba(165,180,252,.4) 100%)', bd: 'rgba(99,102,241,.4)' }
+      : kind === 'rel'
+      ? { bg: 'linear-gradient(135deg,rgba(254,240,138,.3) 0%,rgba(253,224,71,.4) 100%)', bd: 'rgba(234,179,8,.4)' }
+      : { bg: '#fffdfa', bd: '#d8cec0' };
+
+    const triadSrc = [
+      ['I', 'Dm', 'D4 F4 A4', 'tonic'], ['II', 'Edim', 'E4 G4 Bb3', ''],
+      ['III', 'F', 'F4 A4 C4', 'rel'], ['IV', 'Gm', 'G4 Bb3 D4', ''],
+      ['V', 'Am', 'A3 C4 E4', ''], ['VI', 'Bb', 'Bb3 D4 F4', ''], ['VII', 'C', 'C4 E4 G4', '']
+    ];
+    const triads = triadSrc.map(([d, n, s, k]) => Object.assign({ d, n, s }, tileBg(k)));
+
+    const addedGroups = [
+      { root: 'A', chords: [{ n: 'Am7', s: 'A3 C4 E4 G4' }, { n: 'Am11', s: 'A3 C4 D4 G4' }] },
+      { root: 'Bb', chords: [{ n: 'Bbmaj7', s: 'Bb3 D4 F4 A4' }, { n: 'Bb6', s: 'Bb3 D4 F4 G4' }, { n: 'Bbadd9', s: 'Bb3 C4 D4 F4' }] },
+      { root: 'C', chords: [{ n: 'C6', s: 'C4 E4 G4 A4' }, { n: 'Csus2', s: 'C4 D4 G4' }, { n: 'Csus4', s: 'C4 F4 G4' }] },
+      { root: 'D', chords: [{ n: 'Dm7', s: 'D4 F4 A4 C4' }, { n: 'Dm9', s: 'D4 F4 A4 E4' }, { n: 'Dsus2', s: 'D4 E4 A4' }, { n: 'Dsus4', s: 'D4 G4 A4' }] },
+      { root: 'E', chords: [{ n: 'Em7b5', s: 'E4 G4 Bb3 D4' }] },
+      { root: 'F', chords: [{ n: 'Fmaj7', s: 'F4 A4 C4 E4' }, { n: 'F6', s: 'F4 A4 C4 D4' }, { n: 'Fadd9', s: 'F4 G4 A4 C4' }] },
+      { root: 'G', chords: [{ n: 'Gm7', s: 'G4 Bb3 D4 F4' }, { n: 'Gm6', s: 'G4 Bb3 D4 E4' }, { n: 'Gsus2', s: 'G4 A4 D4' }, { n: 'Gsus4', s: 'G4 C4 D4' }] }
+    ];
+
+    const HIGH = '#9c3b2e', MED = '#a8752a', LOW = '#5e6b54';
+    const findings = [
+      { id: 1, sev: 'Critical', sevColor: HIGH, title: 'Three configuration decisions before any sound',
+        body: 'Family, Key and Pads are the first thing on the page, all equally weighted, all with the same visual treatment. A beginner who just bought a pan does not know what "Pads" means, and the page offers no reason to care before they have heard anything.',
+        fix: 'One combined control: "D Kurd · 9 notes → Change". Play becomes the first action.' },
+      { id: 2, sev: 'Critical', sevColor: HIGH, title: 'Play is buried inside a secondary panel',
+        body: 'The single action that satisfies the stated core job sits in the top-right corner of the scale-info card, styled the same as every other dark button, below the fold on mobile. Nothing on first paint says "press this".',
+        fix: 'Promote to a full-width primary action anchored under the pan; keep it visible while scrolling.' },
+      { id: 3, sev: 'High', sevColor: MED, title: 'Hover-only tooltip is unreachable on touch',
+        body: 'The layout disclaimer ("positions may vary by maker") only appears on :hover. On 30–60% of your traffic it never appears — and it is the one caveat that prevents a user mis-learning their instrument.',
+        fix: 'Make it a tappable info button opening a popover; or inline the sentence under the pan.' },
+      { id: 4, sev: 'Medium', sevColor: MED, title: 'Mood tag renders a single internal word',
+        body: 'scaleMoodTags is built as [modeHint], so the tag row is always exactly one chip reading "minor" / "exotic" / "mixed". It looks like a filter, does nothing, and reads as debug output.',
+        fix: 'Either write 3–4 real human mood words per family, or drop the row.' },
+      { id: 5, sev: 'High', sevColor: MED, title: 'Colour legend carries meaning colour alone cannot',
+        body: 'Tonic and Relative Major are indicated by pale indigo and pale yellow fills at roughly 30–40% alpha, explained by a legend above the row. That is a colour-only distinction, low contrast, and it forces a lookup.',
+        fix: 'Label the tile ("tonic", "relative major") instead of tinting it.' },
+      { id: 6, sev: 'High', sevColor: MED, title: '20 advanced chords shown at the same level as the 7 basic ones',
+        body: 'Added Note Chords renders every playable voicing grouped by root, unfiltered and expanded by default. For a beginner this is the largest single block on the page and the least useful.',
+        fix: 'Collapse behind "Show advanced voicings (20)"; default to the 7 diatonic chords.' },
+      { id: 7, sev: 'Medium', sevColor: MED, title: 'Nested scroll containers trap the page',
+        body: 'The advanced grid is a 500px (400px mobile) max-height scroll area inside the page scroll, and the triad row is a horizontal scroll area inside that. Three scroll axes in one viewport is a reliable source of "I could not scroll past it".',
+        fix: 'Remove inner max-height; let the page own vertical scroll.' },
+      { id: 8, sev: 'Medium', sevColor: MED, title: 'Pad sizes fight the container on small screens',
+        body: 'Pad radius is a percentage of the pan, then multiplied by octave, then floored at 45px on mobile. At 390px the floor dominates: outer pads crowd the rim and the ding no longer reads as the largest.',
+        fix: 'Size pads from a single fluid scale with one min-size, and cap the pan at ~340px on mobile.' },
+      { id: 9, sev: 'Critical', sevColor: HIGH, title: 'Mobile opens with a wall of form controls',
+        body: 'Three stacked 48px selects with 18px labels consume the entire first screen. The instrument — the thing that tells a visitor what this page is — starts below the fold.',
+        fix: 'Pan above the fold, always. Selector collapses to one line.' },
+      { id: 10, sev: 'High', sevColor: MED, title: 'Chord playback controls appear and disappear',
+        body: 'Selecting a chord injects a control bar (mode toggle, BPM slider, Play) above the triad row, pushing everything down; deselecting removes it. On mobile the content you were reading jumps off-screen.',
+        fix: 'Fixed bottom action bar that changes content instead of a block that changes height.' },
+      { id: 11, sev: 'Medium', sevColor: MED, title: 'BPM slider is a top-level control for a rare need',
+        body: 'A 60–200 BPM range slider plus an arpeggio/simultaneous toggle sit beside Play, disabled half the time. Two controls of near-zero first-session value, permanently occupying the action row.',
+        fix: 'Default to arpeggio at 120. Move speed into an overflow menu, or drop it.' },
+      { id: 12, sev: 'Medium', sevColor: MED, title: 'Selection silently resets on family change',
+        body: 'Changing family resets key and pad count to that family\'s defaults and clears the chord. A user comparing "the same key across families" loses their key on every switch, with no explanation.',
+        fix: 'Keep the key if the new family supports it; otherwise say which key you moved them to.' }
+    ];
+
+    const benchmarks = [
+      { kind: 'Handpan · direct', name: 'Mudra virtual handpan', note: 'Lands on a playable pan with the scale named above it; scale switching is a list of named scales you hear, not a set of parameters you configure.', lesson: 'Scales are chosen by ear, not by spec.' },
+      { kind: 'Handpan · direct', name: 'Handpaner', note: 'Customising the instrument is a deliberate mode you enter; the default state is a pan you can hit. Chords and scale analysis are results, shown after the instrument exists.', lesson: 'Configuration is a mode, not a prerequisite.' },
+      { kind: 'Handpan · pro', name: 'Notepan', note: 'Builds "your handpan" once, then every other view assumes it. Chord exploration is framed as understanding your instrument, not browsing a catalogue.', lesson: 'Remember the pan. Ask once.' },
+      { kind: 'Theory tool', name: 'Interactive Chord Finder', note: 'Root + scale, then the keyboard, then diatonic chords. One decision surface, one instrument, results below.', lesson: 'A single picker beats three selects.' },
+      { kind: 'Theory tool', name: 'Scale Finder / Chord Progressor', note: 'Degrees and Roman numerals live on the chord cards themselves; tempo controls only appear once something is queued to play.', lesson: 'Playback controls appear with playback.' }
+    ];
+
+    const rationale = [
+      { t: 'One decision, stated in plain language', b: '"D Kurd · 9 notes" reads as a description of your instrument, not three form fields. Tapping it opens a sheet where families can be previewed by ear — which is how people actually choose a scale.' },
+      { t: 'Play is the largest thing on screen', b: 'A 56px full-width primary action fixed to the bottom of the widget. It is reachable one-handed, it never scrolls away, and it is the only high-emphasis control in view.' },
+      { t: 'Theory becomes a destination', b: 'Chords and About are tabs, not stacked sections. The user who wants the 20 advanced voicings can still get all of them — in two taps, in a view designed for them.' },
+      { t: 'Chord state lives in a bar, not in the flow', b: 'Selecting a chord updates the persistent bottom bar rather than injecting a block that shoves the page down. Nothing you are looking at moves.' },
+      { t: 'Degrees ride on the tiles', b: 'Each chord tile carries its own label — "tonic", "relative major", "iv" — so the legend, and its colour-only encoding, disappears entirely.' },
+      { t: 'Teachers get a clean projection view', b: 'With the controls collapsed, the desktop layout is pan + scale name + notes: legible from the back of a room, nothing distracting in the frame.' }
+    ];
+
+    const keys = ['D', 'E', 'F#', 'G', 'A', 'C', 'C#'].map((n, i) => ({
+      n, bg: i === 0 ? '#211b16' : '#fffdfa', fg: i === 0 ? '#fffdfa' : '#211b16', bd: i === 0 ? '#211b16' : '#d8cec0'
+    }));
+    const families = [
+      { n: 'Kurd', mood: 'Warm, familiar, most common', sel: true },
+      { n: 'Celtic Minor', mood: 'Smooth, meditative', sel: false },
+      { n: 'Pygmy', mood: 'Earthy, sparse, easy', sel: false },
+      { n: 'Hijaz', mood: 'Exotic, dramatic', sel: false }
+    ].map((f) => ({
+      n: f.n, mood: f.mood, check: f.sel ? '✓' : '',
+      bg: f.sel ? '#efe9e0' : '#fffdfa', bd: f.sel ? '#211b16' : '#d8cec0', fg: '#8a5a33'
+    }));
+
+    const mkTile = (n, d, s, sel) => ({
+      n, d, s,
+      bg: sel ? '#211b16' : '#fffdfa', bd: sel ? '#211b16' : '#d8cec0',
+      fg: sel ? '#fffdfa' : '#211b16', dim: sel ? '#c9a882' : '#5f544b'
+    });
+    const chordTiles = [
+      mkTile('Dm', 'tonic', 'D4 F4 A4', true), mkTile('F', 'relative major', 'F4 A4 C4', false),
+      mkTile('Gm', 'iv', 'G4 Bb3 D4', false), mkTile('Am', 'v', 'A3 C4 E4', false),
+      mkTile('Bb', 'VI', 'Bb3 D4 F4', false), mkTile('C', 'VII', 'C4 E4 G4', false)
+    ];
+    const chordTilesWide = chordTiles.concat([mkTile('Edim', 'ii°', 'E4 G4 Bb3', false)]);
+
+    const phases = [
+      { tag: 'Phase 0', effort: '~1 week', color: '#9c3b2e', title: 'Stop the bleeding',
+        goal: 'No new architecture, no new dependencies. Reorder and hide what already exists.',
+        items: [
+          'Collapse the three selects into one summary line with a "Change" disclosure; the existing selects render inside it unchanged.',
+          'Move Play out of the scale card into a full-width primary action directly under the pan.',
+          'Default "Added Note Chords" to collapsed, with the count in the toggle label.',
+          'Delete the BPM slider and the arpeggio/simultaneous toggle from Controls; hard-code arpeggio at 120.',
+          'Replace the tonic / relative-major legend with text labels on the tiles.',
+          'Remove max-height from the advanced grid; convert the hover tooltip to a tappable popover.'
+        ],
+        measure: 'Share of mobile sessions that trigger audio at least once; scroll depth to first Play.' },
+      { tag: 'Phase 1', effort: '2–3 weeks', color: '#a8752a', title: 'Restructure around listening',
+        goal: 'The redesign in 1b / 1c. Same components, new information architecture.',
+        items: [
+          'Listen / Chords / About tab structure; Listen is the default and contains only pan + play.',
+          'Scale sheet: key row, family list with per-row audio preview, note count as a quiet third choice.',
+          'Persistent bottom action bar carrying the current chord, replacing the injected Controls block.',
+          'Chord tiles carry their own degree label; advanced voicings become a second tab inside Chords.',
+          'Rewrite scale descriptions and mood tags in player language (drop "Ring order includes tonic repetition").',
+          'Fix pad sizing: one fluid scale, one min target, pan capped at ~340px on mobile.'
+        ],
+        measure: 'Scale switches per session; taps on Chords tab; drop-off between landing and first note.' },
+      { tag: 'Phase 2', effort: 'Later', color: '#5e6b54', title: 'Make it theirs',
+        goal: 'Turn a one-off toy into a tool people return to — and link it to the studio.',
+        items: [
+          'Remember the last scale in localStorage; label it "Your handpan" on return.',
+          'Deep links (?scale=d-kurd-9) so teachers can send a class straight to one layout.',
+          'Compare two scales side by side — the buyer journey the Academy page already implies.',
+          'Practice mode: play a chord, find it on the pan — the memorization job the URL promises.',
+          'Keyboard support and reduced-motion handling for the pulse animation.'
+        ],
+        measure: 'Return visits to the Academy page; click-through from the widget to lessons.' }
+    ];
+
+    const questions = [
+      'The page URL is /academy/memorization/ but the widget is titled "Chord Explorer" and does not contain a memorization exercise. Which one is the page meant to be?',
+      'Is the widget also doing sales work (helping buyers pick a scale before purchase)? If yes, "compare two scales" moves up from Phase 2.',
+      'How much of the theory layer is genuinely used? A week of analytics on the advanced-chord tiles would tell us whether to collapse them or cut them.',
+      'Should the widget remember a user\'s own pan across the whole Academy, or stay stateless per visit?'
+    ];
+
+    return {
+      pads, padsNew, padsChord, triads, addedGroups, findings, benchmarks, rationale,
+      keys, families, chordTiles, chordTilesWide, phases, questions,
+      scaleNotes: ['D3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4'],
+      pinDisplay: (this.props.showAnnotations ?? true) ? 'flex' : 'none'
+    };
+  }
+}
+</script>
+</body>
+</html>
