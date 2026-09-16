@@ -12,6 +12,7 @@ import HandpanRenderer from './HandpanRenderer';
 import ScaleSelector from './ScaleSelector';
 import ScaleNotesRow from './ScaleNotesRow';
 import ScaleAbout from './ScaleAbout';
+import LayoutNote from './LayoutNote';
 import ChordsSection from './ChordsSection';
 import ChordActionBar from './ChordActionBar';
 import WidgetTabs, { type WidgetTab } from './WidgetTabs';
@@ -491,6 +492,7 @@ function HandpanWidgetContent() {
           Tap any pad to hear it — or play the whole scale.
         </p>
       </div>
+      <LayoutNote />
 
       {/*
         No warming on this region. It holds the tabs, the About disclosure and
