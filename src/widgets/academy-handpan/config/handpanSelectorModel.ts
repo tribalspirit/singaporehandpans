@@ -91,7 +91,7 @@ export function getDefaultSelection(familyId: string): {
   const history = MERGED_FAMILY_HISTORY[familyId];
   if (history) {
     return {
-      key: history.defaultKey as PitchClass,
+      key: history.defaultKey,
       noteCount: history.defaultNoteCount,
     };
   }
@@ -231,4 +231,75 @@ export function getFamilyPreviewOptions(): FamilyPreviewOption[] {
       preview,
     };
   });
+}
+
+/** What an embedder may ask the widget to open on, before validation. */
+export interface HandpanSelectionRequest {
+  familyId?: string | null;
+  key?: string | null;
+  noteCount?: number | string | null;
+}
+
+/**
+ * Accept a key however it was typed: `d`, `F#`, `bb`, `E♭`.
+ *
+ * An embed passes this as an HTML attribute, so it arrives as whatever the
+ * page author wrote. Anything that does not then match a published key falls
+ * back rather than resolving to nothing.
+ */
+function normalizeKeyRequest(raw: string): string {
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) {
+    return '';
+  }
+
+  const accidentals = trimmed
+    .slice(1)
+    .replace(/♯/g, '#')
+    .replace(/♭/g, 'b')
+    .toLowerCase();
+
+  return trimmed[0].toUpperCase() + accidentals;
+}
+
+/**
+ * The selection to open on, given what an embedder asked for.
+ *
+ * Every field is validated against what the family actually publishes, and the
+ * whole thing is then checked against the catalog: a request that would resolve
+ * to no instrument is discarded in favour of the default rather than rendering
+ * an empty widget. Fields are independent, so a good family with a nonsense key
+ * keeps the family and takes that family's default key.
+ *
+ * Merged-away ids are honoured as given — `equinox` opens on its own G, not on
+ * Integral's D — for the same reason `getKeyOptions` and `getDefaultSelection`
+ * treat them as first-class.
+ */
+export function resolveInitialSelection(
+  request: HandpanSelectionRequest = {}
+): HandpanSelection {
+  const fallback = getInitialSelection();
+
+  const requestedFamilyId = request.familyId?.trim();
+  const familyId =
+    requestedFamilyId &&
+    (MERGED_FAMILY_HISTORY[requestedFamilyId] || findFamily(requestedFamilyId))
+      ? requestedFamilyId
+      : fallback.familyId;
+
+  const defaults = getDefaultSelection(familyId);
+
+  const requestedKey = request.key ? normalizeKeyRequest(request.key) : '';
+  const key = getKeyOptions(familyId).includes(requestedKey as PitchClass)
+    ? (requestedKey as PitchClass)
+    : defaults.key;
+
+  const requestedNoteCount = Number(request.noteCount);
+  const noteCount = getNoteCountOptions(familyId).includes(requestedNoteCount)
+    ? requestedNoteCount
+    : defaults.noteCount;
+
+  const selection = { familyId, key, noteCount };
+
+  return resolveHandpanConfig(selection) ? selection : fallback;
 }

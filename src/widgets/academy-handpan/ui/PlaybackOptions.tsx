@@ -1,9 +1,10 @@
 import React, { useId } from 'react';
 import type { PlaybackMode } from './types';
+import {
+  MAX_ARPEGGIO_BPM as MAX_BPM,
+  MIN_ARPEGGIO_BPM as MIN_BPM,
+} from './widgetProps';
 import styles from '../styles/PlaybackOptions.module.scss';
-
-const MIN_BPM = 60;
-const MAX_BPM = 200;
 
 const MODE_OPTIONS: ReadonlyArray<{ value: PlaybackMode; label: string }> = [
   { value: 'arpeggio', label: 'Roll' },

@@ -10,33 +10,35 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import HandpanWidget from './HandpanWidget';
-import { stopArpeggio } from '../audio/scheduler';
-import {
-  initializeAudio,
-  isAudioInitialized,
-  warmAudioModule,
-} from '../audio/engine';
-import { playArpeggio } from '../audio/scheduler';
+import { warmAudioModule } from '../audio/engine';
 
 /*
  * Audio is an external system, stubbed at its module boundary.
  *
  * These are tests about what the interface offers, not about sound. Tabbing
- * into the views prefetches Tone, and real Tone in jsdom has no usable
- * `Transport` — exercising it here would test the mock's fidelity rather than
- * the widget. Playback itself is covered by the audio suites.
+ * into the views prefetches Tone, and real Tone in jsdom has no usable audio
+ * context — exercising it here would test the mock's fidelity rather than the
+ * widget. Playback itself is covered by the audio suites.
+ *
+ * `createAudioEngine` hands back the same stub every call, so a test can hold
+ * one set of spies. Nothing here renders two widgets; the isolation between
+ * instances is a property of the real engine, tested there.
  */
-vi.mock('../audio/engine', () => ({
-  initializeAudio: vi.fn().mockResolvedValue(undefined),
-  isAudioInitialized: vi.fn().mockReturnValue(true),
-  warmAudioModule: vi.fn().mockResolvedValue(undefined),
+const audio = vi.hoisted(() => ({
+  initialize: vi.fn().mockResolvedValue(undefined),
+  isInitialized: vi.fn().mockReturnValue(true),
   playNote: vi.fn(),
   playChord: vi.fn(),
-}));
-vi.mock('../audio/scheduler', () => ({
   playArpeggio: vi.fn(),
   stopArpeggio: vi.fn(),
-  isArpeggioPlaying: vi.fn().mockReturnValue(false),
+  dispose: vi.fn(),
+}));
+
+vi.mock('../audio/createAudioEngine', () => ({
+  createAudioEngine: () => audio,
+}));
+vi.mock('../audio/engine', () => ({
+  warmAudioModule: vi.fn().mockResolvedValue(undefined),
 }));
 
 /**
@@ -206,12 +208,12 @@ describe('Chord Explorer first paint', () => {
     render(<HandpanWidget />);
 
     await user.click(screen.getByRole('button', { name: /^change$/i }));
-    vi.mocked(stopArpeggio).mockClear();
+    vi.mocked(audio.stopArpeggio).mockClear();
 
     // Kurd opens on D; E is another key it publishes.
     await user.click(screen.getByRole('button', { name: /^E$/ }));
 
-    expect(stopArpeggio).toHaveBeenCalled();
+    expect(audio.stopArpeggio).toHaveBeenCalled();
   });
 
   /**
@@ -224,11 +226,11 @@ describe('Chord Explorer first paint', () => {
     render(<HandpanWidget />);
 
     await user.click(screen.getByRole('button', { name: /^change$/i }));
-    vi.mocked(stopArpeggio).mockClear();
+    vi.mocked(audio.stopArpeggio).mockClear();
 
     await user.click(screen.getByRole('button', { name: /^Kurd/ }));
 
-    expect(stopArpeggio).toHaveBeenCalled();
+    expect(audio.stopArpeggio).toHaveBeenCalled();
   });
 
   /**
@@ -236,7 +238,7 @@ describe('Chord Explorer first paint', () => {
    * needs it.
    *
    * Tone is ~340 KB and out of the initial bundle, so a cold control starts
-   * the import inside `initializeAudio` and the browser's user activation can
+   * the import inside `initialize` and the browser's user activation can
    * expire mid-download — on stricter engines the first press is simply
    * silent. The family preview buttons sit in the header and the chord Play
    * button sits outside the views, so neither is covered by the wrappers that
@@ -330,22 +332,22 @@ describe('Chord Explorer first paint', () => {
 
     // Hold the audio module unresolved so the preview is still in flight.
     let releaseAudio: () => void = () => {};
-    vi.mocked(initializeAudio).mockImplementationOnce(
+    vi.mocked(audio.initialize).mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
           releaseAudio = () => resolve();
         })
     );
-    vi.mocked(isAudioInitialized).mockReturnValueOnce(false);
+    vi.mocked(audio.isInitialized).mockReturnValueOnce(false);
 
     render(<HandpanWidget />);
     await user.click(screen.getByRole('button', { name: /^change$/i }));
-    vi.mocked(playArpeggio).mockClear();
+    vi.mocked(audio.playArpeggio).mockClear();
 
     await user.click(
       screen.getByRole('button', { name: /^preview celtic minor$/i })
     );
-    expect(playArpeggio).not.toHaveBeenCalled();
+    expect(audio.playArpeggio).not.toHaveBeenCalled();
 
     // The user moves on while the module is still loading.
     await user.click(screen.getByRole('button', { name: /^E$/ }));
@@ -355,7 +357,7 @@ describe('Chord Explorer first paint', () => {
       await Promise.resolve();
     });
 
-    expect(playArpeggio).not.toHaveBeenCalled();
+    expect(audio.playArpeggio).not.toHaveBeenCalled();
   });
 
   /**
@@ -385,8 +387,8 @@ describe('Chord Explorer first paint', () => {
    */
   it('unlights the preview button when audio fails to start', async () => {
     const user = userEvent.setup();
-    vi.mocked(isAudioInitialized).mockReturnValueOnce(false);
-    vi.mocked(initializeAudio).mockRejectedValueOnce(
+    vi.mocked(audio.isInitialized).mockReturnValueOnce(false);
+    vi.mocked(audio.initialize).mockRejectedValueOnce(
       new Error('Starting the audio context timed out')
     );
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

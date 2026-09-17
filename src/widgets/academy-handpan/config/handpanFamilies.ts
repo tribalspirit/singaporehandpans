@@ -591,7 +591,12 @@ export const MERGED_FAMILY_IDS: Record<string, string> = {
  */
 export const MERGED_FAMILY_HISTORY: Record<
   string,
-  { keys: readonly string[]; noteCounts: readonly number[] }
+  {
+    keys: readonly string[];
+    noteCounts: readonly number[];
+    defaultKey: PitchClass;
+    defaultNoteCount: number;
+  }
 > = {
   aeolian: {
     keys: ['D', 'E', 'F#', 'G', 'A', 'C', 'C#'],

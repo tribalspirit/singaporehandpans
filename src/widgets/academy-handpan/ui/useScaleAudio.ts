@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { usePlayback } from './usePlayback';
 import {
-  initializeAudio,
-  isAudioInitialized,
-  playChord,
-  playNote,
-} from '../audio/engine';
+  createAudioEngine,
+  type AudioEngine,
+} from '../audio/createAudioEngine';
 import type { PlaybackMode } from './types';
-import { playArpeggio, stopArpeggio } from '../audio/scheduler';
 
 const NOTE_DURATION_MS = 500;
 const CHORD_DURATION_MS = 1000;
@@ -33,6 +30,24 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
   const { setNoteActive, setChordNotesActive, setIsPlaying, clearPlayback } =
     usePlayback();
 
+  /**
+   * One instrument per mount. Two widgets on a page each get their own synth
+   * and their own timeline, so neither can silence or re-tempo the other.
+   *
+   * Built on first render — the constructor only allocates closures, and does
+   * not reach for Tone or the audio context — so `stop` has something to call
+   * before anything has ever played. Disposing on unmount releases the synth
+   * but leaves the object usable: a later `initialize` rebuilds it, which is
+   * what makes StrictMode's mount-unmount-mount harmless.
+   */
+  const engineRef = useRef<AudioEngine | null>(null);
+  if (engineRef.current === null) {
+    engineRef.current = createAudioEngine();
+  }
+  const engine = engineRef.current;
+
+  useEffect(() => () => engine.dispose(), [engine]);
+
   const onBeforePlayRef = useRef(onBeforePlay);
   const setNoteActiveRef = useRef(setNoteActive);
   const setChordNotesActiveRef = useRef(setChordNotesActive);
@@ -53,31 +68,34 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
     clearPlayback,
   ]);
 
-  const playSingleNote = useCallback(async (noteName: string) => {
-    const sound = () => {
-      onBeforePlayRef.current?.();
-      setNoteActiveRef.current(noteName, 'note');
-      playNote(noteName, NOTE_DURATION_MS);
-      setTimeout(() => clearPlaybackRef.current(), NOTE_DURATION_MS);
-    };
+  const playSingleNote = useCallback(
+    async (noteName: string) => {
+      const sound = () => {
+        onBeforePlayRef.current?.();
+        setNoteActiveRef.current(noteName, 'note');
+        engine.playNote(noteName, NOTE_DURATION_MS);
+        setTimeout(() => clearPlaybackRef.current(), NOTE_DURATION_MS);
+      };
 
-    try {
-      if (!isAudioInitialized()) {
-        await initializeAudio();
-      }
-      sound();
-    } catch (error) {
-      // One retry: the first gesture can land while Tone is still loading, and
-      // initialising again on the user's activation usually succeeds.
       try {
-        await initializeAudio();
+        if (!engine.isInitialized()) {
+          await engine.initialize();
+        }
         sound();
-      } catch (retryError) {
-        console.error('Failed to play note', noteName, retryError);
-        clearPlaybackRef.current();
+      } catch (error) {
+        // One retry: the first gesture can land while Tone is still loading,
+        // and initialising again on the user's activation usually succeeds.
+        try {
+          await engine.initialize();
+          sound();
+        } catch (retryError) {
+          console.error('Failed to play note', noteName, retryError);
+          clearPlaybackRef.current();
+        }
       }
-    }
-  }, []);
+    },
+    [engine]
+  );
 
   /**
    * `shouldProceed` is consulted after the audio module has loaded and before
@@ -100,16 +118,16 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
         return false;
       }
       try {
-        if (!isAudioInitialized()) {
-          await initializeAudio();
+        if (!engine.isInitialized()) {
+          await engine.initialize();
         }
         if (shouldProceed && !shouldProceed()) {
           return false;
         }
-        stopArpeggio();
+        engine.stopArpeggio();
         onBeforePlayRef.current?.();
         setIsPlayingRef.current(true);
-        playArpeggio({
+        engine.playArpeggio({
           notes,
           bpm: SCALE_PREVIEW_BPM,
           direction: 'up',
@@ -127,7 +145,7 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
         return false;
       }
     },
-    []
+    [engine]
   );
 
   /**
@@ -142,20 +160,20 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
         return;
       }
       try {
-        if (!isAudioInitialized()) {
-          await initializeAudio();
+        if (!engine.isInitialized()) {
+          await engine.initialize();
         }
-        stopArpeggio();
+        engine.stopArpeggio();
         setIsPlayingRef.current(true);
 
         if (mode === 'simultaneous') {
           setChordNotesActiveRef.current(notes);
-          playChord(notes, CHORD_DURATION_MS);
+          engine.playChord(notes, CHORD_DURATION_MS);
           setTimeout(() => clearPlaybackRef.current(), CHORD_DURATION_MS);
           return;
         }
 
-        playArpeggio({
+        engine.playArpeggio({
           notes,
           bpm,
           direction: 'up',
@@ -171,13 +189,13 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
         clearPlaybackRef.current();
       }
     },
-    []
+    [engine]
   );
 
   const stop = useCallback(() => {
-    stopArpeggio();
+    engine.stopArpeggio();
     clearPlaybackRef.current();
-  }, []);
+  }, [engine]);
 
   return { playSingleNote, playScale, playChordNotes, stop };
 }

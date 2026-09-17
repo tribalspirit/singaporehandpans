@@ -30,9 +30,13 @@ import {
   getFamilyPreviewOptions,
   getSelectionForFamily,
   resolveHandpanConfig,
-  getInitialSelection,
   type FamilyPreviewOption,
 } from '../config/handpanSelectorModel';
+import {
+  resolveWidgetProps,
+  type HandpanWidgetProps,
+  type ResolvedWidgetProps,
+} from './widgetProps';
 import styles from '../styles/HandpanWidget.module.scss';
 
 function pickBestPadNoteForPc(layout: HandpanPad[], pc: string): string | null {
@@ -50,22 +54,23 @@ function pickBestPadNoteForPc(layout: HandpanPad[], pc: string): string | null {
   return sorted[0].note;
 }
 
-function HandpanWidgetContent() {
-  const initialSelection = useMemo(() => getInitialSelection(), []);
-  const [familyId, setFamilyId] = useState(initialSelection.familyId);
+function HandpanWidgetContent({ initial }: { initial: ResolvedWidgetProps }) {
+  const [familyId, setFamilyId] = useState(initial.selection.familyId);
   const [selectedKey, setSelectedKey] = useState<PitchClass>(
-    initialSelection.key
+    initial.selection.key
   );
   const [selectedNoteCount, setSelectedNoteCount] = useState(
-    initialSelection.noteCount
+    initial.selection.noteCount
   );
   const [selectedChord, setSelectedChord] = useState<PlayableChord | null>(
     null
   );
-  const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('arpeggio');
-  const [arpeggioBpm, setArpeggioBpm] = useState(120);
-  const [notation, setNotation] = useState<NotationMode>('note');
-  const [activeTabId, setActiveTabId] = useState('listen');
+  const [playbackMode, setPlaybackMode] = useState<PlaybackMode>(
+    initial.playbackMode
+  );
+  const [arpeggioBpm, setArpeggioBpm] = useState(initial.arpeggioBpm);
+  const [notation, setNotation] = useState<NotationMode>(initial.notation);
+  const [activeTabId, setActiveTabId] = useState<string>(initial.view);
   const [familyNotice, setFamilyNotice] = useState<string | null>(null);
   const [previewingFamilyId, setPreviewingFamilyId] = useState<string | null>(
     null
@@ -524,10 +529,23 @@ function HandpanWidgetContent() {
   );
 }
 
-export default function HandpanWidget() {
+/**
+ * The widget, with its opening state optionally set by whoever renders it.
+ *
+ * Props are read once. Resolving them on every render would fight the
+ * visitor's own choices — a host that re-rendered with the same `familyId`
+ * would keep yanking them back to it — so the resolved value is captured at
+ * mount and the widget owns its state from there.
+ */
+export default function HandpanWidget(props: HandpanWidgetProps = {}) {
+  const initialRef = useRef<ResolvedWidgetProps | null>(null);
+  if (initialRef.current === null) {
+    initialRef.current = resolveWidgetProps(props);
+  }
+
   return (
     <PlaybackProvider key="handpan-playback-provider">
-      <HandpanWidgetContent />
+      <HandpanWidgetContent initial={initialRef.current} />
     </PlaybackProvider>
   );
 }
