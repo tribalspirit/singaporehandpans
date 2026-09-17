@@ -98,6 +98,26 @@ describe('resolveWidgetProps', () => {
     expect(resolveHandpanConfig(resolved.selection)).not.toBeNull();
   });
 
+  /**
+   * A merged family may be asked for a shell the survivor never published:
+   * Ionian offered 9, 10 and 13, and Sabye — what it became — offers 9 only.
+   * `resolveHandpanConfig` migrates that request down to 9, so returning the
+   * requested 13 would leave the widget rendering a 9-pad instrument while its
+   * summary line and shell selector both claimed 13.
+   */
+  it('reports the shell count the instrument actually has', () => {
+    const resolved = resolveWidgetProps({
+      familyId: 'ionian',
+      scaleKey: 'D',
+      noteCount: 13,
+    });
+
+    const config = resolveHandpanConfig(resolved.selection);
+    expect(config).not.toBeNull();
+    expect(resolved.selection.noteCount).toBe(config?.noteCount);
+    expect(resolved.selection.noteCount).toBe(config?.notes.length);
+  });
+
   it('always yields a selection that resolves to an instrument', () => {
     const nonsense = [
       { familyId: 'kurd', scaleKey: 'Z', noteCount: -4 },
@@ -151,5 +171,31 @@ describe('resolveWidgetProps', () => {
     expect(resolveWidgetProps({ arpeggioBpm: 'fast' }).arpeggioBpm).toBe(
       DEFAULT_ARPEGGIO_BPM
     );
+  });
+
+  /**
+   * An absent attribute reaches a custom element as `null`, and an author may
+   * well write `arpeggio-bpm=""`. `Number` turns both into 0, which clamps to
+   * the slowest tempo the slider offers — so "I did not set this" would have
+   * meant 60 BPM rather than the default.
+   */
+  it('treats an unset tempo as unset rather than as zero', () => {
+    for (const arpeggioBpm of [null, undefined, '', '   ']) {
+      expect(
+        resolveWidgetProps({ arpeggioBpm }).arpeggioBpm,
+        JSON.stringify(arpeggioBpm)
+      ).toBe(DEFAULT_ARPEGGIO_BPM);
+    }
+  });
+
+  /** The same blank-is-absent rule, for the fields that pick an instrument. */
+  it('treats a blank selection attribute as unset', () => {
+    const resolved = resolveWidgetProps({
+      familyId: '   ',
+      scaleKey: '',
+      noteCount: '',
+    });
+
+    expect(resolved.selection).toEqual(DEFAULTS);
   });
 });

@@ -52,6 +52,21 @@ export interface ResolvedWidgetProps {
   arpeggioBpm: number;
 }
 
+/**
+ * Whether a value carries no answer at all.
+ *
+ * An attribute the host page left off arrives as `null`, and one written as
+ * `attr=""` arrives as an empty string. Both mean "unset", and neither may be
+ * coerced into a number or matched against a catalog entry.
+ */
+function isBlank(raw: unknown): boolean {
+  return (
+    raw === null ||
+    raw === undefined ||
+    (typeof raw === 'string' && raw.trim() === '')
+  );
+}
+
 function resolveNotation(raw: HandpanWidgetProps['notation']): NotationMode {
   return raw === 'number' ? 'number' : 'note';
 }
@@ -70,8 +85,17 @@ function resolvePlaybackMode(
 /**
  * Clamped rather than rejected, because the bounds are the tempo slider's own:
  * a value outside them would render a control the visitor cannot return to.
+ *
+ * Absent is not zero, though. An unset attribute reaches a custom element as
+ * `null`, and `bpm=""` is a thing an author writes; `Number` turns both into 0,
+ * which clamps to the slowest tempo on the slider — so "I did not set this"
+ * would have meant 60 BPM instead of the default.
  */
 function resolveArpeggioBpm(raw: HandpanWidgetProps['arpeggioBpm']): number {
+  if (isBlank(raw)) {
+    return DEFAULT_ARPEGGIO_BPM;
+  }
+
   const requested = Number(raw);
   if (!Number.isFinite(requested)) {
     return DEFAULT_ARPEGGIO_BPM;

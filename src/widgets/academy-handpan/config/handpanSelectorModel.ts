@@ -274,6 +274,13 @@ function normalizeKeyRequest(raw: string): string {
  * Merged-away ids are honoured as given — `equinox` opens on its own G, not on
  * Integral's D — for the same reason `getKeyOptions` and `getDefaultSelection`
  * treat them as first-class.
+ *
+ * The shell count that comes back is the one the instrument actually has, which
+ * is not always the one asked for. A merged family may publish a shell its
+ * survivor does not: Ionian offered 9, 10 and 13, and Sabye offers 9 only, so
+ * `resolveHandpanConfig` migrates a request for 13 down to 9. Returning the 13
+ * would have left the widget drawing nine pads under a summary line and a shell
+ * selector that both said thirteen.
  */
 export function resolveInitialSelection(
   request: HandpanSelectionRequest = {}
@@ -299,7 +306,10 @@ export function resolveInitialSelection(
     ? requestedNoteCount
     : defaults.noteCount;
 
-  const selection = { familyId, key, noteCount };
+  const config = resolveHandpanConfig({ familyId, key, noteCount });
+  if (!config) {
+    return fallback;
+  }
 
-  return resolveHandpanConfig(selection) ? selection : fallback;
+  return { familyId, key, noteCount: config.noteCount ?? noteCount };
 }

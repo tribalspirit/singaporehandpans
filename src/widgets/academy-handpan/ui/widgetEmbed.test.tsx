@@ -66,6 +66,22 @@ describe('HandpanWidget props', () => {
     expect(ding.getAttribute('aria-label')).toContain('D3');
   });
 
+  /**
+   * The summary line must describe the pan that is drawn.
+   *
+   * Ionian published 9, 10 and 13; Sabye — what it became — offers 9 only, so a
+   * request for 13 is migrated down. The widget drew nine pads under a line
+   * reading "13 notes" until the resolved selection reported the shell the
+   * instrument actually has.
+   */
+  it('describes the instrument it drew, not the one that was asked for', () => {
+    render(<HandpanWidget familyId="ionian" scaleKey="D" noteCount={13} />);
+
+    const pads = screen.getAllByRole('button', { name: /^Pad \d+,/ });
+    expect(screen.getByText(`D Sabye · ${pads.length} notes`)).toBeDefined();
+    expect(pads).toHaveLength(9);
+  });
+
   /** A bad attribute must still render an instrument, not an empty widget. */
   it('falls back to the default rather than rendering nothing', () => {
     render(<HandpanWidget familyId="lydian" scaleKey="Z" noteCount={-1} />);
