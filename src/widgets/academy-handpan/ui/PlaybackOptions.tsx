@@ -40,6 +40,8 @@ export default function PlaybackOptions({
   // Generated, not hardcoded: two widgets on one page would otherwise share
   // these ids and break every label association on the second instance.
   const modeLabelId = useId();
+  /** Per-instance, so two widgets do not share one native radio group. */
+  const modeGroupName = `playback-mode-${useId()}`;
   const bpmId = useId();
 
   const handleBpmChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +74,7 @@ export default function PlaybackOptions({
             >
               <input
                 type="radio"
-                name="playback-mode"
+                name={modeGroupName}
                 value={option.value}
                 checked={playbackMode === option.value}
                 onChange={() => onPlaybackModeChange(option.value)}

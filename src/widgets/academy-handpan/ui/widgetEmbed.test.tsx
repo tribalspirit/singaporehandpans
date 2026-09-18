@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import HandpanWidget from './HandpanWidget';
 
@@ -102,6 +102,55 @@ describe('HandpanWidget props', () => {
       .map((el) => el.textContent);
 
     expect(selected.some((text) => text?.startsWith('Integral'))).toBe(true);
+  });
+
+  /**
+   * Two widgets must not share a radio group.
+   *
+   * A `name` is scoped to the document, not to a component, so two instances
+   * put their pad-label radios into one native group: choosing Numbers in the
+   * second unchecked the first's input, while the first's React state and its
+   * active styling carried on saying Notes. The same held for the chord
+   * playback mode. Whole-document uniqueness is the point of the fix, so the
+   * assertion is over every radio on the page rather than a chosen pair.
+   */
+  it('keeps each instance radio groups to itself', async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <div data-testid="first">
+          <HandpanWidget />
+        </div>
+        <div data-testid="second">
+          <HandpanWidget />
+        </div>
+      </>
+    );
+
+    const first = within(screen.getByTestId('first'));
+    const second = within(screen.getByTestId('second'));
+
+    await user.click(first.getByRole('button', { name: /^change$/i }));
+    await user.click(second.getByRole('button', { name: /^change$/i }));
+
+    const names = screen
+      .getAllByRole('radio')
+      .map((radio) => radio.getAttribute('name'));
+    expect(new Set(names).size).toBe(names.length / 2);
+
+    const firstNote = first.getByRole('radio', {
+      name: /note/i,
+    }) as HTMLInputElement;
+    expect(firstNote.checked).toBe(true);
+
+    // Choosing in the second instance must leave the first alone.
+    await user.click(second.getByRole('radio', { name: /number/i }));
+
+    expect(firstNote.checked).toBe(true);
+    expect(
+      (second.getByRole('radio', { name: /number/i }) as HTMLInputElement)
+        .checked
+    ).toBe(true);
   });
 
   /** A bad attribute must still render an instrument, not an empty widget. */
