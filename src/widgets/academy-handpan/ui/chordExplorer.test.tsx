@@ -325,6 +325,99 @@ describe('Chord Explorer first paint', () => {
   });
 
   /**
+   * The other direction: a live request that fails *must* still tidy up.
+   *
+   * Scheduling throws only after `isPlaying` has gone true, so without the
+   * cleanup the control stays on Stop forever over silence. Guarding that
+   * cleanup by generation had to keep this working — with nothing asserting it,
+   * a guard that simply never cleared would have passed the suite.
+   */
+  it('unlights its own control when scheduling throws', async () => {
+    const user = userEvent.setup();
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    vi.mocked(audio.playArpeggio).mockImplementationOnce(() => {
+      throw new Error('scheduling failed');
+    });
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('button', { name: /^play scale$/i }));
+
+    await waitFor(() =>
+      expect(screen.queryAllByRole('button', { name: /^stop$/i })).toHaveLength(
+        0
+      )
+    );
+    expect(screen.getByRole('button', { name: /^play scale$/i })).toBeDefined();
+    errors.mockRestore();
+  });
+
+  /**
+   * A stale request that fails must not tidy up after the live one.
+   *
+   * The generation check guards the success path, but a rejection jumps
+   * straight to `catch`, and the cleanup there was unconditional — so an older
+   * attempt failing after a newer one had started playing cleared the newer
+   * one's highlights and flipped its control back to Play, while its audio went
+   * on sounding.
+   */
+  it('leaves live playback alone when an older attempt fails', async () => {
+    const user = userEvent.setup();
+
+    let failFirst: ((error: Error) => void) | undefined;
+    let releaseSecond: (() => void) | undefined;
+    vi.mocked(audio.isInitialized)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
+    vi.mocked(audio.initialize)
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((_resolve, reject) => {
+            failFirst = reject;
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseSecond = resolve;
+          })
+      );
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('tab', { name: /chords/i }));
+
+    await user.click(screen.getByRole('button', { name: /^Dm tonic/ }));
+    await user.click(screen.getByRole('button', { name: /^play$/i }));
+
+    await user.click(screen.getByRole('button', { name: /^F relative major/ }));
+    await user.click(screen.getByRole('button', { name: /^play$/i }));
+
+    await waitFor(() => expect(releaseSecond).toBeDefined());
+
+    // Playing is shown by the controls swapping to Stop — both the scale action
+    // and the chord bar do it, so count them rather than picking one.
+    const stopControls = () =>
+      screen.queryAllByRole('button', { name: /^stop$/i }).length;
+
+    await act(async () => {
+      releaseSecond?.();
+      await Promise.resolve();
+    });
+    const playingControls = stopControls();
+    expect(playingControls).toBeGreaterThan(0);
+
+    // The abandoned one now fails; the live playback must be untouched.
+    await act(async () => {
+      failFirst?.(new Error('Starting the audio context timed out'));
+      await Promise.resolve();
+    });
+
+    expect(stopControls()).toBe(playingControls);
+    errors.mockRestore();
+  });
+
+  /**
    * The same rule for chords: the selected one is the one that sounds.
    *
    * Play a chord while the audio context is still starting, pick another and

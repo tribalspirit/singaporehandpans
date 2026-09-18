@@ -116,6 +116,14 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
 
   const playSingleNote = useCallback(
     async (noteName: string) => {
+      // A note takes no ticket — two pads tapped together should sound
+      // together — but it must still not tidy up after playback that started
+      // while it was waiting, which is what the generation is read for here.
+      const generationAtStart = playbackGenerationRef.current;
+      const canClearOwnPlayback = () =>
+        isMountedRef.current &&
+        playbackGenerationRef.current === generationAtStart;
+
       const sound = () => {
         onBeforePlayRef.current?.();
         setNoteActiveRef.current(noteName, 'note');
@@ -147,7 +155,9 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
           sound();
         } catch (retryError) {
           console.error('Failed to play note', noteName, retryError);
-          clearPlaybackRef.current();
+          if (canClearOwnPlayback()) {
+            clearPlaybackRef.current();
+          }
         }
       }
     },
@@ -202,7 +212,13 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
         return true;
       } catch (error) {
         console.error('Failed to play scale', error);
-        clearPlaybackRef.current();
+        // Only tidy up if this request is still the current one. A rejection
+        // jumps straight here, past the check above, so an older attempt
+        // failing after a newer one began would otherwise clear the newer
+        // one's highlights and unlight its control over sound still playing.
+        if (isCurrentPlayback(generation)) {
+          clearPlaybackRef.current();
+        }
         return false;
       }
     },
@@ -251,7 +267,11 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
         });
       } catch (error) {
         console.error('Failed to play chord', error);
-        clearPlaybackRef.current();
+        // See `playScale`: a stale rejection must not tidy up after the live
+        // request.
+        if (isCurrentPlayback(generation)) {
+          clearPlaybackRef.current();
+        }
       }
     },
     [engine, beginExclusivePlayback, isCurrentPlayback]
