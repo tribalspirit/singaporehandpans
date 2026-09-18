@@ -266,7 +266,12 @@ function HandpanWidgetContent({ initial }: { initial: ResolvedWidgetProps }) {
         // Covers both ways nothing plays: superseded by a later choice, or
         // audio failing outright. Either way `isPlaying` never goes true, so
         // the effect that normally unlights the button never fires.
-        if (!started) {
+        //
+        // Only this request may stand down, though. Matching on family id
+        // alone meant that previewing the *same* family twice had the older
+        // request unlight the button for the newer one that was playing —
+        // both ids being equal, the id check could not tell them apart.
+        if (!started && previewGenerationRef.current === generation) {
           setPreviewingFamilyId((current) =>
             current === option.id ? null : current
           );

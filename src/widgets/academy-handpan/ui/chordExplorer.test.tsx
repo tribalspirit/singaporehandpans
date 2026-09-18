@@ -325,6 +325,60 @@ describe('Chord Explorer first paint', () => {
   });
 
   /**
+   * Previewing the same family twice must leave the second one lit.
+   *
+   * The superseded request's cleanup matched on family id alone. Click the same
+   * preview twice and both ids are equal, so the older request — correctly
+   * refusing to play — unlit the button for the newer one that was playing.
+   */
+  it('keeps the indicator lit when the same preview is clicked twice', async () => {
+    const user = userEvent.setup();
+
+    let releaseFirst: (() => void) | undefined;
+    let releaseSecond: (() => void) | undefined;
+    vi.mocked(audio.isInitialized)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
+    vi.mocked(audio.initialize)
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseSecond = resolve;
+          })
+      );
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+
+    const preview = () =>
+      screen.getByRole('button', { name: /^preview kurd$/i });
+    // Earlier tests in this file leave calls on the shared stub.
+    vi.mocked(audio.playArpeggio).mockClear();
+    await user.click(preview());
+    await user.click(preview());
+    await waitFor(() => expect(releaseSecond).toBeDefined());
+
+    // The second click plays; the first then resolves and stands down.
+    await act(async () => {
+      releaseSecond?.();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      releaseFirst?.();
+      await Promise.resolve();
+    });
+
+    expect(audio.playArpeggio).toHaveBeenCalledTimes(1);
+    expect(preview().getAttribute('data-playing')).not.toBeNull();
+  });
+
+  /**
    * The other direction: a live request that fails *must* still tidy up.
    *
    * Scheduling throws only after `isPlaying` has gone true, so without the
