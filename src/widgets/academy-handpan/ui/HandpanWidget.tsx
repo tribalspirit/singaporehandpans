@@ -233,13 +233,26 @@ function HandpanWidgetContent({ initial }: { initial: ResolvedWidgetProps }) {
       stop();
       return;
     }
+    // Playing the scale outright cancels any preview, exactly as changing the
+    // instrument does. Only the preview's own request clears its marker, and
+    // that request may be stuck behind a context start for seconds yet — until
+    // then the preview button sat lit beside a scale that really was playing.
+    invalidatePreview();
     void playScale(sortedScaleNotes);
-  }, [playback.state.isPlaying, stop, playScale, sortedScaleNotes]);
+  }, [
+    playback.state.isPlaying,
+    stop,
+    playScale,
+    sortedScaleNotes,
+    invalidatePreview,
+  ]);
 
   const handlePlayChord = useCallback(() => {
     if (!selectedChord || playback.state.isPlaying) {
       return;
     }
+    // See `handlePlayScale`: sounding a chord cancels a pending preview too.
+    invalidatePreview();
     void playChordNotes(selectedChord.notes, playbackMode, arpeggioBpm);
   }, [
     selectedChord,
@@ -247,6 +260,7 @@ function HandpanWidgetContent({ initial }: { initial: ResolvedWidgetProps }) {
     playChordNotes,
     playbackMode,
     arpeggioBpm,
+    invalidatePreview,
   ]);
 
   const handlePreviewFamily = useCallback(

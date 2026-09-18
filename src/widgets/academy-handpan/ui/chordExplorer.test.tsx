@@ -325,6 +325,44 @@ describe('Chord Explorer first paint', () => {
   });
 
   /**
+   * Starting the main scale cancels a preview that is still waiting.
+   *
+   * The preview marker is only ever cleared by the preview's own request, and
+   * that request is stuck behind a context start that can take seconds to time
+   * out. Until then the preview button sat lit beside a scale that was actually
+   * playing, claiming two things were sounding at once.
+   */
+  it('unlights a pending preview when the main scale starts', async () => {
+    const user = userEvent.setup();
+
+    let releasePreview: (() => void) | undefined;
+    vi.mocked(audio.isInitialized).mockReturnValueOnce(false);
+    vi.mocked(audio.initialize).mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          releasePreview = resolve;
+        })
+    );
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+    await user.click(screen.getByRole('button', { name: /^preview kurd$/i }));
+    await waitFor(() => expect(releasePreview).toBeDefined());
+
+    const preview = () =>
+      screen.getByRole('button', { name: /^preview kurd$/i });
+    expect(preview().getAttribute('data-playing')).not.toBeNull();
+
+    // The visitor gives up waiting and plays the scale instead. Audio is ready
+    // by now, so this one starts immediately.
+    await user.click(screen.getByRole('button', { name: /^play scale$/i }));
+
+    expect(preview().getAttribute('data-playing')).toBeNull();
+
+    releasePreview?.();
+  });
+
+  /**
    * Previewing the same family twice must leave the second one lit.
    *
    * The superseded request's cleanup matched on family id alone. Click the same
