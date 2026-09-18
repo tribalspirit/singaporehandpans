@@ -89,6 +89,21 @@ function HandpanWidgetContent({ initial }: { initial: ResolvedWidgetProps }) {
   const previewGenerationRef = useRef(0);
 
   const playback = usePlayback();
+
+  /**
+   * Cancel any preview because the instrument itself changed.
+   *
+   * Distinct from one preview superseding another. A superseded request
+   * declines to unlight the button, since the request that replaced it owns
+   * that state now — but a configuration change leaves no preview to own it,
+   * and nothing else clears the marker on this path because `isPlaying` never
+   * went true. Without this the button stayed lit over a preview that never
+   * played.
+   */
+  const invalidatePreview = useCallback(() => {
+    previewGenerationRef.current += 1;
+    setPreviewingFamilyId(null);
+  }, []);
   const familyOptions = useMemo(() => getFamilyPreviewOptions(), []);
   const keyOptions = useMemo(() => getKeyOptions(familyId), [familyId]);
   const noteCountOptions = useMemo(
@@ -300,7 +315,7 @@ function HandpanWidgetContent({ initial }: { initial: ResolvedWidgetProps }) {
       setSelectedKey(next.key);
       setSelectedNoteCount(next.noteCount);
       setSelectedChord(null);
-      previewGenerationRef.current += 1;
+      invalidatePreview();
       // `stop()`, not `clearPlayback()`. Re-selecting the family already shown
       // leaves the selection — and so `selectionKey` — unchanged, so the effect
       // above does not fire. Clearing only the state would let the scheduled
@@ -313,7 +328,7 @@ function HandpanWidgetContent({ initial }: { initial: ResolvedWidgetProps }) {
           : null
       );
     },
-    [selectedKey, selectedNoteCount, stop]
+    [selectedKey, selectedNoteCount, stop, invalidatePreview]
   );
 
   const handleKeyChange = useCallback(
@@ -321,20 +336,20 @@ function HandpanWidgetContent({ initial }: { initial: ResolvedWidgetProps }) {
       setSelectedKey(key);
       setSelectedChord(null);
       setFamilyNotice(null);
-      previewGenerationRef.current += 1;
+      invalidatePreview();
       stop();
     },
-    [stop]
+    [stop, invalidatePreview]
   );
 
   const handleNoteCountChange = useCallback(
     (noteCount: number) => {
       setSelectedNoteCount(noteCount);
       setSelectedChord(null);
-      previewGenerationRef.current += 1;
+      invalidatePreview();
       stop();
     },
-    [stop]
+    [stop, invalidatePreview]
   );
 
   /*

@@ -645,6 +645,17 @@ describe('Chord Explorer first paint', () => {
     });
 
     expect(audio.playArpeggio).not.toHaveBeenCalled();
+
+    // And the button must not stay lit over a preview that never played. The
+    // superseded request declines to clean up after a *later preview*, which
+    // is right — but a configuration change is not a later preview, and
+    // nothing else unlights the button here because `isPlaying` never went
+    // true. Asserting only that no sound happened let that slip through.
+    expect(
+      screen
+        .getByRole('button', { name: /^preview celtic minor$/i })
+        .getAttribute('data-playing')
+    ).toBeNull();
   });
 
   /**
