@@ -46,7 +46,26 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
   }
   const engine = engineRef.current;
 
-  useEffect(() => () => engine.dispose(), [engine]);
+  /**
+   * Whether the widget this engine belongs to is still on the page.
+   *
+   * Every playback path awaits `initialize`, and the visitor can navigate away
+   * mid-await. Disposal on unmount stops what is already sounding, but a
+   * disposed engine rebuilds on the next `initialize` — deliberately, so
+   * StrictMode's mount/unmount/mount is harmless — so anything still holding
+   * one can bring a `PolySynth` back to life after its widget is gone, wire it
+   * to the output, and sound a note over the next page with nothing left to
+   * dispose it.
+   */
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      engine.dispose();
+    };
+  }, [engine]);
 
   const onBeforePlayRef = useRef(onBeforePlay);
   const setNoteActiveRef = useRef(setNoteActive);
@@ -80,13 +99,24 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
       try {
         if (!engine.isInitialized()) {
           await engine.initialize();
+          if (!isMountedRef.current) {
+            return;
+          }
         }
         sound();
       } catch (error) {
         // One retry: the first gesture can land while Tone is still loading,
         // and initialising again on the user's activation usually succeeds.
+        // Not once the widget has gone, though — retrying there would rebuild
+        // the engine that unmounting just disposed.
+        if (!isMountedRef.current) {
+          return;
+        }
         try {
           await engine.initialize();
+          if (!isMountedRef.current) {
+            return;
+          }
           sound();
         } catch (retryError) {
           console.error('Failed to play note', noteName, retryError);
@@ -120,6 +150,9 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
       try {
         if (!engine.isInitialized()) {
           await engine.initialize();
+        }
+        if (!isMountedRef.current) {
+          return false;
         }
         if (shouldProceed && !shouldProceed()) {
           return false;
@@ -162,6 +195,9 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
       try {
         if (!engine.isInitialized()) {
           await engine.initialize();
+        }
+        if (!isMountedRef.current) {
+          return;
         }
         engine.stopArpeggio();
         setIsPlayingRef.current(true);
