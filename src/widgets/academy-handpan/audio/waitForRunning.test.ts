@@ -211,7 +211,7 @@ describe('audio start-up has no unbounded await', () => {
     // helpers, which the case above has just proved bounded. Asserting they
     // exist keeps the allowance from outliving the functions it names.
     expect(shared).toContain('export async function loadToneModule');
-    expect(shared).toContain('export function startAudioContext');
+    expect(shared).toContain('export async function startAudioContext');
 
     const bounded = [
       'withTimeout',

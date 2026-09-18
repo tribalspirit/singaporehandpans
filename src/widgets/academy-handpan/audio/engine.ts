@@ -27,7 +27,6 @@ const MODULE_LOAD_TIMEOUT_MS = 15000;
 
 let Tone: typeof ToneModule | null = null;
 let warmPromise: Promise<unknown> | null = null;
-let contextStartPromise: Promise<void> | null = null;
 
 /**
  * The loaded Tone module. Throws if audio has not been initialised, which is
@@ -99,49 +98,43 @@ export async function loadToneModule(): Promise<typeof ToneModule> {
 }
 
 /**
- * Resume the page's audio context, once, however many widgets ask.
+ * Resume the page's audio context.
  *
- * The promise is shared while in flight and dropped when it settles: on success
- * the state check short-circuits every later call, and on failure the next
- * gesture gets a fresh attempt rather than the cached rejection.
+ * The context is shared — a document gets one, and resuming a running context
+ * buys nothing, which is what the state check above skips. The *attempt* is
+ * deliberately not shared. `tone.start()` resolves only when the underlying
+ * `AudioContext.resume()` does, and a resume made without a live user
+ * activation can sit pending until the bound below fires. Handing that stuck
+ * promise to the next widget would spend its perfectly good gesture on the
+ * first widget's dead one and fail them both; every gesture gets its own
+ * attempt instead. Concurrent `resume()` calls are harmless.
  */
-export function startAudioContext(): Promise<void> {
+export async function startAudioContext(): Promise<void> {
   const tone = getTone();
 
   if (tone.context.state === 'running') {
-    return Promise.resolve();
+    return;
   }
 
-  if (!contextStartPromise) {
-    contextStartPromise = (async () => {
-      try {
-        // Bounded, because `Tone.start()` resolves only when the underlying
-        // `AudioContext.resume()` does, and autoplay policy can leave that
-        // pending indefinitely. Bounding only the state poll below was not
-        // enough: execution never reached it, so the initialisation promise
-        // stayed pending forever and every later gesture reused the stuck
-        // promise — exactly the failure the poll's bound was meant to remove.
-        await withTimeout(
-          tone.start(),
-          CONTEXT_START_TIMEOUT_MS,
-          'Starting the audio context'
-        );
+  // Bounded, because `tone.start()` can stay pending indefinitely under
+  // autoplay policy. Bounding only the state poll below was not enough:
+  // execution never reached it, so the caller's initialisation promise stayed
+  // pending forever and every later gesture reused the stuck promise — exactly
+  // the failure the poll's bound was meant to remove.
+  await withTimeout(
+    tone.start(),
+    CONTEXT_START_TIMEOUT_MS,
+    'Starting the audio context'
+  );
 
-        // Bounded for the same reason: a context that never reaches `running`
-        // must fail rather than poll forever, so the next gesture can retry
-        // against a module that is by then cached.
-        const started = await waitForRunningContext(() => tone.context.state);
+  // Bounded for the same reason: a context that never reaches `running` must
+  // fail rather than poll forever, so the next gesture can retry against a
+  // module that is by then cached.
+  const started = await waitForRunningContext(() => tone.context.state);
 
-        if (!started) {
-          throw new Error(
-            `Audio context failed to start. State: ${tone.context.state}`
-          );
-        }
-      } finally {
-        contextStartPromise = null;
-      }
-    })();
+  if (!started) {
+    throw new Error(
+      `Audio context failed to start. State: ${tone.context.state}`
+    );
   }
-
-  return contextStartPromise;
 }
