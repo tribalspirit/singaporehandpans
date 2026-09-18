@@ -336,6 +336,35 @@ describe('createAudioEngine', () => {
     expect(contextGate.calls).toBe(0);
   });
 
+  /**
+   * The same rule as `startAudioContext`, one level down.
+   *
+   * A cold module load can outlast the activation of the click that began it,
+   * leaving the context resume pending for its full timeout. A second click on
+   * the *same* widget is a fresh activation and must get a real attempt — an
+   * in-flight initialisation that is stuck waiting on the first one's dead
+   * activation would otherwise swallow it, and neither scale nor chord playback
+   * retries.
+   */
+  it('lets a second gesture start the context while the first is stuck', async () => {
+    contextGate.hold = true;
+    const engine = createAudioEngine();
+    const stuck = engine.initialize().catch((error) => error);
+    await contextGate.entered;
+    expect(contextGate.calls).toBe(1);
+
+    // The visitor clicks again; this activation is live.
+    contextGate.hold = false;
+    await engine.initialize();
+
+    expect(contextGate.calls).toBe(2);
+    expect(engine.isInitialized()).toBe(true);
+    expect(() => engine.playNote('D3')).not.toThrow();
+
+    contextGate.open();
+    await stuck;
+  });
+
   it('still initialises after a disposal that interrupted one', async () => {
     contextGate.hold = true;
     const engine = createAudioEngine();

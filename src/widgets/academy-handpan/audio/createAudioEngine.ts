@@ -66,7 +66,6 @@ function getOrderedNotes(
 export function createAudioEngine(): AudioEngine {
   let synth: ToneModule.PolySynth | null = null;
   let initialized = false;
-  let initializationPromise: Promise<void> | null = null;
 
   let arpeggioTimers: ReturnType<typeof setTimeout>[] = [];
   /**
@@ -102,58 +101,68 @@ export function createAudioEngine(): AudioEngine {
     return synth;
   }
 
+  /**
+   * Every gesture gets a real attempt, for the reason `startAudioContext` does.
+   *
+   * There is deliberately no in-flight promise cached here. A cold module load
+   * can outlast the activation of the click that began it, leaving the context
+   * resume pending for its whole timeout; a second click on this widget is a
+   * fresh activation, and handing it the stuck attempt would spend it for
+   * nothing. Neither scale nor chord playback retries, so that click would
+   * simply produce silence.
+   *
+   * Sharing still happens where it should: the module download is deduplicated
+   * in `warmAudioModule`, and an already-working instrument short-circuits
+   * both below.
+   */
   function initialize(): Promise<void> {
-    if (initializationPromise) {
-      return initializationPromise;
-    }
-
     const loaded = peekTone();
     if (initialized && synth && loaded && loaded.context.state === 'running') {
       return Promise.resolve();
     }
 
-    initializationPromise = (async () => {
+    return (async () => {
       const generation = lifecycleGeneration;
       const superseded = () => generation !== lifecycleGeneration;
 
-      try {
-        const tone = await loadToneModule();
-        if (superseded()) {
-          return;
-        }
-
-        if (
-          tone.context.state === 'suspended' ||
-          tone.context.state === 'closed'
-        ) {
-          releaseSynth();
-        }
-
-        await startAudioContext();
-        if (superseded()) {
-          return;
-        }
-
-        releaseSynth();
-        synth = new tone.PolySynth(tone.Synth, {
-          oscillator: {
-            type: 'sine',
-          },
-          envelope: {
-            attack: 0.01,
-            decay: 0.1,
-            sustain: 0.3,
-            release: 0.5,
-          },
-        }).toDestination();
-
-        initialized = true;
-      } finally {
-        initializationPromise = null;
+      const tone = await loadToneModule();
+      if (superseded()) {
+        return;
       }
-    })();
 
-    return initializationPromise;
+      if (
+        tone.context.state === 'suspended' ||
+        tone.context.state === 'closed'
+      ) {
+        releaseSynth();
+      }
+
+      await startAudioContext();
+      if (superseded()) {
+        return;
+      }
+
+      // A concurrent gesture may have got there first; leave its instrument
+      // alone rather than tearing down a working one to rebuild the same thing.
+      if (initialized && synth && tone.context.state === 'running') {
+        return;
+      }
+
+      releaseSynth();
+      synth = new tone.PolySynth(tone.Synth, {
+        oscillator: {
+          type: 'sine',
+        },
+        envelope: {
+          attack: 0.01,
+          decay: 0.1,
+          sustain: 0.3,
+          release: 0.5,
+        },
+      }).toDestination();
+
+      initialized = true;
+    })();
   }
 
   function playNote(note: string, durationMs: number = 500): void {
