@@ -67,6 +67,33 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
     };
   }, [engine]);
 
+  /**
+   * Supersedes an exclusive playback request that is still waiting on audio.
+   *
+   * Scale and chord playback are exclusive: starting one replaces whatever was
+   * sounding. Each gesture now gets its own initialisation attempt, so two can
+   * settle out of order — the later request starts, the earlier one then wakes
+   * up, stops it and plays itself, while the UI still highlights the later one.
+   *
+   * Every exclusive path takes a ticket on the way in and checks it is still
+   * the current one after each await; `stop` invalidates whatever is pending,
+   * so an explicit stop is not undone by a request made before it. Single notes
+   * deliberately do not take part: tapping two pads should sound two notes, not
+   * cancel the first.
+   */
+  const playbackGenerationRef = useRef(0);
+
+  const beginExclusivePlayback = useCallback((): number => {
+    playbackGenerationRef.current += 1;
+    return playbackGenerationRef.current;
+  }, []);
+
+  const isCurrentPlayback = useCallback(
+    (generation: number): boolean =>
+      isMountedRef.current && playbackGenerationRef.current === generation,
+    []
+  );
+
   const onBeforePlayRef = useRef(onBeforePlay);
   const setNoteActiveRef = useRef(setNoteActive);
   const setChordNotesActiveRef = useRef(setChordNotesActive);
@@ -147,11 +174,12 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
       if (notes.length === 0) {
         return false;
       }
+      const generation = beginExclusivePlayback();
       try {
         if (!engine.isInitialized()) {
           await engine.initialize();
         }
-        if (!isMountedRef.current) {
+        if (!isCurrentPlayback(generation)) {
           return false;
         }
         if (shouldProceed && !shouldProceed()) {
@@ -178,7 +206,7 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
         return false;
       }
     },
-    [engine]
+    [engine, beginExclusivePlayback, isCurrentPlayback]
   );
 
   /**
@@ -192,11 +220,12 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
       if (notes.length === 0) {
         return;
       }
+      const generation = beginExclusivePlayback();
       try {
         if (!engine.isInitialized()) {
           await engine.initialize();
         }
-        if (!isMountedRef.current) {
+        if (!isCurrentPlayback(generation)) {
           return;
         }
         engine.stopArpeggio();
@@ -225,13 +254,16 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
         clearPlaybackRef.current();
       }
     },
-    [engine]
+    [engine, beginExclusivePlayback, isCurrentPlayback]
   );
 
   const stop = useCallback(() => {
+    // Invalidates anything still waiting on audio, so a request made before
+    // the stop cannot start sounding after it.
+    beginExclusivePlayback();
     engine.stopArpeggio();
     clearPlaybackRef.current();
-  }, [engine]);
+  }, [engine, beginExclusivePlayback]);
 
   return { playSingleNote, playScale, playChordNotes, stop };
 }

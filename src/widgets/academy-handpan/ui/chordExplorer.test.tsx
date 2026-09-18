@@ -325,6 +325,66 @@ describe('Chord Explorer first paint', () => {
   });
 
   /**
+   * The same rule for chords: the selected one is the one that sounds.
+   *
+   * Play a chord while the audio context is still starting, pick another and
+   * play that, and the first attempt could settle last — stopping the second
+   * chord and sounding itself while the panel still highlights the second.
+   * `playScale` and the family preview each grew their own staleness check;
+   * chord playback had none.
+   */
+  it('plays the chord that is selected when two starts overlap', async () => {
+    const user = userEvent.setup();
+
+    // `*Once` throughout, so the stubs restore themselves however this ends.
+    // A failure part-way used to leave the shared mocks overridden and take
+    // every later test in the file down with it.
+    let releaseFirst: (() => void) | undefined;
+    let releaseSecond: (() => void) | undefined;
+    vi.mocked(audio.isInitialized)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
+    vi.mocked(audio.initialize)
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseSecond = resolve;
+          })
+      );
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('tab', { name: /chords/i }));
+
+    await user.click(screen.getByRole('button', { name: /^Dm tonic/ }));
+    await user.click(screen.getByRole('button', { name: /^play$/i }));
+
+    await user.click(screen.getByRole('button', { name: /^F relative major/ }));
+    await user.click(screen.getByRole('button', { name: /^play$/i }));
+
+    // Waited for rather than assumed: under load a click can still be settling.
+    await waitFor(() => expect(releaseSecond).toBeDefined());
+    vi.mocked(audio.playArpeggio).mockClear();
+
+    // The second request wins the race; the first settles afterwards.
+    await act(async () => {
+      releaseSecond?.();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      releaseFirst?.();
+      await Promise.resolve();
+    });
+
+    expect(audio.playArpeggio).toHaveBeenCalledTimes(1);
+  });
+
+  /**
    * Two previews in a row: only the one the visitor is waiting on may sound.
    *
    * Each gesture now gets its own initialisation attempt, so an earlier one can
@@ -336,14 +396,25 @@ describe('Chord Explorer first paint', () => {
   it('lets the later of two pending previews win', async () => {
     const user = userEvent.setup();
 
-    const release: Array<() => void> = [];
-    vi.mocked(audio.isInitialized).mockReturnValue(false);
-    vi.mocked(audio.initialize).mockImplementation(
-      () =>
-        new Promise<void>((resolve) => {
-          release.push(resolve);
-        })
-    );
+    // `*Once` throughout, so the stubs restore themselves however this ends.
+    let releaseFirst: (() => void) | undefined;
+    let releaseSecond: (() => void) | undefined;
+    vi.mocked(audio.isInitialized)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
+    vi.mocked(audio.initialize)
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseSecond = resolve;
+          })
+      );
 
     render(<HandpanWidget />);
     await user.click(screen.getByRole('button', { name: /^change$/i }));
@@ -353,16 +424,16 @@ describe('Chord Explorer first paint', () => {
     await user.click(
       screen.getByRole('button', { name: /^preview celtic minor$/i })
     );
-    expect(release).toHaveLength(2);
+    await waitFor(() => expect(releaseSecond).toBeDefined());
     expect(audio.playArpeggio).not.toHaveBeenCalled();
 
     // The second click's attempt wins the race; the first settles afterwards.
     await act(async () => {
-      release[1]();
+      releaseSecond?.();
       await Promise.resolve();
     });
     await act(async () => {
-      release[0]();
+      releaseFirst?.();
       await Promise.resolve();
     });
 
@@ -386,9 +457,6 @@ describe('Chord Explorer first paint', () => {
     expect(vi.mocked(audio.playArpeggio).mock.calls[0][0].notes).toEqual(
       expected
     );
-
-    vi.mocked(audio.isInitialized).mockReturnValue(true);
-    vi.mocked(audio.initialize).mockResolvedValue(undefined);
   });
 
   /**
