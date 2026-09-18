@@ -630,9 +630,29 @@ export const MERGED_FAMILY_HISTORY: Record<
   },
 };
 
+/**
+ * What a merged-away family used to publish, or undefined if this is not one.
+ *
+ * The own-property check is the point. These ids arrive from outside — a
+ * restored preset, or a host page's embed attribute — and a plain object
+ * answers `toString`, `constructor` and `valueOf` with inherited functions.
+ * A truthiness test therefore accepted `familyId="toString"` as a legacy
+ * family, after which reading `.keys` off `Function.prototype.toString` gave
+ * `undefined` and the caller's `.includes` on it threw.
+ */
+export function getMergedFamilyHistory(
+  familyId: string
+): (typeof MERGED_FAMILY_HISTORY)[string] | undefined {
+  return Object.hasOwn(MERGED_FAMILY_HISTORY, familyId)
+    ? MERGED_FAMILY_HISTORY[familyId]
+    : undefined;
+}
+
 /** Canonical id for a family id that may be a merged-away name. */
 export function resolveFamilyId(familyId: string): string {
-  return MERGED_FAMILY_IDS[familyId] ?? familyId;
+  return Object.hasOwn(MERGED_FAMILY_IDS, familyId)
+    ? MERGED_FAMILY_IDS[familyId]
+    : familyId;
 }
 
 /** `F#` -> `fs`, matching how a preset id spells a key. */
@@ -655,7 +675,7 @@ export function legacyFamilyPublished(
   key: string,
   noteCount: number
 ): boolean {
-  const history = MERGED_FAMILY_HISTORY[legacyFamilyId];
+  const history = getMergedFamilyHistory(legacyFamilyId);
   if (!history) {
     return false;
   }

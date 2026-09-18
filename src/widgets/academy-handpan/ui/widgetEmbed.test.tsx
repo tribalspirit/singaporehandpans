@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import HandpanWidget from './HandpanWidget';
 
 /**
@@ -80,6 +81,27 @@ describe('HandpanWidget props', () => {
     const pads = screen.getAllByRole('button', { name: /^Pad \d+,/ });
     expect(screen.getByText(`D Sabye · ${pads.length} notes`)).toBeDefined();
     expect(pads).toHaveLength(9);
+  });
+
+  /**
+   * A merged-away id must leave the picker agreeing with the pan.
+   *
+   * The picker lists canonical families only and marks one selected on an exact
+   * id match, so opening "Change" after `familyId="equinox"` showed no family
+   * selected at all while the widget was rendering Integral.
+   */
+  it('marks the family selected after opening on a merged-away id', async () => {
+    const user = userEvent.setup();
+    render(<HandpanWidget familyId="equinox" />);
+
+    expect(screen.getByText('G Integral · 9 notes')).toBeDefined();
+
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+    const selected = screen
+      .getAllByRole('button', { pressed: true })
+      .map((el) => el.textContent);
+
+    expect(selected.some((text) => text?.startsWith('Integral'))).toBe(true);
   });
 
   /** A bad attribute must still render an instrument, not an empty widget. */

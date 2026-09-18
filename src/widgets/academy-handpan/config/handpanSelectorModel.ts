@@ -1,7 +1,7 @@
 import type { HandpanConfig, PitchClass } from './types';
 import {
   HANDPAN_FAMILIES,
-  MERGED_FAMILY_HISTORY,
+  getMergedFamilyHistory,
   getAllHandpanFamilies,
   resolveFamilyId,
   resolveLegacySelection,
@@ -55,7 +55,7 @@ export function getFamilyOptions(): FamilyOption[] {
  * agree or the selector can offer a choice that resolves to nothing.
  */
 export function getKeyOptions(familyId: string): PitchClass[] {
-  const history = MERGED_FAMILY_HISTORY[familyId];
+  const history = getMergedFamilyHistory(familyId);
   if (history) {
     return history.keys as PitchClass[];
   }
@@ -66,7 +66,7 @@ export function getKeyOptions(familyId: string): PitchClass[] {
 
 /** Shells this family offers; a merged-away id gets the ones it published. */
 export function getNoteCountOptions(familyId: string): number[] {
-  const history = MERGED_FAMILY_HISTORY[familyId];
+  const history = getMergedFamilyHistory(familyId);
   if (history) {
     return [...history.noteCounts];
   }
@@ -88,7 +88,7 @@ export function getDefaultSelection(familyId: string): {
   key: PitchClass;
   noteCount: number;
 } {
-  const history = MERGED_FAMILY_HISTORY[familyId];
+  const history = getMergedFamilyHistory(familyId);
   if (history) {
     return {
       key: history.defaultKey,
@@ -288,28 +288,44 @@ export function resolveInitialSelection(
   const fallback = getInitialSelection();
 
   const requestedFamilyId = request.familyId?.trim();
-  const familyId =
+
+  // Resolution runs against the id as asked for, so a merged-away family keeps
+  // its own narrower keys, shells and defaults.
+  const requestedAs =
     requestedFamilyId &&
-    (MERGED_FAMILY_HISTORY[requestedFamilyId] || findFamily(requestedFamilyId))
+    (getMergedFamilyHistory(requestedFamilyId) || findFamily(requestedFamilyId))
       ? requestedFamilyId
       : fallback.familyId;
 
-  const defaults = getDefaultSelection(familyId);
+  const defaults = getDefaultSelection(requestedAs);
 
   const requestedKey = request.key ? normalizeKeyRequest(request.key) : '';
-  const key = getKeyOptions(familyId).includes(requestedKey as PitchClass)
+  const key = getKeyOptions(requestedAs).includes(requestedKey as PitchClass)
     ? (requestedKey as PitchClass)
     : defaults.key;
 
   const requestedNoteCount = Number(request.noteCount);
-  const noteCount = getNoteCountOptions(familyId).includes(requestedNoteCount)
+  const noteCount = getNoteCountOptions(requestedAs).includes(
+    requestedNoteCount
+  )
     ? requestedNoteCount
     : defaults.noteCount;
 
-  const config = resolveHandpanConfig({ familyId, key, noteCount });
+  const config = resolveHandpanConfig({
+    familyId: requestedAs,
+    key,
+    noteCount,
+  });
   if (!config) {
     return fallback;
   }
 
-  return { familyId, key, noteCount: config.noteCount ?? noteCount };
+  // What comes back is the family the UI will show. The picker lists canonical
+  // families only and marks one selected on an exact id match, so handing it
+  // `equinox` left nothing selected while the widget rendered Integral.
+  return {
+    familyId: resolveFamilyId(requestedAs),
+    key,
+    noteCount: config.noteCount ?? noteCount,
+  };
 }

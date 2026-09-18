@@ -6,6 +6,7 @@ import {
   resolveWidgetProps,
 } from './widgetProps';
 import {
+  getFamilyOptions,
   getInitialSelection,
   resolveHandpanConfig,
 } from '../config/handpanSelectorModel';
@@ -87,15 +88,45 @@ describe('resolveWidgetProps', () => {
   });
 
   /**
-   * A merged-away id must keep its own former default rather than inheriting
-   * the survivor's — the same rule the selector follows for a restored id.
+   * A merged-away id keeps its own former default — `equinox` opens on its G,
+   * not on Integral's D — but the id handed to the UI is the canonical one.
+   *
+   * The family picker lists canonical families only and marks one selected on
+   * an exact id match, so returning `equinox` left the picker showing nothing
+   * selected while the widget rendered Integral.
    */
-  it('opens a merged-away family on the selection it used to publish', () => {
+  it('opens a merged-away family on its own default, under the canonical id', () => {
     const resolved = resolveWidgetProps({ familyId: 'equinox' });
 
-    expect(resolved.selection.familyId).toBe('equinox');
+    expect(resolved.selection.familyId).toBe('integral');
     expect(resolved.selection.key).toBe('G');
+    expect(
+      getFamilyOptions().some((o) => o.id === resolved.selection.familyId)
+    ).toBe(true);
     expect(resolveHandpanConfig(resolved.selection)).not.toBeNull();
+  });
+
+  /**
+   * A bare object's inherited properties are not catalog entries.
+   *
+   * `MERGED_FAMILY_IDS['toString']` is `Object.prototype.toString` — a truthy
+   * function — so a lookup by `in`-style truthiness accepted it as a legacy
+   * family. `getKeyOptions` then returned `undefined` and the `.includes` on it
+   * threw, crashing the widget instead of falling back.
+   */
+  it('treats an inherited property name as an unknown family', () => {
+    for (const familyId of [
+      'toString',
+      'constructor',
+      'valueOf',
+      'hasOwnProperty',
+      '__proto__',
+    ]) {
+      expect(() => resolveWidgetProps({ familyId }), familyId).not.toThrow();
+      expect(resolveWidgetProps({ familyId }).selection, familyId).toEqual(
+        DEFAULTS
+      );
+    }
   });
 
   /**
