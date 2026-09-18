@@ -11,6 +11,11 @@ import {
 import userEvent from '@testing-library/user-event';
 import HandpanWidget from './HandpanWidget';
 import { warmAudioModule } from '../audio/engine';
+import {
+  getFamilyPreviewOptions,
+  resolveHandpanConfig,
+} from '../config/handpanSelectorModel';
+import { sortNotesByPitch } from '../theory/utils';
 
 /*
  * Audio is an external system, stubbed at its module boundary.
@@ -317,6 +322,73 @@ describe('Chord Explorer first paint', () => {
 
       expect(warmAudioModule).not.toHaveBeenCalled();
     });
+  });
+
+  /**
+   * Two previews in a row: only the one the visitor is waiting on may sound.
+   *
+   * Each gesture now gets its own initialisation attempt, so an earlier one can
+   * settle *after* a later one. The second preview starts, and the first then
+   * resolves, stops it and plays itself — while the lit button still names the
+   * second. `handlePreviewFamily` read the preview generation without ever
+   * incrementing it, so both requests believed they were current.
+   */
+  it('lets the later of two pending previews win', async () => {
+    const user = userEvent.setup();
+
+    const release: Array<() => void> = [];
+    vi.mocked(audio.isInitialized).mockReturnValue(false);
+    vi.mocked(audio.initialize).mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          release.push(resolve);
+        })
+    );
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+    vi.mocked(audio.playArpeggio).mockClear();
+
+    await user.click(screen.getByRole('button', { name: /^preview kurd$/i }));
+    await user.click(
+      screen.getByRole('button', { name: /^preview celtic minor$/i })
+    );
+    expect(release).toHaveLength(2);
+    expect(audio.playArpeggio).not.toHaveBeenCalled();
+
+    // The second click's attempt wins the race; the first settles afterwards.
+    await act(async () => {
+      release[1]();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      release[0]();
+      await Promise.resolve();
+    });
+
+    // Exactly one preview sounds, and it is the one the visitor last asked
+    // for — a fix that silenced the later preview instead would also leave a
+    // single call, so the notes are checked rather than just the count.
+    expect(audio.playArpeggio).toHaveBeenCalledTimes(1);
+
+    const celtic = getFamilyPreviewOptions().find(
+      (option) => option.name.toLowerCase() === 'celtic minor'
+    );
+    const expected = sortNotesByPitch([
+      ...(resolveHandpanConfig({
+        familyId: celtic!.id,
+        key: celtic!.preview.key,
+        noteCount: celtic!.preview.noteCount,
+      })?.notes ?? []),
+    ]);
+
+    expect(expected.length).toBeGreaterThan(0);
+    expect(vi.mocked(audio.playArpeggio).mock.calls[0][0].notes).toEqual(
+      expected
+    );
+
+    vi.mocked(audio.isInitialized).mockReturnValue(true);
+    vi.mocked(audio.initialize).mockResolvedValue(undefined);
   });
 
   /**

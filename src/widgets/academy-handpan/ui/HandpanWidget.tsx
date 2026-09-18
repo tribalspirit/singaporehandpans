@@ -245,6 +245,13 @@ function HandpanWidgetContent({ initial }: { initial: ResolvedWidgetProps }) {
         return;
       }
 
+      // Each preview supersedes the last. Reading the generation without
+      // bumping it let two pending previews both believe they were current,
+      // and since every gesture now gets its own initialisation attempt, the
+      // earlier one could settle second — stopping the preview the visitor was
+      // actually waiting on and playing itself under the other one's lit
+      // button.
+      previewGenerationRef.current += 1;
       const generation = previewGenerationRef.current;
       setPreviewingFamilyId(option.id);
 
