@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { usePlayback } from './usePlayback';
 import {
-  initializeAudio,
-  isAudioInitialized,
-  playChord,
-  playNote,
-} from '../audio/engine';
+  createAudioEngine,
+  type AudioEngine,
+} from '../audio/createAudioEngine';
 import type { PlaybackMode } from './types';
-import { playArpeggio, stopArpeggio } from '../audio/scheduler';
 
 const NOTE_DURATION_MS = 500;
 const CHORD_DURATION_MS = 1000;
@@ -33,6 +30,70 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
   const { setNoteActive, setChordNotesActive, setIsPlaying, clearPlayback } =
     usePlayback();
 
+  /**
+   * One instrument per mount. Two widgets on a page each get their own synth
+   * and their own timeline, so neither can silence or re-tempo the other.
+   *
+   * Built on first render — the constructor only allocates closures, and does
+   * not reach for Tone or the audio context — so `stop` has something to call
+   * before anything has ever played. Disposing on unmount releases the synth
+   * but leaves the object usable: a later `initialize` rebuilds it, which is
+   * what makes StrictMode's mount-unmount-mount harmless.
+   */
+  const engineRef = useRef<AudioEngine | null>(null);
+  if (engineRef.current === null) {
+    engineRef.current = createAudioEngine();
+  }
+  const engine = engineRef.current;
+
+  /**
+   * Whether the widget this engine belongs to is still on the page.
+   *
+   * Every playback path awaits `initialize`, and the visitor can navigate away
+   * mid-await. Disposal on unmount stops what is already sounding, but a
+   * disposed engine rebuilds on the next `initialize` — deliberately, so
+   * StrictMode's mount/unmount/mount is harmless — so anything still holding
+   * one can bring a `PolySynth` back to life after its widget is gone, wire it
+   * to the output, and sound a note over the next page with nothing left to
+   * dispose it.
+   */
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      engine.dispose();
+    };
+  }, [engine]);
+
+  /**
+   * Supersedes an exclusive playback request that is still waiting on audio.
+   *
+   * Scale and chord playback are exclusive: starting one replaces whatever was
+   * sounding. Each gesture now gets its own initialisation attempt, so two can
+   * settle out of order — the later request starts, the earlier one then wakes
+   * up, stops it and plays itself, while the UI still highlights the later one.
+   *
+   * Every exclusive path takes a ticket on the way in and checks it is still
+   * the current one after each await; `stop` invalidates whatever is pending,
+   * so an explicit stop is not undone by a request made before it. Single notes
+   * deliberately do not take part: tapping two pads should sound two notes, not
+   * cancel the first.
+   */
+  const playbackGenerationRef = useRef(0);
+
+  const beginExclusivePlayback = useCallback((): number => {
+    playbackGenerationRef.current += 1;
+    return playbackGenerationRef.current;
+  }, []);
+
+  const isCurrentPlayback = useCallback(
+    (generation: number): boolean =>
+      isMountedRef.current && playbackGenerationRef.current === generation,
+    []
+  );
+
   const onBeforePlayRef = useRef(onBeforePlay);
   const setNoteActiveRef = useRef(setNoteActive);
   const setChordNotesActiveRef = useRef(setChordNotesActive);
@@ -53,31 +114,55 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
     clearPlayback,
   ]);
 
-  const playSingleNote = useCallback(async (noteName: string) => {
-    const sound = () => {
-      onBeforePlayRef.current?.();
-      setNoteActiveRef.current(noteName, 'note');
-      playNote(noteName, NOTE_DURATION_MS);
-      setTimeout(() => clearPlaybackRef.current(), NOTE_DURATION_MS);
-    };
+  const playSingleNote = useCallback(
+    async (noteName: string) => {
+      // A note takes no ticket — two pads tapped together should sound
+      // together — but it must still not tidy up after playback that started
+      // while it was waiting, which is what the generation is read for here.
+      const generationAtStart = playbackGenerationRef.current;
+      const canClearOwnPlayback = () =>
+        isMountedRef.current &&
+        playbackGenerationRef.current === generationAtStart;
 
-    try {
-      if (!isAudioInitialized()) {
-        await initializeAudio();
-      }
-      sound();
-    } catch (error) {
-      // One retry: the first gesture can land while Tone is still loading, and
-      // initialising again on the user's activation usually succeeds.
+      const sound = () => {
+        onBeforePlayRef.current?.();
+        setNoteActiveRef.current(noteName, 'note');
+        engine.playNote(noteName, NOTE_DURATION_MS);
+        setTimeout(() => clearPlaybackRef.current(), NOTE_DURATION_MS);
+      };
+
       try {
-        await initializeAudio();
+        if (!engine.isInitialized()) {
+          await engine.initialize();
+          if (!isMountedRef.current) {
+            return;
+          }
+        }
         sound();
-      } catch (retryError) {
-        console.error('Failed to play note', noteName, retryError);
-        clearPlaybackRef.current();
+      } catch (error) {
+        // One retry: the first gesture can land while Tone is still loading,
+        // and initialising again on the user's activation usually succeeds.
+        // Not once the widget has gone, though — retrying there would rebuild
+        // the engine that unmounting just disposed.
+        if (!isMountedRef.current) {
+          return;
+        }
+        try {
+          await engine.initialize();
+          if (!isMountedRef.current) {
+            return;
+          }
+          sound();
+        } catch (retryError) {
+          console.error('Failed to play note', noteName, retryError);
+          if (canClearOwnPlayback()) {
+            clearPlaybackRef.current();
+          }
+        }
       }
-    }
-  }, []);
+    },
+    [engine]
+  );
 
   /**
    * `shouldProceed` is consulted after the audio module has loaded and before
@@ -99,17 +184,21 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
       if (notes.length === 0) {
         return false;
       }
+      const generation = beginExclusivePlayback();
       try {
-        if (!isAudioInitialized()) {
-          await initializeAudio();
+        if (!engine.isInitialized()) {
+          await engine.initialize();
+        }
+        if (!isCurrentPlayback(generation)) {
+          return false;
         }
         if (shouldProceed && !shouldProceed()) {
           return false;
         }
-        stopArpeggio();
+        engine.stopArpeggio();
         onBeforePlayRef.current?.();
         setIsPlayingRef.current(true);
-        playArpeggio({
+        engine.playArpeggio({
           notes,
           bpm: SCALE_PREVIEW_BPM,
           direction: 'up',
@@ -123,11 +212,17 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
         return true;
       } catch (error) {
         console.error('Failed to play scale', error);
-        clearPlaybackRef.current();
+        // Only tidy up if this request is still the current one. A rejection
+        // jumps straight here, past the check above, so an older attempt
+        // failing after a newer one began would otherwise clear the newer
+        // one's highlights and unlight its control over sound still playing.
+        if (isCurrentPlayback(generation)) {
+          clearPlaybackRef.current();
+        }
         return false;
       }
     },
-    []
+    [engine, beginExclusivePlayback, isCurrentPlayback]
   );
 
   /**
@@ -141,21 +236,25 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
       if (notes.length === 0) {
         return;
       }
+      const generation = beginExclusivePlayback();
       try {
-        if (!isAudioInitialized()) {
-          await initializeAudio();
+        if (!engine.isInitialized()) {
+          await engine.initialize();
         }
-        stopArpeggio();
+        if (!isCurrentPlayback(generation)) {
+          return;
+        }
+        engine.stopArpeggio();
         setIsPlayingRef.current(true);
 
         if (mode === 'simultaneous') {
           setChordNotesActiveRef.current(notes);
-          playChord(notes, CHORD_DURATION_MS);
+          engine.playChord(notes, CHORD_DURATION_MS);
           setTimeout(() => clearPlaybackRef.current(), CHORD_DURATION_MS);
           return;
         }
 
-        playArpeggio({
+        engine.playArpeggio({
           notes,
           bpm,
           direction: 'up',
@@ -168,16 +267,23 @@ export function useScaleAudio({ onBeforePlay }: UseScaleAudioOptions = {}) {
         });
       } catch (error) {
         console.error('Failed to play chord', error);
-        clearPlaybackRef.current();
+        // See `playScale`: a stale rejection must not tidy up after the live
+        // request.
+        if (isCurrentPlayback(generation)) {
+          clearPlaybackRef.current();
+        }
       }
     },
-    []
+    [engine, beginExclusivePlayback, isCurrentPlayback]
   );
 
   const stop = useCallback(() => {
-    stopArpeggio();
+    // Invalidates anything still waiting on audio, so a request made before
+    // the stop cannot start sounding after it.
+    beginExclusivePlayback();
+    engine.stopArpeggio();
     clearPlaybackRef.current();
-  }, []);
+  }, [engine, beginExclusivePlayback]);
 
   return { playSingleNote, playScale, playChordNotes, stop };
 }

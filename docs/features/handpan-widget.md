@@ -63,16 +63,69 @@ Any future layout taken from a real maker source must be marked as such and must
 not silently inherit this schematic treatment. See
 [handpan-data-audit.md](handpan-data-audit.md).
 
+## Props
+
+`HandpanWidget` takes what it should open on: `familyId`, `scaleKey`,
+`noteCount`, `notation`, `view`, `playbackMode` and `arpeggioBpm`. All are
+optional, and all are **initial** state — read once at mount, so a host that
+re-renders cannot drag a visitor back off a choice they made.
+
+They cross a trust boundary, since an embed will pass them as HTML attributes
+written by someone who has not read this catalog, so `ui/widgetProps.ts` and
+`resolveInitialSelection` validate every one against what can actually be
+rendered:
+
+- Fields fall back **independently** — a good family with a nonsense key keeps
+  the family and takes that family's default key.
+- The whole selection is then re-checked against the catalog; anything that
+  resolves to no instrument falls back wholesale rather than rendering an empty
+  widget.
+- The shell count that comes back is the one the instrument actually has, which
+  is not always the one asked for: a merged family may publish a shell its
+  survivor does not, and the request is migrated.
+- The family id that comes back is canonical, because the picker lists canonical
+  families and marks one selected on an exact id match.
+- Keys are accepted however they were typed (`d`, `F#`, `bb`, `E♭`); tempo is
+  clamped to the slider's own range rather than rejected; blank and absent are
+  the same thing.
+- Inherited property names such as `toString` are not catalog entries — the
+  lookups are own-property checks.
+
 ## Audio
 
 Tone.js loads on first user gesture, not with the page, keeping it out of the
-initial bundle. Consequences for callers:
+initial bundle.
 
-- `playNote` / `playChord` / `playArpeggio` require `initializeAudio()` first
-  and throw otherwise.
-- `stopArpeggio` and `isArpeggioPlaying` are safe before initialisation — they
-  read the module through `peekTone()` and no-op when nothing is loaded.
-  `ScaleInfoPanel` relies on this, calling `stopArpeggio()` from a mount effect.
+The split follows what is actually shared. `audio/engine.ts` holds the page-wide
+half — the module import and `startAudioContext()`, which resumes the one
+`AudioContext` a document gets. Everything else belongs to a single widget:
+`createAudioEngine()` returns an instrument with its own synth, its own
+initialisation state and its own timeline, and `useScaleAudio` builds one per
+mount. Two widgets on a page therefore cannot share a voice, a tempo, or a stop.
+
+- `initialize()`, `playNote`, `playChord`, `playArpeggio`, `stopArpeggio` and
+  `dispose` are instance methods. Playing before `initialize()` throws.
+- `stopArpeggio` and `dispose` are safe at any time, including before any
+  gesture, so a mount effect may call them.
+- `warmAudioModule()` from `audio/engine.ts` stays module-level: it only
+  downloads Tone, and one download serves the page.
+
+Two rules keep concurrent gestures honest, and both exist because a real defect
+broke them:
+
+- **Every gesture gets its own attempt.** Neither the context resume nor the
+  per-instance initialisation is memoised while in flight. A resume made without
+  a live user activation can stay pending until its timeout, and handing that
+  stuck promise to the next gesture spends a perfectly good activation on a dead
+  one.
+- **A superseded request does nothing.** Scale and chord playback are exclusive,
+  so each takes a generation ticket in `useScaleAudio` and checks it after every
+  await — before starting, and before cleaning up on failure. Single notes take
+  no ticket: tapping two pads should sound two notes.
+
+There is no `scheduler.ts` and no module-level `initializeAudio`; arpeggio steps
+run on the instance's own timers rather than `Tone.Transport`, which belongs to
+the document.
 
 ## Styling
 
@@ -126,6 +179,11 @@ components.
 | Pad labelling & accessibility | `core/notation/padLabel.test.ts`      |
 | DOM & keyboard behaviour      | `ui/HandpanRenderer.test.tsx` (jsdom) |
 | Chord theory                  | `theory/chords*.test.ts`              |
+| Per-widget audio instances    | `audio/createAudioEngine.test.ts`     |
+| Shared context start-up       | `audio/engine.test.ts`                |
+| Prop validation               | `ui/widgetProps.test.ts`              |
+| Props reaching the DOM        | `ui/widgetEmbed.test.tsx` (jsdom)     |
+| Playback after unmount        | `ui/useScaleAudio.test.tsx` (jsdom)   |
 
 Component tests set `// @vitest-environment jsdom` per file; the project default
 stays `node`.

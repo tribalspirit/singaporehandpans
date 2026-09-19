@@ -30,9 +30,13 @@ import {
   getFamilyPreviewOptions,
   getSelectionForFamily,
   resolveHandpanConfig,
-  getInitialSelection,
   type FamilyPreviewOption,
 } from '../config/handpanSelectorModel';
+import {
+  resolveWidgetProps,
+  type HandpanWidgetProps,
+  type ResolvedWidgetProps,
+} from './widgetProps';
 import styles from '../styles/HandpanWidget.module.scss';
 
 function pickBestPadNoteForPc(layout: HandpanPad[], pc: string): string | null {
@@ -50,22 +54,23 @@ function pickBestPadNoteForPc(layout: HandpanPad[], pc: string): string | null {
   return sorted[0].note;
 }
 
-function HandpanWidgetContent() {
-  const initialSelection = useMemo(() => getInitialSelection(), []);
-  const [familyId, setFamilyId] = useState(initialSelection.familyId);
+function HandpanWidgetContent({ initial }: { initial: ResolvedWidgetProps }) {
+  const [familyId, setFamilyId] = useState(initial.selection.familyId);
   const [selectedKey, setSelectedKey] = useState<PitchClass>(
-    initialSelection.key
+    initial.selection.key
   );
   const [selectedNoteCount, setSelectedNoteCount] = useState(
-    initialSelection.noteCount
+    initial.selection.noteCount
   );
   const [selectedChord, setSelectedChord] = useState<PlayableChord | null>(
     null
   );
-  const [playbackMode, setPlaybackMode] = useState<PlaybackMode>('arpeggio');
-  const [arpeggioBpm, setArpeggioBpm] = useState(120);
-  const [notation, setNotation] = useState<NotationMode>('note');
-  const [activeTabId, setActiveTabId] = useState('listen');
+  const [playbackMode, setPlaybackMode] = useState<PlaybackMode>(
+    initial.playbackMode
+  );
+  const [arpeggioBpm, setArpeggioBpm] = useState(initial.arpeggioBpm);
+  const [notation, setNotation] = useState<NotationMode>(initial.notation);
+  const [activeTabId, setActiveTabId] = useState<string>(initial.view);
   const [familyNotice, setFamilyNotice] = useState<string | null>(null);
   const [previewingFamilyId, setPreviewingFamilyId] = useState<string | null>(
     null
@@ -84,6 +89,21 @@ function HandpanWidgetContent() {
   const previewGenerationRef = useRef(0);
 
   const playback = usePlayback();
+
+  /**
+   * Cancel any preview because the instrument itself changed.
+   *
+   * Distinct from one preview superseding another. A superseded request
+   * declines to unlight the button, since the request that replaced it owns
+   * that state now — but a configuration change leaves no preview to own it,
+   * and nothing else clears the marker on this path because `isPlaying` never
+   * went true. Without this the button stayed lit over a preview that never
+   * played.
+   */
+  const invalidatePreview = useCallback(() => {
+    previewGenerationRef.current += 1;
+    setPreviewingFamilyId(null);
+  }, []);
   const familyOptions = useMemo(() => getFamilyPreviewOptions(), []);
   const keyOptions = useMemo(() => getKeyOptions(familyId), [familyId]);
   const noteCountOptions = useMemo(
@@ -213,13 +233,26 @@ function HandpanWidgetContent() {
       stop();
       return;
     }
+    // Playing the scale outright cancels any preview, exactly as changing the
+    // instrument does. Only the preview's own request clears its marker, and
+    // that request may be stuck behind a context start for seconds yet — until
+    // then the preview button sat lit beside a scale that really was playing.
+    invalidatePreview();
     void playScale(sortedScaleNotes);
-  }, [playback.state.isPlaying, stop, playScale, sortedScaleNotes]);
+  }, [
+    playback.state.isPlaying,
+    stop,
+    playScale,
+    sortedScaleNotes,
+    invalidatePreview,
+  ]);
 
   const handlePlayChord = useCallback(() => {
     if (!selectedChord || playback.state.isPlaying) {
       return;
     }
+    // See `handlePlayScale`: sounding a chord cancels a pending preview too.
+    invalidatePreview();
     void playChordNotes(selectedChord.notes, playbackMode, arpeggioBpm);
   }, [
     selectedChord,
@@ -227,6 +260,7 @@ function HandpanWidgetContent() {
     playChordNotes,
     playbackMode,
     arpeggioBpm,
+    invalidatePreview,
   ]);
 
   const handlePreviewFamily = useCallback(
@@ -240,6 +274,13 @@ function HandpanWidgetContent() {
         return;
       }
 
+      // Each preview supersedes the last. Reading the generation without
+      // bumping it let two pending previews both believe they were current,
+      // and since every gesture now gets its own initialisation attempt, the
+      // earlier one could settle second — stopping the preview the visitor was
+      // actually waiting on and playing itself under the other one's lit
+      // button.
+      previewGenerationRef.current += 1;
       const generation = previewGenerationRef.current;
       setPreviewingFamilyId(option.id);
 
@@ -254,7 +295,12 @@ function HandpanWidgetContent() {
         // Covers both ways nothing plays: superseded by a later choice, or
         // audio failing outright. Either way `isPlaying` never goes true, so
         // the effect that normally unlights the button never fires.
-        if (!started) {
+        //
+        // Only this request may stand down, though. Matching on family id
+        // alone meant that previewing the *same* family twice had the older
+        // request unlight the button for the newer one that was playing —
+        // both ids being equal, the id check could not tell them apart.
+        if (!started && previewGenerationRef.current === generation) {
           setPreviewingFamilyId((current) =>
             current === option.id ? null : current
           );
@@ -283,7 +329,7 @@ function HandpanWidgetContent() {
       setSelectedKey(next.key);
       setSelectedNoteCount(next.noteCount);
       setSelectedChord(null);
-      previewGenerationRef.current += 1;
+      invalidatePreview();
       // `stop()`, not `clearPlayback()`. Re-selecting the family already shown
       // leaves the selection — and so `selectionKey` — unchanged, so the effect
       // above does not fire. Clearing only the state would let the scheduled
@@ -296,7 +342,7 @@ function HandpanWidgetContent() {
           : null
       );
     },
-    [selectedKey, selectedNoteCount, stop]
+    [selectedKey, selectedNoteCount, stop, invalidatePreview]
   );
 
   const handleKeyChange = useCallback(
@@ -304,20 +350,20 @@ function HandpanWidgetContent() {
       setSelectedKey(key);
       setSelectedChord(null);
       setFamilyNotice(null);
-      previewGenerationRef.current += 1;
+      invalidatePreview();
       stop();
     },
-    [stop]
+    [stop, invalidatePreview]
   );
 
   const handleNoteCountChange = useCallback(
     (noteCount: number) => {
       setSelectedNoteCount(noteCount);
       setSelectedChord(null);
-      previewGenerationRef.current += 1;
+      invalidatePreview();
       stop();
     },
-    [stop]
+    [stop, invalidatePreview]
   );
 
   /*
@@ -524,10 +570,23 @@ function HandpanWidgetContent() {
   );
 }
 
-export default function HandpanWidget() {
+/**
+ * The widget, with its opening state optionally set by whoever renders it.
+ *
+ * Props are read once. Resolving them on every render would fight the
+ * visitor's own choices — a host that re-rendered with the same `familyId`
+ * would keep yanking them back to it — so the resolved value is captured at
+ * mount and the widget owns its state from there.
+ */
+export default function HandpanWidget(props: HandpanWidgetProps = {}) {
+  const initialRef = useRef<ResolvedWidgetProps | null>(null);
+  if (initialRef.current === null) {
+    initialRef.current = resolveWidgetProps(props);
+  }
+
   return (
     <PlaybackProvider key="handpan-playback-provider">
-      <HandpanWidgetContent />
+      <HandpanWidgetContent initial={initialRef.current} />
     </PlaybackProvider>
   );
 }

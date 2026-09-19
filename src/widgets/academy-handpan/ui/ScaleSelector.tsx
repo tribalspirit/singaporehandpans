@@ -65,6 +65,13 @@ export default function ScaleSelector({
 }: ScaleSelectorProps) {
   const sheetId = useId();
   const notationLabelId = useId();
+  /**
+   * A radio `name` groups across the whole document, not the component, so two
+   * widgets on one page shared a group: choosing Numbers in the second
+   * unchecked the first's input while the first's React state carried on
+   * saying Notes. `useId` is per-instance, which is exactly the scope wanted.
+   */
+  const notationGroupName = `notation-${useId()}`;
   const [isOpen, setIsOpen] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -230,7 +237,7 @@ export default function ScaleSelector({
               >
                 <input
                   type="radio"
-                  name="notation"
+                  name={notationGroupName}
                   value={option.value}
                   checked={notation === option.value}
                   onChange={() => onNotationChange(option.value)}

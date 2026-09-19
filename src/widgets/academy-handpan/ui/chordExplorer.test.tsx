@@ -10,33 +10,40 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import HandpanWidget from './HandpanWidget';
-import { stopArpeggio } from '../audio/scheduler';
+import { warmAudioModule } from '../audio/engine';
 import {
-  initializeAudio,
-  isAudioInitialized,
-  warmAudioModule,
-} from '../audio/engine';
-import { playArpeggio } from '../audio/scheduler';
+  getFamilyPreviewOptions,
+  resolveHandpanConfig,
+} from '../config/handpanSelectorModel';
+import { sortNotesByPitch } from '../theory/utils';
 
 /*
  * Audio is an external system, stubbed at its module boundary.
  *
  * These are tests about what the interface offers, not about sound. Tabbing
- * into the views prefetches Tone, and real Tone in jsdom has no usable
- * `Transport` — exercising it here would test the mock's fidelity rather than
- * the widget. Playback itself is covered by the audio suites.
+ * into the views prefetches Tone, and real Tone in jsdom has no usable audio
+ * context — exercising it here would test the mock's fidelity rather than the
+ * widget. Playback itself is covered by the audio suites.
+ *
+ * `createAudioEngine` hands back the same stub every call, so a test can hold
+ * one set of spies. Nothing here renders two widgets; the isolation between
+ * instances is a property of the real engine, tested there.
  */
-vi.mock('../audio/engine', () => ({
-  initializeAudio: vi.fn().mockResolvedValue(undefined),
-  isAudioInitialized: vi.fn().mockReturnValue(true),
-  warmAudioModule: vi.fn().mockResolvedValue(undefined),
+const audio = vi.hoisted(() => ({
+  initialize: vi.fn().mockResolvedValue(undefined),
+  isInitialized: vi.fn().mockReturnValue(true),
   playNote: vi.fn(),
   playChord: vi.fn(),
-}));
-vi.mock('../audio/scheduler', () => ({
   playArpeggio: vi.fn(),
   stopArpeggio: vi.fn(),
-  isArpeggioPlaying: vi.fn().mockReturnValue(false),
+  dispose: vi.fn(),
+}));
+
+vi.mock('../audio/createAudioEngine', () => ({
+  createAudioEngine: () => audio,
+}));
+vi.mock('../audio/engine', () => ({
+  warmAudioModule: vi.fn().mockResolvedValue(undefined),
 }));
 
 /**
@@ -206,12 +213,12 @@ describe('Chord Explorer first paint', () => {
     render(<HandpanWidget />);
 
     await user.click(screen.getByRole('button', { name: /^change$/i }));
-    vi.mocked(stopArpeggio).mockClear();
+    vi.mocked(audio.stopArpeggio).mockClear();
 
     // Kurd opens on D; E is another key it publishes.
     await user.click(screen.getByRole('button', { name: /^E$/ }));
 
-    expect(stopArpeggio).toHaveBeenCalled();
+    expect(audio.stopArpeggio).toHaveBeenCalled();
   });
 
   /**
@@ -224,11 +231,11 @@ describe('Chord Explorer first paint', () => {
     render(<HandpanWidget />);
 
     await user.click(screen.getByRole('button', { name: /^change$/i }));
-    vi.mocked(stopArpeggio).mockClear();
+    vi.mocked(audio.stopArpeggio).mockClear();
 
     await user.click(screen.getByRole('button', { name: /^Kurd/ }));
 
-    expect(stopArpeggio).toHaveBeenCalled();
+    expect(audio.stopArpeggio).toHaveBeenCalled();
   });
 
   /**
@@ -236,7 +243,7 @@ describe('Chord Explorer first paint', () => {
    * needs it.
    *
    * Tone is ~340 KB and out of the initial bundle, so a cold control starts
-   * the import inside `initializeAudio` and the browser's user activation can
+   * the import inside `initialize` and the browser's user activation can
    * expire mid-download — on stricter engines the first press is simply
    * silent. The family preview buttons sit in the header and the chord Play
    * button sits outside the views, so neither is covered by the wrappers that
@@ -318,6 +325,326 @@ describe('Chord Explorer first paint', () => {
   });
 
   /**
+   * Starting the main scale cancels a preview that is still waiting.
+   *
+   * The preview marker is only ever cleared by the preview's own request, and
+   * that request is stuck behind a context start that can take seconds to time
+   * out. Until then the preview button sat lit beside a scale that was actually
+   * playing, claiming two things were sounding at once.
+   */
+  it('unlights a pending preview when the main scale starts', async () => {
+    const user = userEvent.setup();
+
+    let releasePreview: (() => void) | undefined;
+    vi.mocked(audio.isInitialized).mockReturnValueOnce(false);
+    vi.mocked(audio.initialize).mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          releasePreview = resolve;
+        })
+    );
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+    await user.click(screen.getByRole('button', { name: /^preview kurd$/i }));
+    await waitFor(() => expect(releasePreview).toBeDefined());
+
+    const preview = () =>
+      screen.getByRole('button', { name: /^preview kurd$/i });
+    expect(preview().getAttribute('data-playing')).not.toBeNull();
+
+    // The visitor gives up waiting and plays the scale instead. Audio is ready
+    // by now, so this one starts immediately.
+    await user.click(screen.getByRole('button', { name: /^play scale$/i }));
+
+    expect(preview().getAttribute('data-playing')).toBeNull();
+
+    releasePreview?.();
+  });
+
+  /**
+   * Previewing the same family twice must leave the second one lit.
+   *
+   * The superseded request's cleanup matched on family id alone. Click the same
+   * preview twice and both ids are equal, so the older request — correctly
+   * refusing to play — unlit the button for the newer one that was playing.
+   */
+  it('keeps the indicator lit when the same preview is clicked twice', async () => {
+    const user = userEvent.setup();
+
+    let releaseFirst: (() => void) | undefined;
+    let releaseSecond: (() => void) | undefined;
+    vi.mocked(audio.isInitialized)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
+    vi.mocked(audio.initialize)
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseSecond = resolve;
+          })
+      );
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+
+    const preview = () =>
+      screen.getByRole('button', { name: /^preview kurd$/i });
+    // Earlier tests in this file leave calls on the shared stub.
+    vi.mocked(audio.playArpeggio).mockClear();
+    await user.click(preview());
+    await user.click(preview());
+    await waitFor(() => expect(releaseSecond).toBeDefined());
+
+    // The second click plays; the first then resolves and stands down.
+    await act(async () => {
+      releaseSecond?.();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      releaseFirst?.();
+      await Promise.resolve();
+    });
+
+    expect(audio.playArpeggio).toHaveBeenCalledTimes(1);
+    expect(preview().getAttribute('data-playing')).not.toBeNull();
+  });
+
+  /**
+   * The other direction: a live request that fails *must* still tidy up.
+   *
+   * Scheduling throws only after `isPlaying` has gone true, so without the
+   * cleanup the control stays on Stop forever over silence. Guarding that
+   * cleanup by generation had to keep this working — with nothing asserting it,
+   * a guard that simply never cleared would have passed the suite.
+   */
+  it('unlights its own control when scheduling throws', async () => {
+    const user = userEvent.setup();
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    vi.mocked(audio.playArpeggio).mockImplementationOnce(() => {
+      throw new Error('scheduling failed');
+    });
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('button', { name: /^play scale$/i }));
+
+    await waitFor(() =>
+      expect(screen.queryAllByRole('button', { name: /^stop$/i })).toHaveLength(
+        0
+      )
+    );
+    expect(screen.getByRole('button', { name: /^play scale$/i })).toBeDefined();
+    errors.mockRestore();
+  });
+
+  /**
+   * A stale request that fails must not tidy up after the live one.
+   *
+   * The generation check guards the success path, but a rejection jumps
+   * straight to `catch`, and the cleanup there was unconditional — so an older
+   * attempt failing after a newer one had started playing cleared the newer
+   * one's highlights and flipped its control back to Play, while its audio went
+   * on sounding.
+   */
+  it('leaves live playback alone when an older attempt fails', async () => {
+    const user = userEvent.setup();
+
+    let failFirst: ((error: Error) => void) | undefined;
+    let releaseSecond: (() => void) | undefined;
+    vi.mocked(audio.isInitialized)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
+    vi.mocked(audio.initialize)
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((_resolve, reject) => {
+            failFirst = reject;
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseSecond = resolve;
+          })
+      );
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('tab', { name: /chords/i }));
+
+    await user.click(screen.getByRole('button', { name: /^Dm tonic/ }));
+    await user.click(screen.getByRole('button', { name: /^play$/i }));
+
+    await user.click(screen.getByRole('button', { name: /^F relative major/ }));
+    await user.click(screen.getByRole('button', { name: /^play$/i }));
+
+    await waitFor(() => expect(releaseSecond).toBeDefined());
+
+    // Playing is shown by the controls swapping to Stop — both the scale action
+    // and the chord bar do it, so count them rather than picking one.
+    const stopControls = () =>
+      screen.queryAllByRole('button', { name: /^stop$/i }).length;
+
+    await act(async () => {
+      releaseSecond?.();
+      await Promise.resolve();
+    });
+    const playingControls = stopControls();
+    expect(playingControls).toBeGreaterThan(0);
+
+    // The abandoned one now fails; the live playback must be untouched.
+    await act(async () => {
+      failFirst?.(new Error('Starting the audio context timed out'));
+      await Promise.resolve();
+    });
+
+    expect(stopControls()).toBe(playingControls);
+    errors.mockRestore();
+  });
+
+  /**
+   * The same rule for chords: the selected one is the one that sounds.
+   *
+   * Play a chord while the audio context is still starting, pick another and
+   * play that, and the first attempt could settle last — stopping the second
+   * chord and sounding itself while the panel still highlights the second.
+   * `playScale` and the family preview each grew their own staleness check;
+   * chord playback had none.
+   */
+  it('plays the chord that is selected when two starts overlap', async () => {
+    const user = userEvent.setup();
+
+    // `*Once` throughout, so the stubs restore themselves however this ends.
+    // A failure part-way used to leave the shared mocks overridden and take
+    // every later test in the file down with it.
+    let releaseFirst: (() => void) | undefined;
+    let releaseSecond: (() => void) | undefined;
+    vi.mocked(audio.isInitialized)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
+    vi.mocked(audio.initialize)
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseSecond = resolve;
+          })
+      );
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('tab', { name: /chords/i }));
+
+    await user.click(screen.getByRole('button', { name: /^Dm tonic/ }));
+    await user.click(screen.getByRole('button', { name: /^play$/i }));
+
+    await user.click(screen.getByRole('button', { name: /^F relative major/ }));
+    await user.click(screen.getByRole('button', { name: /^play$/i }));
+
+    // Waited for rather than assumed: under load a click can still be settling.
+    await waitFor(() => expect(releaseSecond).toBeDefined());
+    vi.mocked(audio.playArpeggio).mockClear();
+
+    // The second request wins the race; the first settles afterwards.
+    await act(async () => {
+      releaseSecond?.();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      releaseFirst?.();
+      await Promise.resolve();
+    });
+
+    expect(audio.playArpeggio).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * Two previews in a row: only the one the visitor is waiting on may sound.
+   *
+   * Each gesture now gets its own initialisation attempt, so an earlier one can
+   * settle *after* a later one. The second preview starts, and the first then
+   * resolves, stops it and plays itself — while the lit button still names the
+   * second. `handlePreviewFamily` read the preview generation without ever
+   * incrementing it, so both requests believed they were current.
+   */
+  it('lets the later of two pending previews win', async () => {
+    const user = userEvent.setup();
+
+    // `*Once` throughout, so the stubs restore themselves however this ends.
+    let releaseFirst: (() => void) | undefined;
+    let releaseSecond: (() => void) | undefined;
+    vi.mocked(audio.isInitialized)
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(false);
+    vi.mocked(audio.initialize)
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            releaseSecond = resolve;
+          })
+      );
+
+    render(<HandpanWidget />);
+    await user.click(screen.getByRole('button', { name: /^change$/i }));
+    vi.mocked(audio.playArpeggio).mockClear();
+
+    await user.click(screen.getByRole('button', { name: /^preview kurd$/i }));
+    await user.click(
+      screen.getByRole('button', { name: /^preview celtic minor$/i })
+    );
+    await waitFor(() => expect(releaseSecond).toBeDefined());
+    expect(audio.playArpeggio).not.toHaveBeenCalled();
+
+    // The second click's attempt wins the race; the first settles afterwards.
+    await act(async () => {
+      releaseSecond?.();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      releaseFirst?.();
+      await Promise.resolve();
+    });
+
+    // Exactly one preview sounds, and it is the one the visitor last asked
+    // for — a fix that silenced the later preview instead would also leave a
+    // single call, so the notes are checked rather than just the count.
+    expect(audio.playArpeggio).toHaveBeenCalledTimes(1);
+
+    const celtic = getFamilyPreviewOptions().find(
+      (option) => option.name.toLowerCase() === 'celtic minor'
+    );
+    const expected = sortNotesByPitch([
+      ...(resolveHandpanConfig({
+        familyId: celtic!.id,
+        key: celtic!.preview.key,
+        noteCount: celtic!.preview.noteCount,
+      })?.notes ?? []),
+    ]);
+
+    expect(expected.length).toBeGreaterThan(0);
+    expect(vi.mocked(audio.playArpeggio).mock.calls[0][0].notes).toEqual(
+      expected
+    );
+  });
+
+  /**
    * A preview that loses the race must not play.
    *
    * `playScale` awaits the audio module. On a cold load that await outlives the
@@ -330,22 +657,22 @@ describe('Chord Explorer first paint', () => {
 
     // Hold the audio module unresolved so the preview is still in flight.
     let releaseAudio: () => void = () => {};
-    vi.mocked(initializeAudio).mockImplementationOnce(
+    vi.mocked(audio.initialize).mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
           releaseAudio = () => resolve();
         })
     );
-    vi.mocked(isAudioInitialized).mockReturnValueOnce(false);
+    vi.mocked(audio.isInitialized).mockReturnValueOnce(false);
 
     render(<HandpanWidget />);
     await user.click(screen.getByRole('button', { name: /^change$/i }));
-    vi.mocked(playArpeggio).mockClear();
+    vi.mocked(audio.playArpeggio).mockClear();
 
     await user.click(
       screen.getByRole('button', { name: /^preview celtic minor$/i })
     );
-    expect(playArpeggio).not.toHaveBeenCalled();
+    expect(audio.playArpeggio).not.toHaveBeenCalled();
 
     // The user moves on while the module is still loading.
     await user.click(screen.getByRole('button', { name: /^E$/ }));
@@ -355,7 +682,18 @@ describe('Chord Explorer first paint', () => {
       await Promise.resolve();
     });
 
-    expect(playArpeggio).not.toHaveBeenCalled();
+    expect(audio.playArpeggio).not.toHaveBeenCalled();
+
+    // And the button must not stay lit over a preview that never played. The
+    // superseded request declines to clean up after a *later preview*, which
+    // is right — but a configuration change is not a later preview, and
+    // nothing else unlights the button here because `isPlaying` never went
+    // true. Asserting only that no sound happened let that slip through.
+    expect(
+      screen
+        .getByRole('button', { name: /^preview celtic minor$/i })
+        .getAttribute('data-playing')
+    ).toBeNull();
   });
 
   /**
@@ -385,8 +723,8 @@ describe('Chord Explorer first paint', () => {
    */
   it('unlights the preview button when audio fails to start', async () => {
     const user = userEvent.setup();
-    vi.mocked(isAudioInitialized).mockReturnValueOnce(false);
-    vi.mocked(initializeAudio).mockRejectedValueOnce(
+    vi.mocked(audio.isInitialized).mockReturnValueOnce(false);
+    vi.mocked(audio.initialize).mockRejectedValueOnce(
       new Error('Starting the audio context timed out')
     );
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});

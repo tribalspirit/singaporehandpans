@@ -1,9 +1,10 @@
 import React, { useId } from 'react';
 import type { PlaybackMode } from './types';
+import {
+  MAX_ARPEGGIO_BPM as MAX_BPM,
+  MIN_ARPEGGIO_BPM as MIN_BPM,
+} from './widgetProps';
 import styles from '../styles/PlaybackOptions.module.scss';
-
-const MIN_BPM = 60;
-const MAX_BPM = 200;
 
 const MODE_OPTIONS: ReadonlyArray<{ value: PlaybackMode; label: string }> = [
   { value: 'arpeggio', label: 'Roll' },
@@ -39,6 +40,8 @@ export default function PlaybackOptions({
   // Generated, not hardcoded: two widgets on one page would otherwise share
   // these ids and break every label association on the second instance.
   const modeLabelId = useId();
+  /** Per-instance, so two widgets do not share one native radio group. */
+  const modeGroupName = `playback-mode-${useId()}`;
   const bpmId = useId();
 
   const handleBpmChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,7 +74,7 @@ export default function PlaybackOptions({
             >
               <input
                 type="radio"
-                name="playback-mode"
+                name={modeGroupName}
                 value={option.value}
                 checked={playbackMode === option.value}
                 onChange={() => onPlaybackModeChange(option.value)}

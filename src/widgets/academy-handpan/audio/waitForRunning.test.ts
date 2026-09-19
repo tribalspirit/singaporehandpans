@@ -170,33 +170,58 @@ describe('withTimeout', () => {
  * `finally` never ran and every later gesture reused the stuck promise.
  *
  * Reading the source is crude, but it catches the shape of the bug rather than
- * one instance of it, which is what kept being missed.
+ * one instance of it, which is what kept being missed. Earlier versions sliced
+ * out the function body to scan and twice sliced nothing, passing while
+ * checking zero lines — so both files are now scanned whole.
  */
+function awaitedCallees(source: string): string[] {
+  return [...source.matchAll(/await\s+([A-Za-z_$][\w$.]*)\s*\(/g)].map(
+    ([, callee]) => callee
+  );
+}
+
+function readAudioSource(file: string): string {
+  const source = readFileSync(
+    join(process.cwd(), 'src/widgets/academy-handpan/audio', file),
+    'utf8'
+  );
+  expect(source.length, `${file} is empty`).toBeGreaterThan(200);
+  return source;
+}
+
 describe('audio start-up has no unbounded await', () => {
-  it('wraps every await inside initializeAudio in a bound', () => {
-    const source = readFileSync(
-      join(process.cwd(), 'src/widgets/academy-handpan/audio/engine.ts'),
-      'utf8'
-    );
+  it('bounds every await in the shared module and context layer', () => {
+    const source = readAudioSource('engine.ts');
 
-    // Slice from the async IIFE to its own closing `})();`. An earlier attempt
-    // ended at `return initializationPromise;`, which appears *before* this in
-    // the file as the in-flight guard — so the slice was empty and the test
-    // passed while checking nothing.
-    const start = source.indexOf('initializationPromise = (async () => {');
-    expect(start, 'initializeAudio body not found').toBeGreaterThan(-1);
+    // The base case: nothing here may await anything but the two primitives
+    // that carry their own timeout.
+    expect(
+      awaitedCallees(source).filter(
+        (callee) =>
+          callee !== 'withTimeout' && callee !== 'waitForRunningContext'
+      )
+    ).toEqual([]);
+  });
 
-    const end = source.indexOf('})();', start);
-    expect(end, 'end of the async body not found').toBeGreaterThan(start);
+  it('bounds every await in a widget instance engine', () => {
+    const shared = readAudioSource('engine.ts');
+    const source = readAudioSource('createAudioEngine.ts');
 
-    const body = source.slice(start, end);
-    expect(body.length, 'sliced an empty body').toBeGreaterThan(200);
-    const unbounded = [
-      ...body.matchAll(
-        /await\s+(?!withTimeout|waitForRunningContext)([A-Za-z_$][\w$.]*)\s*\(/g
-      ),
-    ].map(([, callee]) => callee);
+    // The inductive step: an instance may additionally await the two shared
+    // helpers, which the case above has just proved bounded. Asserting they
+    // exist keeps the allowance from outliving the functions it names.
+    expect(shared).toContain('export async function loadToneModule');
+    expect(shared).toContain('export async function startAudioContext');
 
-    expect(unbounded).toEqual([]);
+    const bounded = [
+      'withTimeout',
+      'waitForRunningContext',
+      'loadToneModule',
+      'startAudioContext',
+    ];
+
+    expect(
+      awaitedCallees(source).filter((callee) => !bounded.includes(callee))
+    ).toEqual([]);
   });
 });
