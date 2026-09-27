@@ -30,6 +30,7 @@
  * Uses Node 18+ global fetch / FormData / Blob.
  */
 
+import { readFileSync } from 'node:fs';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -81,24 +82,22 @@ if (!SHOP_DOMAIN || !SHOP_TOKEN) {
 /**
  * Shopify handles that must never become Storyblok products.
  *
- * Small shops routinely create one-off "products" that exist only so a named
- * customer can pay a quoted amount — usually by duplicating a real product, so
- * they inherit a misleading handle, type and collection. They are published to
- * the Shopify storefront because that is how the customer reaches the payment
- * page, which means the Storefront API returns them like any other product.
- *
- * Syncing one would put a private individual's name into the public catalog,
- * the product grid, the sitemap and the structured data. Excluding by handle
- * keeps them out, and keeps them out on every re-run.
+ * The list is shared with the running site (src/lib/catalogExclusions.ts reads
+ * the same JSON), so the storefront and this migration cannot disagree about
+ * what is in the catalog. See that module for why entries end up here.
  *
  * A handle listed here is also treated as absent from Shopify, so a product
- * that was synced before being added to this list is reported as an orphan and
- * unpublished by --prune, exactly like a deleted one.
+ * synced before it was added is reported as an orphan and unpublished by
+ * --prune, exactly like a deleted one.
  */
-const EXCLUDED_HANDLES = new Set([
-  // "Order For Su Xin" — a bespoke invoice duplicated from the blue Airtek bag.
-  'hardcase-technologies-airtek-m-blue-handpan-bag-copy',
-]);
+const EXCLUDED_HANDLES = new Set(
+  JSON.parse(
+    readFileSync(
+      new URL('../src/lib/catalogExclusions.json', import.meta.url),
+      'utf8'
+    )
+  ).excludedShopifyHandles
+);
 
 /**
  * Brand slugs must match a story slug under shop/collections/ — shopClient.ts
@@ -1210,10 +1209,9 @@ async function main() {
   const shopifyProducts = fetchedProducts.filter(
     (node) => !EXCLUDED_HANDLES.has(node.handle)
   );
+  // Deliberately logs the handle only: these titles are customer names.
   for (const node of excluded) {
-    console.log(
-      `  excluded by EXCLUDED_HANDLES: ${node.handle} ("${node.title}")`
-    );
+    console.log(`  excluded by catalogExclusions.json: ${node.handle}`);
   }
 
   const records = buildProductRecords(shopifyProducts);

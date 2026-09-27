@@ -1,4 +1,5 @@
 import type { ShopProduct, ShopCollection } from './shopTypes';
+import { isExcludedShopifyHandle } from './catalogExclusions';
 
 export type { ShopProduct, ShopCollection } from './shopTypes';
 
@@ -232,16 +233,23 @@ export async function fetchAllProducts(): Promise<ShopProduct[]> {
       return [];
     }
 
-    return json.data.products.edges.map((edge) =>
-      normalizeProduct(edge.node, config.domain)
-    );
+    return json.data.products.edges
+      .filter((edge) => !isExcludedShopifyHandle(edge.node.handle))
+      .map((edge) => normalizeProduct(edge.node, config.domain));
   } catch (error) {
     console.error('Failed to fetch products from Shopify:', error);
     return [];
   }
 }
 
-function normalizeCollection(node: ShopifyCollectionNode): ShopCollection {
+/**
+ * `productCount` is passed in rather than read off `node.products.edges`, so an
+ * excluded product is not counted in a tile that will never display it.
+ */
+function normalizeCollection(
+  node: ShopifyCollectionNode,
+  productCount: number
+): ShopCollection {
   return {
     id: node.id,
     title: node.title,
@@ -250,7 +258,7 @@ function normalizeCollection(node: ShopifyCollectionNode): ShopCollection {
     image: node.image
       ? { url: node.image.url, altText: node.image.altText ?? undefined }
       : undefined,
-    productCount: node.products.edges.length,
+    productCount,
   };
 }
 
@@ -304,12 +312,17 @@ export async function fetchAllCollections(): Promise<{
 
     for (const edge of json.data.collections.edges) {
       const node = edge.node;
-      if (node.products.edges.length === 0) continue;
+      const productEdges = node.products.edges.filter(
+        (productEdge) => !isExcludedShopifyHandle(productEdge.node.handle)
+      );
+      // A collection left empty by the exclusion is dropped, exactly as one
+      // that was empty in Shopify — otherwise the grid shows a dead tile.
+      if (productEdges.length === 0) continue;
 
-      collections.push(normalizeCollection(node));
+      collections.push(normalizeCollection(node, productEdges.length));
 
       const productIds: string[] = [];
-      for (const productEdge of node.products.edges) {
+      for (const productEdge of productEdges) {
         const product = normalizeProduct(productEdge.node, config.domain);
         productIds.push(product.id);
         if (!productMap.has(product.id)) {
@@ -374,9 +387,13 @@ export async function fetchCollectionByHandle(
       return { collection: null, products: [] };
     }
 
+    const productEdges = node.products.edges.filter(
+      (edge) => !isExcludedShopifyHandle(edge.node.handle)
+    );
+
     return {
-      collection: normalizeCollection(node),
-      products: node.products.edges.map((edge) =>
+      collection: normalizeCollection(node, productEdges.length),
+      products: productEdges.map((edge) =>
         normalizeProduct(edge.node, config.domain)
       ),
     };
