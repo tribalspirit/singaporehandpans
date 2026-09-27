@@ -122,11 +122,20 @@ wrangler pages secret put HITPAY_API_URL --project-name=singaporehandpans
 wrangler pages secret put HITPAY_API_KEY --project-name=singaporehandpans
 wrangler pages secret put HITPAY_SALT    --project-name=singaporehandpans
 
-# Preview (all non-production branches) — add --env=preview
+# Preview (all non-production branches) — a separate set of bindings,
+# so all three must be set again here, not just the ones that differ
 wrangler pages secret put HITPAY_API_URL --project-name=singaporehandpans --env=preview
+wrangler pages secret put HITPAY_API_KEY --project-name=singaporehandpans --env=preview
+wrangler pages secret put HITPAY_SALT    --project-name=singaporehandpans --env=preview
 ```
 
-Verify with `wrangler pages secret list --project-name=singaporehandpans`.
+Verify each environment separately — `--env=preview` is not implied:
+
+```bash
+wrangler pages secret list --project-name=singaporehandpans
+wrangler pages secret list --project-name=singaporehandpans --env=preview
+```
+
 Secrets apply to the **next** deployment; setting one does not redeploy.
 
 `HITPAY_API_URL` is `https://api.hit-pay.com` (live) or
