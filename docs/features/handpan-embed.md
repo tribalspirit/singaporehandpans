@@ -23,8 +23,9 @@ external embed needs is in place. Nothing more.
 
 ## Decisions already taken
 
-These were settled before the groundwork landed; they are inputs, not open
-questions.
+These were settled before the groundwork landed. Treat them as inputs rather
+than reopening them on taste — with one exception, flagged below, where the
+recorded reasoning turned out to be wrong.
 
 | Decision  | Choice                                             |
 | --------- | -------------------------------------------------- |
@@ -32,11 +33,28 @@ questions.
 | Mechanism | Custom element, **light DOM** (no shadow root)     |
 | API scope | Render + configure. No imperative playback control |
 
-Light DOM plus hostile host CSS is a real tension, and it was accepted
-deliberately: shadow DOM would have isolated styling but cut the widget off from
-the host's own tokens, which is the thing that makes it look like it belongs.
-The mitigation is a defensive scoped reset, which is part of the work below, not
-something already done.
+Light DOM plus hostile host CSS is a real tension, and the mitigation — a
+defensive scoped reset — is part of the work below, not something already done.
+
+**Re-confirm the light DOM choice before doing that reset work.** An earlier
+version of this document justified it by claiming shadow DOM would cut the
+widget off from the host's tokens. That is wrong: custom properties are
+inherited properties and pass straight through a shadow boundary, so both the
+public `--shp-*` surface and the site-token fallbacks would reach a shadow tree
+unchanged. The decision came from the project owner and stands as their call,
+but it does not rest on the reason recorded here, and the reset exists only
+because of it.
+
+The genuine trade-off, for whoever re-confirms it:
+
+- **Light DOM** — the widget inherits the host's ambient styling, so ordinary
+  inherited properties and the host's global stylesheet reach it. That is what
+  makes it look native to the page, and equally what lets a careless
+  `button { }` rule wreck every pad.
+- **Shadow DOM** — hostile selectors cannot reach in, and tokens still do. The
+  cost is that the widget's own CSS must be injected into the shadow root, and
+  it stops picking up the host's ambient styling, so looking native becomes
+  entirely the token surface's job.
 
 ## The contract that exists today
 
@@ -99,10 +117,13 @@ are not a public surface.
 - One `AudioContext` per document, shared. Verified in a real browser with two
   widgets: one context between them.
 - Everything else is per widget — synth, initialisation state, timeline.
-- Every gesture gets its own initialisation attempt; nothing in-flight is
-  memoised. A resume made without a live user activation can stay pending until
-  it times out, and handing that stuck promise to the next gesture spends a good
-  activation on a dead one.
+- The Tone download **is** shared: `warmAudioModule` memoises its in-flight
+  import, so two widgets warming at once cause one download. Do not remove or
+  bypass that loader.
+- What is deliberately _not_ shared is the context resume and the per-widget
+  initialisation: every gesture gets its own attempt. A resume made without a
+  live user activation can stay pending until it times out, and handing that
+  stuck promise to the next gesture spends a good activation on a dead one.
 - Exclusive playback (scale, chord) takes a generation ticket and checks it
   after every await. Single notes do not — tapping two pads should sound two
   notes.
