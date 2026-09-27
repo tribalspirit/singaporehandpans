@@ -1,0 +1,40 @@
+# Template for .dev.vars — copy to `.dev.vars` and fill in. Never commit `.dev.vars`.
+#
+#   cp .dev.vars.example .dev.vars
+#
+# Why this file exists alongside .env:
+#
+#   .env       build-time and PUBLIC_* vars. Reaches import.meta.env, which
+#              Vite inlines into the build output. Safe for anything the
+#              browser may see; NOT safe for payment secrets.
+#   .dev.vars  server-side runtime secrets. @astrojs/cloudflare runs a platform
+#              proxy in dev, so these arrive via Astro.locals.runtime.env —
+#              the same path used on Cloudflare Pages. Nothing here is inlined.
+#
+# Server code (src/lib/hitpay.ts, src/lib/orderEmail.ts) reads the runtime env,
+# so HitPay and Resend values belong here, not in .env.
+#
+# This file is the local mirror of the Cloudflare Pages secrets.
+# See docs/deployment/CLOUDFLARE.md for the per-environment matrix.
+
+# --- HitPay ----------------------------------------------------------------
+# Sandbox: https://api.sandbox.hit-pay.com   Live: https://api.hit-pay.com
+# All three are required together — getHitPayConfig() returns null if any one
+# is missing, and checkout then fails with ?checkout=error.
+#
+# WARNING when pointed at the live URL: a checkout started locally creates a
+# real, payable payment request, and HitPay emails a real receipt to whatever
+# address is entered.
+HITPAY_API_URL=https://api.sandbox.hit-pay.com
+HITPAY_API_KEY=
+HITPAY_SALT=
+
+# --- Storyblok -------------------------------------------------------------
+STORYBLOK_TOKEN=
+
+# --- Order notifications (Resend) ------------------------------------------
+# All three required together. Without them a paid order is acknowledged but
+# nobody is notified, and orders are not persisted anywhere.
+RESEND_API_KEY=
+SHOP_EMAIL_FROM=shop@singaporehandpans.com
+SHOP_ORDER_EMAIL=

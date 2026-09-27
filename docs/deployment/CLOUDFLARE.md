@@ -24,6 +24,7 @@ Guide for deploying Singapore Handpan Studio to Cloudflare Pages.
 **Framework preset**: Astro
 
 **Build settings**:
+
 ```
 Build command: npm run build
 Build output directory: dist
@@ -31,6 +32,7 @@ Root directory: (leave empty)
 ```
 
 **Environment variables**:
+
 ```
 NODE_ENV=production
 PUBLIC_SITE_URL=https://your-site.pages.dev
@@ -56,9 +58,11 @@ STORYBLOK_TOKEN=your_preview_token_here
 ### DNS Configuration
 
 If domain is on Cloudflare:
+
 - Automatically configured ✅
 
 If domain is elsewhere:
+
 1. Add CNAME record:
    ```
    Name: @ (or www)
@@ -88,9 +92,81 @@ PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/...
 ### Preview Variables
 
 For preview branches:
+
 1. Same as production
 2. Use Preview token instead
 3. Different PUBLIC_SITE_URL if needed
+
+### Shop Variables (HitPay)
+
+Two kinds of variable, set in two different places. Getting this wrong is the
+usual cause of `?checkout=error`.
+
+| Kind                | Where it is set                          | How code reads it                   | Goes in             |
+| ------------------- | ---------------------------------------- | ----------------------------------- | ------------------- |
+| Build-time / public | Pages → Settings → Environment variables | `import.meta.env`, inlined at build | `.env` locally      |
+| Runtime secret      | `wrangler pages secret put` (encrypted)  | `Astro.locals.runtime.env`          | `.dev.vars` locally |
+
+Payment credentials are always the second kind. A `PUBLIC_` prefix on any of
+them would ship the value to the browser, and putting them in `.env` lets Vite
+inline them into the build output.
+
+#### Runtime secrets
+
+All three are required together — `getHitPayConfig()` returns `null` if any one
+is missing, and checkout then redirects to `?checkout=error`.
+
+```bash
+# Production
+wrangler pages secret put HITPAY_API_URL --project-name=singaporehandpans
+wrangler pages secret put HITPAY_API_KEY --project-name=singaporehandpans
+wrangler pages secret put HITPAY_SALT    --project-name=singaporehandpans
+
+# Preview (all non-production branches) — add --env=preview
+wrangler pages secret put HITPAY_API_URL --project-name=singaporehandpans --env=preview
+```
+
+Verify with `wrangler pages secret list --project-name=singaporehandpans`.
+Secrets apply to the **next** deployment; setting one does not redeploy.
+
+`HITPAY_API_URL` is `https://api.hit-pay.com` (live) or
+`https://api.sandbox.hit-pay.com` (sandbox). Sandbox is a separate HitPay
+account with its own key and salt; the two sets are not interchangeable.
+
+> **Both environments currently hold the live key.** A checkout run from a
+> preview deploy or from localhost therefore creates a real, payable payment
+> request, and HitPay emails a real receipt to whatever address is entered
+> (`send_email: true` in `buildPaymentRequestBody`). Cancel test requests in the
+> HitPay dashboard afterwards. Swap in sandbox credentials if that is not what
+> you want.
+
+#### Build-time variables
+
+Set these in the dashboard, per environment:
+
+| Variable             | Production | Preview  |
+| -------------------- | ---------- | -------- |
+| `PUBLIC_ENABLE_SHOP` | `true`     | `true`   |
+| `PUBLIC_SHOP_IMPL`   | `shopify`  | `hitpay` |
+
+`PUBLIC_SHOP_IMPL` is what selects the backend, and it is read at build time —
+changing it needs a redeploy, not just a save. Production stays on `shopify`
+until a HitPay order has been tested end to end on preview.
+
+#### Order notifications — not yet configured
+
+`RESEND_API_KEY`, `SHOP_EMAIL_FROM` and `SHOP_ORDER_EMAIL` are unset in both
+environments. Until all three exist, a paid order is verified and acknowledged
+by the webhook but **nobody is emailed**. Orders are not persisted anywhere, so
+the HitPay dashboard would be the only record. `SHOP_EMAIL_FROM` must be on a
+domain verified in Resend. These are runtime secrets — set them the same way as
+the HitPay values above.
+
+#### Webhook
+
+No dashboard configuration needed. The site sends the callback URL with each
+payment request (`${url.origin}/api/shop/hitpay-webhook`), so it automatically
+matches whichever deployment created the order.
 
 ## Automatic Deployments
 
@@ -123,7 +199,7 @@ If needed, create `_worker.js` for advanced configs:
 export default {
   async fetch(request, env) {
     return new Response('Hello World');
-  }
+  },
 };
 ```
 
@@ -141,6 +217,7 @@ Create `public/_redirects` file:
 ### Automatic Optimizations
 
 Cloudflare automatically provides:
+
 - ✅ Global CDN (300+ locations)
 - ✅ HTTP/2 and HTTP/3
 - ✅ Brotli compression
@@ -151,6 +228,7 @@ Cloudflare automatically provides:
 ### Custom Optimizations
 
 In Cloudflare Dashboard:
+
 1. **Speed** → **Optimization**
 2. Enable:
    - Auto Minify
@@ -163,6 +241,7 @@ In Cloudflare Dashboard:
 ### Analytics
 
 View in Cloudflare Pages:
+
 - **Analytics** tab
 - Page views
 - Bandwidth usage
@@ -172,6 +251,7 @@ View in Cloudflare Pages:
 ### Logs
 
 View build logs:
+
 1. Cloudflare Pages → Your project
 2. **Deployments** tab
 3. Click any deployment
@@ -182,11 +262,13 @@ View build logs:
 ### Build Failures
 
 **Check build log** for errors:
+
 1. Missing environment variables
 2. Node version mismatch
 3. Dependency issues
 
 **Solutions**:
+
 ```bash
 # Locally test production build
 npm run build
@@ -218,6 +300,7 @@ node --version  # Should be 18+
 ## Limits & Pricing
 
 ### Free Tier
+
 - ✅ Unlimited bandwidth
 - ✅ Unlimited requests
 - ✅ 500 builds/month
@@ -225,6 +308,7 @@ node --version  # Should be 18+
 - ✅ 20,000 files
 
 ### Paid Tiers
+
 - **$20/month**: 5,000 builds
 - **$200/month**: 20,000 builds
 - Custom enterprise options
@@ -245,7 +329,3 @@ node --version  # Should be 18+
 - [Framework Guides](https://developers.cloudflare.com/pages/framework-guides/)
 - [Custom Domains](https://developers.cloudflare.com/pages/platform/custom-domains/)
 - [Build Configuration](https://developers.cloudflare.com/pages/platform/build-configuration/)
-
-
-
-
