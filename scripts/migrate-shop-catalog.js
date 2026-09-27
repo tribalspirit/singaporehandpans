@@ -79,6 +79,28 @@ if (!SHOP_DOMAIN || !SHOP_TOKEN) {
 }
 
 /**
+ * Shopify handles that must never become Storyblok products.
+ *
+ * Small shops routinely create one-off "products" that exist only so a named
+ * customer can pay a quoted amount — usually by duplicating a real product, so
+ * they inherit a misleading handle, type and collection. They are published to
+ * the Shopify storefront because that is how the customer reaches the payment
+ * page, which means the Storefront API returns them like any other product.
+ *
+ * Syncing one would put a private individual's name into the public catalog,
+ * the product grid, the sitemap and the structured data. Excluding by handle
+ * keeps them out, and keeps them out on every re-run.
+ *
+ * A handle listed here is also treated as absent from Shopify, so a product
+ * that was synced before being added to this list is reported as an orphan and
+ * unpublished by --prune, exactly like a deleted one.
+ */
+const EXCLUDED_HANDLES = new Set([
+  // "Order For Su Xin" — a bespoke invoice duplicated from the blue Airtek bag.
+  'hardcase-technologies-airtek-m-blue-handpan-bag-copy',
+]);
+
+/**
  * Brand slugs must match a story slug under shop/collections/ — shopClient.ts
  * maps products to collections by `brand === collection.slug`.
  */
@@ -1179,8 +1201,20 @@ async function main() {
   );
 
   await assertSpacesMatch();
-  const shopifyProducts = await fetchShopifyCatalog();
-  console.log(`Fetched ${shopifyProducts.length} products from Shopify.`);
+  const fetchedProducts = await fetchShopifyCatalog();
+  console.log(`Fetched ${fetchedProducts.length} products from Shopify.`);
+
+  const excluded = fetchedProducts.filter((node) =>
+    EXCLUDED_HANDLES.has(node.handle)
+  );
+  const shopifyProducts = fetchedProducts.filter(
+    (node) => !EXCLUDED_HANDLES.has(node.handle)
+  );
+  for (const node of excluded) {
+    console.log(
+      `  excluded by EXCLUDED_HANDLES: ${node.handle} ("${node.title}")`
+    );
+  }
 
   const records = buildProductRecords(shopifyProducts);
   assertUniqueSlugs(records);
