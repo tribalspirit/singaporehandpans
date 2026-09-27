@@ -30,6 +30,7 @@
  * Uses Node 18+ global fetch / FormData / Blob.
  */
 
+import { readFileSync } from 'node:fs';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -77,6 +78,26 @@ if (!SHOP_DOMAIN || !SHOP_TOKEN) {
   );
   process.exit(1);
 }
+
+/**
+ * Shopify handles that must never become Storyblok products.
+ *
+ * The list is shared with the running site (src/lib/catalogExclusions.ts reads
+ * the same JSON), so the storefront and this migration cannot disagree about
+ * what is in the catalog. See that module for why entries end up here.
+ *
+ * A handle listed here is also treated as absent from Shopify, so a product
+ * synced before it was added is reported as an orphan and unpublished by
+ * --prune, exactly like a deleted one.
+ */
+const EXCLUDED_HANDLES = new Set(
+  JSON.parse(
+    readFileSync(
+      new URL('../src/lib/catalogExclusions.json', import.meta.url),
+      'utf8'
+    )
+  ).excludedShopifyHandles
+);
 
 /**
  * Brand slugs must match a story slug under shop/collections/ — shopClient.ts
@@ -1179,8 +1200,19 @@ async function main() {
   );
 
   await assertSpacesMatch();
-  const shopifyProducts = await fetchShopifyCatalog();
-  console.log(`Fetched ${shopifyProducts.length} products from Shopify.`);
+  const fetchedProducts = await fetchShopifyCatalog();
+  console.log(`Fetched ${fetchedProducts.length} products from Shopify.`);
+
+  const excluded = fetchedProducts.filter((node) =>
+    EXCLUDED_HANDLES.has(node.handle)
+  );
+  const shopifyProducts = fetchedProducts.filter(
+    (node) => !EXCLUDED_HANDLES.has(node.handle)
+  );
+  // Deliberately logs the handle only: these titles are customer names.
+  for (const node of excluded) {
+    console.log(`  excluded by catalogExclusions.json: ${node.handle}`);
+  }
 
   const records = buildProductRecords(shopifyProducts);
   assertUniqueSlugs(records);
