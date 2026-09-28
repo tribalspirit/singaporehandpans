@@ -25,6 +25,16 @@ export interface CreatePaymentParams {
   webhookUrl: string;
   email?: string;
   name?: string;
+  /**
+   * Restricts the hosted checkout to specific methods, e.g. `['card']`.
+   * Omitted, HitPay offers everything enabled on the account.
+   *
+   * Used to keep PayNow off the hosted page when the site offers a direct
+   * PayNow transfer of its own: the buyer has been quoted a card surcharge by
+   * that point, so letting them pick PayNow here would overcharge them for a
+   * method that costs the studio far less.
+   */
+  paymentMethods?: string[];
 }
 
 export interface HitPayPaymentRequest {
@@ -48,7 +58,7 @@ export function getHitPayConfig(env: RuntimeEnv): HitPayConfig | null {
 
 export function buildPaymentRequestBody(
   params: CreatePaymentParams
-): Record<string, string | boolean> {
+): Record<string, string | boolean | string[]> {
   return {
     amount: params.amount.toFixed(2),
     currency: 'SGD',
@@ -61,6 +71,9 @@ export function buildPaymentRequestBody(
     send_email: true,
     ...(params.email && { email: params.email }),
     ...(params.name && { name: params.name }),
+    ...(params.paymentMethods?.length && {
+      payment_methods: params.paymentMethods,
+    }),
   };
 }
 

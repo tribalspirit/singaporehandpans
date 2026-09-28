@@ -11,7 +11,8 @@ add native PayNow support.
 - Products and collections are Storyblok stories, editable without deploys
 - Product grid with search and filtering (brand, category, price, availability)
 - Product detail pages at `/shop/product/{slug}/` with a "Buy now" form
-- Checkout redirects to HitPay's hosted payment page; no card data on-site
+- Two ways to pay, depending on configuration (see **Payment options**)
+- Card checkout redirects to HitPay's hosted page; no card data on-site
 - Payment confirmation arrives via an HMAC-signed webhook that emails the
   shop owner (Resend); orders are not stored in a database — the inbox and
   the HitPay dashboard are the record
@@ -40,17 +41,22 @@ HitPay hosted checkout (PayNow QR / cards)
 
 Key files:
 
-| File                                        | Role                                               |
-| ------------------------------------------- | -------------------------------------------------- |
-| `src/lib/shopClient.ts`                     | Storyblok-backed catalog fetchers + transforms     |
-| `src/lib/hitpay.ts`                         | Payment request creation, webhook signature verify |
-| `src/lib/orderEmail.ts`                     | Owner notification via Resend REST API             |
-| `src/pages/shop/product/[slug].astro`       | Product page with Buy form                         |
-| `src/pages/api/shop/checkout.ts`            | Creates the HitPay payment, redirects              |
-| `src/pages/api/shop/hitpay-webhook.ts`      | Confirms payment, sends email                      |
-| `src/pages/shop/thank-you.astro`            | Post-payment status page (no-store)                |
-| `storyblok/components/product.json`         | Product content-type schema                        |
-| `storyblok/components/shop_collection.json` | Collection content-type schema                     |
+| File                                        | Role                                                |
+| ------------------------------------------- | --------------------------------------------------- |
+| `src/lib/shopClient.ts`                     | Storyblok-backed catalog fetchers + transforms      |
+| `src/lib/hitpay.ts`                         | Payment request creation, webhook signature verify  |
+| `src/lib/orderEmail.ts`                     | Owner and buyer notifications via Resend REST API   |
+| `src/lib/paynow.ts`                         | EMVCo PayNow QR payload, and the PayNow config gate |
+| `src/lib/qrSvg.ts`                          | Server-rendered QR as inline SVG                    |
+| `src/lib/cardSurcharge.ts`                  | Card surcharge arithmetic, in integer cents         |
+| `src/pages/api/shop/paynow.ts`              | Raises a PayNow order and notifies both sides       |
+| `src/pages/shop/paynow.astro`               | PayNow QR and payment instructions                  |
+| `src/pages/shop/product/[slug].astro`       | Product page with Buy form                          |
+| `src/pages/api/shop/checkout.ts`            | Creates the HitPay payment, redirects               |
+| `src/pages/api/shop/hitpay-webhook.ts`      | Confirms payment, sends email                       |
+| `src/pages/shop/thank-you.astro`            | Post-payment status page (no-store)                 |
+| `storyblok/components/product.json`         | Product content-type schema                         |
+| `storyblok/components/shop_collection.json` | Collection content-type schema                      |
 
 ## Configuration
 
@@ -113,6 +119,67 @@ navigation, `/shop`, product pages, thank-you and the checkout API return
 4. The webhook URL is passed per payment request
    (`/api/shop/hitpay-webhook`) — no dashboard webhook config is needed for
    the checkout flow.
+
+## Payment options
+
+Which options appear depends on whether direct PayNow is configured
+(`PAYNOW_PROXY_*` plus the Resend variables — see `.dev.vars.example`).
+
+**PayNow not configured** — the original behaviour. One "Buy now" button posts
+to `/api/shop/checkout`, which creates a HitPay payment request offering both
+PayNow and card. The buyer pays the list price; the studio absorbs HitPay's fee.
+
+**PayNow configured** — the product page shows two submit buttons on one form,
+each with its own `formaction`, so no JavaScript and no duplicated fields:
+
+| Option | Endpoint             | Buyer pays           | Costs the studio |
+| ------ | -------------------- | -------------------- | ---------------- |
+| PayNow | `/api/shop/paynow`   | list price           | nothing          |
+| Card   | `/api/shop/checkout` | list + 2.8% + S$0.50 | 2.8% + S$0.50    |
+
+The HitPay request is then restricted to `payment_methods: ['card']`. Without
+that, a buyer quoted the card surcharge could pick PayNow on HitPay's own page
+and be overcharged for a method that costs the studio 0.65%.
+
+### Why the surcharge only appears alongside PayNow
+
+Surcharging is only defensible when the buyer had a free alternative. With no
+direct PayNow, suppressing HitPay's PayNow to make the surcharge honest would
+remove the cheapest method the studio has, so the surcharge is simply not
+applied. Both behaviours live in one conditional in `checkout.ts`.
+
+The rate is HitPay's published online **domestic** card rate. An
+internationally issued card costs 3.65% + S$0.50, so the studio absorbs roughly
+0.85% on those; the shop sells domestically and the issuing country is unknown
+at the time the price is quoted. The figures live in `src/lib/cardSurcharge.ts`
+and the buyer-facing wording is derived from them, so prose cannot drift from
+the arithmetic.
+
+Card surcharging is legal in Singapore but is commonly prohibited by card
+network and acquirer merchant terms. Presenting the same difference as a PayNow
+discount off a card-inclusive list price carries the same economics without
+that exposure.
+
+### Direct PayNow flow
+
+```text
+/api/shop/paynow  ── re-reads price and stock from Storyblok
+        │ mints SHP-XXXXXXXXXX, emails owner (critical) and buyer (best effort)
+        ▼
+/shop/paynow/?slug=…&reference=…
+        │ rebuilds the amount from the CMS, never from the URL
+        ▼
+EMVCo PayNow QR (src/lib/paynow.ts) rendered as inline SVG (src/lib/qrSvg.ts)
+```
+
+There is no webhook on a bank transfer, so nothing confirms payment. The owner
+reconciles against their bank by hand; the owner's email states in capitals
+that the money is unconfirmed. This is why `getPayNowConfig` refuses to return
+a configuration unless order email is also configured — an order nobody is told
+about would exist nowhere at all.
+
+The QR locks the amount and is marked single-use, and the reference is
+restricted to characters a bank reference field preserves intact.
 
 ## Security Notes
 

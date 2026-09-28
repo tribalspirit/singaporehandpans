@@ -6,6 +6,14 @@ import {
   isHitpayShop,
 } from '../../../lib/shop';
 import { setEdgeCache } from '../../../lib/edgeCache';
+import { getPayNowConfig } from '../../../lib/paynow';
+import { getOrderEmailConfig } from '../../../lib/orderEmail';
+import {
+  applyCardSurcharge,
+  formatSgd,
+  CARD_SURCHARGE_RATE_LABEL,
+  CARD_SURCHARGE_FLAT,
+} from '../../../lib/cardSurcharge';
 import type { ShopProduct } from '../../../lib/shop';
 
 export const prerender = false;
@@ -42,6 +50,29 @@ const CHECKOUT_MESSAGES: Record<string, string> = {
 };
 const checkoutMessage = checkoutState
   ? (CHECKOUT_MESSAGES[checkoutState] ?? CHECKOUT_MESSAGES.error)
+  : null;
+
+/*
+ * Payment options.
+ *
+ * A PayNow transfer straight to the studio costs nothing, while HitPay takes
+ * 2.8% + S$0.50 on a domestic card. When the free path is actually available,
+ * the card path shows that cost as a surcharge instead of burying it in every
+ * instrument's list price. When it is not, there is only one checkout and the
+ * price is the price — see the comment in the checkout endpoint.
+ *
+ * Both depend on deploy-time configuration, not on the request, so this stays
+ * compatible with the edge caching set above.
+ */
+const runtimeEnv = (Astro.locals.runtime?.env ?? {}) as Record<
+  string,
+  string | undefined
+>;
+const offersDirectPayNow =
+  getPayNowConfig(runtimeEnv, getOrderEmailConfig(runtimeEnv) !== null) !==
+  null;
+const cardCharge = offersDirectPayNow
+  ? applyCardSurcharge(product.priceMin.amount)
   : null;
 
 const pageTitle = `${product.title} - Shop`;
@@ -315,13 +346,64 @@ const descriptionBlocks = product.description
                     </label>
                   </div>
 
-                  <button type="submit" class="buy-button">
-                    Buy now — pay with PayNow or card
-                  </button>
-                  <p class="buy-form__note">
-                    Secure payment via HitPay. You will be redirected to
-                    complete the payment.
-                  </p>
+                  {cardCharge ? (
+                    <div class="pay-options">
+                      {/*
+                          Two submit buttons on one form, each with its own
+                          formaction. No radio, no JavaScript, no second set of
+                          name and email fields — the buyer picks how to pay by
+                          pressing the button for it.
+                        */}
+                      <button
+                        type="submit"
+                        formaction="/api/shop/paynow"
+                        class="buy-button pay-option"
+                      >
+                        <span class="pay-option__name">Pay by PayNow</span>
+                        <span class="pay-option__price">
+                          {formatSgd(cardCharge.base)}
+                        </span>
+                        <span class="pay-option__meta">
+                          Bank transfer · no extra charge
+                        </span>
+                      </button>
+
+                      <button
+                        type="submit"
+                        formaction="/api/shop/checkout"
+                        class="buy-button buy-button--secondary pay-option"
+                      >
+                        <span class="pay-option__name">Pay by card</span>
+                        <span class="pay-option__price">
+                          {formatSgd(cardCharge.total)}
+                        </span>
+                        <span class="pay-option__meta">
+                          Includes {formatSgd(cardCharge.surcharge)} card fee
+                        </span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button type="submit" class="buy-button">
+                      Buy now — pay with PayNow or card
+                    </button>
+                  )}
+
+                  {cardCharge ? (
+                    <p class="buy-form__note buy-form__note--surcharge">
+                      <strong>Card payments cost more.</strong> Paying by credit
+                      or debit card adds {CARD_SURCHARGE_RATE_LABEL} +{' '}
+                      {formatSgd(CARD_SURCHARGE_FLAT)} — the fee our payment
+                      provider charges us — which is{' '}
+                      {formatSgd(cardCharge.surcharge)} on this instrument.
+                      PayNow has no such fee, so the price stays{' '}
+                      {formatSgd(cardCharge.base)}.
+                    </p>
+                  ) : (
+                    <p class="buy-form__note">
+                      Secure payment via HitPay. You will be redirected to
+                      complete the payment.
+                    </p>
+                  )}
                 </form>
               ) : (
                 <div class="sold-out">
@@ -635,6 +717,62 @@ const descriptionBlocks = product.description
     margin-top: var(--space-3);
     font-size: var(--font-size-sm);
     color: var(--color-gray-500);
+  }
+
+  // The surcharge notice is a price term, not fine print. It sits at body
+  // contrast rather than the muted grey used for the reassurance note, because
+  // a buyer who misses it is surprised at the payment page.
+  .buy-form__note--surcharge {
+    color: var(--color-gray-700);
+    background: var(--color-gray-50);
+    border-left: 3px solid var(--color-gray-900);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    line-height: 1.5;
+  }
+
+  .pay-options {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  // Each option is a submit button carrying its own price, so the difference
+  // is visible at the moment of choosing rather than one screen later.
+  .pay-option {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+    text-align: left;
+    padding: var(--space-4) var(--space-5);
+
+    &__name {
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    &__price {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      font-variant-numeric: tabular-nums;
+    }
+
+    &__meta {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-normal);
+      opacity: 0.8;
+    }
+  }
+
+  // Card is the more expensive path, so it is presented as the alternative
+  // rather than given equal visual weight.
+  .buy-button--secondary {
+    background: var(--color-white);
+    color: var(--color-gray-900);
+    border: 1px solid var(--color-gray-300);
+
+    &:hover {
+      background: var(--color-gray-50);
+    }
   }
 
   .sold-out {

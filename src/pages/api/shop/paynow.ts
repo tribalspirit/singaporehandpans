@@ -4,18 +4,20 @@ import {
   isShopEnabled,
   isHitpayShop,
 } from '../../../lib/shop';
-import { createPaymentRequest, getHitPayConfig } from '../../../lib/hitpay';
-import { applyCardSurcharge } from '../../../lib/cardSurcharge';
-import { getPayNowConfig } from '../../../lib/paynow';
-import { getOrderEmailConfig } from '../../../lib/orderEmail';
+import { getPayNowConfig, isValidPayNowReference } from '../../../lib/paynow';
+import {
+  getOrderEmailConfig,
+  sendPayNowNotifications,
+} from '../../../lib/orderEmail';
+import { formatSgd } from '../../../lib/cardSurcharge';
 
 export const prerender = false;
 
 const MAX_SLUG_LENGTH = 120;
 const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 200;
-// Deliberately loose — real validation happens at HitPay; this only rejects
-// obvious garbage before an API call is spent on it.
+// Deliberately loose — this only rejects obvious garbage before an order is
+// raised against it. The buyer's own inbox is the real check.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function productRedirect(slug: string, reason: string): string {
@@ -34,6 +36,16 @@ function readField(
   return trimmed;
 }
 
+/**
+ * Place an order to be paid by a PayNow transfer straight to the studio.
+ *
+ * No money moves here and nothing external confirms that it ever will. All
+ * this does is mint a reference, tell the owner to watch their bank for it,
+ * and send the buyer to a page showing the QR. The owner reconciles by hand.
+ *
+ * Mirrors the validation in checkout.ts deliberately: price and stock are
+ * re-read from published CMS content, never taken from the submitted form.
+ */
 export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
   if (!isShopEnabled() || !isHitpayShop()) {
     return new Response('Not found', { status: 404 });
@@ -70,58 +82,45 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
   }
 
   const env = (locals.runtime?.env ?? {}) as Record<string, string | undefined>;
-  const storyblokToken = env.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+  const emailConfig = getOrderEmailConfig(env);
+  const paynow = getPayNowConfig(env, emailConfig !== null);
 
-  // Price and availability always come from published CMS content —
-  // client-submitted values are never trusted.
+  // Refuses rather than degrades. An order taken here with no way to tell the
+  // owner is an order that silently does not exist.
+  if (!paynow || !emailConfig) {
+    console.error('[paynow] Direct PayNow is not configured; order refused');
+    return redirect(productRedirect(slug, 'error'), 303);
+  }
+
+  const storyblokToken = env.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
   const product = await fetchProductBySlug(slug, storyblokToken);
   if (!product || !product.availableForSale || product.priceMin.amount <= 0) {
     return redirect(productRedirect(slug, 'unavailable'), 303);
   }
 
-  const hitpay = getHitPayConfig(env);
-  if (!hitpay) {
-    console.error('[checkout] HitPay configuration missing');
+  // Hyphen-and-alphanumerics only, so it survives a bank's reference field
+  // intact — see isValidPayNowReference.
+  const referenceNumber = `SHP-${crypto.randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
+  if (!isValidPayNowReference(referenceNumber)) {
+    console.error('[paynow] Generated an unusable reference:', referenceNumber);
     return redirect(productRedirect(slug, 'error'), 303);
   }
-
-  const referenceNumber = `SHP-${crypto.randomUUID().slice(0, 13)}`;
-
-  /*
-   * The card surcharge applies only when the buyer had a free alternative.
-   *
-   * With direct PayNow configured, this endpoint is the card lane: the product
-   * page quoted price + surcharge, so HitPay is restricted to cards and the
-   * surcharged total is charged. Without it, HitPay's hosted page is the only
-   * checkout and still offers its own PayNow, so surcharging here would either
-   * overcharge whoever picks PayNow on that page, or — if we restricted to
-   * cards to prevent that — remove the cheapest method the studio has. So the
-   * behaviour stays exactly as it was until PayNow is configured.
-   */
-  const offersDirectPayNow =
-    getPayNowConfig(env, getOrderEmailConfig(env) !== null) !== null;
-
-  const charge = offersDirectPayNow
-    ? applyCardSurcharge(product.priceMin.amount)
-    : null;
 
   try {
-    const payment = await createPaymentRequest(hitpay, {
-      amount: charge ? charge.total : product.priceMin.amount,
-      purpose: charge
-        ? `${product.title} (${product.handle}) incl. card fee`
-        : `${product.title} (${product.handle})`,
+    await sendPayNowNotifications(emailConfig, {
       referenceNumber,
-      redirectUrl: `${url.origin}/shop/thank-you/`,
-      webhookUrl: `${url.origin}/api/shop/hitpay-webhook`,
-      email: buyerEmail,
-      name: buyerName,
-      ...(charge && { paymentMethods: ['card'] }),
+      amount: formatSgd(product.priceMin.amount),
+      purpose: `${product.title} (${product.handle})`,
+      customerEmail: buyerEmail,
+      customerName: buyerName,
     });
-
-    return redirect(payment.url, 303);
   } catch (error) {
-    console.error('[checkout] Failed to create HitPay payment:', error);
+    // The owner was not told, so the order does not exist. Say so rather than
+    // showing a QR for a payment nobody is expecting.
+    console.error('[paynow] Owner notification failed; order refused:', error);
     return redirect(productRedirect(slug, 'error'), 303);
   }
+
+  const params = new URLSearchParams({ slug, reference: referenceNumber });
+  return redirect(`/shop/paynow/?${params.toString()}`, 303);
 };
