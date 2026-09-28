@@ -179,23 +179,37 @@ export function buildPayNowPayload(params: PayNowPaymentParams): string {
 }
 
 /**
- * Read the PayNow configuration, or null when direct transfer is not offered.
+ * Who a PayNow transfer is paid to, or null when that is not configured.
  *
- * Deliberately returns null unless order email is configured too: a PayNow
- * transfer produces no webhook, so the owner's inbox is the only record that
- * an order exists. Offering the option without it would silently drop orders.
+ * Deliberately says nothing about whether new orders may be taken — see
+ * `getPayNowConfig` for that. Rendering an order that already exists needs
+ * only the payee: the signed token proves the owner was notified when it was
+ * raised, so re-applying the creation gate here would break an already-issued
+ * seven-day payment link, and the recovery link in the owner's own
+ * notification, exactly during an email configuration incident.
  */
-export function getPayNowConfig(
-  env: RuntimeEnv,
-  hasOrderEmail: boolean
-): PayNowConfig | null {
+export function readPayNowPayee(env: RuntimeEnv): PayNowConfig | null {
   const proxyValue = env.PAYNOW_PROXY_VALUE;
   const rawType = env.PAYNOW_PROXY_TYPE;
   const merchantName = env.PAYNOW_MERCHANT_NAME;
 
   if (!proxyValue || !rawType || !merchantName) return null;
   if (rawType !== 'mobile' && rawType !== 'uen') return null;
-  if (!hasOrderEmail) return null;
 
   return { proxyType: rawType, proxyValue, merchantName };
+}
+
+/**
+ * Whether direct PayNow may be *offered*, and to whom it pays.
+ *
+ * Returns null unless order email is configured as well: a PayNow transfer
+ * produces no webhook, so the owner's inbox is the only record that an order
+ * exists. Taking an order without it would silently drop it.
+ */
+export function getPayNowConfig(
+  env: RuntimeEnv,
+  hasOrderEmail: boolean
+): PayNowConfig | null {
+  if (!hasOrderEmail) return null;
+  return readPayNowPayee(env);
 }

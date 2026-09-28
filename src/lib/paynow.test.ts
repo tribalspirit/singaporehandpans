@@ -3,6 +3,7 @@ import {
   buildPayNowPayload,
   crc16,
   getPayNowConfig,
+  readPayNowPayee,
   isValidPayNowReference,
   type PayNowConfig,
 } from './paynow';
@@ -264,5 +265,28 @@ describe('non-ASCII merchant names', () => {
     // 25 bytes / 3 per character = 8 whole characters, never a half one.
     expect(payload).toContain(`5924${'新'.repeat(8)}`);
     expect(payload).not.toContain('�');
+  });
+});
+
+describe('readPayNowPayee', () => {
+  const env = {
+    PAYNOW_PROXY_TYPE: 'uen',
+    PAYNOW_PROXY_VALUE: '201912345K',
+    PAYNOW_MERCHANT_NAME: 'Singapore Handpan Studio',
+  };
+
+  test('does not require order email, unlike the creation gate', () => {
+    // An order already raised must stay payable through an email outage or a
+    // key rotation: its signed link, and the recovery link in the owner's own
+    // notification, would otherwise break during exactly that incident.
+    expect(readPayNowPayee(env)).toEqual(CONFIG);
+    expect(getPayNowConfig(env, false)).toBeNull();
+  });
+
+  test('still requires a complete, valid payee', () => {
+    for (const key of Object.keys(env)) {
+      expect(readPayNowPayee({ ...env, [key]: undefined })).toBeNull();
+    }
+    expect(readPayNowPayee({ ...env, PAYNOW_PROXY_TYPE: 'nric' })).toBeNull();
   });
 });

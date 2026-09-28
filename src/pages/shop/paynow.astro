@@ -6,11 +6,10 @@ import {
   fetchProductBySlug,
 } from '../../lib/shop';
 import {
-  getPayNowConfig,
+  readPayNowPayee,
   buildPayNowPayload,
   isValidPayNowReference,
 } from '../../lib/paynow';
-import { getOrderEmailConfig } from '../../lib/orderEmail';
 import { renderQrSvg } from '../../lib/qrSvg';
 import { verifyOrderToken, tokenExpiry } from '../../lib/orderToken';
 import { formatSgd } from '../../lib/cardSurcharge';
@@ -34,7 +33,14 @@ const env = (Astro.locals.runtime?.env ?? {}) as Record<
   string,
   string | undefined
 >;
-const paynow = getPayNowConfig(env, getOrderEmailConfig(env) !== null);
+/*
+ * Only the payee is needed here, not the gate on whether new orders may be
+ * taken. The signed token below proves the owner was notified when this order
+ * was raised, so requiring email configuration again would break an
+ * already-issued payment link — and the recovery link in the owner's own
+ * notification — during exactly the email incident that broke it.
+ */
+const paynow = readPayNowPayee(env);
 if (!paynow) {
   return Astro.redirect('/shop/');
 }
