@@ -101,6 +101,33 @@ function truncateToBytes(value: string, maxBytes: number): string {
  */
 const REFERENCE_PATTERN = /^[A-Za-z0-9-]{1,25}$/;
 
+/**
+ * A Singapore UEN is 9 or 10 alphanumeric characters, and PayNow allows a
+ * further 3-character account suffix, so 9 to 13 in total.
+ */
+const UEN_PATTERN = /^[A-Za-z0-9]{9,13}$/;
+
+/** PayNow addresses mobiles in full international form. */
+const MOBILE_PATTERN = /^\+65\d{8}$/;
+
+/**
+ * Whether a configured proxy can actually be paid.
+ *
+ * Checked when the configuration is read, not when the QR is drawn. A
+ * malformed value would otherwise sail through, the order endpoint would
+ * notify the owner, and only then would the payment page produce a code no
+ * banking app can pay — or, past 99 bytes, throw out of `tlv` and return a
+ * 500 for an order the owner has already been told about.
+ */
+export function isValidPayNowProxy(
+  proxyType: PayNowProxyType,
+  proxyValue: string
+): boolean {
+  return proxyType === 'uen'
+    ? UEN_PATTERN.test(proxyValue)
+    : MOBILE_PATTERN.test(proxyValue);
+}
+
 function tlv(id: string, value: string): string {
   const bytes = utf8Length(value);
   if (bytes > 99) {
@@ -195,6 +222,7 @@ export function readPayNowPayee(env: RuntimeEnv): PayNowConfig | null {
 
   if (!proxyValue || !rawType || !merchantName) return null;
   if (rawType !== 'mobile' && rawType !== 'uen') return null;
+  if (!isValidPayNowProxy(rawType, proxyValue)) return null;
 
   return { proxyType: rawType, proxyValue, merchantName };
 }

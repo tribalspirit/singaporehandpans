@@ -4,6 +4,7 @@ import {
   crc16,
   getPayNowConfig,
   readPayNowPayee,
+  isValidPayNowProxy,
   isValidPayNowReference,
   type PayNowConfig,
 } from './paynow';
@@ -288,5 +289,41 @@ describe('readPayNowPayee', () => {
       expect(readPayNowPayee({ ...env, [key]: undefined })).toBeNull();
     }
     expect(readPayNowPayee({ ...env, PAYNOW_PROXY_TYPE: 'nric' })).toBeNull();
+  });
+});
+
+describe('isValidPayNowProxy', () => {
+  test('accepts real UEN shapes, including a PayNow account suffix', () => {
+    for (const uen of [
+      '201806308C2B3',
+      '201806308C',
+      '12345678A',
+      'T08GB0001A',
+    ]) {
+      expect(isValidPayNowProxy('uen', uen)).toBe(true);
+    }
+  });
+
+  test('accepts a mobile only in full international form', () => {
+    expect(isValidPayNowProxy('mobile', '+6591234567')).toBe(true);
+    expect(isValidPayNowProxy('mobile', '91234567')).toBe(false);
+  });
+
+  test('rejects values that would break the payload', () => {
+    // Over 99 bytes throws out of tlv(); a space desynchronises the TLV
+    // lengths. Both would surface only after the owner had been notified.
+    for (const bad of ['', 'has space', 'x'.repeat(120), 'short']) {
+      expect(isValidPayNowProxy('uen', bad)).toBe(false);
+    }
+  });
+
+  test('a malformed proxy disables PayNow instead of failing at payment time', () => {
+    expect(
+      readPayNowPayee({
+        PAYNOW_PROXY_TYPE: 'uen',
+        PAYNOW_PROXY_VALUE: 'nope!',
+        PAYNOW_MERCHANT_NAME: 'Singapore Handpan Studio',
+      })
+    ).toBeNull();
   });
 });

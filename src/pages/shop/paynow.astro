@@ -105,12 +105,28 @@ const amountLabel = formatSgd(amount);
  * when the order does. None of the checks above — the signed URL, the stock
  * recheck — reach a saved image; only a field inside the payload does.
  */
+const expiresAt = tokenExpiry(token) ?? undefined;
 const payload = buildPayNowPayload({
   config: paynow,
   amount,
   reference,
-  expiresAt: tokenExpiry(token) ?? undefined,
+  expiresAt,
 });
+
+/*
+ * Shown with the manual details as well as encoded in the QR. A transfer
+ * typed straight into a banking app carries no expiry for the bank to
+ * enforce — a UEN is payable by anyone, forever, and no amount of code
+ * changes that. Stating the date sets the buyer's expectation; the owner
+ * reconciling before shipping, and refunding anything late or unmatched, is
+ * the actual control.
+ */
+const payByLabel = expiresAt
+  ? new Intl.DateTimeFormat('en-SG', {
+      dateStyle: 'medium',
+      timeZone: 'Asia/Singapore',
+    }).format(new Date(expiresAt))
+  : null;
 const qrSvg = renderQrSvg(payload, {
   title: `PayNow QR code for ${amountLabel}, reference ${reference}`,
 });
@@ -164,6 +180,14 @@ const proxyLabel = paynow.proxyType === 'uen' ? 'UEN' : 'Mobile';
                 <dt>Reference</dt>
                 <dd>{reference}</dd>
               </div>
+              {
+                payByLabel && (
+                  <div>
+                    <dt>Pay by</dt>
+                    <dd>{payByLabel}</dd>
+                  </div>
+                )
+              }
             </dl>
             <p class="paynow-manual__warning">
               Please include the reference — it is how we match your transfer to

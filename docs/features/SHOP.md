@@ -242,6 +242,12 @@ was raised. The token is valid for seven days and these are one-off
 instruments, so without that check a buyer revisiting a signed link after the
 handpan sold would still be shown a payable QR.
 
+The QR carries the order's expiry, so a screenshot stops being payable when
+the order does. **The manual details cannot carry one.** A UEN is payable by
+anyone, forever — that is what a bank transfer is, and no code changes it. The
+page states the pay-by date to set expectations, but the control is the owner
+reconciling before shipping and refunding anything late or unmatched.
+
 The QR locks the amount and is marked single-use, and the reference is
 restricted to characters a bank reference field preserves intact.
 
