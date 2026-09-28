@@ -119,6 +119,12 @@ export interface PayNowOrderDetails {
   purpose: string;
   customerEmail: string;
   customerName?: string;
+  /**
+   * Signed link back to the QR page. The page cannot be reconstructed from
+   * the reference alone — it needs the signature the order endpoint minted —
+   * so without this the buyer cannot return to it after closing the tab.
+   */
+  payUrl?: string;
 }
 
 /**
@@ -170,6 +176,13 @@ export function buildPayNowBuyerNotification(order: PayNowOrderDetails): {
     'Please put that reference in the PayNow comment or reference field —',
     'it is how we match your transfer to your order.',
     '',
+    ...(order.payUrl
+      ? [
+          'To scan a QR code with the amount already filled in, open:',
+          order.payUrl,
+          '',
+        ]
+      : []),
     'Your order is reserved once we see the transfer, and we will email you',
     'to arrange collection or delivery. If anything looks wrong, just reply',
     'to this email.',

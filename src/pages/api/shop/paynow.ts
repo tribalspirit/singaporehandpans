@@ -10,6 +10,7 @@ import {
   sendPayNowNotifications,
 } from '../../../lib/orderEmail';
 import { formatSgd } from '../../../lib/cardSurcharge';
+import { mintOrderToken } from '../../../lib/orderToken';
 
 export const prerender = false;
 
@@ -106,6 +107,31 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
     return redirect(productRedirect(slug, 'error'), 303);
   }
 
+  /*
+   * Sign the order so the instructions page can tell a real order from two
+   * query parameters somebody typed. Key material is HITPAY_SALT, which the
+   * shop already requires; orderToken derives a separate key from it, so a
+   * page token is not interchangeable with a webhook signature.
+   */
+  const signingSecret = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
+  if (!signingSecret) {
+    console.error('[paynow] HITPAY_SALT missing; cannot sign the order');
+    return redirect(productRedirect(slug, 'error'), 303);
+  }
+
+  const amountCents = Math.round(product.priceMin.amount * 100);
+  const token = await mintOrderToken(signingSecret, {
+    slug,
+    reference: referenceNumber,
+    amountCents,
+  });
+  const params = new URLSearchParams({
+    slug,
+    reference: referenceNumber,
+    t: token,
+  });
+  const payUrl = `${url.origin}/shop/paynow/?${params.toString()}`;
+
   try {
     await sendPayNowNotifications(emailConfig, {
       referenceNumber,
@@ -113,6 +139,7 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
       purpose: `${product.title} (${product.handle})`,
       customerEmail: buyerEmail,
       customerName: buyerName,
+      payUrl,
     });
   } catch (error) {
     // The owner was not told, so the order does not exist. Say so rather than
@@ -121,6 +148,5 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
     return redirect(productRedirect(slug, 'error'), 303);
   }
 
-  const params = new URLSearchParams({ slug, reference: referenceNumber });
   return redirect(`/shop/paynow/?${params.toString()}`, 303);
 };

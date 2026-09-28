@@ -12,6 +12,7 @@ import {
 } from '../../lib/paynow';
 import { getOrderEmailConfig } from '../../lib/orderEmail';
 import { renderQrSvg } from '../../lib/qrSvg';
+import { verifyOrderToken } from '../../lib/orderToken';
 import { formatSgd } from '../../lib/cardSurcharge';
 
 // Rendered live and never cached: every buyer sees their own reference, and a
@@ -36,9 +37,10 @@ if (!paynow) {
 
 const slug = Astro.url.searchParams.get('slug') ?? '';
 const reference = Astro.url.searchParams.get('reference') ?? '';
+const token = Astro.url.searchParams.get('t') ?? '';
 
-// The page is reachable by URL, so both inputs are treated as untrusted. A
-// bad reference would otherwise be encoded straight into the QR payload.
+// The page is reachable by URL, so every input is treated as untrusted. A bad
+// reference would otherwise be encoded straight into the QR payload.
 if (!/^[a-z0-9-]{1,120}$/.test(slug) || !isValidPayNowReference(reference)) {
   return Astro.redirect('/shop/');
 }
@@ -48,6 +50,26 @@ if (!/^[a-z0-9-]{1,120}$/.test(slug) || !isValidPayNowReference(reference)) {
 const storyblokToken = env.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
 const product = await fetchProductBySlug(slug, storyblokToken);
 if (!product || product.priceMin.amount <= 0) {
+  return Astro.redirect('/shop/');
+}
+
+/*
+ * Syntactically valid parameters are not an order. Without this check anyone
+ * could construct a payable QR for any product under any reference, and the
+ * owner would never have been told the order exists — so a buyer could
+ * transfer thousands against a reference the studio cannot match to anything.
+ * The signature is minted only by /api/shop/paynow, after it has notified the
+ * owner. Signing the amount too means a price change since the order fails
+ * closed rather than showing a different sum than the buyer was emailed.
+ */
+const signingSecret = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
+const amountCents = Math.round(product.priceMin.amount * 100);
+const isGenuineOrder = await verifyOrderToken(signingSecret ?? '', token, {
+  slug,
+  reference,
+  amountCents,
+});
+if (!isGenuineOrder) {
   return Astro.redirect('/shop/');
 }
 

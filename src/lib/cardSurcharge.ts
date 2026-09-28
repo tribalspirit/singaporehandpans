@@ -7,6 +7,12 @@
  * passes the card cost to the buyer who chooses to incur it, rather than
  * spreading it across every instrument's list price.
  *
+ * The percentage is grossed up, not simply added. HitPay charges its fee on
+ * the amount actually presented to it, so adding 2.8% of the list price and
+ * charging the sum leaves the studio short: charge S$3,906.90 and HitPay takes
+ * S$109.89 of it, netting S$3,797.01 against a S$3,800 list price. Solving
+ * `total - (total * rate + flat) = base` instead makes the studio whole.
+ *
  * Two things this deliberately does not do:
  *
  * - It does not vary by card origin. An internationally issued card costs
@@ -47,8 +53,10 @@ function toCents(amount: number): number {
 /**
  * Apply the surcharge to a listed price.
  *
- * Rounds the percentage component to the nearest cent before adding the flat
- * fee, so the surcharge shown to the buyer is exactly the surcharge charged.
+ * `total = (base + flat) / (1 - rate)`, the amount whose own fee leaves the
+ * list price behind. Rounded up, so the studio is never left a cent short by
+ * the rounding itself — the buyer pays at most one cent more than the exact
+ * solution.
  */
 export function applyCardSurcharge(amount: number): CardTotal {
   if (!Number.isFinite(amount) || amount <= 0) {
@@ -56,14 +64,27 @@ export function applyCardSurcharge(amount: number): CardTotal {
   }
 
   const baseCents = toCents(amount);
-  const surchargeCents =
-    Math.round(baseCents * CARD_SURCHARGE_RATE) + toCents(CARD_SURCHARGE_FLAT);
+  const totalCents = Math.ceil(
+    (baseCents + toCents(CARD_SURCHARGE_FLAT)) / (1 - CARD_SURCHARGE_RATE)
+  );
 
   return {
     base: baseCents / 100,
-    surcharge: surchargeCents / 100,
-    total: (baseCents + surchargeCents) / 100,
+    surcharge: (totalCents - baseCents) / 100,
+    total: totalCents / 100,
   };
+}
+
+/**
+ * What HitPay deducts from a given charge. Exists so tests can assert the
+ * round trip — that what the studio nets is the list price — rather than
+ * trusting the formula above.
+ */
+export function providerFeeOn(total: number): number {
+  const cents =
+    Math.round(toCents(total) * CARD_SURCHARGE_RATE) +
+    toCents(CARD_SURCHARGE_FLAT);
+  return cents / 100;
 }
 
 /**

@@ -148,6 +148,13 @@ direct PayNow, suppressing HitPay's PayNow to make the surcharge honest would
 remove the cheapest method the studio has, so the surcharge is simply not
 applied. Both behaviours live in one conditional in `checkout.ts`.
 
+The percentage is **grossed up**, not simply added: HitPay charges its fee on
+the amount presented to it, so `base + base * rate + flat` leaves the studio
+short — charge S$3,906.90 and HitPay takes S$109.89, netting S$3,797.01 against
+a S$3,800 list price. Solving `total - (total * rate + flat) = base` gives
+S$3,909.98, on which the studio nets exactly S$3,800. A test asserts that round
+trip rather than trusting the formula.
+
 The rate is HitPay's published online **domestic** card rate. An
 internationally issued card costs 3.65% + S$0.50, so the studio absorbs roughly
 0.85% on those; the shop sells domestically and the issuing country is unknown
@@ -166,7 +173,7 @@ that exposure.
 /api/shop/paynow  ── re-reads price and stock from Storyblok
         │ mints SHP-XXXXXXXXXX, emails owner (critical) and buyer (best effort)
         ▼
-/shop/paynow/?slug=…&reference=…
+/shop/paynow/?slug=…&reference=…&t=<signature>
         │ rebuilds the amount from the CMS, never from the URL
         ▼
 EMVCo PayNow QR (src/lib/paynow.ts) rendered as inline SVG (src/lib/qrSvg.ts)
@@ -177,6 +184,17 @@ reconciles against their bank by hand; the owner's email states in capitals
 that the money is unconfirmed. This is why `getPayNowConfig` refuses to return
 a configuration unless order email is also configured — an order nobody is told
 about would exist nowhere at all.
+
+The page is bound to a real order by a signed, expiring token
+(`src/lib/orderToken.ts`) that only the POST can mint. Without it the URL is
+just query parameters: anyone could construct a payable QR for any product
+under a reference the owner was never told about, and a buyer who edited the
+slug after ordering would see a QR for a different instrument than their
+reference was raised against. The amount is signed too, so a price change
+between ordering and paying fails closed instead of quietly showing a different
+sum than the buyer was emailed. Key material is derived from `HITPAY_SALT` with
+domain separation, so a page token cannot be confused with a webhook signature
+and no extra secret is needed.
 
 The QR locks the amount and is marked single-use, and the reference is
 restricted to characters a bank reference field preserves intact.

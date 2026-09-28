@@ -391,10 +391,10 @@ const descriptionBlocks = product.description
                   {cardCharge ? (
                     <p class="buy-form__note buy-form__note--surcharge">
                       <strong>Card payments cost more.</strong> Paying by credit
-                      or debit card adds {CARD_SURCHARGE_RATE_LABEL} +{' '}
-                      {formatSgd(CARD_SURCHARGE_FLAT)} — the fee our payment
-                      provider charges us — which is{' '}
-                      {formatSgd(cardCharge.surcharge)} on this instrument.
+                      or debit card adds {formatSgd(cardCharge.surcharge)},
+                      which covers the fee our payment provider charges us —{' '}
+                      {CARD_SURCHARGE_RATE_LABEL} +{' '}
+                      {formatSgd(CARD_SURCHARGE_FLAT)} of the amount charged.
                       PayNow has no such fee, so the price stays{' '}
                       {formatSgd(cardCharge.base)}.
                     </p>

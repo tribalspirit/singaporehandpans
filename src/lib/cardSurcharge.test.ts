@@ -5,29 +5,43 @@ import {
   CARD_SURCHARGE_RATE,
   CARD_SURCHARGE_RATE_LABEL,
   formatSgd,
+  providerFeeOn,
 } from './cardSurcharge';
 
 describe('applyCardSurcharge', () => {
-  test('matches HitPay 2.8% + S$0.50 on real catalogue prices', () => {
-    // base, surcharge, total — worked by hand from the published rate.
+  test('grosses up, so real catalogue prices come out whole', () => {
+    // base, surcharge, total — solved from total - (total*rate + flat) = base.
     const cases: [number, number, number][] = [
-      [3800, 106.9, 3906.9], // D Kurd 10
-      [6500, 182.5, 6682.5], // D Aegean 18
-      [58, 2.12, 60.12], // floor stand
+      [3800, 109.98, 3909.98], // D Kurd 10
+      [6500, 187.76, 6687.76], // D Aegean 18
+      [58, 2.19, 60.19], // floor stand
     ];
     for (const [base, surcharge, total] of cases) {
       expect(applyCardSurcharge(base)).toEqual({ base, surcharge, total });
     }
   });
 
+  test('the studio nets the list price, which is the whole point', () => {
+    // The naive version — base + base*rate + flat — charged 3906.90 and netted
+    // 3797.01, because HitPay takes its cut of the surcharged total, not of
+    // the list price. Every card sale quietly under-recovered.
+    for (const base of [58, 280, 1234.56, 1888, 3800, 6500]) {
+      const { total } = applyCardSurcharge(base);
+      const netted = Math.round((total - providerFeeOn(total)) * 100) / 100;
+      expect(netted).toBeGreaterThanOrEqual(base);
+      // Rounding up may overshoot, but never by more than a cent.
+      expect(netted - base).toBeLessThanOrEqual(0.01);
+    }
+  });
+
   test('does not leak binary floating point into a price', () => {
     // 3800 * 0.028 is 106.39999999999999 in floats, which would render as
-    // S$106.40 in one place and S$3,906.8999999999996 in another.
+    // one figure in the disclaimer and another at the payment page.
     const { surcharge, total } = applyCardSurcharge(3800);
-    expect(surcharge).toBe(106.9);
-    expect(total).toBe(3906.9);
+    expect(surcharge).toBe(109.98);
+    expect(total).toBe(3909.98);
     expect(Number.isInteger(Math.round(total * 100))).toBe(true);
-    expect(total.toFixed(2)).toBe('3906.90');
+    expect(total.toFixed(2)).toBe('3909.98');
   });
 
   test('the surcharge shown is exactly total minus base, to the cent', () => {
@@ -41,13 +55,15 @@ describe('applyCardSurcharge', () => {
 
   test('handles a price with cents', () => {
     const { surcharge, total } = applyCardSurcharge(1234.56);
-    // round(123456 * 0.028) = round(3456.768) = 3457 cents, + 50 flat.
-    expect(surcharge).toBe(35.07);
-    expect(total).toBe(1269.63);
+    // ceil((123456 + 50) / 0.972) = 127064 cents.
+    expect(total).toBe(1270.64);
+    expect(surcharge).toBe(36.08);
   });
 
-  test('always adds at least the flat fee', () => {
-    expect(applyCardSurcharge(0.01).surcharge).toBe(CARD_SURCHARGE_FLAT);
+  test('always adds more than the flat fee', () => {
+    expect(applyCardSurcharge(0.01).surcharge).toBeGreaterThan(
+      CARD_SURCHARGE_FLAT
+    );
   });
 
   test('refuses a non-positive or non-finite price', () => {
