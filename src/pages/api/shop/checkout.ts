@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { isSameOriginSubmission } from '../../../lib/sameOrigin';
 import {
   fetchProductBySlug,
   isShopEnabled,
@@ -39,9 +40,9 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
     return new Response('Not found', { status: 404 });
   }
 
-  // Same-origin guard: browsers send Origin on cross-site POSTs.
-  const origin = request.headers.get('origin');
-  if (origin && origin !== url.origin) {
+  // Only accept submissions that look like they came from our own pages;
+  // see sameOrigin.ts for why Referer is accepted when Origin is absent.
+  if (!isSameOriginSubmission(request, url.origin)) {
     return new Response('Forbidden', { status: 403 });
   }
 
@@ -97,13 +98,25 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
    * overcharge whoever picks PayNow on that page, or — if we restricted to
    * cards to prevent that — remove the cheapest method the studio has. So the
    * behaviour stays exactly as it was until PayNow is configured.
+   *
+   * Runtime configuration alone is not enough to decide, because product pages
+   * are edge-cached for five minutes. In the window after PayNow is switched
+   * on, a cached page still shows the single combined checkout at the list
+   * price; surcharging that submission would send the buyer to HitPay for more
+   * than the page disclosed. So the surcharge also requires the page to say it
+   * quoted one — only the two-option form's card button submits `method=card`.
+   *
+   * Omitting the marker cannot be used to dodge the fee for gain: it yields
+   * the list price, which is exactly what the PayNow button offers anyway.
    */
   const offersDirectPayNow =
     getPayNowConfig(env, getOrderEmailConfig(env) !== null) !== null;
+  const pageQuotedCardPrice = form.get('method') === 'card';
 
-  const charge = offersDirectPayNow
-    ? applyCardSurcharge(product.priceMin.amount)
-    : null;
+  const charge =
+    offersDirectPayNow && pageQuotedCardPrice
+      ? applyCardSurcharge(product.priceMin.amount)
+      : null;
 
   try {
     const payment = await createPaymentRequest(hitpay, {

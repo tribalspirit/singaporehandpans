@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import {
   buildOwnerNotification,
-  buildPayNowBuyerNotification,
   buildPayNowOwnerNotification,
   getOrderEmailConfig,
 } from './orderEmail';
@@ -102,18 +101,28 @@ describe('buildPayNowOwnerNotification', () => {
   });
 });
 
-describe('buildPayNowBuyerNotification', () => {
-  test('gives the buyer the amount and the reference to quote', () => {
-    const { subject, text } = buildPayNowBuyerNotification({
+describe('the PayNow owner notification is the only mail sent', () => {
+  test('carries the signed payment link so the owner can forward it', () => {
+    const { text } = buildPayNowOwnerNotification({
+      referenceNumber: 'SHP-abc123',
+      amount: '$3,800.00',
+      purpose: 'MAG D Kurd 10',
+      customerEmail: 'buyer@example.com',
+      payUrl: 'https://example.com/shop/paynow/?slug=x&reference=y&t=z',
+    });
+    expect(text).toContain('https://example.com/shop/paynow/');
+  });
+
+  test('says the buyer was not emailed, so the owner knows to reply', () => {
+    // Nothing is sent to the address submitted with the order: an endpoint
+    // that mails a buyer-supplied address can be pointed at anybody, and the
+    // studio's verified domain would be sending strangers unsolicited mail.
+    const { text } = buildPayNowOwnerNotification({
       referenceNumber: 'SHP-abc123',
       amount: '$3,800.00',
       purpose: 'MAG D Kurd 10',
       customerEmail: 'buyer@example.com',
     });
-    expect(subject).toContain('SHP-abc123');
-    expect(text).toContain('$3,800.00');
-    expect(text).toContain('SHP-abc123');
-    // Without the reference in the transfer, the owner cannot match it.
-    expect(text).toMatch(/reference/i);
+    expect(text).toContain('NOT emailed');
   });
 });

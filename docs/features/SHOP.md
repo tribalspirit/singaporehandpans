@@ -171,13 +171,26 @@ that exposure.
 
 ```text
 /api/shop/paynow  ── re-reads price and stock from Storyblok
-        │ mints SHP-XXXXXXXXXX, emails owner (critical) and buyer (best effort)
+        │ mints SHP-XXXXXXXXXX + a signed token, emails the owner
         ▼
 /shop/paynow/?slug=…&reference=…&t=<signature>
         │ rebuilds the amount from the CMS, never from the URL
         ▼
 EMVCo PayNow QR (src/lib/paynow.ts) rendered as inline SVG (src/lib/qrSvg.ts)
 ```
+
+Mail goes only to the studio's own address; nothing is sent to the address
+submitted with the order. An endpoint that emails a buyer-supplied address can
+be pointed at anybody, which would spend the studio's Resend quota sending
+strangers unsolicited mail and damage the domain's sending reputation. The
+buyer's address reaches the owner inside the notification, as the reply-to, and
+the owner replies from there. The buyer keeps their reference from the page,
+which says so.
+
+Both shop POST endpoints require a matching `Origin` header rather than only
+checking it when present. That turns away trivially scripted submissions, but
+`Origin` is spoofable — a Cloudflare WAF rate-limit rule on `/api/shop/*` is
+the actual control and is a prerequisite for enabling PayNow.
 
 There is no webhook on a bank transfer, so nothing confirms payment. The owner
 reconciles against their bank by hand; the owner's email states in capitals

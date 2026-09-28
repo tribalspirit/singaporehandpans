@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { isSameOriginSubmission } from '../../../lib/sameOrigin';
 import {
   fetchProductBySlug,
   isShopEnabled,
@@ -7,7 +8,7 @@ import {
 import { getPayNowConfig, isValidPayNowReference } from '../../../lib/paynow';
 import {
   getOrderEmailConfig,
-  sendPayNowNotifications,
+  sendPayNowNotification,
 } from '../../../lib/orderEmail';
 import { formatSgd } from '../../../lib/cardSurcharge';
 import { mintOrderToken } from '../../../lib/orderToken';
@@ -52,9 +53,14 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
     return new Response('Not found', { status: 404 });
   }
 
-  // Same-origin guard: browsers send Origin on cross-site POSTs.
-  const origin = request.headers.get('origin');
-  if (origin && origin !== url.origin) {
+  /*
+   * Only accept submissions that look like they came from our own pages.
+   * This endpoint sends mail through the studio's Resend account, so an
+   * unauthenticated script hitting it repeatedly costs real money and, worse,
+   * sender reputation. See sameOrigin.ts for why Referer is accepted too, and
+   * why a WAF rate limit — not this — is the actual control.
+   */
+  if (!isSameOriginSubmission(request, url.origin)) {
     return new Response('Forbidden', { status: 403 });
   }
 
@@ -133,7 +139,7 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
   const payUrl = `${url.origin}/shop/paynow/?${params.toString()}`;
 
   try {
-    await sendPayNowNotifications(emailConfig, {
+    await sendPayNowNotification(emailConfig, {
       referenceNumber,
       amount: formatSgd(product.priceMin.amount),
       purpose: `${product.title} (${product.handle})`,

@@ -200,6 +200,18 @@ it on, the product page offers two prices — PayNow at the list price, and card
 at list + 2.8% + S$0.50 — and the HitPay checkout is restricted to cards, so a
 buyer quoted the surcharge cannot then pick a cheaper method on HitPay's page.
 
+**A WAF rate-limit rule on `/api/shop/*` is a prerequisite, not a nicety.**
+The order endpoint sends mail through the studio's Resend account, so without
+a rate limit a script can exhaust the quota and flood the owner's inbox. The
+endpoints require a matching `Origin` header, which turns away the simplest
+abuse, but `Origin` is trivially spoofed and is a speed bump rather than a
+control. Add the rule in Cloudflare → Security → WAF → Rate limiting rules
+before switching PayNow on.
+
+Mail is only ever sent to the studio's own address. Nothing is sent to the
+address submitted with an order, so the endpoint cannot be pointed at a third
+party and the domain's sending reputation is not exposed.
+
 Two things to be aware of before enabling it:
 
 - **Reconciliation is manual.** Nothing confirms a bank transfer. The buyer is

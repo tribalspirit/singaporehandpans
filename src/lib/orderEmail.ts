@@ -11,10 +11,16 @@
  *   payment request) and the webhook confirms the money arrived, so the site
  *   only tells the owner about a payment that already succeeded.
  * - Direct PayNow. Nothing confirms a bank transfer, and HitPay is not
- *   involved, so the site sends both sides: the owner gets an order to
- *   reconcile against their bank, and the buyer gets the reference they must
- *   quote. Without that mail the order exists nowhere, which is why
+ *   involved, so the site tells the owner, who reconciles against their bank.
+ *   Without that mail the order exists nowhere, which is why
  *   `getPayNowConfig` refuses to offer PayNow unless email is configured.
+ *
+ * Mail is only ever sent to the studio's own address, never to one submitted
+ * with the order. An endpoint that emails a buyer-supplied address is an
+ * endpoint a script can point at anybody: the studio's verified domain would
+ * be sending unsolicited mail to strangers, which costs quota and, far worse,
+ * sender reputation. The buyer's details reach the owner inside the
+ * notification instead, and the owner replies from there.
  */
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
@@ -120,9 +126,9 @@ export interface PayNowOrderDetails {
   customerEmail: string;
   customerName?: string;
   /**
-   * Signed link back to the QR page. The page cannot be reconstructed from
-   * the reference alone — it needs the signature the order endpoint minted —
-   * so without this the buyer cannot return to it after closing the tab.
+   * Signed link back to the QR page, for the owner to forward if the buyer
+   * loses it. The page cannot be reconstructed from the reference alone — it
+   * needs the signature the order endpoint minted.
    */
   payUrl?: string;
 }
@@ -147,8 +153,12 @@ export function buildPayNowOwnerNotification(order: PayNowOrderDetails): {
     `Reference: ${order.referenceNumber}`,
     ...(order.customerName ? [`Customer: ${order.customerName}`] : []),
     `Customer email: ${order.customerEmail}`,
+    ...(order.payUrl
+      ? ['', 'Payment page, if the buyer needs it again:', order.payUrl]
+      : []),
     '',
-    'Nothing else records this order — there is no webhook on a bank transfer.',
+    'The buyer was NOT emailed — reply to them from here to confirm.',
+    'Nothing else records this order: there is no webhook on a bank transfer.',
   ];
 
   return {
@@ -158,57 +168,13 @@ export function buildPayNowOwnerNotification(order: PayNowOrderDetails): {
 }
 
 /**
- * The buyer's copy, so the reference survives them closing the tab. Without it
- * a transfer can arrive that the owner cannot match to an order.
+ * Tell the owner a PayNow order was placed.
+ *
+ * Throws on failure. This is the only record the order exists — there is no
+ * webhook on a bank transfer — so the caller must not tell the buyer the
+ * order was placed if this does not land.
  */
-export function buildPayNowBuyerNotification(order: PayNowOrderDetails): {
-  subject: string;
-  text: string;
-} {
-  const lines = [
-    `Thank you for your order of ${order.purpose}.`,
-    '',
-    'To complete it, send a PayNow transfer for:',
-    '',
-    `  Amount:    ${order.amount}`,
-    `  Reference: ${order.referenceNumber}`,
-    '',
-    'Please put that reference in the PayNow comment or reference field —',
-    'it is how we match your transfer to your order.',
-    '',
-    ...(order.payUrl
-      ? [
-          'To scan a QR code with the amount already filled in, open:',
-          order.payUrl,
-          '',
-        ]
-      : []),
-    'Your order is reserved once we see the transfer, and we will email you',
-    'to arrange collection or delivery. If anything looks wrong, just reply',
-    'to this email.',
-  ];
-
-  return {
-    subject: `Your order ${order.referenceNumber} — how to pay by PayNow`,
-    text: lines.join('\n'),
-  };
-}
-
-/**
- * Notify both sides of a PayNow order.
- *
- * The two mails are not equally important, so they fail differently.
- *
- * The owner's copy is the only record that the order exists — there is no
- * webhook on a bank transfer — so a failure to send it is thrown, and the
- * caller must not tell the buyer the order was placed.
- *
- * The buyer's copy is a convenience: they are about to be shown the same
- * amount, reference and QR on screen. A mail-server hiccup there must not
- * fail an order the owner has already been told about, so it is logged and
- * swallowed.
- */
-export async function sendPayNowNotifications(
+export async function sendPayNowNotification(
   config: OrderEmailConfig,
   order: PayNowOrderDetails
 ): Promise<void> {
@@ -219,21 +185,4 @@ export async function sendPayNowNotifications(
     text: owner.text,
     replyTo: order.customerEmail,
   });
-
-  const buyer = buildPayNowBuyerNotification(order);
-  try {
-    await send(config, {
-      to: order.customerEmail,
-      subject: buyer.subject,
-      text: buyer.text,
-      replyTo: config.ownerEmail,
-    });
-  } catch (error) {
-    console.error(
-      '[orderEmail] PayNow buyer copy failed for',
-      order.referenceNumber,
-      '— the owner was notified, so the order stands:',
-      error
-    );
-  }
 }
