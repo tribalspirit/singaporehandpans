@@ -23,7 +23,19 @@
  * token signature can never be confused with, or used to forge, anything else
  * signed with the same secret.
  */
-const KEY_CONTEXT = 'sghandpan:paynow-order-token:v1';
+const ORDER_CONTEXT = 'sghandpan:paynow-order-token:v1';
+
+/**
+ * Separate context for card price quotes, so a quote can never be replayed as
+ * an order token or the reverse.
+ */
+const QUOTE_CONTEXT = 'sghandpan:card-quote-token:v1';
+
+/**
+ * A quote must outlive the five-minute edge cache on product pages and a
+ * buyer who leaves the tab open over lunch, but not indefinitely.
+ */
+export const CARD_QUOTE_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** Long enough that a buyer can pay the next morning, short enough to bound. */
 export const ORDER_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -55,9 +67,9 @@ async function importKey(raw: BufferSource): Promise<CryptoKey> {
   );
 }
 
-async function derivedKey(secret: string): Promise<CryptoKey> {
+async function derivedKey(secret: string, context: string): Promise<CryptoKey> {
   const base = await importKey(bytes(secret));
-  const derived = await crypto.subtle.sign('HMAC', base, bytes(KEY_CONTEXT));
+  const derived = await crypto.subtle.sign('HMAC', base, bytes(context));
   return importKey(new Uint8Array(derived));
 }
 
@@ -86,15 +98,17 @@ function constantTimeEqual(a: string, b: string): boolean {
   return mismatch === 0;
 }
 
-export async function mintOrderToken(
+async function mint(
   secret: string,
+  context: string,
+  ttl: number,
   fields: OrderTokenFields,
-  now: number = Date.now()
+  now: number
 ): Promise<string> {
-  if (!secret) throw new Error('Cannot mint an order token without a secret');
+  if (!secret) throw new Error('Cannot mint a token without a secret');
 
-  const expiresAt = now + ORDER_TOKEN_TTL_MS;
-  const key = await derivedKey(secret);
+  const expiresAt = now + ttl;
+  const key = await derivedKey(secret, context);
   const signature = await crypto.subtle.sign(
     'HMAC',
     key,
@@ -103,17 +117,26 @@ export async function mintOrderToken(
   return `${expiresAt}.${toHex(signature)}`;
 }
 
+export function mintOrderToken(
+  secret: string,
+  fields: OrderTokenFields,
+  now: number = Date.now()
+): Promise<string> {
+  return mint(secret, ORDER_CONTEXT, ORDER_TOKEN_TTL_MS, fields, now);
+}
+
 /**
  * True only for a token this site minted, for exactly these fields, that has
  * not expired. Every failure path returns false rather than throwing: the
  * token is attacker-controlled input and the caller's only sensible response
  * to any problem is the same redirect.
  */
-export async function verifyOrderToken(
+async function verify(
   secret: string,
+  context: string,
   token: string,
   fields: OrderTokenFields,
-  now: number = Date.now()
+  now: number
 ): Promise<boolean> {
   if (!secret || !token) return false;
 
@@ -127,9 +150,51 @@ export async function verifyOrderToken(
   }
   if (expiresAt <= now) return false;
 
-  const key = await derivedKey(secret);
+  const key = await derivedKey(secret, context);
   const expected = toHex(
     await crypto.subtle.sign('HMAC', key, bytes(message(fields, expiresAt)))
   );
   return constantTimeEqual(expected, received);
+}
+
+export function verifyOrderToken(
+  secret: string,
+  token: string,
+  fields: OrderTokenFields,
+  now: number = Date.now()
+): Promise<boolean> {
+  return verify(secret, ORDER_CONTEXT, token, fields, now);
+}
+
+/**
+ * A card price quote: proof that a product page actually displayed the card
+ * lane at this total before the buyer submitted it.
+ *
+ * Needed because the surcharge cannot be decided from runtime configuration
+ * alone. Product pages are edge-cached, so just after PayNow is switched on a
+ * cached page still shows the old combined checkout at the list price, and
+ * surcharging that submission would charge more than it disclosed.
+ *
+ * It has to be signed rather than a plain form field. An unsigned marker can
+ * simply be deleted, and the endpoint would then fall back to an unrestricted
+ * checkout at the list price — where the buyer picks a card anyway and the
+ * studio pays the fee it meant to pass on. Copying a genuine quote out of the
+ * page HTML gains nothing, because a quote only ever authorises the
+ * surcharged card lane for the product it names.
+ */
+export function mintCardQuote(
+  secret: string,
+  fields: OrderTokenFields,
+  now: number = Date.now()
+): Promise<string> {
+  return mint(secret, QUOTE_CONTEXT, CARD_QUOTE_TTL_MS, fields, now);
+}
+
+export function verifyCardQuote(
+  secret: string,
+  token: string,
+  fields: OrderTokenFields,
+  now: number = Date.now()
+): Promise<boolean> {
+  return verify(secret, QUOTE_CONTEXT, token, fields, now);
 }

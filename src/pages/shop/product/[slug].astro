@@ -7,6 +7,7 @@ import {
 } from '../../../lib/shop';
 import { setEdgeCache } from '../../../lib/edgeCache';
 import { getPayNowConfig } from '../../../lib/paynow';
+import { mintCardQuote } from '../../../lib/orderToken';
 import { getOrderEmailConfig } from '../../../lib/orderEmail';
 import {
   applyCardSurcharge,
@@ -68,12 +69,32 @@ const runtimeEnv = (Astro.locals.runtime?.env ?? {}) as Record<
   string,
   string | undefined
 >;
+const signingSecret = runtimeEnv.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
 const offersDirectPayNow =
   getPayNowConfig(runtimeEnv, getOrderEmailConfig(runtimeEnv) !== null) !==
-  null;
+    null && Boolean(signingSecret);
 const cardCharge = offersDirectPayNow
   ? applyCardSurcharge(product.priceMin.amount)
   : null;
+
+/*
+ * A signed quote proving this page displayed the card lane at this total.
+ * The checkout endpoint refuses to surcharge without one, so a buyer cannot
+ * delete a form field and fall through to an unrestricted checkout at the
+ * list price — where they would pay by card while the studio absorbs the fee
+ * the surcharge exists to pass on.
+ *
+ * Safe to sit in an edge-cached page: it authorises only the surcharged card
+ * lane, for this product.
+ */
+const cardQuote =
+  cardCharge && signingSecret
+    ? await mintCardQuote(signingSecret, {
+        slug: product.handle,
+        reference: 'card',
+        amountCents: Math.round(cardCharge.total * 100),
+      })
+    : null;
 
 const pageTitle = `${product.title} - Shop`;
 const pageDescription =
@@ -370,8 +391,8 @@ const descriptionBlocks = product.description
 
                       <button
                         type="submit"
-                        name="method"
-                        value="card"
+                        name="quote"
+                        value={cardQuote ?? ''}
                         formaction="/api/shop/checkout"
                         class="buy-button buy-button--secondary pay-option"
                       >

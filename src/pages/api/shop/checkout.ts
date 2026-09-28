@@ -8,6 +8,7 @@ import {
 import { createPaymentRequest, getHitPayConfig } from '../../../lib/hitpay';
 import { applyCardSurcharge } from '../../../lib/cardSurcharge';
 import { getPayNowConfig } from '../../../lib/paynow';
+import { verifyCardQuote } from '../../../lib/orderToken';
 import { getOrderEmailConfig } from '../../../lib/orderEmail';
 
 export const prerender = false;
@@ -91,32 +92,47 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
   /*
    * The card surcharge applies only when the buyer had a free alternative.
    *
-   * With direct PayNow configured, this endpoint is the card lane: the product
-   * page quoted price + surcharge, so HitPay is restricted to cards and the
-   * surcharged total is charged. Without it, HitPay's hosted page is the only
-   * checkout and still offers its own PayNow, so surcharging here would either
-   * overcharge whoever picks PayNow on that page, or — if we restricted to
-   * cards to prevent that — remove the cheapest method the studio has. So the
-   * behaviour stays exactly as it was until PayNow is configured.
+   * Without direct PayNow, HitPay's hosted page is the only checkout and still
+   * offers its own PayNow, so surcharging here would either overcharge whoever
+   * picks PayNow there, or — if we restricted to cards to prevent that —
+   * remove the cheapest method the studio has. Behaviour stays as it was.
    *
-   * Runtime configuration alone is not enough to decide, because product pages
-   * are edge-cached for five minutes. In the window after PayNow is switched
-   * on, a cached page still shows the single combined checkout at the list
-   * price; surcharging that submission would send the buyer to HitPay for more
-   * than the page disclosed. So the surcharge also requires the page to say it
-   * quoted one — only the two-option form's card button submits `method=card`.
+   * With direct PayNow, this endpoint is the card lane and must prove the page
+   * said so. The proof is a signed quote, not a form field: a plain marker can
+   * simply be deleted, and falling back to an unrestricted list-price checkout
+   * would let the buyer pay by card while the studio absorbs the very fee the
+   * surcharge exists to pass on. It also can't be decided from configuration
+   * alone, because product pages are edge-cached — just after PayNow is turned
+   * on, a cached page still quotes the list price, and surcharging that
+   * submission would charge more than it displayed.
    *
-   * Omitting the marker cannot be used to dodge the fee for gain: it yields
-   * the list price, which is exactly what the PayNow button offers anyway.
+   * So when PayNow is available the quote is required, and a stale page is
+   * refused rather than silently charged either price. Reloading mints a fresh
+   * one.
    */
+  const signingSecret = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
   const offersDirectPayNow =
-    getPayNowConfig(env, getOrderEmailConfig(env) !== null) !== null;
-  const pageQuotedCardPrice = form.get('method') === 'card';
+    getPayNowConfig(env, getOrderEmailConfig(env) !== null) !== null &&
+    Boolean(signingSecret);
 
-  const charge =
-    offersDirectPayNow && pageQuotedCardPrice
-      ? applyCardSurcharge(product.priceMin.amount)
-      : null;
+  let charge = null;
+  if (offersDirectPayNow) {
+    const quoted = applyCardSurcharge(product.priceMin.amount);
+    const submitted = form.get('quote');
+    const valid =
+      typeof submitted === 'string' &&
+      (await verifyCardQuote(signingSecret ?? '', submitted, {
+        slug,
+        reference: 'card',
+        amountCents: Math.round(quoted.total * 100),
+      }));
+
+    if (!valid) {
+      console.error('[checkout] Card quote missing or stale; refusing');
+      return redirect(productRedirect(slug, 'error'), 303);
+    }
+    charge = quoted;
+  }
 
   try {
     const payment = await createPaymentRequest(hitpay, {

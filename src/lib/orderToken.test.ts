@@ -2,7 +2,10 @@ import { describe, expect, test } from 'vitest';
 import {
   mintOrderToken,
   verifyOrderToken,
+  mintCardQuote,
+  verifyCardQuote,
   ORDER_TOKEN_TTL_MS,
+  CARD_QUOTE_TTL_MS,
   type OrderTokenFields,
 } from './orderToken';
 
@@ -125,5 +128,55 @@ describe('order tokens', () => {
 
   test('refuses to mint without a secret', async () => {
     await expect(mintOrderToken('', FIELDS, NOW)).rejects.toThrow(/secret/i);
+  });
+});
+
+describe('card quotes', () => {
+  const QUOTE = {
+    slug: 'handpan-d-kurd-10',
+    reference: 'card',
+    amountCents: 390998,
+  };
+
+  test('a minted quote verifies', async () => {
+    const q = await mintCardQuote(SECRET, QUOTE, NOW);
+    expect(await verifyCardQuote(SECRET, q, QUOTE, NOW + 1000)).toBe(true);
+  });
+
+  test('a quote is not an order token, and an order token is not a quote', async () => {
+    // Separate derivation contexts, so neither can be replayed as the other.
+    const quote = await mintCardQuote(SECRET, QUOTE, NOW);
+    const order = await mintOrderToken(SECRET, QUOTE, NOW);
+    expect(await verifyOrderToken(SECRET, quote, QUOTE, NOW)).toBe(false);
+    expect(await verifyCardQuote(SECRET, order, QUOTE, NOW)).toBe(false);
+  });
+
+  test('a quote does not transfer to another product or another total', async () => {
+    const q = await mintCardQuote(SECRET, QUOTE, NOW);
+    expect(
+      await verifyCardQuote(
+        SECRET,
+        q,
+        { ...QUOTE, slug: 'handpan-d-aegean-18' },
+        NOW
+      )
+    ).toBe(false);
+    expect(
+      await verifyCardQuote(SECRET, q, { ...QUOTE, amountCents: 380000 }, NOW)
+    ).toBe(false);
+  });
+
+  test('outlives the page cache but not forever', async () => {
+    const q = await mintCardQuote(SECRET, QUOTE, NOW);
+    // Product pages are edge-cached for 300s; a quote must comfortably exceed it.
+    expect(await verifyCardQuote(SECRET, q, QUOTE, NOW + 600_000)).toBe(true);
+    expect(
+      await verifyCardQuote(SECRET, q, QUOTE, NOW + CARD_QUOTE_TTL_MS + 1)
+    ).toBe(false);
+  });
+
+  test('an absent quote is not valid, which is the bypass this closes', async () => {
+    // Deleting the field must not fall through to a cheaper card checkout.
+    expect(await verifyCardQuote(SECRET, '', QUOTE, NOW)).toBe(false);
   });
 });

@@ -141,6 +141,25 @@ The HitPay request is then restricted to `payment_methods: ['card']`. Without
 that, a buyer quoted the card surcharge could pick PayNow on HitPay's own page
 and be overcharged for a method that costs the studio 0.65%.
 
+### The card lane requires a signed quote
+
+The surcharge cannot be decided from runtime configuration alone, and it
+cannot be decided from an unsigned form field either.
+
+Product pages are edge-cached for five minutes, so just after PayNow is turned
+on a cached page still shows the old combined checkout at the list price;
+surcharging that submission would charge more than the page disclosed. But a
+plain `method=card` marker does not fix it, because a buyer can simply delete
+the field — and falling back to an unrestricted checkout hands them the list
+price _with a card_, which is precisely the fee the surcharge exists to pass
+on.
+
+So the page mints a signed quote (`mintCardQuote`) naming the product and the
+surcharged total, and the endpoint refuses to proceed without a valid one. A
+stale page is refused rather than charged either price; reloading mints a
+fresh quote. Copying a genuine quote out of the page HTML gains nothing, since
+a quote only ever authorises the surcharged card lane for the product it names.
+
 ### Why the surcharge only appears alongside PayNow
 
 Surcharging is only defensible when the buyer had a free alternative. With no
@@ -208,6 +227,11 @@ between ordering and paying fails closed instead of quietly showing a different
 sum than the buyer was emailed. Key material is derived from `HITPAY_SALT` with
 domain separation, so a page token cannot be confused with a webhook signature
 and no extra secret is needed.
+
+Availability is rechecked when the QR page renders, not only when the order
+was raised. The token is valid for seven days and these are one-off
+instruments, so without that check a buyer revisiting a signed link after the
+handpan sold would still be shown a payable QR.
 
 The QR locks the amount and is marked single-use, and the reference is
 restricted to characters a bank reference field preserves intact.

@@ -54,6 +54,21 @@ if (!product || product.priceMin.amount <= 0) {
 }
 
 /*
+ * Stock is rechecked here, not just when the order was raised. The token is
+ * good for seven days, and these are one-off instruments: if the handpan sold
+ * in the meantime, an unchecked revisit would still render a payable QR and a
+ * buyer could transfer thousands for something already gone.
+ *
+ * Sent back to the product page rather than the shop index, because that page
+ * already explains the situation for ?checkout=unavailable.
+ */
+if (!product.availableForSale) {
+  return Astro.redirect(
+    `/shop/product/${encodeURIComponent(slug)}/?checkout=unavailable`
+  );
+}
+
+/*
  * Syntactically valid parameters are not an order. Without this check anyone
  * could construct a payable QR for any product under any reference, and the
  * owner would never have been told the order exists — so a buyer could
