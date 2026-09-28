@@ -9,6 +9,13 @@ export interface SEOProps {
   publishedTime?: string;
   modifiedTime?: string;
   noindex?: boolean;
+  /**
+   * Suppress analytics entirely. For pages whose URL is itself sensitive —
+   * the PayNow page carries an order reference and a bearer token in its
+   * query string, and a page view would hand the whole location to Google.
+   * `noindex` only speaks to crawlers; it does nothing about these scripts.
+   */
+  noAnalytics?: boolean;
 }
 
 const {
@@ -21,6 +28,7 @@ const {
   publishedTime,
   modifiedTime,
   noindex = false,
+  noAnalytics = false,
 } = Astro.props as SEOProps;
 
 const siteName = 'Singapore Handpan Studio';
@@ -212,7 +220,7 @@ const gtmId = import.meta.env.PUBLIC_GTM_ID;
 
 <!-- Google Tag Manager -->
 {
-  gtmId && (
+  gtmId && !noAnalytics && (
     <script
       set:html={`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -225,7 +233,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
 <!-- Google Analytics 4 (standalone, when GTM is not used) -->
 {
-  ga4Id && !gtmId && (
+  ga4Id && !gtmId && !noAnalytics && (
     <Fragment>
       <script
         async
