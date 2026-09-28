@@ -92,47 +92,49 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
   /*
    * The card surcharge applies only when the buyer had a free alternative.
    *
-   * Without direct PayNow, HitPay's hosted page is the only checkout and still
-   * offers its own PayNow, so surcharging here would either overcharge whoever
-   * picks PayNow there, or — if we restricted to cards to prevent that —
-   * remove the cheapest method the studio has. Behaviour stays as it was.
+   * The decision follows the signed quote the page submitted, not the current
+   * configuration, because product pages are edge-cached for five minutes and
+   * the two disagree for that long either side of a config change.
    *
-   * With direct PayNow, this endpoint is the card lane and must prove the page
-   * said so. The proof is a signed quote, not a form field: a plain marker can
-   * simply be deleted, and falling back to an unrestricted list-price checkout
-   * would let the buyer pay by card while the studio absorbs the very fee the
-   * surcharge exists to pass on. It also can't be decided from configuration
-   * alone, because product pages are edge-cached — just after PayNow is turned
-   * on, a cached page still quotes the list price, and surcharging that
-   * submission would charge more than it displayed.
+   *   Quote present and valid -> the page displayed the card lane at this
+   *     total, so charge it and restrict HitPay to cards. Honoured even if
+   *     PayNow has since been switched off: the page still disclosed the
+   *     surcharge, and ignoring it would have the studio absorb the fee.
+   *   No quote, PayNow available -> a stale page from before PayNow was
+   *     enabled, quoting the list price against a combined checkout. Refused
+   *     rather than charged either price; reloading mints a fresh quote.
+   *   No quote, no PayNow -> the original single checkout. HitPay's hosted
+   *     page still offers its own PayNow, so surcharging would overcharge
+   *     whoever picks it, and restricting to cards would remove the cheapest
+   *     method the studio has. Unchanged behaviour, list price.
    *
-   * So when PayNow is available the quote is required, and a stale page is
-   * refused rather than silently charged either price. Reloading mints a fresh
-   * one.
+   * The quote has to be signed rather than a plain marker: a marker can
+   * simply be deleted, and falling through to an unrestricted list-price
+   * checkout lets the buyer pay by card while the studio absorbs the very fee
+   * the surcharge exists to pass on.
    */
   const signingSecret = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
   const offersDirectPayNow =
     getPayNowConfig(env, getOrderEmailConfig(env) !== null) !== null &&
     Boolean(signingSecret);
 
-  let charge = null;
-  if (offersDirectPayNow) {
-    const quoted = applyCardSurcharge(product.priceMin.amount);
-    const submitted = form.get('quote');
-    const valid =
-      typeof submitted === 'string' &&
-      (await verifyPriceQuote(signingSecret ?? '', submitted, {
-        slug,
-        reference: 'card',
-        amountCents: Math.round(quoted.total * 100),
-      }));
+  const quoted = applyCardSurcharge(product.priceMin.amount);
+  const submittedQuote = form.get('quote');
+  const quoteIsValid =
+    typeof submittedQuote === 'string' &&
+    Boolean(signingSecret) &&
+    (await verifyPriceQuote(signingSecret ?? '', submittedQuote, {
+      slug,
+      reference: 'card',
+      amountCents: Math.round(quoted.total * 100),
+    }));
 
-    if (!valid) {
-      console.error('[checkout] Card quote missing or stale; refusing');
-      return redirect(productRedirect(slug, 'error'), 303);
-    }
-    charge = quoted;
+  if (!quoteIsValid && offersDirectPayNow) {
+    console.error('[checkout] Card quote missing or stale; refusing');
+    return redirect(productRedirect(slug, 'error'), 303);
   }
+
+  const charge = quoteIsValid ? quoted : null;
 
   try {
     const payment = await createPaymentRequest(hitpay, {
