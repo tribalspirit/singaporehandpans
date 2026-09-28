@@ -199,3 +199,19 @@ export function verifyPriceQuote(
 ): Promise<boolean> {
   return verify(secret, QUOTE_CONTEXT, token, fields, now);
 }
+
+/**
+ * The expiry stamped into a token, as epoch milliseconds, or null if the
+ * token is malformed. Read only after verifying: this checks nothing itself,
+ * but the expiry sits inside the signed message, so a verified token's
+ * expiry is trustworthy.
+ *
+ * Used to stamp the same lifetime into the PayNow QR, so a saved screenshot
+ * stops being payable when the order does.
+ */
+export function tokenExpiry(token: string): number | null {
+  const separator = token.indexOf('.');
+  if (separator <= 0) return null;
+  const expiresAt = Number(token.slice(0, separator));
+  return Number.isSafeInteger(expiresAt) ? expiresAt : null;
+}

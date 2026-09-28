@@ -380,7 +380,13 @@ const descriptionBlocks = product.description
                       />
                     </label>
                     <label class="buy-form__label">
-                      Email for your receipt
+                      {/*
+                        Only the card lane produces a receipt — HitPay sends
+                        it. PayNow sends the buyer nothing, so promising one
+                        here would have them close the page expecting mail and
+                        lose the reference they need to quote.
+                      */}
+                      {cardCharge ? 'Your email' : 'Email for your receipt'}
                       <input
                         type="email"
                         name="email"
@@ -412,7 +418,7 @@ const descriptionBlocks = product.description
                           {formatSgd(cardCharge.base)}
                         </span>
                         <span class="pay-option__meta">
-                          Bank transfer · no extra charge
+                          Bank transfer · no extra charge · pay on the next page
                         </span>
                       </button>
 

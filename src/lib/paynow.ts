@@ -32,6 +32,16 @@ export interface PayNowPaymentParams {
   /** SGD dollars, e.g. 3800 or 3800.5 */
   amount: number;
   reference: string;
+  /**
+   * When the code stops being payable, as epoch milliseconds.
+   *
+   * Without it a screenshot of the QR stays payable forever, and none of the
+   * checks on the page — the expiring URL token, the stock recheck — apply to
+   * a saved image. For a one-off instrument that means someone could transfer
+   * thousands for something sold weeks ago. Tied to the order's own lifetime,
+   * a stale copy is refused by the banking app itself.
+   */
+  expiresAt?: number;
 }
 
 type RuntimeEnv = Record<string, string | undefined>;
@@ -50,6 +60,41 @@ const MAX_MERCHANT_NAME = 25;
 const MAX_REFERENCE = 25;
 const MERCHANT_CITY = 'Singapore';
 
+const encoder = new TextEncoder();
+
+/** Singapore keeps UTC+8 year round, so a fixed offset is exact. */
+const SGT_OFFSET_MS = 8 * 60 * 60 * 1000;
+
+/** PayNow's expiry field is a plain `YYYYMMDD` date in local time. */
+function toExpiryDate(epochMs: number): string {
+  const sgt = new Date(epochMs + SGT_OFFSET_MS);
+  const year = sgt.getUTCFullYear();
+  const month = String(sgt.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(sgt.getUTCDate()).padStart(2, '0');
+  return `${year}${month}${day}`;
+}
+
+/**
+ * EMVCo lengths count bytes, and a QR carries UTF-8. `"café".length` is 4 but
+ * encodes to 5 bytes, so measuring in JavaScript characters would declare a
+ * short length and desynchronise every field after it. Only bites with a
+ * non-ASCII merchant name, which is exactly the case nobody tests by hand.
+ */
+function utf8Length(value: string): number {
+  return encoder.encode(value).length;
+}
+
+/** Truncate to at most `maxBytes` UTF-8 bytes without splitting a character. */
+function truncateToBytes(value: string, maxBytes: number): string {
+  if (utf8Length(value) <= maxBytes) return value;
+  let out = '';
+  for (const char of value) {
+    if (utf8Length(out + char) > maxBytes) break;
+    out += char;
+  }
+  return out;
+}
+
 /**
  * A reference has to survive a round trip through a bank statement, so it is
  * restricted to characters that banks reliably preserve.
@@ -57,11 +102,11 @@ const MERCHANT_CITY = 'Singapore';
 const REFERENCE_PATTERN = /^[A-Za-z0-9-]{1,25}$/;
 
 function tlv(id: string, value: string): string {
-  const length = value.length.toString().padStart(2, '0');
-  if (value.length > 99) {
-    throw new Error(`PayNow field ${id} is too long (${value.length} chars)`);
+  const bytes = utf8Length(value);
+  if (bytes > 99) {
+    throw new Error(`PayNow field ${id} is too long (${bytes} bytes)`);
   }
-  return `${id}${length}${value}`;
+  return `${id}${bytes.toString().padStart(2, '0')}${value}`;
 }
 
 /**
@@ -70,9 +115,12 @@ function tlv(id: string, value: string): string {
  * carries.
  */
 export function crc16(input: string): string {
+  // Over UTF-8 bytes, not characters: the banking app checksums the bytes it
+  // decoded from the QR, and for anything non-ASCII those differ.
+  const bytes = encoder.encode(input);
   let crc = 0xffff;
-  for (let i = 0; i < input.length; i++) {
-    crc ^= input.charCodeAt(i) << 8;
+  for (let i = 0; i < bytes.length; i++) {
+    crc ^= bytes[i]! << 8;
     for (let bit = 0; bit < 8; bit++) {
       crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
     }
@@ -92,7 +140,7 @@ export function isValidPayNowReference(reference: string): boolean {
  * reused for another order.
  */
 export function buildPayNowPayload(params: PayNowPaymentParams): string {
-  const { config, amount, reference } = params;
+  const { config, amount, reference, expiresAt } = params;
 
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error(`PayNow amount must be positive, got ${amount}`);
@@ -109,6 +157,7 @@ export function buildPayNowPayload(params: PayNowPaymentParams): string {
     tlv('01', PROXY_TYPE_CODE[config.proxyType]),
     tlv('02', config.proxyValue),
     tlv('03', '0'),
+    ...(expiresAt === undefined ? [] : [tlv('04', toExpiryDate(expiresAt))]),
   ].join('');
 
   const payload = [
@@ -119,7 +168,7 @@ export function buildPayNowPayload(params: PayNowPaymentParams): string {
     tlv('53', '702'),
     tlv('54', amount.toFixed(2)),
     tlv('58', 'SG'),
-    tlv('59', config.merchantName.slice(0, MAX_MERCHANT_NAME)),
+    tlv('59', truncateToBytes(config.merchantName, MAX_MERCHANT_NAME)),
     tlv('60', MERCHANT_CITY),
     tlv('62', tlv('01', reference.slice(0, MAX_REFERENCE))),
   ].join('');

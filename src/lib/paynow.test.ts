@@ -176,3 +176,93 @@ describe('getPayNowConfig', () => {
     ).toBeNull();
   });
 });
+
+describe('QR expiry', () => {
+  const AT = Date.UTC(2026, 8, 28, 20, 0, 0); // 2026-09-29 04:00 SGT
+
+  function merchantFields(payload: string) {
+    const parse = (p: string) => {
+      const out: Record<string, string> = {};
+      let i = 0;
+      while (i < p.length) {
+        const id = p.slice(i, i + 2);
+        const n = Number(p.slice(i + 2, i + 4));
+        out[id] = p.slice(i + 4, i + 4 + n);
+        i += 4 + n;
+      }
+      return out;
+    };
+    return parse(parse(payload.slice(0, -8))['26'] ?? '');
+  }
+
+  test('stamps the expiry as a Singapore-local YYYYMMDD', () => {
+    // 20:00 UTC is already the next day in SGT; using UTC would date it a day early.
+    const m = merchantFields(
+      buildPayNowPayload({
+        config: CONFIG,
+        amount: 10,
+        reference: 'SHP-1',
+        expiresAt: AT,
+      })
+    );
+    expect(m['04']).toBe('20260929');
+  });
+
+  test('omits the field entirely when no expiry is given', () => {
+    const m = merchantFields(
+      buildPayNowPayload({ config: CONFIG, amount: 10, reference: 'SHP-1' })
+    );
+    expect(m['04']).toBeUndefined();
+  });
+
+  test('an expiry changes the payload, so a saved QR is not reusable forever', () => {
+    const withExpiry = buildPayNowPayload({
+      config: CONFIG,
+      amount: 10,
+      reference: 'SHP-1',
+      expiresAt: AT,
+    });
+    const without = buildPayNowPayload({
+      config: CONFIG,
+      amount: 10,
+      reference: 'SHP-1',
+    });
+    expect(withExpiry).not.toBe(without);
+    expect(withExpiry.slice(-4)).toBe(crc16(withExpiry.slice(0, -4)));
+  });
+});
+
+describe('non-ASCII merchant names', () => {
+  const CHINESE = { ...CONFIG, merchantName: '新加坡手碟工作室' };
+
+  test('declares TLV lengths in bytes, as the QR is decoded', () => {
+    const payload = buildPayNowPayload({
+      config: CHINESE,
+      amount: 10,
+      reference: 'SHP-1',
+    });
+    // Eight CJK characters encode to 24 UTF-8 bytes; a character count would
+    // declare 08 and desynchronise every field after it.
+    expect(payload).toContain(`5924${CHINESE.merchantName}`);
+  });
+
+  test('the CRC covers the encoded bytes', () => {
+    const payload = buildPayNowPayload({
+      config: CHINESE,
+      amount: 10,
+      reference: 'SHP-1',
+    });
+    expect(payload.slice(-4)).toBe(crc16(payload.slice(0, -4)));
+  });
+
+  test('truncates on a byte budget without splitting a character', () => {
+    const payload = buildPayNowPayload({
+      config: { ...CONFIG, merchantName: '新'.repeat(20) },
+      amount: 10,
+      reference: 'SHP-1',
+    });
+    // 25 bytes / 3 per character = 8 whole characters, never a half one.
+    expect(payload).toContain(`5924${'新'.repeat(8)}`);
+    expect(payload).not.toContain('�');
+  });
+});

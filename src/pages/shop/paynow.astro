@@ -12,7 +12,7 @@ import {
 } from '../../lib/paynow';
 import { getOrderEmailConfig } from '../../lib/orderEmail';
 import { renderQrSvg } from '../../lib/qrSvg';
-import { verifyOrderToken } from '../../lib/orderToken';
+import { verifyOrderToken, tokenExpiry } from '../../lib/orderToken';
 import { formatSgd } from '../../lib/cardSurcharge';
 
 // Rendered live and never cached: every buyer sees their own reference, and a
@@ -94,7 +94,17 @@ if (!isGenuineOrder) {
 
 const amount = product.priceMin.amount;
 const amountLabel = formatSgd(amount);
-const payload = buildPayNowPayload({ config: paynow, amount, reference });
+/*
+ * The QR carries the order's own expiry, so a screenshot stops being payable
+ * when the order does. None of the checks above — the signed URL, the stock
+ * recheck — reach a saved image; only a field inside the payload does.
+ */
+const payload = buildPayNowPayload({
+  config: paynow,
+  amount,
+  reference,
+  expiresAt: tokenExpiry(token) ?? undefined,
+});
 const qrSvg = renderQrSvg(payload, {
   title: `PayNow QR code for ${amountLabel}, reference ${reference}`,
 });
