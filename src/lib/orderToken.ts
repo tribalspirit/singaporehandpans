@@ -167,8 +167,9 @@ export function verifyOrderToken(
 }
 
 /**
- * A card price quote: proof that a product page actually displayed the card
- * lane at this total before the buyer submitted it.
+ * A price quote: proof that a product page actually displayed this lane at
+ * this amount before the buyer submitted it. `reference` names the lane —
+ * `card` or `paynow` — so a quote for one cannot be spent on the other.
  *
  * Needed because the surcharge cannot be decided from runtime configuration
  * alone. Product pages are edge-cached, so just after PayNow is switched on a
@@ -182,7 +183,7 @@ export function verifyOrderToken(
  * page HTML gains nothing, because a quote only ever authorises the
  * surcharged card lane for the product it names.
  */
-export function mintCardQuote(
+export function mintPriceQuote(
   secret: string,
   fields: OrderTokenFields,
   now: number = Date.now()
@@ -190,7 +191,7 @@ export function mintCardQuote(
   return mint(secret, QUOTE_CONTEXT, CARD_QUOTE_TTL_MS, fields, now);
 }
 
-export function verifyCardQuote(
+export function verifyPriceQuote(
   secret: string,
   token: string,
   fields: OrderTokenFields,

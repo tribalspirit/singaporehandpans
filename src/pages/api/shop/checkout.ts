@@ -8,7 +8,7 @@ import {
 import { createPaymentRequest, getHitPayConfig } from '../../../lib/hitpay';
 import { applyCardSurcharge } from '../../../lib/cardSurcharge';
 import { getPayNowConfig } from '../../../lib/paynow';
-import { verifyCardQuote } from '../../../lib/orderToken';
+import { verifyPriceQuote } from '../../../lib/orderToken';
 import { getOrderEmailConfig } from '../../../lib/orderEmail';
 
 export const prerender = false;
@@ -121,7 +121,7 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
     const submitted = form.get('quote');
     const valid =
       typeof submitted === 'string' &&
-      (await verifyCardQuote(signingSecret ?? '', submitted, {
+      (await verifyPriceQuote(signingSecret ?? '', submitted, {
         slug,
         reference: 'card',
         amountCents: Math.round(quoted.total * 100),

@@ -21,6 +21,10 @@ export const prerender = false;
 Astro.response.headers.set('Cache-Control', 'no-store');
 // The page carries an order reference; it has no business in a search index.
 Astro.response.headers.set('X-Robots-Tag', 'noindex');
+// The query string carries a bearer token. Without this, every external
+// request the page makes — a font, a CMS image — hands the whole URL to a
+// third party in the Referer header.
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
 
 if (!isShopEnabled() || !isHitpayShop()) {
   return Astro.redirect('/404');
@@ -101,6 +105,7 @@ const proxyLabel = paynow.proxyType === 'uen' ? 'UEN' : 'Mobile';
   title="Complete your payment with PayNow"
   description="PayNow payment details for your Singapore Handpan Studio order."
   noindex
+  noAnalytics
 >
   <div class="paynow-page">
     <section class="paynow-section">

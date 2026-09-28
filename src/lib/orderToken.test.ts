@@ -2,8 +2,8 @@ import { describe, expect, test } from 'vitest';
 import {
   mintOrderToken,
   verifyOrderToken,
-  mintCardQuote,
-  verifyCardQuote,
+  mintPriceQuote,
+  verifyPriceQuote,
   ORDER_TOKEN_TTL_MS,
   CARD_QUOTE_TTL_MS,
   type OrderTokenFields,
@@ -131,7 +131,7 @@ describe('order tokens', () => {
   });
 });
 
-describe('card quotes', () => {
+describe('price quotes', () => {
   const QUOTE = {
     slug: 'handpan-d-kurd-10',
     reference: 'card',
@@ -139,22 +139,36 @@ describe('card quotes', () => {
   };
 
   test('a minted quote verifies', async () => {
-    const q = await mintCardQuote(SECRET, QUOTE, NOW);
-    expect(await verifyCardQuote(SECRET, q, QUOTE, NOW + 1000)).toBe(true);
+    const q = await mintPriceQuote(SECRET, QUOTE, NOW);
+    expect(await verifyPriceQuote(SECRET, q, QUOTE, NOW + 1000)).toBe(true);
+  });
+
+  test('a card quote cannot be spent on the PayNow lane', async () => {
+    // The lane is in the signed message, so the cheaper unsurcharged quote
+    // and the surcharged one are not interchangeable.
+    const card = await mintPriceQuote(SECRET, QUOTE, NOW);
+    expect(
+      await verifyPriceQuote(
+        SECRET,
+        card,
+        { ...QUOTE, reference: 'paynow' },
+        NOW
+      )
+    ).toBe(false);
   });
 
   test('a quote is not an order token, and an order token is not a quote', async () => {
     // Separate derivation contexts, so neither can be replayed as the other.
-    const quote = await mintCardQuote(SECRET, QUOTE, NOW);
+    const quote = await mintPriceQuote(SECRET, QUOTE, NOW);
     const order = await mintOrderToken(SECRET, QUOTE, NOW);
     expect(await verifyOrderToken(SECRET, quote, QUOTE, NOW)).toBe(false);
-    expect(await verifyCardQuote(SECRET, order, QUOTE, NOW)).toBe(false);
+    expect(await verifyPriceQuote(SECRET, order, QUOTE, NOW)).toBe(false);
   });
 
   test('a quote does not transfer to another product or another total', async () => {
-    const q = await mintCardQuote(SECRET, QUOTE, NOW);
+    const q = await mintPriceQuote(SECRET, QUOTE, NOW);
     expect(
-      await verifyCardQuote(
+      await verifyPriceQuote(
         SECRET,
         q,
         { ...QUOTE, slug: 'handpan-d-aegean-18' },
@@ -162,21 +176,21 @@ describe('card quotes', () => {
       )
     ).toBe(false);
     expect(
-      await verifyCardQuote(SECRET, q, { ...QUOTE, amountCents: 380000 }, NOW)
+      await verifyPriceQuote(SECRET, q, { ...QUOTE, amountCents: 380000 }, NOW)
     ).toBe(false);
   });
 
   test('outlives the page cache but not forever', async () => {
-    const q = await mintCardQuote(SECRET, QUOTE, NOW);
+    const q = await mintPriceQuote(SECRET, QUOTE, NOW);
     // Product pages are edge-cached for 300s; a quote must comfortably exceed it.
-    expect(await verifyCardQuote(SECRET, q, QUOTE, NOW + 600_000)).toBe(true);
+    expect(await verifyPriceQuote(SECRET, q, QUOTE, NOW + 600_000)).toBe(true);
     expect(
-      await verifyCardQuote(SECRET, q, QUOTE, NOW + CARD_QUOTE_TTL_MS + 1)
+      await verifyPriceQuote(SECRET, q, QUOTE, NOW + CARD_QUOTE_TTL_MS + 1)
     ).toBe(false);
   });
 
   test('an absent quote is not valid, which is the bypass this closes', async () => {
     // Deleting the field must not fall through to a cheaper card checkout.
-    expect(await verifyCardQuote(SECRET, '', QUOTE, NOW)).toBe(false);
+    expect(await verifyPriceQuote(SECRET, '', QUOTE, NOW)).toBe(false);
   });
 });

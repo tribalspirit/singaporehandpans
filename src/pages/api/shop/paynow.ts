@@ -11,7 +11,7 @@ import {
   sendPayNowNotification,
 } from '../../../lib/orderEmail';
 import { formatSgd } from '../../../lib/cardSurcharge';
-import { mintOrderToken } from '../../../lib/orderToken';
+import { mintOrderToken, verifyPriceQuote } from '../../../lib/orderToken';
 
 export const prerender = false;
 
@@ -105,6 +105,33 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
     return redirect(productRedirect(slug, 'unavailable'), 303);
   }
 
+  /*
+   * The buyer must have been shown this price. Product pages are edge-cached
+   * for five minutes, so a rise in the CMS would otherwise let this endpoint
+   * mint an order — and a QR, and an owner notification — for an amount the
+   * buyer never saw. The signed quote is refused rather than silently
+   * repriced; reloading the product page mints a fresh one.
+   */
+  const signingSecret = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
+  if (!signingSecret) {
+    console.error('[paynow] HITPAY_SALT missing; cannot verify the quote');
+    return redirect(productRedirect(slug, 'error'), 303);
+  }
+
+  const amountCents = Math.round(product.priceMin.amount * 100);
+  const submittedQuote = form.get('quote');
+  const quoteIsValid =
+    typeof submittedQuote === 'string' &&
+    (await verifyPriceQuote(signingSecret, submittedQuote, {
+      slug,
+      reference: 'paynow',
+      amountCents,
+    }));
+  if (!quoteIsValid) {
+    console.error('[paynow] Price quote missing or stale; refusing');
+    return redirect(productRedirect(slug, 'error'), 303);
+  }
+
   // Hyphen-and-alphanumerics only, so it survives a bank's reference field
   // intact — see isValidPayNowReference.
   const referenceNumber = `SHP-${crypto.randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
@@ -119,13 +146,6 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
    * shop already requires; orderToken derives a separate key from it, so a
    * page token is not interchangeable with a webhook signature.
    */
-  const signingSecret = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
-  if (!signingSecret) {
-    console.error('[paynow] HITPAY_SALT missing; cannot sign the order');
-    return redirect(productRedirect(slug, 'error'), 303);
-  }
-
-  const amountCents = Math.round(product.priceMin.amount * 100);
   const token = await mintOrderToken(signingSecret, {
     slug,
     reference: referenceNumber,

@@ -7,7 +7,7 @@ import {
 } from '../../../lib/shop';
 import { setEdgeCache } from '../../../lib/edgeCache';
 import { getPayNowConfig } from '../../../lib/paynow';
-import { mintCardQuote } from '../../../lib/orderToken';
+import { mintPriceQuote } from '../../../lib/orderToken';
 import { getOrderEmailConfig } from '../../../lib/orderEmail';
 import {
   applyCardSurcharge,
@@ -69,13 +69,23 @@ const runtimeEnv = (Astro.locals.runtime?.env ?? {}) as Record<
   string,
   string | undefined
 >;
+/*
+ * A published product with a missing or malformed price transforms to 0 while
+ * staying "available", and the surcharge maths refuses a non-positive amount.
+ * Treat such an entry as not purchasable rather than throwing: previously it
+ * still rendered and the endpoint rejected the purchase, and a 500 on a
+ * catalogue page is a worse failure than a disabled buy button.
+ */
+const canPurchase = product.availableForSale && product.priceMin.amount > 0;
+
 const signingSecret = runtimeEnv.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
 const offersDirectPayNow =
   getPayNowConfig(runtimeEnv, getOrderEmailConfig(runtimeEnv) !== null) !==
     null && Boolean(signingSecret);
-const cardCharge = offersDirectPayNow
-  ? applyCardSurcharge(product.priceMin.amount)
-  : null;
+const cardCharge =
+  offersDirectPayNow && canPurchase
+    ? applyCardSurcharge(product.priceMin.amount)
+    : null;
 
 /*
  * A signed quote proving this page displayed the card lane at this total.
@@ -89,10 +99,25 @@ const cardCharge = offersDirectPayNow
  */
 const cardQuote =
   cardCharge && signingSecret
-    ? await mintCardQuote(signingSecret, {
+    ? await mintPriceQuote(signingSecret, {
         slug: product.handle,
         reference: 'card',
         amountCents: Math.round(cardCharge.total * 100),
+      })
+    : null;
+
+/*
+ * The PayNow lane needs the same proof. It is not surcharged, but the page is
+ * still edge-cached: a price rise in the CMS would otherwise let the endpoint
+ * mint an order — and a QR, and an owner notification — for an amount the
+ * buyer never saw.
+ */
+const payNowQuote =
+  cardCharge && signingSecret
+    ? await mintPriceQuote(signingSecret, {
+        slug: product.handle,
+        reference: 'paynow',
+        amountCents: Math.round(product.priceMin.amount * 100),
       })
     : null;
 
@@ -323,7 +348,7 @@ const descriptionBlocks = product.description
             }
 
             {
-              product.availableForSale ? (
+              canPurchase ? (
                 <form
                   method="POST"
                   action="/api/shop/checkout"
@@ -377,6 +402,8 @@ const descriptionBlocks = product.description
                         */}
                       <button
                         type="submit"
+                        name="quote"
+                        value={payNowQuote ?? ''}
                         formaction="/api/shop/paynow"
                         class="buy-button pay-option"
                       >
