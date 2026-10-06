@@ -32,10 +32,14 @@
       "pos": 4,
       "required": true,
       "options": [
-        { "name": "MAG", "value": "mag" },
+        { "name": "MAG Instruments", "value": "mag" },
         { "name": "Battiloro", "value": "battiloro" },
         { "name": "Sirvan", "value": "sirvan" },
-        { "name": "SEW", "value": "sew" }
+        { "name": "SEW Handpan", "value": "sew" },
+        { "name": "SG Pan", "value": "sg-pan" },
+        { "name": "Hardcase Technologies", "value": "hardcase" },
+        { "name": "RAV", "value": "rav" },
+        { "name": "Singapore Handpan Studio", "value": "studio" }
       ],
       "description": "Brand — must match a shop collection slug"
     },
@@ -46,6 +50,7 @@
       "default_value": "Handpan",
       "options": [
         { "name": "Handpan", "value": "Handpan" },
+        { "name": "Tongue Drum", "value": "Tongue Drum" },
         { "name": "Case", "value": "Case" },
         { "name": "Stand", "value": "Stand" },
         { "name": "Accessory", "value": "Accessory" }

@@ -1,182 +1,179 @@
 @use 'src/styles/tokens.scss';
+@use 'widget-tokens' as *;
 
 .handpanWidget {
+  @include shp-tokens;
+
+  /*
+   * The widget supplies its own horizontal inset.
+   *
+   * The section embedding it pads vertically only, on the standing assumption
+   * that the widget brings its own sides. When this rule lost its padding,
+   * every control sat flush against the card edge — on every engine, not just
+   * Safari.
+   *
+   * The value lives in the token layer so a host can override it, and because
+   * the action bar reads the same one to bleed back out to the card edge.
+   */
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: var(--spacing-md);
-  box-sizing: border-box;
-  overflow: hidden;
+  padding: var(--_shp-widget-pad);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-lg);
+
+  // Deliberately no `overflow: hidden`, which this rule used to carry: it
+  // would clip the sticky action bar out of its own scroll context.
+  container-type: inline-size;
 
   &,
   & * {
     box-sizing: border-box;
   }
-
-  @media (min-width: 768px) {
-    padding: var(--spacing-xl);
-  }
 }
 
 .header {
-  margin-bottom: var(--spacing-md);
-  text-align: center;
-
-  @media (min-width: 768px) {
-    margin-bottom: var(--spacing-xl);
-  }
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-sm);
 }
 
 .title {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-light);
-  color: var(--color-primary);
-  margin-bottom: var(--spacing-md);
-  font-family: var(--font-family-heading);
-
-  @media (min-width: 768px) {
-    font-size: var(--font-size-3xl);
-    margin-bottom: var(--spacing-lg);
-  }
+  margin: 0;
+  font-family: var(--_shp-font-family-heading);
+  font-size: var(--_shp-font-size-3xl);
+  font-weight: var(--_shp-font-weight-light);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--_shp-color-text-primary);
 }
 
-.selector {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--spacing-md);
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-
-  @media (min-width: 640px) {
-    grid-template-columns: 2fr 1fr 1fr;
-    align-items: end;
-  }
-}
-
-.selectorRow {
+/*
+ * The instrument and its one primary action.
+ *
+ * Single column by default so the pan is the first thing below the header on a
+ * phone, rather than sitting under three rows of form controls. On a wide
+ * viewport the play action moves beside the pan instead of under it, which
+ * keeps the instrument large without pushing the views below the fold.
+ */
+.stage {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  align-items: center;
+  gap: var(--_shp-spacing-md);
+}
+
+/*
+ * The pan is the centrepiece, not the whole page.
+ *
+ * Left to fill a desktop column it rendered around 900px across — so tall that
+ * the play action and the views below it both fell off the fold, which is the
+ * problem this layout exists to solve. Capped here rather than in the
+ * renderer's own stylesheet so the component stays reusable at other sizes.
+ */
+.panFrame {
   width: 100%;
+  max-width: 460px;
 }
 
-.selectorGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--spacing-md);
-
-  @media (min-width: 640px) {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.label {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-
-  @media (max-width: 768px) {
-    font-size: var(--font-size-lg);
-  }
-}
-
-.select {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 2px solid var(--color-border);
-  border-radius: var(--border-radius-md);
-  background: var(--color-surface);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+.primaryPlay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--_shp-spacing-xs);
+  width: 100%;
+  max-width: 420px;
+  // The largest control in view, and the only high-emphasis one.
+  min-height: 56px;
+  padding: 0 var(--_shp-spacing-lg);
+  border: 1px solid var(--_shp-color-accent);
+  border-radius: var(--_shp-border-radius-sm);
+  background: var(--_shp-color-accent);
+  color: var(--_shp-color-white);
+  font-family: inherit;
+  font-size: var(--_shp-font-size-lg);
+  font-weight: var(--_shp-font-weight-medium);
   cursor: pointer;
-  transition: all var(--transition-base);
-  width: 100%;
-
-  @media (max-width: 768px) {
-    font-size: var(--font-size-base);
-    padding: var(--spacing-md) var(--spacing-lg);
-    min-height: 48px;
-  }
+  transition:
+    background-color var(--_shp-transition-base),
+    transform var(--_shp-transition-base);
 
   &:hover {
-    border-color: var(--color-primary);
+    background: var(--_shp-color-accent-dark);
+    border-color: var(--_shp-color-accent-dark);
   }
 
-  &:focus {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-    border-color: var(--color-primary);
+  &:active {
+    transform: translateY(1px);
   }
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    border-color: var(--color-border);
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 3px;
   }
 }
 
-.selectCompact {
-  @media (min-width: 640px) {
-    max-width: 120px;
-  }
+.stageHint {
+  margin: 0;
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-gray-500);
+  text-align: center;
+  text-wrap: pretty;
 }
 
-.topRow {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--spacing-md);
-  align-items: start;
-  width: 100%;
+.views {
   min-width: 0;
-  margin-bottom: var(--spacing-md);
-
-  @media (min-width: 768px) {
-    grid-template-columns: minmax(280px, 500px) 1fr;
-    gap: var(--spacing-xl);
-    margin-bottom: var(--spacing-xl);
-  }
-
-  @media (min-width: 1024px) {
-    gap: var(--spacing-2xl);
-  }
-}
-
-.handpanSection {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-
-  @media (min-width: 768px) {
-    min-height: 500px;
-  }
-
-  @media (min-width: 1024px) {
-    min-height: 600px;
-  }
-}
-
-.scaleInfoSection {
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.chordsSectionWrapper {
-  width: 100%;
-  min-width: 0;
-  overflow: hidden;
 }
 
 .placeholder {
-  padding: var(--spacing-xl);
+  padding: var(--_shp-spacing-lg);
+  border: 1px dashed var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
+  color: var(--_shp-color-text-secondary);
   text-align: center;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-base);
-  background: var(--color-gray-50);
-  border-radius: var(--border-radius-md);
+}
+
+@container (min-width: 900px) {
+  .stage {
+    display: grid;
+    // Two columns that both keep a sane measure: the pan stops at its cap, and
+    // the action column is generous without stretching across half the screen.
+    grid-template-columns: minmax(0, 460px) minmax(220px, 320px);
+    justify-content: center;
+    align-items: center;
+    gap: var(--_shp-spacing-2xl);
+  }
+
+  .panFrame {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  // Meeting at the row boundary puts the action and its hint together in the
+  // vertical middle, beside the pan rather than adrift at the column's edge.
+  .primaryPlay {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    max-width: none;
+  }
+
+  .stageHint {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primaryPlay {
+    transition: none;
+  }
+
+  .primaryPlay:active {
+    transform: none;
+  }
 }

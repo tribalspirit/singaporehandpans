@@ -1,10 +1,11 @@
 ---
 import { storyblokEditable } from '@storyblok/astro';
+import type { ISbRichtext } from '@storyblok/astro';
 
 export interface Props {
   blok: {
     title: string;
-    content: any; // Rich text content
+    content: ISbRichtext;
     excerpt?: string;
     published?: boolean;
     show_in_menu?: boolean;

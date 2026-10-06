@@ -1,10 +1,15 @@
 import type { APIRoute } from 'astro';
+import { isSameOriginSubmission } from '../../../lib/sameOrigin';
 import {
   fetchProductBySlug,
   isShopEnabled,
   isHitpayShop,
 } from '../../../lib/shop';
 import { createPaymentRequest, getHitPayConfig } from '../../../lib/hitpay';
+import { applyCardSurcharge } from '../../../lib/cardSurcharge';
+import { getPayNowConfig } from '../../../lib/paynow';
+import { verifyPriceQuote } from '../../../lib/orderToken';
+import { getOrderEmailConfig } from '../../../lib/orderEmail';
 
 export const prerender = false;
 
@@ -36,9 +41,9 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
     return new Response('Not found', { status: 404 });
   }
 
-  // Same-origin guard: browsers send Origin on cross-site POSTs.
-  const origin = request.headers.get('origin');
-  if (origin && origin !== url.origin) {
+  // Only accept submissions that look like they came from our own pages;
+  // see sameOrigin.ts for why Referer is accepted when Origin is absent.
+  if (!isSameOriginSubmission(request, url.origin)) {
     return new Response('Forbidden', { status: 403 });
   }
 
@@ -84,15 +89,65 @@ export const POST: APIRoute = async ({ request, locals, url, redirect }) => {
 
   const referenceNumber = `SHP-${crypto.randomUUID().slice(0, 13)}`;
 
+  /*
+   * The card surcharge applies only when the buyer had a free alternative.
+   *
+   * The decision follows the signed quote the page submitted, not the current
+   * configuration, because product pages are edge-cached for five minutes and
+   * the two disagree for that long either side of a config change.
+   *
+   *   Quote present and valid -> the page displayed the card lane at this
+   *     total, so charge it and restrict HitPay to cards. Honoured even if
+   *     PayNow has since been switched off: the page still disclosed the
+   *     surcharge, and ignoring it would have the studio absorb the fee.
+   *   No quote, PayNow available -> a stale page from before PayNow was
+   *     enabled, quoting the list price against a combined checkout. Refused
+   *     rather than charged either price; reloading mints a fresh quote.
+   *   No quote, no PayNow -> the original single checkout. HitPay's hosted
+   *     page still offers its own PayNow, so surcharging would overcharge
+   *     whoever picks it, and restricting to cards would remove the cheapest
+   *     method the studio has. Unchanged behaviour, list price.
+   *
+   * The quote has to be signed rather than a plain marker: a marker can
+   * simply be deleted, and falling through to an unrestricted list-price
+   * checkout lets the buyer pay by card while the studio absorbs the very fee
+   * the surcharge exists to pass on.
+   */
+  const signingSecret = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
+  const offersDirectPayNow =
+    getPayNowConfig(env, getOrderEmailConfig(env) !== null) !== null &&
+    Boolean(signingSecret);
+
+  const quoted = applyCardSurcharge(product.priceMin.amount);
+  const submittedQuote = form.get('quote');
+  const quoteIsValid =
+    typeof submittedQuote === 'string' &&
+    Boolean(signingSecret) &&
+    (await verifyPriceQuote(signingSecret ?? '', submittedQuote, {
+      slug,
+      reference: 'card',
+      amountCents: Math.round(quoted.total * 100),
+    }));
+
+  if (!quoteIsValid && offersDirectPayNow) {
+    console.error('[checkout] Card quote missing or stale; refusing');
+    return redirect(productRedirect(slug, 'error'), 303);
+  }
+
+  const charge = quoteIsValid ? quoted : null;
+
   try {
     const payment = await createPaymentRequest(hitpay, {
-      amount: product.priceMin.amount,
-      purpose: `${product.title} (${product.handle})`,
+      amount: charge ? charge.total : product.priceMin.amount,
+      purpose: charge
+        ? `${product.title} (${product.handle}) incl. card fee`
+        : `${product.title} (${product.handle})`,
       referenceNumber,
       redirectUrl: `${url.origin}/shop/thank-you/`,
       webhookUrl: `${url.origin}/api/shop/hitpay-webhook`,
       email: buyerEmail,
       name: buyerName,
+      ...(charge && { paymentMethods: ['card'] }),
     });
 
     return redirect(payment.url, 303);

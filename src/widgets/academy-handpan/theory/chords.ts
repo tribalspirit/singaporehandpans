@@ -1,7 +1,7 @@
 import * as Chord from '@tonaljs/chord';
 import { note } from '@tonaljs/core';
 import { isSubset, stableSort } from './pcset';
-import { normalizeToPitchClass } from './normalize';
+import { normalizeToPitchClass, spellPitchClassAsTuned } from './normalize';
 import { assignAllOctavesToPitchClasses, sortNotesByPitch } from './utils';
 
 export interface PlayableChord {
@@ -10,7 +10,17 @@ export interface PlayableChord {
   notes: string[];
   pitchClasses: string[];
   category: 'basic' | 'advanced';
+  /** Canonical root, for comparison and grouping identity. */
   rootPc?: string;
+  /**
+   * The root spelled as this tuning spells it, for display.
+   *
+   * `rootPc` is canonical, so on a C# tuning it reads Ab where the pads read
+   * G#. Rendering it directly put an "A♭" heading above chords named "G#m7" —
+   * the same contradiction the chord names were fixed to remove, relocated to
+   * the group label.
+   */
+  displayRootPc?: string;
 }
 
 interface ChordCandidate {
@@ -66,7 +76,17 @@ interface ChordTemplate {
   priority: number;
 }
 
-const CHORD_TEMPLATES: ChordTemplate[] = [
+/**
+ * Interval templates, written root-upward.
+ *
+ * Several extended voicings read most naturally with the 9th written last
+ * (`add9` as root-3rd-5th-9th). `getIntervalsFromRoot()` however returns
+ * intervals sorted ascending and `arraysEqual` compares positionally, so those
+ * templates could never match. `normalizeTemplates` below sorts every template
+ * once at module load, letting the templates stay readable while keeping the
+ * comparison well-defined.
+ */
+const RAW_CHORD_TEMPLATES: ChordTemplate[] = [
   {
     intervals: [0, 4, 7],
     displayName: (r) => r,
@@ -189,6 +209,16 @@ const CHORD_TEMPLATES: ChordTemplate[] = [
   },
 ];
 
+function normalizeTemplates(templates: ChordTemplate[]): ChordTemplate[] {
+  return templates.map((template) => ({
+    ...template,
+    intervals: [...template.intervals].sort((a, b) => a - b),
+  }));
+}
+
+const CHORD_TEMPLATES: ChordTemplate[] =
+  normalizeTemplates(RAW_CHORD_TEMPLATES);
+
 function arraysEqual(a: number[], b: number[]): boolean {
   if (a.length !== b.length) return false;
   return a.every((val, idx) => val === b[idx]);
@@ -196,7 +226,8 @@ function arraysEqual(a: number[], b: number[]): boolean {
 
 function analyzeChordPcset(
   pitchClasses: string[],
-  scaleTonic?: string
+  scaleTonic?: string,
+  tuningNotes?: string[]
 ): {
   rootPc: string;
   displayName: string;
@@ -227,9 +258,13 @@ function analyzeChordPcset(
           priority > bestMatch.priority ||
           (priority === bestMatch.priority && candidateRoot === scaleTonic)
         ) {
+          const displayRoot = tuningNotes
+            ? spellPitchClassAsTuned(candidateRoot, tuningNotes)
+            : candidateRoot;
+
           bestMatch = {
             rootPc: candidateRoot,
-            displayName: template.displayName(candidateRoot),
+            displayName: template.displayName(displayRoot),
             category: template.category,
             priority,
           };
@@ -273,6 +308,7 @@ function generateCuratedCandidates(availableNotes: string[]): ChordCandidate[] {
     'm9',
     '7sus4',
     '9sus4',
+    '6add9',
   ];
 
   for (const tonic of tonics) {
@@ -333,6 +369,9 @@ function extractScaleTonic(availableNotes: string[]): string | undefined {
 export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
   const candidates = buildChordCandidates(availableNotes);
   const scaleTonic = extractScaleTonic(availableNotes);
+  // Chord names are spelled the way this tuning spells its own notes, so the
+  // chord list never contradicts the pads.
+  const keySpelling = availableNotes;
 
   const chordsByPcset = new Map<string, PlayableChord>();
 
@@ -344,7 +383,11 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
       continue;
     }
 
-    const analyzed = analyzeChordPcset(candidate.pitchClasses, scaleTonic);
+    const analyzed = analyzeChordPcset(
+      candidate.pitchClasses,
+      scaleTonic,
+      keySpelling
+    );
 
     if (!analyzed) {
       continue;
@@ -377,6 +420,7 @@ export function findPlayableChords(availableNotes: string[]): PlayableChord[] {
         pitchClasses: candidate.pitchClasses,
         category: analyzed.category,
         rootPc: analyzed.rootPc,
+        displayRootPc: spellPitchClassAsTuned(analyzed.rootPc, availableNotes),
       });
     }
   }

@@ -222,7 +222,7 @@ const breadcrumbSchema = {
     slot="head"
   />
 
-  <main class="archive-page" id="top">
+  <div class="archive-page" id="top">
     {cmsError && <CMSFallback type="events" />}
 
     <!-- Masthead band wraps the container so its ground and hairline run the
@@ -371,7 +371,7 @@ const breadcrumbSchema = {
         )
       }
     </div>
-  </main>
+  </div>
 
   {
     /* The upcoming cards closing this page carry the same booking CTAs and

@@ -106,6 +106,80 @@ describe('layoutHelpers', () => {
       }
     });
 
+    /*
+     * The pad sizes are percentages of the pan, so the CSS can only preserve
+     * the "ding reads as the largest pad" rule if the geometry hands it a ding
+     * that is already the largest. Guard that here rather than in a viewport
+     * test: if this ever inverts, no amount of clamping in the stylesheet can
+     * put it back.
+     */
+    it('gives the ding a larger radius than every ring pad, across scales', () => {
+      const scales: ReadonlyArray<{ notes: string[]; ding: string }> = [
+        {
+          notes: ['D3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4'],
+          ding: 'D3',
+        },
+        {
+          notes: ['C3', 'G3', 'Ab3', 'Bb3', 'C4', 'Eb4', 'F4', 'G4'],
+          ding: 'C3',
+        },
+        {
+          notes: [
+            'F3',
+            'C4',
+            'Db4',
+            'Eb4',
+            'F4',
+            'G4',
+            'Ab4',
+            'Bb4',
+            'C5',
+            'Db5',
+            'Eb5',
+            'F5',
+          ],
+          ding: 'F3',
+        },
+        { notes: ['E4', 'B4', 'C5', 'D5', 'E5', 'F5', 'G5', 'A5'], ding: 'E4' },
+      ];
+
+      for (const { notes, ding } of scales) {
+        const layout = generateHandpanLayout(notes, ding);
+        const dingPad = layout.find((p) => p.role === 'ding');
+        const ringPads = layout.filter((p) => p.role !== 'ding');
+
+        expect(dingPad).toBeDefined();
+        for (const pad of ringPads) {
+          expect(dingPad!.r).toBeGreaterThan(pad.r);
+        }
+      }
+    });
+
+    it('keeps every ring pad inside the pan rim', () => {
+      const notes = [
+        'F3',
+        'C4',
+        'Db4',
+        'Eb4',
+        'F4',
+        'G4',
+        'Ab4',
+        'Bb4',
+        'C5',
+        'Db5',
+        'Eb5',
+        'F5',
+      ];
+      const layout = generateHandpanLayout(notes, 'F3');
+      const PAN_RADIUS = 0.5;
+
+      for (const pad of layout) {
+        const distanceFromCenter = Math.hypot(pad.x - 0.5, pad.y - 0.5);
+        // `r` is a diameter fraction of the pan, so half of it is the overhang.
+        expect(distanceFromCenter + pad.r / 2).toBeLessThan(PAN_RADIUS);
+      }
+    });
+
     it('should handle slotOrderOverride', () => {
       const notes = ['D3', 'A3', 'Bb3', 'C4'];
       const dingNote = 'D3';

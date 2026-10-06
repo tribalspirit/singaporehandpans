@@ -14,9 +14,22 @@ function formatPrice(price: { amount: number; currencyCode: string }): string {
   }).format(price.amount);
 }
 
+/**
+ * Flatten a description into a one-line card excerpt.
+ *
+ * Descriptions carry real line breaks and "• " bullet markers, which the
+ * product page renders as a list. Dropped into a clamped card excerpt those
+ * markers just read as debris mid-sentence, so they are stripped here and the
+ * whole thing collapsed to a single run of prose.
+ */
 function truncateDescription(text: string, maxLength = 120): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength).trim() + '...';
+  const flat = text
+    .replace(/^[•\s]+/, '')
+    .replace(/\s*•\s*/g, ' — ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (flat.length <= maxLength) return flat;
+  return flat.slice(0, maxLength).trim() + '...';
 }
 
 export default function ProductCard({ product }: ProductCardProps) {

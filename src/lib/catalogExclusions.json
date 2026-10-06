@@ -1,0 +1,6 @@
+{
+  "note": "Shopify product handles that must never reach the public catalog. See catalogExclusions.ts for why. Shared with scripts/migrate-shop-catalog.js, which reads this file directly.",
+  "excludedShopifyHandles": [
+    "hardcase-technologies-airtek-m-blue-handpan-bag-copy"
+  ]
+}

@@ -1,162 +1,140 @@
-import * as Tone from 'tone';
+/**
+ * The page-wide half of the audio stack: loading Tone, and starting the one
+ * audio context the browser gives us.
+ *
+ * Both are genuinely shared. A page may hold several widgets, but there is only
+ * ever one `tone` module to import and one `AudioContext` to resume — browsers
+ * cap how many a document may create, and resuming twice buys nothing. What is
+ * *not* shared lives in `createAudioEngine.ts`: a synth, its initialisation
+ * state, and whatever that instance is currently playing.
+ *
+ * Tone.js is loaded on demand rather than imported statically. It is by far the
+ * heaviest dependency in this widget, and none of it is needed until the visitor
+ * actually asks for sound. Browser autoplay policy already forces initialisation
+ * behind a user gesture, so the dynamic import costs nothing extra in practice
+ * while keeping Tone out of the page's initial JavaScript. `import type` is
+ * erased at build time and adds no runtime cost.
+ */
+import type * as ToneModule from 'tone';
+import {
+  CONTEXT_START_TIMEOUT_MS,
+  waitForRunningContext,
+  withTimeout,
+} from './waitForRunning';
 
-let isInitialized = false;
-let synth: Tone.PolySynth | null = null;
-let initializationPromise: Promise<void> | null = null;
+/** A cold module fetch on a slow connection, bounded so it cannot hang. */
+const MODULE_LOAD_TIMEOUT_MS = 15000;
 
-export async function initializeAudio(): Promise<void> {
-  if (initializationPromise) {
-    return initializationPromise;
-  }
+let Tone: typeof ToneModule | null = null;
+let warmPromise: Promise<unknown> | null = null;
 
-  if (isInitialized && synth && Tone.context.state === 'running') {
-    return;
-  }
-
-  initializationPromise = (async () => {
-    try {
-      if (
-        Tone.context.state === 'suspended' ||
-        Tone.context.state === 'closed'
-      ) {
-        isInitialized = false;
-        if (synth) {
-          synth.dispose();
-          synth = null;
-        }
-      }
-
-      await Tone.start();
-
-      if (Tone.context.state !== 'running') {
-        await new Promise<void>((resolve) => {
-          const checkState = () => {
-            if (Tone.context.state === 'running') {
-              resolve();
-            } else {
-              setTimeout(checkState, 50);
-            }
-          };
-          setTimeout(checkState, 100);
-        });
-      }
-
-      if (Tone.context.state !== 'running') {
-        throw new Error(
-          `Audio context failed to start. State: ${Tone.context.state}`
-        );
-      }
-
-      if (synth) {
-        synth.dispose();
-      }
-
-      synth = new Tone.PolySynth(Tone.Synth, {
-        oscillator: {
-          type: 'sine',
-        },
-        envelope: {
-          attack: 0.01,
-          decay: 0.1,
-          sustain: 0.3,
-          release: 0.5,
-        },
-      }).toDestination();
-
-      isInitialized = true;
-    } finally {
-      initializationPromise = null;
-    }
-  })();
-
-  return initializationPromise;
-}
-
-export function isAudioInitialized(): boolean {
-  return isInitialized;
-}
-
-export function playNote(note: string, durationMs: number = 500): void {
-  if (!isInitialized || !synth) {
+/**
+ * The loaded Tone module. Throws if audio has not been initialised, which is
+ * the same precondition every playback function here already enforces.
+ */
+export function getTone(): typeof ToneModule {
+  if (!Tone) {
     throw new Error('Audio not initialized. Call initializeAudio() first.');
   }
+  return Tone;
+}
 
-  if (Tone.context.state === 'suspended') {
-    Tone.context.resume().then(() => {
-      if (synth) {
-        const duration = Tone.Time(durationMs / 1000).toSeconds();
-        synth.triggerAttackRelease(note, duration);
-      }
-    });
+/**
+ * The loaded Tone module, or null if audio has never been initialised.
+ *
+ * Teardown and status helpers run on mount and on scale changes — before the
+ * visitor has made any gesture — so they must not demand that Tone be present.
+ * With nothing loaded there is by definition nothing playing to stop.
+ */
+export function peekTone(): typeof ToneModule | null {
+  return Tone;
+}
+
+/**
+ * Load the Tone module without touching the audio context.
+ *
+ * Keeping Tone out of the initial bundle means the first gesture would
+ * otherwise have to wait for a ~340 KB download before it can resume the audio
+ * context — and a browser's user activation can expire in the meantime, which
+ * on stricter engines leaves audio blocked.
+ *
+ * Calling this on pointerdown, before the click completes, gives the download a
+ * head start while costing nothing for visitors who never play anything. Safe
+ * to call repeatedly: the import is cached and the promise is shared.
+ */
+export function warmAudioModule(): Promise<unknown> {
+  if (Tone) {
+    return Promise.resolve(Tone);
+  }
+  if (!warmPromise) {
+    warmPromise = import('tone')
+      .then((module) => {
+        Tone = module;
+        return module;
+      })
+      .catch((error) => {
+        // Drop the rejected promise so a later gesture can retry. Caching it
+        // would hand the same rejection to every subsequent call — the pointer
+        // handler swallows it, so audio would simply never work again until
+        // reload. Same permanent-failure shape as the unbounded start poll.
+        warmPromise = null;
+        throw error;
+      });
+  }
+  return warmPromise;
+}
+
+/** `warmAudioModule`, bounded, resolving to the module itself. */
+export async function loadToneModule(): Promise<typeof ToneModule> {
+  if (Tone) {
+    return Tone;
+  }
+  await withTimeout(
+    warmAudioModule(),
+    MODULE_LOAD_TIMEOUT_MS,
+    'Loading the audio engine'
+  );
+  return getTone();
+}
+
+/**
+ * Resume the page's audio context.
+ *
+ * The context is shared — a document gets one, and resuming a running context
+ * buys nothing, which is what the state check above skips. The *attempt* is
+ * deliberately not shared. `tone.start()` resolves only when the underlying
+ * `AudioContext.resume()` does, and a resume made without a live user
+ * activation can sit pending until the bound below fires. Handing that stuck
+ * promise to the next widget would spend its perfectly good gesture on the
+ * first widget's dead one and fail them both; every gesture gets its own
+ * attempt instead. Concurrent `resume()` calls are harmless.
+ */
+export async function startAudioContext(): Promise<void> {
+  const tone = getTone();
+
+  if (tone.context.state === 'running') {
     return;
   }
 
-  if (Tone.context.state !== 'running') {
-    throw new Error(`Audio context not running. State: ${Tone.context.state}`);
+  // Bounded, because `tone.start()` can stay pending indefinitely under
+  // autoplay policy. Bounding only the state poll below was not enough:
+  // execution never reached it, so the caller's initialisation promise stayed
+  // pending forever and every later gesture reused the stuck promise — exactly
+  // the failure the poll's bound was meant to remove.
+  await withTimeout(
+    tone.start(),
+    CONTEXT_START_TIMEOUT_MS,
+    'Starting the audio context'
+  );
+
+  // Bounded for the same reason: a context that never reaches `running` must
+  // fail rather than poll forever, so the next gesture can retry against a
+  // module that is by then cached.
+  const started = await waitForRunningContext(() => tone.context.state);
+
+  if (!started) {
+    throw new Error(
+      `Audio context failed to start. State: ${tone.context.state}`
+    );
   }
-
-  const duration = Tone.Time(durationMs / 1000).toSeconds();
-  synth.triggerAttackRelease(note, duration);
-}
-
-export function playChord(notes: string[], durationMs: number = 1000): void {
-  if (!isInitialized || !synth) {
-    throw new Error('Audio not initialized. Call initializeAudio() first.');
-  }
-
-  if (Tone.context.state === 'suspended') {
-    Tone.context.resume().then(() => {
-      if (synth) {
-        const duration = Tone.Time(durationMs / 1000).toSeconds();
-        synth.triggerAttackRelease(notes, duration);
-      }
-    });
-    return;
-  }
-
-  const duration = Tone.Time(durationMs / 1000).toSeconds();
-  synth.triggerAttackRelease(notes, duration);
-}
-
-export function playArpeggio(
-  notes: string[],
-  noteDurationMs: number = 200,
-  startTime?: number
-): void {
-  if (!isInitialized || !synth) {
-    throw new Error('Audio not initialized. Call initializeAudio() first.');
-  }
-
-  const playNotes = () => {
-    if (!synth) return;
-    const duration = Tone.Time(noteDurationMs / 1000).toSeconds();
-    const start =
-      startTime !== undefined ? Tone.Time(startTime).toSeconds() : Tone.now();
-
-    notes.forEach((note, index) => {
-      const time = start + index * duration;
-      synth?.triggerAttackRelease(note, duration, time);
-    });
-  };
-
-  if (Tone.context.state === 'suspended') {
-    Tone.context.resume().then(playNotes);
-    return;
-  }
-
-  playNotes();
-}
-
-export function stopAll(): void {
-  if (synth) {
-    synth.releaseAll();
-  }
-}
-
-export function dispose(): void {
-  if (synth) {
-    synth.dispose();
-    synth = null;
-  }
-  isInitialized = false;
 }

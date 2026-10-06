@@ -17,8 +17,13 @@ dist/
 .env.test
 .env.test.local
 
-# Allow example file to be committed
+# Wrangler local runtime secrets (keep .dev.vars.example)
+.dev.vars
+.dev.vars.*
+
+# Allow example files to be committed
 !.env.example
+!.dev.vars.example
 
 # TypeScript build info
 .tsbuildinfo

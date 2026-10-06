@@ -1,6 +1,12 @@
 import React from 'react';
 import type { HandpanConfig, HandpanPad } from '../config/types';
 import { parseNote } from '../theory/normalize';
+import {
+  buildPadIdentities,
+  padAccessibleName,
+  padVisibleLabel,
+  type NotationMode,
+} from '../core/notation/padLabel';
 import styles from '../styles/HandpanRenderer.module.scss';
 
 interface HandpanRendererProps {
@@ -9,6 +15,7 @@ interface HandpanRendererProps {
   activeNotes?: Set<string>;
   onPadClick?: (pad: HandpanPad) => void;
   showDebugGrid?: boolean;
+  notation?: NotationMode;
 }
 
 function getPadSizeMultiplier(note: string): number {
@@ -30,7 +37,9 @@ export default function HandpanRenderer({
   activeNotes = new Set(),
   onPadClick,
   showDebugGrid = false,
+  notation = 'note',
 }: HandpanRendererProps) {
+  const padIdentities = buildPadIdentities(config.layout, config.notes);
   const handlePadClick = (pad: HandpanPad) => {
     if (onPadClick) {
       onPadClick(pad);
@@ -51,6 +60,7 @@ export default function HandpanRenderer({
           </>
         )}
         {config.layout.map((pad) => {
+          const identity = padIdentities.get(pad.id);
           const isSelected = selectedNotes.has(pad.note);
           const isActive = activeNotes.has(pad.note);
           const sizeMultiplier = getPadSizeMultiplier(pad.note);
@@ -75,9 +85,11 @@ export default function HandpanRenderer({
                 height: `${adjustedRadius * 100}%`,
               }}
               onClick={() => handlePadClick(pad)}
-              aria-label={`Note ${pad.note}`}
+              aria-label={padAccessibleName(pad, identity)}
             >
-              <span className={styles.padLabel}>{pad.note}</span>
+              <span className={styles.padLabel}>
+                {padVisibleLabel(pad, identity, notation)}
+              </span>
               {showDebugGrid && (
                 <>
                   <span className={styles.debugPadId}>{pad.id}</span>

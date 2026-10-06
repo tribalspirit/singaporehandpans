@@ -1,0 +1,117 @@
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-xs);
+}
+
+.fieldLabel {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--_shp-spacing-sm);
+  font-family: var(--_shp-font-family-mono);
+  font-size: var(--_shp-font-size-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--_shp-color-gray-500);
+}
+
+.fieldValue {
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--_shp-color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.fieldHint {
+  margin: 0;
+  font-size: var(--_shp-font-size-xs);
+  color: var(--_shp-color-gray-500);
+}
+
+.modeToggle {
+  display: inline-flex;
+  border: 1px solid var(--_shp-color-border);
+  border-radius: var(--_shp-border-radius-sm);
+  overflow: hidden;
+}
+
+.modeOption {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 0 var(--_shp-spacing-md);
+  font-size: var(--_shp-font-size-sm);
+  color: var(--_shp-color-text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--_shp-transition-base),
+    color var(--_shp-transition-base);
+
+  & + & {
+    border-left: 1px solid var(--_shp-color-border);
+  }
+
+  &:hover {
+    background: var(--_shp-color-gray-50);
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: -2px;
+  }
+}
+
+.modeOptionActive {
+  background: var(--_shp-color-accent);
+  color: var(--_shp-color-white);
+
+  &:hover {
+    background: var(--_shp-color-accent);
+  }
+}
+
+.modeInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.slider {
+  width: 100%;
+  // A comfortable grab area without inflating the popover.
+  height: 44px;
+  accent-color: var(--_shp-color-primary);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modeOption {
+    transition: none;
+  }
+}

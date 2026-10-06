@@ -152,7 +152,7 @@ const seoDescription =
   description={seoDescription}
   canonical={`${Astro.site}events/`}
 >
-  <main class="events-page">
+  <div class="events-page">
     {cmsError && <CMSFallback type="events" />}
 
     <!-- Masthead band wraps the container, matching about/contacts/shop/stories,
@@ -205,7 +205,7 @@ const seoDescription =
         )
       }
     </div>
-  </main>
+  </div>
 
   <script src="../scripts/availability-hydration.ts"></script>
 </BaseLayout>

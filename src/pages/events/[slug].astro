@@ -263,7 +263,7 @@ const breadcrumbData = {
     set:html={JSON.stringify(breadcrumbData)}
     slot="head"
   />
-  <main class="event-detail-page">
+  <div class="event-detail-page">
     <div class="container">
       <nav class="breadcrumb">
         <a href="/">Home</a>
@@ -275,7 +275,7 @@ const breadcrumbData = {
 
       <EventDetail event={event} liveAvailability={liveAvailability} />
     </div>
-  </main>
+  </div>
 </BaseLayout>
 
 <style lang="scss">

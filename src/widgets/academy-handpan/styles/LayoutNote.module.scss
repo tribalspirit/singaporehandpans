@@ -1,0 +1,68 @@
+@use 'src/styles/tokens.scss';
+@use 'widget-tokens' as *;
+
+/*
+ * Sits under the pan, quiet by default. It must read as a footnote to the
+ * diagram rather than competing with it — the disclosure only works if people
+ * are willing to leave it on screen.
+ */
+.layoutNote {
+  display: flex;
+  flex-direction: column;
+  gap: var(--_shp-spacing-xs);
+  padding-top: var(--_shp-spacing-sm);
+  border-top: 1px solid var(--_shp-color-border);
+}
+
+.layoutNoteToggle {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--_shp-spacing-xs);
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--_shp-color-primary);
+  font-family: inherit;
+  font-size: var(--_shp-font-size-sm);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--_shp-color-primary-dark);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_shp-color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.layoutNoteText {
+  margin: 0;
+  font-size: var(--_shp-font-size-sm);
+  line-height: var(--_shp-line-height-relaxed);
+  color: var(--_shp-color-text-secondary);
+  text-wrap: pretty;
+}
+
+/*
+ * Visually hidden, not removed.
+ *
+ * `display: none` (or the `hidden` attribute) would take the text out of the
+ * accessibility tree, and the button's aria-describedby would then resolve to
+ * nothing — losing the automatic announcement that is the whole reason a
+ * screen reader user hears this caveat without hunting for it.
+ */
+.layoutNoteTextCollapsed {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}

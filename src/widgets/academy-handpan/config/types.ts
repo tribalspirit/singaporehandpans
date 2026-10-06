@@ -34,9 +34,42 @@ export interface HandpanScaleFamilyTemplate {
   description: string;
   aliases?: string[];
   makers?: string[];
+  /**
+   * Internal classification, used to group and reason about families. It is not
+   * display copy — it used to be rendered straight into the UI's tag row, which
+   * is why a player was shown a single chip reading "minor".
+   */
   modeHint?: 'minor' | 'major' | 'mixed' | 'exotic';
+  /**
+   * Three or four plain words for how the family feels to play, written for
+   * someone choosing a scale by ear rather than by theory. Optional so a family
+   * added without them still renders; `buildHandpanConfigFromFamily` falls back
+   * to the mode hint.
+   */
+  moodTags?: string[];
+  /**
+   * The family's declared pitch-class set, as semitones above the tonic.
+   *
+   * This is documentation-and-validation only: note generation is driven
+   * entirely by `orderedRingIntervalsByNoteCount`. `handpanFamilies.test.ts`
+   * asserts the two agree, so a ring order can never drift from the pitch-class
+   * set the family claims to be.
+   */
   intervalsPcSemitones?: number[];
+  /** Ring note order (excluding the ding), as semitones above the tonic. */
   orderedRingIntervalsByNoteCount?: Record<number, number[]>;
+  /**
+   * Semitones from the ding to where the scale actually resolves, when a maker
+   * documents that it is not the ding itself. Sabye is named by its ding but
+   * HaganeNote states the root is the 4th above, which is why makers call it
+   * Lydian.
+   *
+   * Used only to decide whether diatonic labels are earned — a scale whose
+   * tonal centre is not the ding cannot be given Roman numerals rooted on the
+   * ding. It deliberately does not affect naming or note generation: makers
+   * name these instruments by the ding and so does the catalog.
+   */
+  tonalCentreOffsetSemitones?: number;
   suggestedNoteCounts: number[];
   supportedKeys: PitchClass[];
   defaultKey?: PitchClass;
@@ -59,6 +92,8 @@ export interface HandpanConfig {
   scaleMoodTags: string[];
   scaleTypicalKeys?: string[];
   makers?: string[];
+  /** See `HandpanScaleFamilyTemplate.tonalCentreOffsetSemitones`. */
+  tonalCentreOffsetSemitones?: number;
 }
 
 export const NOTE_PATTERN = /^[A-G](?:#|b)?\d*$/;

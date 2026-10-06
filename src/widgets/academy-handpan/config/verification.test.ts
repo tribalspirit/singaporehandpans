@@ -80,30 +80,35 @@ describe('Handpan Scale Verification', () => {
   it('should have all families represented', () => {
     const familyIds = new Set(HANDPAN_CONFIGS.map((c) => c.familyId));
 
+    /**
+     * 14 families. Five were merged into the family whose pitch-class set they
+     * duplicated (Aeolian, Equinox, Mystic, Magic Voyage, Ionian), three were
+     * removed because their data could not be sourced (Lydian, Ursa Minor,
+     * Onoleo), and four were added from maker listings (Akebono, Aegean
+     * corrected and restored, Sabye, Golden Gate).
+     * See `familyAliases.test.ts` for both guards.
+     */
     const expectedFamilies = [
       'kurd',
       'celtic-minor',
       'integral',
-      'mystic',
       'pygmy',
       'la-sirena',
-      'ursa-minor',
+      'akebono',
       'aegean',
+      'sabye',
+      'golden-gate',
       'oxalis',
       'hijaz',
       'harmonic-minor',
-      'onoleo',
-      'equinox',
-      'magic-voyage',
-      'ionian',
       'dorian',
-      'lydian',
       'mixolydian',
-      'aeolian',
     ];
 
     for (const family of expectedFamilies) {
       expect(familyIds.has(family)).toBe(true);
     }
+
+    expect(familyIds.size).toBe(expectedFamilies.length);
   });
 });

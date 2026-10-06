@@ -6,6 +6,15 @@ import {
   isHitpayShop,
 } from '../../../lib/shop';
 import { setEdgeCache } from '../../../lib/edgeCache';
+import { getPayNowConfig } from '../../../lib/paynow';
+import { mintPriceQuote } from '../../../lib/orderToken';
+import { getOrderEmailConfig } from '../../../lib/orderEmail';
+import {
+  applyCardSurcharge,
+  formatSgd,
+  CARD_SURCHARGE_RATE_LABEL,
+  CARD_SURCHARGE_FLAT,
+} from '../../../lib/cardSurcharge';
 import type { ShopProduct } from '../../../lib/shop';
 
 export const prerender = false;
@@ -43,6 +52,74 @@ const CHECKOUT_MESSAGES: Record<string, string> = {
 const checkoutMessage = checkoutState
   ? (CHECKOUT_MESSAGES[checkoutState] ?? CHECKOUT_MESSAGES.error)
   : null;
+
+/*
+ * Payment options.
+ *
+ * A PayNow transfer straight to the studio costs nothing, while HitPay takes
+ * 2.8% + S$0.50 on a domestic card. When the free path is actually available,
+ * the card path shows that cost as a surcharge instead of burying it in every
+ * instrument's list price. When it is not, there is only one checkout and the
+ * price is the price — see the comment in the checkout endpoint.
+ *
+ * Both depend on deploy-time configuration, not on the request, so this stays
+ * compatible with the edge caching set above.
+ */
+const runtimeEnv = (Astro.locals.runtime?.env ?? {}) as Record<
+  string,
+  string | undefined
+>;
+/*
+ * A published product with a missing or malformed price transforms to 0 while
+ * staying "available", and the surcharge maths refuses a non-positive amount.
+ * Treat such an entry as not purchasable rather than throwing: previously it
+ * still rendered and the endpoint rejected the purchase, and a 500 on a
+ * catalogue page is a worse failure than a disabled buy button.
+ */
+const canPurchase = product.availableForSale && product.priceMin.amount > 0;
+
+const signingSecret = runtimeEnv.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
+const offersDirectPayNow =
+  getPayNowConfig(runtimeEnv, getOrderEmailConfig(runtimeEnv) !== null) !==
+    null && Boolean(signingSecret);
+const cardCharge =
+  offersDirectPayNow && canPurchase
+    ? applyCardSurcharge(product.priceMin.amount)
+    : null;
+
+/*
+ * A signed quote proving this page displayed the card lane at this total.
+ * The checkout endpoint refuses to surcharge without one, so a buyer cannot
+ * delete a form field and fall through to an unrestricted checkout at the
+ * list price — where they would pay by card while the studio absorbs the fee
+ * the surcharge exists to pass on.
+ *
+ * Safe to sit in an edge-cached page: it authorises only the surcharged card
+ * lane, for this product.
+ */
+const cardQuote =
+  cardCharge && signingSecret
+    ? await mintPriceQuote(signingSecret, {
+        slug: product.handle,
+        reference: 'card',
+        amountCents: Math.round(cardCharge.total * 100),
+      })
+    : null;
+
+/*
+ * The PayNow lane needs the same proof. It is not surcharged, but the page is
+ * still edge-cached: a price rise in the CMS would otherwise let the endpoint
+ * mint an order — and a QR, and an owner notification — for an amount the
+ * buyer never saw.
+ */
+const payNowQuote =
+  cardCharge && signingSecret
+    ? await mintPriceQuote(signingSecret, {
+        slug: product.handle,
+        reference: 'paynow',
+        amountCents: Math.round(product.priceMin.amount * 100),
+      })
+    : null;
 
 const pageTitle = `${product.title} - Shop`;
 const pageDescription =
@@ -118,6 +195,43 @@ const productSchema = {
 
 const galleryImages = product.images ?? [];
 const mainImage = galleryImages[0];
+
+type DescriptionBlock =
+  { type: 'text'; text: string } | { type: 'list'; items: string[] };
+
+/**
+ * Turn the plain-text description into paragraphs and real lists.
+ *
+ * The catalog stores descriptions as text, with "• " marking list items.
+ * Rendering that as one pre-line paragraph made wrapped bullets run back to the
+ * left margin instead of hanging under their text, and gave screen readers no
+ * list to announce. Grouping runs of bullets into a <ul> fixes both.
+ */
+function parseDescription(description: string): DescriptionBlock[] {
+  return description.split('\n').reduce<DescriptionBlock[]>((blocks, raw) => {
+    const line = raw.trim();
+    if (!line) return blocks;
+
+    const bullet = line.match(/^[•\-*]\s+(.*)$/);
+    const last = blocks[blocks.length - 1];
+
+    if (bullet) {
+      if (last?.type === 'list') {
+        return [
+          ...blocks.slice(0, -1),
+          { type: 'list', items: [...last.items, bullet[1]] },
+        ];
+      }
+      return [...blocks, { type: 'list', items: [bullet[1]] }];
+    }
+
+    return [...blocks, { type: 'text', text: line }];
+  }, []);
+}
+
+const descriptionBlocks = product.description
+  ? parseDescription(product.description)
+  : [];
 ---
 
 <BaseLayout
@@ -136,7 +250,7 @@ const mainImage = galleryImages[0];
     slot="head"
   />
 
-  <main class="product-page">
+  <div class="product-page">
     <section class="product-section">
       <div class="container">
         <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -216,13 +330,25 @@ const mainImage = galleryImages[0];
             <p class="product-price">{formatPrice(product.priceMin)}</p>
 
             {
-              product.description && (
-                <p class="product-description">{product.description}</p>
+              descriptionBlocks.length > 0 && (
+                <div class="product-description">
+                  {descriptionBlocks.map((block) =>
+                    block.type === 'list' ? (
+                      <ul class="product-description__list" role="list">
+                        {block.items.map((item) => (
+                          <li>{item}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p class="product-description__text">{block.text}</p>
+                    )
+                  )}
+                </div>
               )
             }
 
             {
-              product.availableForSale ? (
+              canPurchase ? (
                 <form
                   method="POST"
                   action="/api/shop/checkout"
@@ -254,7 +380,13 @@ const mainImage = galleryImages[0];
                       />
                     </label>
                     <label class="buy-form__label">
-                      Email for your receipt
+                      {/*
+                        Only the card lane produces a receipt — HitPay sends
+                        it. PayNow sends the buyer nothing, so promising one
+                        here would have them close the page expecting mail and
+                        lose the reference they need to quote.
+                      */}
+                      {cardCharge ? 'Your email' : 'Email for your receipt'}
                       <input
                         type="email"
                         name="email"
@@ -266,13 +398,68 @@ const mainImage = galleryImages[0];
                     </label>
                   </div>
 
-                  <button type="submit" class="buy-button">
-                    Buy now — pay with PayNow or card
-                  </button>
-                  <p class="buy-form__note">
-                    Secure payment via HitPay. You will be redirected to
-                    complete the payment.
-                  </p>
+                  {cardCharge ? (
+                    <div class="pay-options">
+                      {/*
+                          Two submit buttons on one form, each with its own
+                          formaction. No radio, no JavaScript, no second set of
+                          name and email fields — the buyer picks how to pay by
+                          pressing the button for it.
+                        */}
+                      <button
+                        type="submit"
+                        name="quote"
+                        value={payNowQuote ?? ''}
+                        formaction="/api/shop/paynow"
+                        class="buy-button pay-option"
+                      >
+                        <span class="pay-option__name">Pay by PayNow</span>
+                        <span class="pay-option__price">
+                          {formatSgd(cardCharge.base)}
+                        </span>
+                        <span class="pay-option__meta">
+                          Bank transfer · no extra charge · pay on the next page
+                        </span>
+                      </button>
+
+                      <button
+                        type="submit"
+                        name="quote"
+                        value={cardQuote ?? ''}
+                        formaction="/api/shop/checkout"
+                        class="buy-button buy-button--secondary pay-option"
+                      >
+                        <span class="pay-option__name">Pay by card</span>
+                        <span class="pay-option__price">
+                          {formatSgd(cardCharge.total)}
+                        </span>
+                        <span class="pay-option__meta">
+                          Includes {formatSgd(cardCharge.surcharge)} card fee
+                        </span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button type="submit" class="buy-button">
+                      Buy now — pay with PayNow or card
+                    </button>
+                  )}
+
+                  {cardCharge ? (
+                    <p class="buy-form__note buy-form__note--surcharge">
+                      <strong>Card payments cost more.</strong> Paying by credit
+                      or debit card adds {formatSgd(cardCharge.surcharge)},
+                      which covers the fee our payment provider charges us —{' '}
+                      {CARD_SURCHARGE_RATE_LABEL} +{' '}
+                      {formatSgd(CARD_SURCHARGE_FLAT)} of the amount charged.
+                      PayNow has no such fee, so the price stays{' '}
+                      {formatSgd(cardCharge.base)}.
+                    </p>
+                  ) : (
+                    <p class="buy-form__note">
+                      Secure payment via HitPay. You will be redirected to
+                      complete the payment.
+                    </p>
+                  )}
                 </form>
               ) : (
                 <div class="sold-out">
@@ -293,7 +480,7 @@ const mainImage = galleryImages[0];
         </div>
       </div>
     </section>
-  </main>
+  </div>
 </BaseLayout>
 
 <style lang="scss">
@@ -462,7 +649,47 @@ const mainImage = galleryImages[0];
     color: var(--color-gray-700);
     line-height: var(--line-height-relaxed);
     margin: 0 0 var(--space-8);
-    white-space: pre-line;
+
+    > * + * {
+      margin-top: var(--space-4);
+    }
+  }
+
+  .product-description__text {
+    margin: 0;
+  }
+
+  .product-description__list {
+    margin: 0;
+    padding: 0;
+    /* The markup carries an explicit `role="list"` because of this line:
+       Safari drops list semantics from the accessibility tree when the marker
+       is removed, which would defeat the point of using a real list. */
+    list-style: none;
+
+    li {
+      /* Hanging indent: the marker sits in the gap, so a wrapped line aligns
+         under the text rather than running back beneath the bullet. */
+      position: relative;
+      padding-left: var(--space-5);
+    }
+
+    li + li {
+      margin-top: var(--space-2);
+    }
+
+    li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      /* Optically centred on the first line rather than the glyph box. */
+      top: calc(var(--line-height-relaxed) * 0.5em);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--color-accent, var(--color-gray-400));
+      transform: translateY(-50%);
+    }
   }
 
   .buy-form__fields {
@@ -546,6 +773,62 @@ const mainImage = galleryImages[0];
     margin-top: var(--space-3);
     font-size: var(--font-size-sm);
     color: var(--color-gray-500);
+  }
+
+  // The surcharge notice is a price term, not fine print. It sits at body
+  // contrast rather than the muted grey used for the reassurance note, because
+  // a buyer who misses it is surprised at the payment page.
+  .buy-form__note--surcharge {
+    color: var(--color-gray-700);
+    background: var(--color-gray-50);
+    border-left: 3px solid var(--color-gray-900);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    line-height: 1.5;
+  }
+
+  .pay-options {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  // Each option is a submit button carrying its own price, so the difference
+  // is visible at the moment of choosing rather than one screen later.
+  .pay-option {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+    text-align: left;
+    padding: var(--space-4) var(--space-5);
+
+    &__name {
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    &__price {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+      font-variant-numeric: tabular-nums;
+    }
+
+    &__meta {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-normal);
+      opacity: 0.8;
+    }
+  }
+
+  // Card is the more expensive path, so it is presented as the alternative
+  // rather than given equal visual weight.
+  .buy-button--secondary {
+    background: var(--color-white);
+    color: var(--color-gray-900);
+    border: 1px solid var(--color-gray-300);
+
+    &:hover {
+      background: var(--color-gray-50);
+    }
   }
 
   .sold-out {
