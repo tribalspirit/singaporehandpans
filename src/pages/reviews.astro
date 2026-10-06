@@ -1,0 +1,507 @@
+---
+/**
+ * `/reviews/` — the full set of reviews the homepage widget links to.
+ *
+ * Deliberately NOT marked up as schema.org `Review` / `AggregateRating`.
+ * Google's review-snippet guidelines exclude self-serving reviews: ratings an
+ * organisation publishes about itself on its own pages are ineligible for rich
+ * results, and marking them up anyway risks a structured-data manual action
+ * against the whole site. The reviews are here to be read by people; the
+ * `LocalBusiness` block in `SEO.astro` stays rating-free on purpose.
+ *
+ * Prerendered, like `/about/` — the reviews are a local module, so there is
+ * nothing to fetch at request time. (The SSR guardrail applies to CMS-backed
+ * pages, which this is not.)
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StarRating from '../components/reviews/StarRating.astro';
+import {
+  STUDIO_REVIEWS,
+  GOOGLE_REVIEW_AGGREGATE,
+  GOOGLE_REVIEWS_URL,
+  GOOGLE_WRITE_REVIEW_URL,
+} from '../constants/reviews';
+import {
+  summariseReviews,
+  selectFeaturedReviews,
+  formatReviewMonth,
+  latestReviewMonth,
+  reviewParagraphs,
+} from '../lib/reviews';
+
+const title = 'Reviews — What Players Say About the Studio';
+const description =
+  'Read reviews of Singapore Handpan Studio from our Google listing — handpan lessons, beginner classes, studio sessions and sound healing, in the words of the people who came.';
+
+const summary = summariseReviews(STUDIO_REVIEWS, GOOGLE_REVIEW_AGGREGATE);
+
+// Same ordering as the homepage widget: the hand-picked reviews lead.
+const ordered = selectFeaturedReviews(STUDIO_REVIEWS, STUDIO_REVIEWS.length);
+const updated = latestReviewMonth(STUDIO_REVIEWS);
+---
+
+<BaseLayout title={title} description={description}>
+  <section class="page-hero" aria-labelledby="reviews-title">
+    <div class="container">
+      <div class="page-hero__inner">
+        <div class="page-hero__content">
+          <span class="page-hero__eyebrow" aria-hidden="true">Reviews</span>
+          <h1 id="reviews-title" class="page-hero__title">
+            What players say about the studio
+          </h1>
+          <p class="page-hero__subtitle">
+            Beginners who had never touched a handpan, players who come back
+            every week, and people who booked the room for an afternoon to
+            themselves.
+          </p>
+        </div>
+
+        <div class="score">
+          <span class="score__value">{summary.ratingLabel}</span>
+          <StarRating rating={summary.rating} size="lg" />
+          <span class="score__caption">
+            {summary.count} reviews on Google
+          </span>
+        </div>
+      </div>
+
+      <p class="provenance">
+        Reproduced as written from our
+        <a
+          href={GOOGLE_REVIEWS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="provenance__link">Google listing</a
+        >. {summary.shown} of {summary.count} shown{
+          updated && <Fragment>, most recent {updated}</Fragment>
+        }.
+      </p>
+    </div>
+  </section>
+
+  {
+    ordered.length > 0 && (
+      <section class="section entries-section" aria-label="Reviews">
+        <div class="container">
+          <ul class="entries">
+            {ordered.map((review, index) => {
+              const month = formatReviewMonth(review.date);
+              return (
+                <li class:list={['entry', index === 0 && 'entry--opener']}>
+                  <figure class="entry__figure" id={`review-${review.id}`}>
+                    <blockquote class="entry__text">
+                      {reviewParagraphs(review.text).map((paragraph) => (
+                        <p>{paragraph}</p>
+                      ))}
+                    </blockquote>
+                    <figcaption class="entry__credit">
+                      <StarRating
+                        rating={review.rating}
+                        size={index === 0 ? 'lg' : 'sm'}
+                      />
+                      <cite class="credit__author">{review.author}</cite>
+                      {month && <span class="credit__date">{month}</span>}
+                    </figcaption>
+                  </figure>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section cta" aria-labelledby="reviews-cta-title">
+    <div class="container">
+      <div class="cta__inner">
+        <h2 id="reviews-cta-title" class="cta__title">
+          Played with us? Say so where it counts.
+        </h2>
+        <p class="cta__text">
+          A few words on Google is how the next beginner in Singapore finds the
+          studio — and it is very nearly the only advertising we do.
+        </p>
+        <div class="cta__actions">
+          <a
+            href={GOOGLE_WRITE_REVIEW_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn--primary"
+          >
+            Write a Google review
+            <svg
+              class="btn__icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M7 17 17 7M17 7H8m9 0v9"></path>
+            </svg>
+          </a>
+          <a href="/events/" class="btn btn--outline">Book a class</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style lang="scss">
+  // Matches /about/: paper ground, hairline seam, no full-bleed splash
+  .page-hero {
+    background: var(--color-gray-50);
+    border-bottom: 1px solid var(--color-hairline);
+    padding: var(--space-20) 0 var(--space-12);
+
+    @media (min-width: 768px) {
+      padding: var(--space-24) 0 var(--space-12);
+    }
+  }
+
+  .page-hero__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+
+    // Headline left, score right — the same masthead split as the widget
+    @media (min-width: 900px) {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-12);
+    }
+  }
+
+  /*
+   * No `ch` max-width here: `ch` resolves against this div's own font-size
+   * (the body base), not against the 5xl h1 inside it, so a measure that looks
+   * like "about 30 characters of headline" is really ~300px of headline.
+   * The headline takes the column, and the two text elements carry their own
+   * measures below.
+   */
+  .page-hero__content {
+    @media (min-width: 900px) {
+      flex: 1 1 60%;
+    }
+  }
+
+  .page-hero__eyebrow {
+    display: block;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .page-hero__title {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-light);
+    margin-bottom: var(--space-6);
+    // In the h1's own units, so it means what it says
+    max-width: 22ch;
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-5xl);
+    }
+  }
+
+  .page-hero__subtitle {
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-relaxed);
+    max-width: 52ch;
+    color: var(--color-gray-600);
+    margin: 0;
+  }
+
+  // The rating as a data block: large light numeral, stars, mono caption
+  .score {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-hairline-strong);
+
+    @media (min-width: 900px) {
+      justify-items: end;
+      border-top: none;
+      padding-top: 0;
+      flex: none;
+    }
+  }
+
+  .score__value {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-5xl);
+    font-weight: var(--font-weight-light);
+    line-height: 1;
+    color: var(--color-gray-900);
+  }
+
+  .score__caption {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-gray-600);
+  }
+
+  /*
+   * Where the reviews came from, stated plainly. A page of praise with no stated
+   * source is the oldest trick on a business site; naming the listing, the
+   * counts and the newest date is what makes it answerable. It also says out
+   * loud that 5 of 52 are shown, rather than letting five reviews imply five.
+   */
+  .provenance {
+    margin: var(--space-10) 0 0;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-hairline);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-relaxed);
+    letter-spacing: 0.04em;
+    color: var(--color-gray-500);
+  }
+
+  .provenance__link {
+    color: var(--color-primary);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-hairline-strong);
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+
+    &:hover {
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  .entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /*
+   * One review per full-width band, attribution set into the left margin.
+   *
+   * Not a card grid and not CSS columns: these reviews run from 440 to 1,400
+   * characters, so equal cards would clip the long ones and strand the short
+   * ones in white space, while columns would leave one lumpy 1,400-character
+   * tower beside a short stack. A banded list lets each review take exactly the
+   * height it needs, and the marginal attribution uses the width that a
+   * single-column text measure would otherwise waste.
+   */
+  .entry {
+    padding: var(--space-10) 0;
+    border-top: 1px solid var(--color-hairline);
+
+    &:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    @media (min-width: 768px) {
+      padding: var(--space-12) 0;
+    }
+  }
+
+  .entry__figure {
+    margin: 0;
+    display: grid;
+    gap: var(--space-5);
+
+    @media (min-width: 900px) {
+      // Attribution column wide enough for a full name on one line
+      grid-template-columns: 13rem 1fr;
+      gap: var(--space-10);
+      align-items: start;
+    }
+  }
+
+  .entry__text {
+    margin: 0;
+
+    @media (min-width: 900px) {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    p {
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-relaxed);
+      color: var(--color-gray-700);
+      // A real reading measure, in the paragraph's own units
+      max-width: 64ch;
+      margin: 0 0 var(--space-4);
+      // Reviews arrive as prose with no hyphenation hints, and the last line of
+      // a paragraph left as one orphaned word reads as a layout fault
+      text-wrap: pretty;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  /*
+   * Placed into column 1 while staying after the quote in the DOM: a caption
+   * belongs to its figure either way, and reading the words before the byline is
+   * the right order when the two columns collapse on a phone.
+   */
+  .entry__credit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+
+    @media (min-width: 900px) {
+      grid-column: 1;
+      grid-row: 1;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
+      // Optically level with the first line of the quote beside it
+      padding-top: var(--space-1);
+    }
+  }
+
+  .credit__author {
+    font-style: normal; // `cite` italicises by default
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-900);
+  }
+
+  .credit__date {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-gray-500);
+  }
+
+  /*
+   * The opening review carries the page. One size step up, full-strength ink and
+   * a larger star row is the whole device — enough to say "start here" without
+   * blowing a customer's words up into display type they never wrote for that
+   * purpose. No extra rule: it sits directly under the hero's own hairline.
+   */
+  .entry--opener {
+    .entry__text p {
+      font-size: var(--font-size-lg);
+      color: var(--color-gray-900);
+      max-width: 58ch;
+    }
+
+    .credit__author {
+      font-size: var(--font-size-base);
+    }
+  }
+
+  .cta {
+    background-color: var(--color-gray-100);
+    border-top: 1px solid var(--color-hairline);
+  }
+
+  .cta__inner {
+    max-width: 56ch;
+  }
+
+  .cta__title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-light);
+    margin-bottom: var(--space-4);
+  }
+
+  .cta__text {
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-relaxed);
+    color: var(--color-gray-600);
+    margin-bottom: var(--space-8);
+  }
+
+  .cta__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    align-items: flex-start;
+
+    @media (min-width: 640px) {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  // NOTE: `.btn` is scoped per-component in Astro and there is no `.btn` in
+  // global.scss, so this is the same deliberate duplication index.astro and
+  // UpcomingEvents.astro carry. Edit together or not at all.
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-base);
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition:
+      background-color var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+
+    &:focus {
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+
+    &--primary {
+      background-color: var(--color-gray-900);
+      color: var(--color-white);
+
+      &:hover {
+        background-color: var(--color-gray-800);
+      }
+    }
+
+    &--outline {
+      background-color: transparent;
+      color: var(--color-gray-900);
+      border: 1px solid var(--color-hairline-strong);
+
+      &:hover {
+        background-color: var(--color-gray-900);
+        color: var(--color-white);
+        border-color: var(--color-gray-900);
+      }
+    }
+  }
+
+  .btn__icon {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+</style>
