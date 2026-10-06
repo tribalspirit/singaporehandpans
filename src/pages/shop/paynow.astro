@@ -1,0 +1,390 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  isShopEnabled,
+  isHitpayShop,
+  fetchProductBySlug,
+} from '../../lib/shop';
+import {
+  readPayNowPayee,
+  buildPayNowPayload,
+  isValidPayNowReference,
+} from '../../lib/paynow';
+import { renderQrSvg } from '../../lib/qrSvg';
+import { verifyOrderToken, tokenExpiry } from '../../lib/orderToken';
+import { formatSgd } from '../../lib/cardSurcharge';
+
+// Rendered live and never cached: every buyer sees their own reference, and a
+// cached copy would show one buyer's order to the next.
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', 'no-store');
+// The page carries an order reference; it has no business in a search index.
+Astro.response.headers.set('X-Robots-Tag', 'noindex');
+// The query string carries a bearer token. Without this, every external
+// request the page makes — a font, a CMS image — hands the whole URL to a
+// third party in the Referer header.
+Astro.response.headers.set('Referrer-Policy', 'no-referrer');
+
+if (!isShopEnabled() || !isHitpayShop()) {
+  return Astro.redirect('/404');
+}
+
+const env = (Astro.locals.runtime?.env ?? {}) as Record<
+  string,
+  string | undefined
+>;
+/*
+ * Only the payee is needed here, not the gate on whether new orders may be
+ * taken. The signed token below proves the owner was notified when this order
+ * was raised, so requiring email configuration again would break an
+ * already-issued payment link — and the recovery link in the owner's own
+ * notification — during exactly the email incident that broke it.
+ */
+const paynow = readPayNowPayee(env);
+if (!paynow) {
+  return Astro.redirect('/shop/');
+}
+
+const slug = Astro.url.searchParams.get('slug') ?? '';
+const reference = Astro.url.searchParams.get('reference') ?? '';
+const token = Astro.url.searchParams.get('t') ?? '';
+
+// The page is reachable by URL, so every input is treated as untrusted. A bad
+// reference would otherwise be encoded straight into the QR payload.
+if (!/^[a-z0-9-]{1,120}$/.test(slug) || !isValidPayNowReference(reference)) {
+  return Astro.redirect('/shop/');
+}
+
+// The amount comes from published CMS content, not the URL — the same rule the
+// checkout endpoints follow, so a crafted link cannot alter the sum requested.
+const storyblokToken = env.STORYBLOK_TOKEN ?? import.meta.env.STORYBLOK_TOKEN;
+const product = await fetchProductBySlug(slug, storyblokToken);
+if (!product || product.priceMin.amount <= 0) {
+  return Astro.redirect('/shop/');
+}
+
+/*
+ * Stock is rechecked here, not just when the order was raised. The token is
+ * good for seven days, and these are one-off instruments: if the handpan sold
+ * in the meantime, an unchecked revisit would still render a payable QR and a
+ * buyer could transfer thousands for something already gone.
+ *
+ * Sent back to the product page rather than the shop index, because that page
+ * already explains the situation for ?checkout=unavailable.
+ */
+if (!product.availableForSale) {
+  return Astro.redirect(
+    `/shop/product/${encodeURIComponent(slug)}/?checkout=unavailable`
+  );
+}
+
+/*
+ * Syntactically valid parameters are not an order. Without this check anyone
+ * could construct a payable QR for any product under any reference, and the
+ * owner would never have been told the order exists — so a buyer could
+ * transfer thousands against a reference the studio cannot match to anything.
+ * The signature is minted only by /api/shop/paynow, after it has notified the
+ * owner. Signing the amount too means a price change since the order fails
+ * closed rather than showing a different sum than the buyer was emailed.
+ */
+const signingSecret = env.HITPAY_SALT ?? import.meta.env.HITPAY_SALT;
+const amountCents = Math.round(product.priceMin.amount * 100);
+const isGenuineOrder = await verifyOrderToken(signingSecret ?? '', token, {
+  slug,
+  reference,
+  amountCents,
+});
+if (!isGenuineOrder) {
+  return Astro.redirect('/shop/');
+}
+
+const amount = product.priceMin.amount;
+const amountLabel = formatSgd(amount);
+/*
+ * The QR carries the order's own expiry, so a screenshot stops being payable
+ * when the order does. None of the checks above — the signed URL, the stock
+ * recheck — reach a saved image; only a field inside the payload does.
+ */
+const expiresAt = tokenExpiry(token) ?? undefined;
+const payload = buildPayNowPayload({
+  config: paynow,
+  amount,
+  reference,
+  expiresAt,
+});
+
+/*
+ * Shown with the manual details as well as encoded in the QR. A transfer
+ * typed straight into a banking app carries no expiry for the bank to
+ * enforce — a UEN is payable by anyone, forever, and no amount of code
+ * changes that. Stating the date sets the buyer's expectation; the owner
+ * reconciling before shipping, and refunding anything late or unmatched, is
+ * the actual control.
+ */
+const payByLabel = expiresAt
+  ? new Intl.DateTimeFormat('en-SG', {
+      dateStyle: 'medium',
+      timeZone: 'Asia/Singapore',
+    }).format(new Date(expiresAt))
+  : null;
+const qrSvg = renderQrSvg(payload, {
+  title: `PayNow QR code for ${amountLabel}, reference ${reference}`,
+});
+const proxyLabel = paynow.proxyType === 'uen' ? 'UEN' : 'Mobile';
+---
+
+<BaseLayout
+  title="Complete your payment with PayNow"
+  description="PayNow payment details for your Singapore Handpan Studio order."
+  noindex
+  noAnalytics
+>
+  <div class="paynow-page">
+    <section class="paynow-section">
+      <div class="container">
+        <div class="paynow-card">
+          <p class="paynow-eyebrow">Order {reference}</p>
+          <h1 class="paynow-title">Scan to pay by PayNow</h1>
+          <p class="paynow-lede">
+            {product.title} — your order is reserved once we see the transfer.
+          </p>
+
+          <div class="paynow-amount">
+            <span class="paynow-amount__label">Amount</span>
+            <span class="paynow-amount__value">{amountLabel}</span>
+          </div>
+
+          <div class="paynow-qr" set:html={qrSvg} />
+
+          <p class="paynow-qr-note">
+            Open your banking app, choose <strong>Scan &amp; Pay</strong>, and
+            scan this code. The amount and reference are already filled in.
+          </p>
+
+          <div class="paynow-manual">
+            <p class="paynow-manual__title">Or enter the details by hand</p>
+            <dl class="paynow-manual__list">
+              <div>
+                <dt>{proxyLabel}</dt>
+                <dd>{paynow.proxyValue}</dd>
+              </div>
+              <div>
+                <dt>Payee</dt>
+                <dd>{paynow.merchantName}</dd>
+              </div>
+              <div>
+                <dt>Amount</dt>
+                <dd>{amountLabel}</dd>
+              </div>
+              <div>
+                <dt>Reference</dt>
+                <dd>{reference}</dd>
+              </div>
+              {
+                payByLabel && (
+                  <div>
+                    <dt>Pay by</dt>
+                    <dd>{payByLabel}</dd>
+                  </div>
+                )
+              }
+            </dl>
+            <p class="paynow-manual__warning">
+              Please include the reference — it is how we match your transfer to
+              your order.
+            </p>
+          </div>
+
+          <div class="paynow-next">
+            <h2 class="paynow-next__title">What happens next</h2>
+            <ol class="paynow-next__steps">
+              <li>
+                <strong>Pay before you close this page.</strong> We do not email these
+                details, so the reference above is only here — if you lose it, just
+                place the order again.
+              </li>
+              <li>
+                We check for your transfer and email you to arrange collection
+                or delivery. Bank transfers usually arrive within minutes.
+              </li>
+              <li>
+                Nothing is charged automatically — no card is involved and no
+                payment is taken until you send the transfer yourself.
+              </li>
+            </ol>
+          </div>
+
+          <a class="paynow-back" href="/shop/">Back to the shop</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style lang="scss">
+  .paynow-page {
+    background: var(--color-gray-50);
+  }
+
+  .paynow-section {
+    width: 100%;
+    padding: var(--space-16) 0;
+  }
+
+  // Narrow measure belongs to the card, not `.container` — that class is
+  // shared site-wide and overriding it shifts the gutter on other routes.
+  .paynow-card {
+    max-width: 640px;
+    margin: 0 auto;
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-10) var(--space-8);
+    text-align: center;
+  }
+
+  .paynow-eyebrow {
+    font-size: var(--font-size-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-gray-500);
+    margin: 0 0 var(--space-2);
+  }
+
+  .paynow-title {
+    margin: 0 0 var(--space-3);
+  }
+
+  .paynow-lede {
+    color: var(--color-gray-600);
+    margin: 0 0 var(--space-6);
+  }
+
+  .paynow-amount {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-6);
+
+    &__label {
+      font-size: var(--font-size-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-gray-500);
+    }
+
+    &__value {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .paynow-qr {
+    // A fixed, generous size: this is photographed by a second phone held over
+    // the screen, and a small code fails to scan far more often than a large one.
+    width: min(260px, 70vw);
+    margin: 0 auto var(--space-4);
+
+    :global(svg) {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius-sm);
+    }
+  }
+
+  .paynow-qr-note {
+    color: var(--color-gray-600);
+    font-size: var(--font-size-sm);
+    margin: 0 0 var(--space-8);
+  }
+
+  .paynow-manual {
+    text-align: left;
+    background: var(--color-gray-50);
+    border-radius: var(--radius-md);
+    padding: var(--space-5) var(--space-6);
+    margin-bottom: var(--space-8);
+
+    &__title {
+      font-weight: var(--font-weight-semibold);
+      margin: 0 0 var(--space-4);
+    }
+
+    &__list {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+
+      div {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-4);
+        align-items: baseline;
+      }
+
+      dt {
+        color: var(--color-gray-600);
+        font-size: var(--font-size-sm);
+      }
+
+      dd {
+        margin: 0;
+        font-weight: var(--font-weight-semibold);
+        text-align: right;
+        // References and UENs are strings to copy exactly; a proportional
+        // font makes 0/O and 1/l ambiguous.
+        font-family: var(--font-family-mono);
+        word-break: break-all;
+      }
+    }
+
+    &__warning {
+      margin: var(--space-4) 0 0;
+      font-size: var(--font-size-sm);
+      color: var(--color-gray-700);
+    }
+  }
+
+  .paynow-next {
+    text-align: left;
+    margin-bottom: var(--space-8);
+
+    &__title {
+      font-size: var(--font-size-lg);
+      margin: 0 0 var(--space-3);
+    }
+
+    &__steps {
+      margin: 0;
+      padding-left: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      color: var(--color-gray-700);
+      font-size: var(--font-size-sm);
+    }
+  }
+
+  .paynow-back {
+    display: inline-block;
+    font-weight: var(--font-weight-semibold);
+  }
+
+  @media (max-width: 640px) {
+    .paynow-card {
+      padding: var(--space-8) var(--space-5);
+    }
+
+    .paynow-manual__list div {
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .paynow-manual__list dd {
+      text-align: left;
+    }
+  }
+</style>

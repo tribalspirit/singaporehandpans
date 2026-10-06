@@ -165,11 +165,65 @@ until a HitPay order has been tested end to end on preview.
 #### Order notifications — not yet configured
 
 `RESEND_API_KEY`, `SHOP_EMAIL_FROM` and `SHOP_ORDER_EMAIL` are unset in both
-environments. Until all three exist, a paid order is verified and acknowledged
-by the webhook but **nobody is emailed**. Orders are not persisted anywhere, so
-the HitPay dashboard would be the only record. `SHOP_EMAIL_FROM` must be on a
-domain verified in Resend. These are runtime secrets — set them the same way as
-the HitPay values above.
+environments. Until all three exist:
+
+- a paid HitPay order is verified and acknowledged by the webhook but **nobody
+  is emailed**, and orders are not persisted, so the HitPay dashboard is the
+  only record; and
+- **direct PayNow stays switched off**, because a bank transfer has no webhook
+  and the owner's inbox would be the only record that the order exists at all.
+
+`SHOP_EMAIL_FROM` must be on a domain verified in Resend. These are runtime
+secrets — set them the same way as the HitPay values above.
+
+#### Direct PayNow (optional)
+
+Lets a buyer pay by bank transfer straight to the studio's own PayNow, which
+costs nothing, rather than through HitPay at 0.65% + S$0.30. Requires the three
+Resend values above **and** all three of:
+
+| Variable               | Value                                                      |
+| ---------------------- | ---------------------------------------------------------- |
+| `PAYNOW_PROXY_TYPE`    | `uen` or `mobile`                                          |
+| `PAYNOW_PROXY_VALUE`   | the UEN (e.g. `201912345K`) or mobile (e.g. `+6591234567`) |
+| `PAYNOW_MERCHANT_NAME` | shown to the payer; truncated at 25 characters by EMVCo    |
+
+```bash
+wrangler pages secret put PAYNOW_PROXY_TYPE --project-name=singaporehandpans --env=preview
+wrangler pages secret put PAYNOW_PROXY_VALUE --project-name=singaporehandpans --env=preview
+wrangler pages secret put PAYNOW_MERCHANT_NAME --project-name=singaporehandpans --env=preview
+```
+
+**Switching this on changes the prices shown.** With it off, the shop offers a
+single HitPay checkout carrying both PayNow and card, at the list price. With
+it on, the product page offers two prices — PayNow at the list price, and card
+at list + 2.8% + S$0.50 — and the HitPay checkout is restricted to cards, so a
+buyer quoted the surcharge cannot then pick a cheaper method on HitPay's page.
+
+**A WAF rate-limit rule on `/api/shop/*` is a prerequisite, not a nicety.**
+The order endpoint sends mail through the studio's Resend account, so without
+a rate limit a script can exhaust the quota and flood the owner's inbox. The
+endpoints require a matching `Origin` header, which turns away the simplest
+abuse, but `Origin` is trivially spoofed and is a speed bump rather than a
+control. Add the rule in Cloudflare → Security → WAF → Rate limiting rules
+before switching PayNow on.
+
+Mail is only ever sent to the studio's own address. Nothing is sent to the
+address submitted with an order, so the endpoint cannot be pointed at a third
+party and the domain's sending reputation is not exposed.
+
+Two things to be aware of before enabling it:
+
+- **Reconciliation is manual.** Nothing confirms a bank transfer. The buyer is
+  shown a reference, both sides are emailed, and the owner matches the transfer
+  in their bank by hand before shipping. The owner's email says in capitals that
+  the money is _not_ confirmed, precisely because nothing else will say so.
+- **The surcharge is a card surcharge.** Singapore has no law against it, but
+  Visa prohibits surcharging outside the US absent local law requiring it be
+  allowed, and acquirer and gateway merchant terms commonly forbid it. The
+  alternative with the same economics and no such exposure is to present it as
+  a PayNow _discount_ off a card-inclusive list price. The rate lives in
+  `src/lib/cardSurcharge.ts`.
 
 #### Webhook
 

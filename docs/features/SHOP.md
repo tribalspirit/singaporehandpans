@@ -11,7 +11,8 @@ add native PayNow support.
 - Products and collections are Storyblok stories, editable without deploys
 - Product grid with search and filtering (brand, category, price, availability)
 - Product detail pages at `/shop/product/{slug}/` with a "Buy now" form
-- Checkout redirects to HitPay's hosted payment page; no card data on-site
+- Two ways to pay, depending on configuration (see **Payment options**)
+- Card checkout redirects to HitPay's hosted page; no card data on-site
 - Payment confirmation arrives via an HMAC-signed webhook that emails the
   shop owner (Resend); orders are not stored in a database — the inbox and
   the HitPay dashboard are the record
@@ -40,17 +41,22 @@ HitPay hosted checkout (PayNow QR / cards)
 
 Key files:
 
-| File                                        | Role                                               |
-| ------------------------------------------- | -------------------------------------------------- |
-| `src/lib/shopClient.ts`                     | Storyblok-backed catalog fetchers + transforms     |
-| `src/lib/hitpay.ts`                         | Payment request creation, webhook signature verify |
-| `src/lib/orderEmail.ts`                     | Owner notification via Resend REST API             |
-| `src/pages/shop/product/[slug].astro`       | Product page with Buy form                         |
-| `src/pages/api/shop/checkout.ts`            | Creates the HitPay payment, redirects              |
-| `src/pages/api/shop/hitpay-webhook.ts`      | Confirms payment, sends email                      |
-| `src/pages/shop/thank-you.astro`            | Post-payment status page (no-store)                |
-| `storyblok/components/product.json`         | Product content-type schema                        |
-| `storyblok/components/shop_collection.json` | Collection content-type schema                     |
+| File                                        | Role                                                |
+| ------------------------------------------- | --------------------------------------------------- |
+| `src/lib/shopClient.ts`                     | Storyblok-backed catalog fetchers + transforms      |
+| `src/lib/hitpay.ts`                         | Payment request creation, webhook signature verify  |
+| `src/lib/orderEmail.ts`                     | Owner and buyer notifications via Resend REST API   |
+| `src/lib/paynow.ts`                         | EMVCo PayNow QR payload, and the PayNow config gate |
+| `src/lib/qrSvg.ts`                          | Server-rendered QR as inline SVG                    |
+| `src/lib/cardSurcharge.ts`                  | Card surcharge arithmetic, in integer cents         |
+| `src/pages/api/shop/paynow.ts`              | Raises a PayNow order and notifies both sides       |
+| `src/pages/shop/paynow.astro`               | PayNow QR and payment instructions                  |
+| `src/pages/shop/product/[slug].astro`       | Product page with Buy form                          |
+| `src/pages/api/shop/checkout.ts`            | Creates the HitPay payment, redirects               |
+| `src/pages/api/shop/hitpay-webhook.ts`      | Confirms payment, sends email                       |
+| `src/pages/shop/thank-you.astro`            | Post-payment status page (no-store)                 |
+| `storyblok/components/product.json`         | Product content-type schema                         |
+| `storyblok/components/shop_collection.json` | Collection content-type schema                      |
 
 ## Configuration
 
@@ -113,6 +119,137 @@ navigation, `/shop`, product pages, thank-you and the checkout API return
 4. The webhook URL is passed per payment request
    (`/api/shop/hitpay-webhook`) — no dashboard webhook config is needed for
    the checkout flow.
+
+## Payment options
+
+Which options appear depends on whether direct PayNow is configured
+(`PAYNOW_PROXY_*` plus the Resend variables — see `.dev.vars.example`).
+
+**PayNow not configured** — the original behaviour. One "Buy now" button posts
+to `/api/shop/checkout`, which creates a HitPay payment request offering both
+PayNow and card. The buyer pays the list price; the studio absorbs HitPay's fee.
+
+**PayNow configured** — the product page shows two submit buttons on one form,
+each with its own `formaction`, so no JavaScript and no duplicated fields:
+
+| Option | Endpoint             | Buyer pays           | Costs the studio |
+| ------ | -------------------- | -------------------- | ---------------- |
+| PayNow | `/api/shop/paynow`   | list price           | nothing          |
+| Card   | `/api/shop/checkout` | list + 2.8% + S$0.50 | 2.8% + S$0.50    |
+
+The HitPay request is then restricted to `payment_methods: ['card']`. Without
+that, a buyer quoted the card surcharge could pick PayNow on HitPay's own page
+and be overcharged for a method that costs the studio 0.65%.
+
+### Both lanes require a signed price quote
+
+The surcharge cannot be decided from runtime configuration alone, and it
+cannot be decided from an unsigned form field either.
+
+Product pages are edge-cached for five minutes, so just after PayNow is turned
+on a cached page still shows the old combined checkout at the list price;
+surcharging that submission would charge more than the page disclosed. But a
+plain `method=card` marker does not fix it, because a buyer can simply delete
+the field — and falling back to an unrestricted checkout hands them the list
+price _with a card_, which is precisely the fee the surcharge exists to pass
+on.
+
+So the page mints a signed quote (`mintPriceQuote`) naming the product, the
+lane and the amount displayed, and both endpoints refuse to proceed without a
+valid one. A stale page is refused rather than charged either price; reloading
+mints a fresh quote. Copying a genuine quote out of the page HTML gains
+nothing, since it only authorises that lane at that amount for that product.
+
+PayNow needs the same proof even though it is not surcharged: without it, a
+price rise in the CMS would let the endpoint mint an order — and a QR, and an
+owner notification — for an amount the buyer never saw.
+
+### Why the surcharge only appears alongside PayNow
+
+Surcharging is only defensible when the buyer had a free alternative. With no
+direct PayNow, suppressing HitPay's PayNow to make the surcharge honest would
+remove the cheapest method the studio has, so the surcharge is simply not
+applied. Both behaviours live in one conditional in `checkout.ts`.
+
+The percentage is **grossed up**, not simply added: HitPay charges its fee on
+the amount presented to it, so `base + base * rate + flat` leaves the studio
+short — charge S$3,906.90 and HitPay takes S$109.89, netting S$3,797.01 against
+a S$3,800 list price. Solving `total - (total * rate + flat) = base` gives
+S$3,909.98, on which the studio nets exactly S$3,800. A test asserts that round
+trip rather than trusting the formula.
+
+The rate is HitPay's published online **domestic** card rate. An
+internationally issued card costs 3.65% + S$0.50, so the studio absorbs roughly
+0.85% on those; the shop sells domestically and the issuing country is unknown
+at the time the price is quoted. The figures live in `src/lib/cardSurcharge.ts`
+and the buyer-facing wording is derived from them, so prose cannot drift from
+the arithmetic.
+
+Card surcharging is legal in Singapore but is commonly prohibited by card
+network and acquirer merchant terms. Presenting the same difference as a PayNow
+discount off a card-inclusive list price carries the same economics without
+that exposure.
+
+### Direct PayNow flow
+
+```text
+/api/shop/paynow  ── re-reads price and stock from Storyblok
+        │ mints SHP-XXXXXXXXXX + a signed token, emails the owner
+        ▼
+/shop/paynow/?slug=…&reference=…&t=<signature>
+        │ rebuilds the amount from the CMS, never from the URL
+        ▼
+EMVCo PayNow QR (src/lib/paynow.ts) rendered as inline SVG (src/lib/qrSvg.ts)
+```
+
+Mail goes only to the studio's own address; nothing is sent to the address
+submitted with the order. An endpoint that emails a buyer-supplied address can
+be pointed at anybody, which would spend the studio's Resend quota sending
+strangers unsolicited mail and damage the domain's sending reputation. The
+buyer's address reaches the owner inside the notification, as the reply-to, and
+the owner replies from there. The buyer keeps their reference from the page,
+which says so.
+
+Both shop POST endpoints require a matching `Origin` header rather than only
+checking it when present. That turns away trivially scripted submissions, but
+`Origin` is spoofable — a Cloudflare WAF rate-limit rule on `/api/shop/*` is
+the actual control and is a prerequisite for enabling PayNow.
+
+There is no webhook on a bank transfer, so nothing confirms payment. The owner
+reconciles against their bank by hand; the owner's email states in capitals
+that the money is unconfirmed. This is why `getPayNowConfig` refuses to return
+a configuration unless order email is also configured — an order nobody is told
+about would exist nowhere at all.
+
+The page is bound to a real order by a signed, expiring token
+(`src/lib/orderToken.ts`) that only the POST can mint. Without it the URL is
+just query parameters: anyone could construct a payable QR for any product
+under a reference the owner was never told about, and a buyer who edited the
+slug after ordering would see a QR for a different instrument than their
+reference was raised against. The amount is signed too, so a price change
+between ordering and paying fails closed instead of quietly showing a different
+sum than the buyer was emailed. Key material is derived from `HITPAY_SALT` with
+domain separation, so a page token cannot be confused with a webhook signature
+and no extra secret is needed.
+
+The QR page suppresses analytics and sends `Referrer-Policy: no-referrer`.
+Its URL carries an order reference and a seven-day bearer token, and a Google
+Analytics page view reports the full location — `noindex` speaks only to
+crawlers and does nothing about that.
+
+Availability is rechecked when the QR page renders, not only when the order
+was raised. The token is valid for seven days and these are one-off
+instruments, so without that check a buyer revisiting a signed link after the
+handpan sold would still be shown a payable QR.
+
+The QR carries the order's expiry, so a screenshot stops being payable when
+the order does. **The manual details cannot carry one.** A UEN is payable by
+anyone, forever — that is what a bank transfer is, and no code changes it. The
+page states the pay-by date to set expectations, but the control is the owner
+reconciling before shipping and refunding anything late or unmatched.
+
+The QR locks the amount and is marked single-use, and the reference is
+restricted to characters a bank reference field preserves intact.
 
 ## Security Notes
 

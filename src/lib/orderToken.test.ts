@@ -1,0 +1,196 @@
+import { describe, expect, test } from 'vitest';
+import {
+  mintOrderToken,
+  verifyOrderToken,
+  mintPriceQuote,
+  verifyPriceQuote,
+  ORDER_TOKEN_TTL_MS,
+  CARD_QUOTE_TTL_MS,
+  type OrderTokenFields,
+} from './orderToken';
+
+const SECRET = 'test-salt-abc';
+const FIELDS: OrderTokenFields = {
+  slug: 'handpan-d-kurd-10-notes-by-mag-instruments',
+  reference: 'SHP-ABC1234567',
+  amountCents: 380000,
+};
+const NOW = 1_700_000_000_000;
+
+describe('order tokens', () => {
+  test('a freshly minted token verifies', async () => {
+    const token = await mintOrderToken(SECRET, FIELDS, NOW);
+    expect(await verifyOrderToken(SECRET, token, FIELDS, NOW + 1000)).toBe(
+      true
+    );
+  });
+
+  test('rejects a token for a different product', async () => {
+    // The attack this exists for: order a stand, then edit the slug to a
+    // handpan and be shown a QR the reference was never raised against.
+    const token = await mintOrderToken(SECRET, FIELDS, NOW);
+    expect(
+      await verifyOrderToken(
+        SECRET,
+        token,
+        { ...FIELDS, slug: 'handpan-d-aegean-18-by-mag-instruments' },
+        NOW
+      )
+    ).toBe(false);
+  });
+
+  test('rejects a token for a different reference or amount', async () => {
+    const token = await mintOrderToken(SECRET, FIELDS, NOW);
+    expect(
+      await verifyOrderToken(
+        SECRET,
+        token,
+        { ...FIELDS, reference: 'SHP-OTHER' },
+        NOW
+      )
+    ).toBe(false);
+    expect(
+      await verifyOrderToken(
+        SECRET,
+        token,
+        { ...FIELDS, amountCents: 100 },
+        NOW
+      )
+    ).toBe(false);
+  });
+
+  test('rejects a token minted with another secret', async () => {
+    const token = await mintOrderToken('someone-elses-salt', FIELDS, NOW);
+    expect(await verifyOrderToken(SECRET, token, FIELDS, NOW)).toBe(false);
+  });
+
+  test('expires', async () => {
+    const token = await mintOrderToken(SECRET, FIELDS, NOW);
+    expect(
+      await verifyOrderToken(
+        SECRET,
+        token,
+        FIELDS,
+        NOW + ORDER_TOKEN_TTL_MS - 1
+      )
+    ).toBe(true);
+    expect(
+      await verifyOrderToken(
+        SECRET,
+        token,
+        FIELDS,
+        NOW + ORDER_TOKEN_TTL_MS + 1
+      )
+    ).toBe(false);
+  });
+
+  test('an extended expiry does not validate against the original signature', async () => {
+    const token = await mintOrderToken(SECRET, FIELDS, NOW);
+    const signature = token.slice(token.indexOf('.') + 1);
+    const forged = `${NOW + ORDER_TOKEN_TTL_MS * 10}.${signature}`;
+    // The expiry is inside the signed message, so moving it invalidates it.
+    expect(await verifyOrderToken(SECRET, forged, FIELDS, NOW)).toBe(false);
+  });
+
+  test('field boundaries cannot be shifted between slug and reference', async () => {
+    // Length-prefixing stops "ab" + "c" signing the same message as "a" + "bc".
+    const a = await mintOrderToken(
+      SECRET,
+      { slug: 'ab', reference: 'c', amountCents: 1 },
+      NOW
+    );
+    expect(
+      await verifyOrderToken(
+        SECRET,
+        a,
+        { slug: 'a', reference: 'bc', amountCents: 1 },
+        NOW
+      )
+    ).toBe(false);
+  });
+
+  test('returns false rather than throwing on malformed input', async () => {
+    for (const bad of [
+      '',
+      '.',
+      'abc',
+      'notanumber.deadbeef',
+      `${NOW + 1000}.xyz`,
+    ]) {
+      expect(await verifyOrderToken(SECRET, bad, FIELDS, NOW)).toBe(false);
+    }
+  });
+
+  test('refuses to verify when no secret is configured', async () => {
+    const token = await mintOrderToken(SECRET, FIELDS, NOW);
+    expect(await verifyOrderToken('', token, FIELDS, NOW)).toBe(false);
+  });
+
+  test('refuses to mint without a secret', async () => {
+    await expect(mintOrderToken('', FIELDS, NOW)).rejects.toThrow(/secret/i);
+  });
+});
+
+describe('price quotes', () => {
+  const QUOTE = {
+    slug: 'handpan-d-kurd-10',
+    reference: 'card',
+    amountCents: 390998,
+  };
+
+  test('a minted quote verifies', async () => {
+    const q = await mintPriceQuote(SECRET, QUOTE, NOW);
+    expect(await verifyPriceQuote(SECRET, q, QUOTE, NOW + 1000)).toBe(true);
+  });
+
+  test('a card quote cannot be spent on the PayNow lane', async () => {
+    // The lane is in the signed message, so the cheaper unsurcharged quote
+    // and the surcharged one are not interchangeable.
+    const card = await mintPriceQuote(SECRET, QUOTE, NOW);
+    expect(
+      await verifyPriceQuote(
+        SECRET,
+        card,
+        { ...QUOTE, reference: 'paynow' },
+        NOW
+      )
+    ).toBe(false);
+  });
+
+  test('a quote is not an order token, and an order token is not a quote', async () => {
+    // Separate derivation contexts, so neither can be replayed as the other.
+    const quote = await mintPriceQuote(SECRET, QUOTE, NOW);
+    const order = await mintOrderToken(SECRET, QUOTE, NOW);
+    expect(await verifyOrderToken(SECRET, quote, QUOTE, NOW)).toBe(false);
+    expect(await verifyPriceQuote(SECRET, order, QUOTE, NOW)).toBe(false);
+  });
+
+  test('a quote does not transfer to another product or another total', async () => {
+    const q = await mintPriceQuote(SECRET, QUOTE, NOW);
+    expect(
+      await verifyPriceQuote(
+        SECRET,
+        q,
+        { ...QUOTE, slug: 'handpan-d-aegean-18' },
+        NOW
+      )
+    ).toBe(false);
+    expect(
+      await verifyPriceQuote(SECRET, q, { ...QUOTE, amountCents: 380000 }, NOW)
+    ).toBe(false);
+  });
+
+  test('outlives the page cache but not forever', async () => {
+    const q = await mintPriceQuote(SECRET, QUOTE, NOW);
+    // Product pages are edge-cached for 300s; a quote must comfortably exceed it.
+    expect(await verifyPriceQuote(SECRET, q, QUOTE, NOW + 600_000)).toBe(true);
+    expect(
+      await verifyPriceQuote(SECRET, q, QUOTE, NOW + CARD_QUOTE_TTL_MS + 1)
+    ).toBe(false);
+  });
+
+  test('an absent quote is not valid, which is the bypass this closes', async () => {
+    // Deleting the field must not fall through to a cheaper card checkout.
+    expect(await verifyPriceQuote(SECRET, '', QUOTE, NOW)).toBe(false);
+  });
+});
