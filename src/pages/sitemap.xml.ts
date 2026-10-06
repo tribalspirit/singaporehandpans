@@ -22,6 +22,7 @@ const STATIC_PAGES: { path: string; changefreq: string; priority: number }[] = [
   { path: '/stories/', changefreq: 'weekly', priority: 0.8 },
   { path: '/shop/', changefreq: 'weekly', priority: 0.9 },
   { path: '/contacts/', changefreq: 'monthly', priority: 0.7 },
+  { path: '/reviews/', changefreq: 'monthly', priority: 0.6 },
 ];
 
 function urlEntry(loc: string, changefreq: string, priority: number): string {

@@ -1,0 +1,94 @@
+---
+/**
+ * A five-star row. Shared by the homepage widget and `/reviews/`, which is the
+ * only markup those two surfaces genuinely have in common — the quote blocks
+ * are styled too differently to share.
+ *
+ * The stars are decorative: `role="img"` plus the spelled-out label is what a
+ * screen reader announces, so the rating never depends on counting glyphs.
+ * A fractional aggregate (4.9) fills to the nearest whole star and lets the
+ * numeral beside it carry the precision; a half-star clip would imply a
+ * precision the glyph cannot actually show.
+ */
+import { reviewStarLabel } from '../../lib/reviews';
+
+export interface Props {
+  rating: number;
+  /** `sm` for a review's own row, `lg` for the studio-wide rating block. */
+  size?: 'sm' | 'lg';
+  class?: string;
+}
+
+const { rating, size = 'sm', class: className = '' } = Astro.props;
+
+const TOTAL_STARS = 5;
+const filled = Math.round(rating);
+
+const STAR_PATH =
+  'M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z';
+---
+
+<span
+  class:list={['stars', `stars--${size}`, className]}
+  role="img"
+  aria-label={reviewStarLabel(rating)}
+>
+  {
+    Array.from({ length: TOTAL_STARS }, (_, index) => (
+      <svg
+        class:list={['stars__star', index < filled && 'stars__star--filled']}
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d={STAR_PATH} />
+      </svg>
+    ))
+  }
+</span>
+
+<style lang="scss">
+  .stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15em;
+    /*
+     * Bronze, not brass. Brass looked better against the paper, but it measures
+     * 2.2:1 on white and 1.66:1 on the sand band — WCAG 2.1 SC 1.4.11 wants 3:1
+     * for a graphic that carries meaning, and beside an individual review there
+     * is no numeral to fall back on, so the stars are the only thing stating
+     * that review's rating. Bronze holds 5.8:1 and 4.4:1 respectively.
+     */
+    color: var(--color-primary);
+  }
+
+  .stars--sm {
+    font-size: var(--font-size-sm);
+  }
+
+  .stars--lg {
+    font-size: var(--font-size-xl);
+  }
+
+  .stars__star {
+    // em units so a row scales with the `--size` font-size alone
+    width: 1em;
+    height: 1em;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+  }
+
+  .stars__star--filled {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  // An outlined star against a high-contrast ground would otherwise vanish
+  @media (prefers-contrast: high) {
+    .stars {
+      color: var(--color-primary);
+    }
+  }
+</style>
