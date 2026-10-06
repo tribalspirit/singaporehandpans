@@ -108,8 +108,16 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
         </div>
 
         <div class="reviews__cta">
+          {/*
+           * Not "Read all 52 reviews". `/reviews/` carries the five that are
+           * published in full, not the whole listing — the count belongs to
+           * Google, and promising it here would send every visitor to a page
+           * whose own first line admits it shows five of them. The 52 is
+           * already stated in the score caption above, and the Google link
+           * that does reach all of them lives on `/reviews/` itself.
+           */}
           <a href="/reviews/" class="reviews__cta-link">
-            Read all {summary.count} reviews
+            Read more reviews
             <svg
               class="reviews__cta-icon"
               viewBox="0 0 24 24"
