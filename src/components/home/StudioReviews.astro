@@ -1,0 +1,403 @@
+---
+/**
+ * The homepage reviews widget: one lead quote, two supporting quotes, the
+ * studio-wide rating, and a link to the full set at `/reviews/`.
+ *
+ * Composition is deliberately asymmetric — a 1.35fr lead quote on white beside
+ * a narrower column of hairline-separated quotes on the band itself. Three
+ * equal cards would have been the obvious move and would have read as a
+ * template: nothing in it would say which review is worth reading first.
+ *
+ * No data fetch here. The reviews are a local module, so this component adds
+ * nothing to the homepage's request time.
+ */
+import StarRating from '../reviews/StarRating.astro';
+import {
+  STUDIO_REVIEWS,
+  GOOGLE_REVIEW_AGGREGATE,
+} from '../../constants/reviews';
+import {
+  selectFeaturedReviews,
+  summariseReviews,
+  excerptReviewText,
+  formatReviewMonth,
+} from '../../lib/reviews';
+
+/** One lead quote plus two supporting ones fills the band without crowding. */
+const WIDGET_REVIEWS = 3;
+
+/**
+ * Excerpt lengths, not line clamps — see `excerptReviewText` for why the cut is
+ * in the text rather than in CSS.
+ *
+ * Both values are tuned to the reviews actually in the file: at these lengths
+ * every current quote lands on a whole sentence rather than trailing off
+ * mid-clause. Re-check them when the featured three change.
+ */
+const LEAD_EXCERPT_CHARS = 300;
+const SUPPORTING_EXCERPT_CHARS = 260;
+
+const featured = selectFeaturedReviews(STUDIO_REVIEWS, WIDGET_REVIEWS);
+const summary = summariseReviews(STUDIO_REVIEWS, GOOGLE_REVIEW_AGGREGATE);
+
+const [lead, ...supporting] = featured;
+const leadMonth = lead ? formatReviewMonth(lead.date) : null;
+---
+
+{
+  lead && (
+    <section class="reviews" aria-labelledby="reviews-heading">
+      <div class="container">
+        <div class="reviews__masthead">
+          <div>
+            <span class="reviews__eyebrow" aria-hidden="true">
+              Reviews
+            </span>
+            <h2 id="reviews-heading" class="reviews__title">
+              What players say
+            </h2>
+          </div>
+
+          <div class="reviews__score">
+            <span class="reviews__score-value">{summary.ratingLabel}</span>
+            <StarRating rating={summary.rating} size="lg" />
+            <span class="reviews__score-caption">
+              {summary.count} Google reviews
+            </span>
+          </div>
+        </div>
+
+        <div class="reviews__layout">
+          <figure class="lead-quote">
+            <blockquote class="lead-quote__text">
+              <p>{excerptReviewText(lead.text, LEAD_EXCERPT_CHARS)}</p>
+            </blockquote>
+            <figcaption class="lead-quote__credit">
+              <StarRating rating={lead.rating} />
+              <cite class="lead-quote__author">{lead.author}</cite>
+              {leadMonth && <span class="lead-quote__date">{leadMonth}</span>}
+            </figcaption>
+          </figure>
+
+          {supporting.length > 0 && (
+            <ul class="reviews__supporting">
+              {supporting.map((review) => {
+                const month = formatReviewMonth(review.date);
+                return (
+                  <li>
+                    <figure class="quote">
+                      <blockquote class="quote__text">
+                        <p>
+                          {excerptReviewText(
+                            review.text,
+                            SUPPORTING_EXCERPT_CHARS
+                          )}
+                        </p>
+                      </blockquote>
+                      <figcaption class="quote__credit">
+                        <StarRating rating={review.rating} />
+                        <cite class="quote__author">{review.author}</cite>
+                        {month && <span class="quote__date">{month}</span>}
+                      </figcaption>
+                    </figure>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div class="reviews__cta">
+          {/*
+           * Not "Read all 52 reviews". `/reviews/` carries the five that are
+           * published in full, not the whole listing — the count belongs to
+           * Google, and promising it here would send every visitor to a page
+           * whose own first line admits it shows five of them. The 52 is
+           * already stated in the score caption above, and the Google link
+           * that does reach all of them lives on `/reviews/` itself.
+           */}
+          <a href="/reviews/" class="reviews__cta-link">
+            Read more reviews
+            <svg
+              class="reviews__cta-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<style lang="scss">
+  /*
+   * Sand, not paper or paper-deep. The homepage alternates gray-50 / gray-100
+   * band by band, and this section lands between services-preview (paper) and
+   * the CTA (paper-deep) — either of those values would have fused this band
+   * into a neighbour. Sand is already the palette's panel surface.
+   */
+  .reviews {
+    padding: var(--space-16) 0;
+    background-color: var(--color-gray-200);
+
+    // Matches the global `.section` rhythm (64/128px); this component does not
+    // carry the `.section` class, so the global rule cannot reach it.
+    @media (min-width: 768px) {
+      padding: var(--space-32) 0;
+    }
+  }
+
+  .reviews__masthead {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding-bottom: var(--space-8);
+    margin-bottom: var(--space-10);
+    border-bottom: 1px solid var(--color-hairline-strong);
+
+    // Title left, score right — the masthead device the rest of the site uses
+    @media (min-width: 768px) {
+      flex-direction: row;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-8);
+    }
+  }
+
+  .reviews__eyebrow {
+    display: block;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    // Deep bronze, not bronze: this band is sand, which is darker than the
+    // paper grounds `--color-primary` was tuned against — at 12px it measures
+    // 4.34:1 there, just under AA. Deep bronze gives 7.3:1.
+    color: var(--color-primary-dark);
+    margin-bottom: var(--space-3);
+  }
+
+  .reviews__title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-light);
+    color: var(--color-gray-900);
+    line-height: var(--line-height-tight);
+    margin: 0;
+  }
+
+  // The score is data, so it is set like the site's other data: a large light
+  // numeral over a mono caption.
+  .reviews__score {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+
+    @media (min-width: 768px) {
+      justify-content: flex-end;
+    }
+  }
+
+  .reviews__score-value {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-light);
+    line-height: 1;
+    color: var(--color-gray-900);
+  }
+
+  .reviews__score-caption {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-gray-600);
+
+    // Onto its own line under the numeral once there is room, so the caption
+    // reads as a caption rather than as a third item in a row
+    @media (min-width: 768px) {
+      flex-basis: 100%;
+      text-align: right;
+    }
+  }
+
+  .reviews__layout {
+    display: grid;
+    gap: var(--space-10);
+
+    @media (min-width: 1024px) {
+      grid-template-columns: 1.35fr 1fr;
+      gap: var(--space-12);
+      // Stretch, not start: the lead panel is the taller of the two, and the
+      // supporting column spreads to meet it rather than stopping two thirds
+      // of the way down and leaving a hole under the last quote.
+      align-items: stretch;
+    }
+  }
+
+  // The lead lifts off the band onto white with a hairline. The supporting
+  // quotes stay on the sand, which is the layering the section's hierarchy
+  // rests on — not a drop shadow, and not three identical cards.
+  .lead-quote {
+    position: relative;
+    margin: 0;
+    padding: var(--space-8) var(--space-6) var(--space-6);
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+
+    @media (min-width: 768px) {
+      padding: var(--space-10) var(--space-8) var(--space-8);
+    }
+
+    // Oversized brass quote mark, set behind the text. Atmosphere, and it marks
+    // the lead without needing a "featured" label.
+    &::before {
+      content: '\201C';
+      position: absolute;
+      top: -0.08em;
+      left: 0.1em;
+      font-family: var(--font-family-heading);
+      font-size: 7rem;
+      line-height: 1;
+      color: var(--color-primary-light);
+      opacity: 0.28;
+      pointer-events: none;
+      user-select: none;
+    }
+  }
+
+  .lead-quote__text {
+    position: relative;
+    margin: 0 0 var(--space-6);
+
+    p {
+      font-family: var(--font-family-heading);
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-light);
+      line-height: 1.5;
+      color: var(--color-gray-900);
+      margin: 0;
+
+      @media (min-width: 768px) {
+        font-size: var(--font-size-2xl);
+      }
+    }
+  }
+
+  .lead-quote__credit,
+  .quote__credit {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .lead-quote__author,
+  .quote__author {
+    font-style: normal; // `cite` italicises by default
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-900);
+  }
+
+  .lead-quote__date,
+  .quote__date {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    // gray-500 is documented in tokens.scss as 4.6:1 *on paper*; on this band's
+    // sand it drops to 3.69:1. gray-600 holds 5.5:1 on both grounds.
+    color: var(--color-gray-600);
+  }
+
+  .reviews__supporting {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-8);
+
+    // Hairline between the stacked quotes, not around each one
+    li + li {
+      border-top: 1px solid var(--color-hairline);
+      padding-top: var(--space-8);
+    }
+
+    @media (min-width: 1024px) {
+      // Fills the lead panel's height, so the two columns end together
+      align-content: space-between;
+    }
+  }
+
+  .quote {
+    margin: 0;
+  }
+
+  .quote__text {
+    margin: 0 0 var(--space-4);
+
+    p {
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-relaxed);
+      color: var(--color-gray-700);
+      margin: 0;
+    }
+  }
+
+  .reviews__cta {
+    margin-top: var(--space-10);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-hairline);
+  }
+
+  // The site's link pattern: a 1px rule that fades in, not a browser underline
+  // that snaps. See OurPartners `__cta-link`.
+  .reviews__cta-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    // Deep bronze for the same reason as the eyebrow: plain bronze is 4.34:1 on
+    // this band's sand, and at 16px that is normal-sized text needing 4.5:1.
+    // Hover then darkens to ink, since primary-dark is already the resting
+    // colour and a hover has to be visible.
+    color: var(--color-primary-dark);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-base);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition:
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+
+    &:hover {
+      color: var(--color-gray-900);
+      border-bottom-color: var(--color-gray-900);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  .reviews__cta-icon {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+</style>

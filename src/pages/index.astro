@@ -4,6 +4,7 @@ import HeroBackgroundCarousel from '../components/HeroBackgroundCarousel';
 import FeaturedProducts from '../components/home/FeaturedProducts.astro';
 import UpcomingEvents from '../components/home/UpcomingEvents.astro';
 import OurPartners from '../components/home/OurPartners.astro';
+import StudioReviews from '../components/home/StudioReviews.astro';
 import { setEdgeCache } from '../lib/edgeCache';
 
 export const prerender = false;
@@ -174,6 +175,9 @@ const description =
       </div>
     </div>
   </section>
+
+  <!-- Reviews (widget → /reviews/) -->
+  <StudioReviews />
 
   <!-- CTA Section -->
   <section class="section cta-section">
