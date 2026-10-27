@@ -3,8 +3,17 @@
  *
  * `PUBLIC_SHOP_IMPL` chooses which catalog/checkout implementation the /shop
  * surface uses:
- *   - 'shopify' (default): external Shopify Storefront API   [production]
- *   - 'hitpay':            Storyblok catalog + HitPay checkout [preview/dev]
+ *   - 'hitpay' (default): Storyblok catalog + HitPay checkout
+ *   - 'shopify':          the legacy Shopify Storefront API
+ *
+ * The default is `hitpay` because the Shopify account has been closed. While
+ * `shopify` was the default, production — which never set this variable —
+ * silently served an empty shop the moment that account went away: the
+ * Storefront API simply returns nothing, so every page rendered 200 with no
+ * products. Defaulting to the backend that actually has a catalog means an
+ * unset variable degrades to "works" rather than "quietly sells nothing".
+ *
+ * `shopify` is kept, and still selectable, in case the account is reopened.
  *
  * `PUBLIC_ENABLE_SHOP` remains the master on/off switch for the whole section.
  * Both are Astro `PUBLIC_*` vars, inlined at build time, so the choice is made
@@ -25,7 +34,7 @@ export type { ShopProduct, ShopCollection } from './shopTypes';
 export type ShopImpl = 'shopify' | 'hitpay';
 
 export const SHOP_IMPL: ShopImpl =
-  import.meta.env.PUBLIC_SHOP_IMPL === 'hitpay' ? 'hitpay' : 'shopify';
+  import.meta.env.PUBLIC_SHOP_IMPL === 'shopify' ? 'shopify' : 'hitpay';
 
 /** Master on/off switch for the entire shop section. */
 export function isShopEnabled(): boolean {
