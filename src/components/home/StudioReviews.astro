@@ -137,14 +137,20 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
 
 <style lang="scss">
   /*
-   * Sand, not paper or paper-deep. The homepage alternates gray-50 / gray-100
-   * band by band, and this section lands between services-preview (paper) and
-   * the CTA (paper-deep) — either of those values would have fused this band
-   * into a neighbour. Sand is already the palette's panel surface.
+   * Paper-deep. This was sand (gray-200), chosen only because it differed from
+   * both neighbours — but sand is DARKER than paper-deep, so the page ran
+   * paper → sand → paper-deep → ink footer: light, darkest, mid, black. The
+   * band read as a dip rather than a step, and it washed out the closing CTA,
+   * which is the one section that wants the strongest ground.
+   *
+   * Sand now goes to that CTA (see index.astro), so the page darkens
+   * monotonically into the footer. Sand was also only load-bearing because it
+   * had to make a white card pop; the card is gone, and a third tint used once
+   * on one section is a one-off, which is what templates are made of.
    */
   .reviews {
     padding: var(--space-16) 0;
-    background-color: var(--color-gray-200);
+    background-color: var(--color-gray-100);
 
     // Matches the global `.section` rhythm (64/128px); this component does not
     // carry the `.section` class, so the global rule cannot reach it.
@@ -177,10 +183,10 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
     font-weight: var(--font-weight-medium);
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    // Deep bronze, not bronze: this band is sand, which is darker than the
-    // paper grounds `--color-primary` was tuned against — at 12px it measures
-    // 4.34:1 there, just under AA. Deep bronze gives 7.3:1.
-    color: var(--color-primary-dark);
+    // Back to plain bronze now the band is paper-deep: 4.85:1 here, where on
+    // the old sand ground it was 4.34:1 and needed a one-off deep-bronze
+    // override. Every other eyebrow on the site is --color-primary.
+    color: var(--color-primary);
     margin-bottom: var(--space-3);
   }
 
@@ -242,42 +248,36 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
     @media (min-width: 1024px) {
       grid-template-columns: 1.35fr 1fr;
       gap: var(--space-12);
-      // Stretch, not start: the lead panel is the taller of the two, and the
-      // supporting column spreads to meet it rather than stopping two thirds
-      // of the way down and leaving a hole under the last quote.
-      align-items: stretch;
+      // Back to `start`. `stretch` existed to let the supporting column spread
+      // to the lead panel's height; with no panel there is no height to match,
+      // and both columns now just start at the top.
+      align-items: start;
     }
   }
 
   // The lead lifts off the band onto white with a hairline. The supporting
   // quotes stay on the sand, which is the layering the section's hierarchy
   // rests on — not a drop shadow, and not three identical cards.
+  /*
+   * A hairline and a type step, not a lifted panel.
+   *
+   * This was a white card on sand — a 1.33:1 surface jump, the largest on the
+   * homepage — with a radius, an outline and a 7rem quote mark parked in the
+   * corner at 28% opacity. Element for element that is the stock testimonial
+   * block, and the glyph was not "behind the first line" as intended: at
+   * top:-0.08em/left:0.1em it sat above and left of the text as a corner
+   * ornament, costing 112px of the card at 375px.
+   *
+   * The lead is now marked the way /reviews/ marks its opener — by size and a
+   * rule — which is also the separation device the rest of the site uses.
+   */
   .lead-quote {
-    position: relative;
     margin: 0;
-    padding: var(--space-8) var(--space-6) var(--space-6);
-    background: var(--color-white);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
+    padding-left: var(--space-6);
+    border-left: 1px solid var(--color-hairline-strong);
 
     @media (min-width: 768px) {
-      padding: var(--space-10) var(--space-8) var(--space-8);
-    }
-
-    // Oversized brass quote mark, set behind the text. Atmosphere, and it marks
-    // the lead without needing a "featured" label.
-    &::before {
-      content: '\201C';
-      position: absolute;
-      top: -0.08em;
-      left: 0.1em;
-      font-family: var(--font-family-heading);
-      font-size: 7rem;
-      line-height: 1;
-      color: var(--color-primary-light);
-      opacity: 0.28;
-      pointer-events: none;
-      user-select: none;
+      padding-left: var(--space-8);
     }
   }
 
@@ -321,8 +321,10 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
     font-size: var(--font-size-xs);
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    // gray-500 is documented in tokens.scss as 4.6:1 *on paper*; on this band's
-    // sand it drops to 3.69:1. gray-600 holds 5.5:1 on both grounds.
+    // Stays gray-600 after the move to paper-deep: gray-500 measures 4.12:1
+    // there, still short of the 4.5:1 this 12px text needs. (It is only 4.50:1
+    // even on plain paper — see the provenance line on /reviews/.) gray-600 is
+    // 6.1:1 here.
     color: var(--color-gray-600);
   }
 
@@ -339,10 +341,15 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
       padding-top: var(--space-8);
     }
 
-    @media (min-width: 1024px) {
-      // Fills the lead panel's height, so the two columns end together
-      align-content: space-between;
-    }
+    /*
+     * Deliberately NOT `align-content: space-between`. That stretched the gap
+     * between the two quotes to whatever was left over after the lead panel's
+     * height — 62px at 1440, and a different figure at every width and every
+     * change to the lead's line count. Space whose size is set by somebody
+     * else's content is a layout tell. The gap above is now fixed and the
+     * column simply ends where it ends; the band's closing hairline does the
+     * closing.
+     */
   }
 
   .quote {
@@ -381,11 +388,10 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
     align-items: center;
     gap: var(--space-2);
     min-height: 44px;
-    // Deep bronze for the same reason as the eyebrow: plain bronze is 4.34:1 on
-    // this band's sand, and at 16px that is normal-sized text needing 4.5:1.
-    // Hover then darkens to ink, since primary-dark is already the resting
-    // colour and a hover has to be visible.
-    color: var(--color-primary-dark);
+    // Bronze, with the site's standard bronze → deep-bronze hover restored:
+    // 4.85:1 on paper-deep, where the old sand ground forced this link to rest
+    // at deep bronze and hover to ink instead.
+    color: var(--color-primary);
     font-weight: var(--font-weight-medium);
     font-size: var(--font-size-base);
     text-decoration: none;
@@ -395,8 +401,8 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
       border-color var(--transition-fast);
 
     &:hover {
-      color: var(--color-gray-900);
-      border-bottom-color: var(--color-gray-900);
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary-dark);
     }
 
     &:focus-visible {
