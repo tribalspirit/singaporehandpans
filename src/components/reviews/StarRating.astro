@@ -53,11 +53,14 @@ const STAR_PATH =
     align-items: center;
     gap: 0.15em;
     /*
-     * Bronze, not brass. Brass looked better against the paper, but it measures
-     * 2.2:1 on white and 1.66:1 on the sand band — WCAG 2.1 SC 1.4.11 wants 3:1
-     * for a graphic that carries meaning, and beside an individual review there
-     * is no numeral to fall back on, so the stars are the only thing stating
-     * that review's rating. Bronze holds 5.8:1 and 4.4:1 respectively.
+     * Bronze, not brass. Brass looked better, but it measures 2.0:1 on paper
+     * and 1.85:1 on paper-deep — WCAG 2.1 SC 1.4.11 wants 3:1 for a graphic
+     * that carries meaning, and beside an individual review there is no numeral
+     * to fall back on, so the stars are the only thing stating that review's
+     * rating. Bronze holds 5.3:1 and 4.9:1 on those two grounds.
+     *
+     * (Re-measured when the widget moved off the sand band; brass failed there
+     * too, so this choice is independent of which paper tint it sits on.)
      */
     color: var(--color-primary);
   }

@@ -234,9 +234,20 @@ const updated = latestReviewMonth(STUDIO_REVIEWS);
     }
   }
 
+  /*
+   * Always one step below the h1, which means stepping WITH it: the title is
+   * 4xl below 768 and 5xl above, so a fixed size for this numeral ties with it
+   * at one end or the other. At a flat 5xl it matched the h1 from 768 up and
+   * beat it below; at a flat 4xl it still tied at 375. A page title should not
+   * have a peer at any width.
+   */
   .score__value {
     font-family: var(--font-family-heading);
-    font-size: var(--font-size-5xl);
+    font-size: var(--font-size-3xl);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-4xl);
+    }
     font-weight: var(--font-weight-light);
     line-height: 1;
     color: var(--color-gray-900);
@@ -264,7 +275,12 @@ const updated = latestReviewMonth(STUDIO_REVIEWS);
     font-size: var(--font-size-xs);
     line-height: var(--line-height-relaxed);
     letter-spacing: 0.04em;
-    color: var(--color-gray-500);
+    /*
+     * gray-600, not gray-500. tokens.scss advertises gray-500 as "4.6:1 on
+     * paper"; measured against this ground it is 4.502:1 — AA by two
+     * thousandths, so any drift in the paper tint fails it. gray-600 is 6.6:1.
+     */
+    color: var(--color-gray-600);
   }
 
   .provenance__link {
@@ -294,6 +310,25 @@ const updated = latestReviewMonth(STUDIO_REVIEWS);
     list-style: none;
     margin: 0;
     padding: 0;
+
+    /*
+     * The list admits its own width, so the hairlines end where the text ends.
+     *
+     * The rules sit on the `li`, which spanned the full 1176px container while
+     * the widest paragraph stopped 243px short of it at every desktop width —
+     * so each rule ran a quarter of its length past any content, and the block
+     * read as left-hugging inside a wider frame rather than as one measured
+     * column. The parts: the 13rem credit column, the grid gap, and the widest
+     * text measure (the opener's 58ch at --font-size-lg).
+     *
+     * The alternative — pulling the credit column out into the page margin so
+     * the text aligns with the h1 — needs a 248px shift into a gutter that is
+     * only 20px at 1280 and 100px at 1440. It fits at 1920 and nowhere people
+     * actually browse.
+     */
+    @media (min-width: 900px) {
+      max-width: calc(13rem + var(--space-10) + 43rem);
+    }
   }
 
   /*
@@ -368,6 +403,17 @@ const updated = latestReviewMonth(STUDIO_REVIEWS);
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2) var(--space-3);
+    /*
+     * Above the quote when the two columns are stacked. In source order the
+     * caption follows the quote, which is right for a figure and right for a
+     * screen reader — but stacked, it meant a phone reader met up to 1,400
+     * characters of praise with no stars, no name and no date until the very
+     * end, and so had no way to know it was reading a review at all. `order`
+     * moves the box without touching that source order.
+     *
+     * From 900 up the grid placement below takes over and this is inert.
+     */
+    order: -1;
 
     @media (min-width: 900px) {
       grid-column: 1;
@@ -468,7 +514,11 @@ const updated = latestReviewMonth(STUDIO_REVIEWS);
       color var(--transition-fast),
       border-color var(--transition-fast);
 
-    &:focus {
+    // `:focus-visible`, not `:focus` — the latter painted the ink ring on a
+    // plain mouse click. Every other interactive element in this feature uses
+    // the visible-only form. (index.astro's `.btn` copy still uses `:focus`;
+    // that is a wider change than this pass.)
+    &:focus-visible {
       outline: 2px solid var(--color-focus);
       outline-offset: 2px;
     }
