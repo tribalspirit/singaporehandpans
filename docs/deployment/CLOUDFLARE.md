@@ -153,14 +153,21 @@ account with its own key and salt; the two sets are not interchangeable.
 
 Set these in the dashboard, per environment:
 
-| Variable             | Production | Preview  |
-| -------------------- | ---------- | -------- |
-| `PUBLIC_ENABLE_SHOP` | `true`     | `true`   |
-| `PUBLIC_SHOP_IMPL`   | `shopify`  | `hitpay` |
+| Variable             | Production       | Preview  |
+| -------------------- | ---------------- | -------- |
+| `PUBLIC_ENABLE_SHOP` | `true`           | `true`   |
+| `PUBLIC_SHOP_IMPL`   | unset (`hitpay`) | `hitpay` |
 
-`PUBLIC_SHOP_IMPL` is what selects the backend, and it is read at build time —
-changing it needs a redeploy, not just a save. Production stays on `shopify`
-until a HitPay order has been tested end to end on preview.
+`PUBLIC_SHOP_IMPL` selects the backend and is **read at build time**, so it has
+to be a dashboard environment variable — a `wrangler pages secret` is not
+visible to the build, only to the running Worker. Changing it needs a redeploy,
+not just a save.
+
+Unset means `hitpay`. The default used to be `shopify`, which is how
+production served an empty shop the moment the Shopify account was closed: it
+had never set this variable, and the Storefront API returns nothing rather
+than failing, so every page rendered 200 with no products. Set it explicitly
+to `shopify` only to go back to the legacy backend.
 
 #### Order notifications — not yet configured
 
