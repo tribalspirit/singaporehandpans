@@ -310,6 +310,25 @@ const updated = latestReviewMonth(STUDIO_REVIEWS);
     list-style: none;
     margin: 0;
     padding: 0;
+
+    /*
+     * The list admits its own width, so the hairlines end where the text ends.
+     *
+     * The rules sit on the `li`, which spanned the full 1176px container while
+     * the widest paragraph stopped 243px short of it at every desktop width —
+     * so each rule ran a quarter of its length past any content, and the block
+     * read as left-hugging inside a wider frame rather than as one measured
+     * column. The parts: the 13rem credit column, the grid gap, and the widest
+     * text measure (the opener's 58ch at --font-size-lg).
+     *
+     * The alternative — pulling the credit column out into the page margin so
+     * the text aligns with the h1 — needs a 248px shift into a gutter that is
+     * only 20px at 1280 and 100px at 1440. It fits at 1920 and nowhere people
+     * actually browse.
+     */
+    @media (min-width: 900px) {
+      max-width: calc(13rem + var(--space-10) + 43rem);
+    }
   }
 
   /*

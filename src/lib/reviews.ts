@@ -211,13 +211,21 @@ export function excerptReviewText(text: string, maxChars: number): string {
       : null;
 
   /*
-   * A cut on a whole sentence keeps its own punctuation and takes no ellipsis.
-   * An ellipsis stands in for an omission inside a quotation or for a sentence
-   * trailing off; quoting someone's first two sentences and stopping is neither,
-   * and "grow and explore.…" is just untidy. Nothing is misrepresented either
-   * way — the words are verbatim and the full review is one click away.
+   * Both kinds of cut are marked, but they are marked differently.
+   *
+   * A sentence cut keeps its own terminal punctuation and takes a SPACED
+   * ellipsis — "grow and explore. …" — which is the convention for omitting
+   * whole sentences that followed. A mid-sentence cut takes a closed-up one —
+   * "every time I…" — which is the convention for trailing off inside a
+   * sentence. "explore.…" would be neither.
+   *
+   * An earlier version left sentence cuts unmarked on the argument that a
+   * complete sentence quoted in full is not an omission. True as far as it
+   * goes, but it leaves the reader no way to know they are looking at an
+   * excerpt at all, which matters more on a page of testimonials than the
+   * typographic nicety does.
    */
-  if (sentenceCut) return sentenceCut;
+  if (sentenceCut) return `${sentenceCut} ${ELLIPSIS}`;
 
   return wordCut.trimEnd().replace(STRANDED_PUNCTUATION, '') + ELLIPSIS;
 }

@@ -151,7 +151,7 @@ describe('excerptReviewText', () => {
         'Alpha beta gamma. Delta epsilon zeta continues on.',
         17
       )
-    ).toBe('Alpha beta gamma.');
+    ).toBe('Alpha beta gamma. \u2026');
   });
 
   it('does not leave punctuation stranded before the ellipsis', () => {
@@ -178,7 +178,7 @@ describe('excerptReviewText', () => {
         'First sentence here. Second sentence runs on and on beyond the limit.',
         40
       )
-    ).toBe('First sentence here.');
+    ).toBe('First sentence here. \u2026');
   });
 
   it('falls back to a word cut when the only sentence end is far too early', () => {
@@ -191,13 +191,13 @@ describe('excerptReviewText', () => {
     ).toBe('Yes. And then a very long continuation…');
   });
 
-  it('keeps a whole sentence intact, with no ellipsis after it', () => {
+  it('marks a whole-sentence cut with a spaced ellipsis, keeping its own mark', () => {
     expect(
       excerptReviewText(
         'What a wonderful afternoon! It went on much longer than this though.',
         30
       )
-    ).toBe('What a wonderful afternoon!');
+    ).toBe('What a wonderful afternoon! \u2026');
   });
 
   it('returns nothing for a non-positive limit', () => {

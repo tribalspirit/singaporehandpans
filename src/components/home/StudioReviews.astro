@@ -342,6 +342,18 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
     }
 
     /*
+     * Two voices on a phone, three from 640 up. Stacked, three quotes plus the
+     * masthead made this the longest section on the mobile homepage; the third
+     * is what "Read more reviews" is for. It stays in the DOM — this is a
+     * display decision, not a content one, and /reviews/ carries all five.
+     */
+    @media (max-width: 639px) {
+      li:last-child {
+        display: none;
+      }
+    }
+
+    /*
      * Deliberately NOT `align-content: space-between`. That stretched the gap
      * between the two quotes to whatever was left over after the lead panel's
      * height — 62px at 1440, and a different figure at every width and every
@@ -383,17 +395,27 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
 
   // The site's link pattern: a 1px rule that fades in, not a browser underline
   // that snaps. See OurPartners `__cta-link`.
+  /*
+   * The site's section link: xs mono, uppercase, letterspaced, bronze.
+   *
+   * This was 16px medium-weight sans, which made it a THIRD link style on a
+   * page where "EXPLORE ACADEMY", "VIEW CLASSES" and "JOIN US" sit directly
+   * above it in the mono form. Bronze is 4.85:1 on paper-deep, so it still
+   * clears AA at this size. The 44px target comes from padding rather than
+   * line-height, so the hairline underline stays on the text.
+   */
   .reviews__cta-link {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
     min-height: 44px;
-    // Bronze, with the site's standard bronze → deep-bronze hover restored:
-    // 4.85:1 on paper-deep, where the old sand ground forced this link to rest
-    // at deep bronze and hover to ink instead.
+    padding: var(--space-2) 0;
     color: var(--color-primary);
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
-    font-size: var(--font-size-base);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     text-decoration: none;
     border-bottom: 1px solid transparent;
     transition:
