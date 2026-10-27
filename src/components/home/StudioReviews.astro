@@ -184,8 +184,10 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
     margin-bottom: var(--space-3);
   }
 
+  // A step up over the score numeral beside it: the section is called "What
+  // players say", not "5.0". See `.reviews__score-value`.
   .reviews__title {
-    font-size: var(--font-size-3xl);
+    font-size: var(--font-size-4xl);
     font-weight: var(--font-weight-light);
     color: var(--color-gray-900);
     line-height: var(--line-height-tight);
@@ -205,9 +207,14 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
     }
   }
 
+  /*
+   * One step BELOW the heading. At 4xl against the heading's 3xl this numeral
+   * was the largest thing in the band, so the eye landed on "5.0" and had to
+   * work back up to find out what it was the rating of.
+   */
   .reviews__score-value {
     font-family: var(--font-family-heading);
-    font-size: var(--font-size-4xl);
+    font-size: var(--font-size-3xl);
     font-weight: var(--font-weight-light);
     line-height: 1;
     color: var(--color-gray-900);
@@ -350,6 +357,14 @@ const leadMonth = lead ? formatReviewMonth(lead.date) : null;
       line-height: var(--line-height-relaxed);
       color: var(--color-gray-700);
       margin: 0;
+      /*
+       * The two-column grid only starts at 1024, so between 768 and 1023 these
+       * quotes ran the full container — about 105 characters a line, against
+       * the 64ch measure the same prose gets on /reviews/. The column width
+       * was doing the measuring, and only by accident at the widths where a
+       * column existed.
+       */
+      max-width: 64ch;
     }
   }
 
