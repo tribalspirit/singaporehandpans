@@ -238,6 +238,23 @@ No dashboard configuration needed. The site sends the callback URL with each
 payment request (`${url.origin}/api/shop/hitpay-webhook`), so it automatically
 matches whichever deployment created the order.
 
+### Academy tune player
+
+| Variable                   | Production | Preview |
+| -------------------------- | ---------- | ------- |
+| `PUBLIC_TAB_EDITOR_ORIGIN` | unset      | unset   |
+
+The Handpan Tab Editor's origin, for its framed player at `/academy/tunes/`.
+It is **read at build time** (`src/lib/tabEditor.ts`), so set it as a
+dashboard environment variable and redeploy. It must be a bare `https` origin
+in lower case, with no path and no trailing slash. Anything else counts as
+unset. Unset, the build has no `/academy/tunes/`, no Academy card for it and no
+sitemap entry, and the "More Tools Coming Soon" card shows instead.
+
+Preview covers the dev environment (`dev.singaporehandpans.pages.dev`) and
+every branch preview, so a Preview value puts the editor's address in all of
+their page source. Never commit a value.
+
 ## Automatic Deployments
 
 ### On Git Push

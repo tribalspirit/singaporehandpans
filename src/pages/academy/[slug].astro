@@ -1,0 +1,271 @@
+---
+/**
+ * /academy/tunes/: library tunes from the Handpan Tab Editor, each in the
+ * editor's own framed player.
+ *
+ * A dynamic route for one fixed page, so the page can be left out of the
+ * build: getStaticPaths returns it only when PUBLIC_TAB_EDITOR_ORIGIN holds a
+ * valid origin (src/lib/tabEditor.ts). Unset, there is no /academy/tunes/ at
+ * all, matching the hidden Academy card and sitemap entry.
+ *
+ * No client JavaScript: each tune is a plain iframe in the editor's "Copy
+ * embed code" form.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  ACADEMY_TUNES,
+  ACADEMY_TUNES_PATH,
+  ACADEMY_TUNES_SLUG,
+  EMBED_SANDBOX,
+  embedSrc,
+  frameTitle,
+  getTabEditorOrigin,
+  tuneHref,
+} from '../../lib/tabEditor';
+
+export function getStaticPaths() {
+  return getTabEditorOrigin() ? [{ params: { slug: ACADEMY_TUNES_SLUG } }] : [];
+}
+
+const origin = getTabEditorOrigin();
+if (!origin) {
+  // Unreachable: getStaticPaths only builds this page with an origin set.
+  throw new Error(`${ACADEMY_TUNES_PATH} needs PUBLIC_TAB_EDITOR_ORIGIN`);
+}
+
+// BaseLayout appends " | Singapore Handpan Studio", so the <title> reads
+// "Handpan Tunes to Play | Academy | Singapore Handpan Studio".
+const seoTitle = 'Handpan Tunes to Play | Academy';
+const seoDescription =
+  'Play handpan tunes in your browser, with the tab for each: from calm beginner pieces to studies and grooves in D Kurd.';
+---
+
+<BaseLayout
+  title={seoTitle}
+  description={seoDescription}
+  canonical={new URL(ACADEMY_TUNES_PATH, Astro.site).href}
+>
+  <div class="tunes-page">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/academy/">Academy</a>
+        <span class="separator" aria-hidden="true">/</span>
+        <span aria-current="page">Tunes</span>
+      </nav>
+
+      <header class="tunes-hero">
+        <h1 class="tunes-hero__title">Handpan Tunes</h1>
+        <p class="tunes-hero__description">
+          Press Play and read along as each tune plays. Start with a calm
+          beginner piece, then work up to studies and grooves.
+        </p>
+      </header>
+
+      {
+        ACADEMY_TUNES.map((tune) => (
+          <section class="tune" aria-labelledby={`tune-${tune.id}`}>
+            <div class="tune__head">
+              <h2 class="tune__title" id={`tune-${tune.id}`}>
+                {tune.title}
+              </h2>
+              <p class="tune__meta">
+                {tune.level} · {tune.tuning}
+              </p>
+            </div>
+            <div class="tune__frame">
+              <iframe
+                src={embedSrc(origin, tune.id)}
+                title={frameTitle(tune)}
+                width="100%"
+                height="480"
+                loading="lazy"
+                style="border:0"
+                sandbox={EMBED_SANDBOX}
+              />
+            </div>
+            <a class="tune__open" href={tuneHref(origin, tune.id)}>
+              Open in Handpan Tab Editor
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M7 17 17 7M8 7h9v9" />
+              </svg>
+            </a>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</BaseLayout>
+
+<style lang="scss">
+  @use 'sass:map';
+
+  // The editor's own embed sizes (its tokens embed-height-narrow,
+  // embed-height-wide and breakpoint.embed): a frame is 480px tall when
+  // narrow and 360px from 760px across. The frame fills whatever height it is
+  // given and scrolls its score inside, so these set how much shows at once.
+  // The iframe's height="480" attribute is the narrow value too.
+  $embed: (
+    height-narrow: 480px,
+    height-wide: 360px,
+    breakpoint: 760px,
+  );
+
+  .tunes-page {
+    min-height: calc(100vh - var(--header-height) - var(--footer-height));
+    padding: var(--spacing-2xl) 0;
+    background: var(--color-gray-50);
+  }
+
+  // Same breadcrumb as the Chord Explorer page.
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition:
+        color var(--transition-base),
+        border-color var(--transition-base);
+
+      &:hover {
+        color: var(--color-primary-dark);
+        border-bottom-color: var(--color-primary-dark);
+      }
+    }
+
+    .separator {
+      color: var(--color-gray-400);
+    }
+  }
+
+  // The shared masthead: left-set, light display type, ink not bronze.
+  .tunes-hero {
+    padding: var(--spacing-xl) 0;
+    margin-bottom: var(--spacing-xl);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+
+  .tunes-hero__title {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-light);
+    color: var(--color-gray-900);
+    margin-bottom: var(--spacing-lg);
+
+    @media (min-width: 768px) {
+      font-size: var(--font-size-5xl);
+    }
+  }
+
+  .tunes-hero__description {
+    font-size: var(--font-size-lg);
+    color: var(--color-gray-600);
+    max-width: 56ch;
+    line-height: var(--line-height-relaxed);
+  }
+
+  // One tune: a white surface like the Chord Explorer's widget section, its
+  // title set against a mono eyebrow, then the frame, then the way out.
+  .tune {
+    background: var(--color-white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-base);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-2xl);
+
+    @media (min-width: 768px) {
+      padding: var(--spacing-xl);
+    }
+  }
+
+  .tune__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-xs) var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .tune__title {
+    font-family: var(--font-family-heading);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-light);
+    color: var(--color-gray-900);
+    margin: 0;
+  }
+
+  // Eyebrow metadata in mono, bronze, per the type system.
+  .tune__meta {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin: 0;
+  }
+
+  .tune__frame {
+    container-type: inline-size;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    background: var(--color-gray-50);
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: map.get($embed, height-narrow);
+    }
+  }
+
+  @container (min-width: #{map.get($embed, breakpoint)}) {
+    .tune__frame iframe {
+      height: map.get($embed, height-wide);
+    }
+  }
+
+  // The fallback when a frame can't load, in the site's mono link style. The
+  // 44px target comes from padding, so the hover underline stays on the text.
+  .tune__open {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm) 0;
+    min-height: 44px;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color var(--transition-base);
+
+    &:hover {
+      color: var(--color-primary-dark);
+      text-decoration: underline;
+      text-underline-offset: 0.3em;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
+      border-radius: var(--border-radius-sm);
+    }
+  }
+</style>

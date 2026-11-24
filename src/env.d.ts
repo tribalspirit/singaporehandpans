@@ -1,6 +1,14 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference -- Astro convention for generated types
 /// <reference path="../.astro/types.d.ts" />
 
+interface ImportMetaEnv {
+  /**
+   * The Handpan Tab Editor's origin, read at build time for /academy/tunes/.
+   * Parsed by `src/lib/tabEditor.ts`; unset or invalid switches the player off.
+   */
+  readonly PUBLIC_TAB_EDITOR_ORIGIN?: string;
+}
+
 /** Cloudflare runtime bindings/secrets available via `Astro.locals.runtime.env`. */
 interface CloudflareEnv {
   STORYBLOK_TOKEN?: string;

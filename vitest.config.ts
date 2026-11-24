@@ -34,6 +34,12 @@ export default defineConfig({
           functions: 80,
           lines: 80,
         },
+        'src/lib/tabEditor.ts': {
+          statements: 80,
+          branches: 80,
+          functions: 80,
+          lines: 80,
+        },
         'src/lib/storyblokImage.ts': {
           statements: 80,
           branches: 80,
