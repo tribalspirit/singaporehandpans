@@ -1,10 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { ACADEMY_TUNES_PATH, getTabEditorOrigin } from '../lib/tabEditor';
+import { getTabEditorOrigin, tabEditorLibraryHref } from '../lib/tabEditor';
 
 // The tunes card shows only when the Handpan Tab Editor's origin is set, and
-// then takes the "coming soon" card's place (owner, 2026-11-24).
-const hasTunePlayer = getTabEditorOrigin() !== null;
+// then takes the "coming soon" card's place. It links straight to the
+// editor's Library (owner, 2026-11-24).
+const tabEditorOrigin = getTabEditorOrigin();
 
 const seoTitle = 'Handpan Academy — Free Learning Resources & Tools';
 const seoDescription =
@@ -69,7 +70,7 @@ const seoDescription =
         </div>
 
         {
-          hasTunePlayer ? (
+          tabEditorOrigin ? (
             <div class="tool-card">
               <div class="tool-card__icon">
                 <svg
@@ -87,12 +88,15 @@ const seoDescription =
               </div>
               <h2 class="tool-card__title">Handpan Tunes</h2>
               <p class="tool-card__description">
-                Listen to tunes from the Handpan Tab Editor's library and read
-                the tab as each one plays. Start calm and simple, then work up
-                to studies and grooves.
+                Browse the tune library in the Handpan Tab Editor: play each
+                tune with its tab, and add your own.
               </p>
-              <a href={ACADEMY_TUNES_PATH} class="tool-card__link">
-                Play Tunes
+              <a
+                href={tabEditorLibraryHref(tabEditorOrigin)}
+                class="tool-card__link"
+              >
+                Open the Library
+                {/* An arrow out: the Library is in the editor, not this site. */}
                 <svg
                   width="20"
                   height="20"
@@ -100,8 +104,9 @@ const seoDescription =
                   fill="none"
                   stroke="currentColor"
                   stroke-width="2"
+                  aria-hidden="true"
                 >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
+                  <path d="M7 17 17 7M8 7h9v9" />
                 </svg>
               </a>
             </div>

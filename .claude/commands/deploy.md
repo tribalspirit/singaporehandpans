@@ -49,11 +49,11 @@ PUBLIC_SHOPIFY_STOREFRONT_TOKEN=your_token
 PUBLIC_TAB_EDITOR_ORIGIN=
 ```
 
-`PUBLIC_TAB_EDITOR_ORIGIN` turns on the Handpan Tab Editor's player at
-`/academy/tunes/`, with its Academy card and sitemap entry. It is the editor's
-bare `https` origin (no path, no trailing slash), read at build time, so a
-change needs a redeploy. Unset or invalid, none of the three is built. A
-Preview value reaches the dev environment and every branch preview. Never
+`PUBLIC_TAB_EDITOR_ORIGIN` turns on the Academy's "Handpan Tunes" card, which
+links to the Handpan Tab Editor's Library. It is the editor's bare `https`
+origin (no path, no trailing slash), read at build time, so a change needs a
+redeploy. Unset or invalid, the card isn't built. Preview builds run only for
+the `dev` branch, so a Preview value reaches the dev environment alone. Never
 commit a value; see `src/lib/tabEditor.ts`.
 
 **Important**: Use **Published** token for production (not Preview)!

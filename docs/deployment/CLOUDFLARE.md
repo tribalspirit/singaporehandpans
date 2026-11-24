@@ -238,22 +238,24 @@ No dashboard configuration needed. The site sends the callback URL with each
 payment request (`${url.origin}/api/shop/hitpay-webhook`), so it automatically
 matches whichever deployment created the order.
 
-### Academy tune player
+### Academy link to the Handpan Tab Editor
 
-| Variable                   | Production | Preview |
-| -------------------------- | ---------- | ------- |
-| `PUBLIC_TAB_EDITOR_ORIGIN` | unset      | unset   |
+| Variable                   | Production | Preview                 |
+| -------------------------- | ---------- | ----------------------- |
+| `PUBLIC_TAB_EDITOR_ORIGIN` | unset      | the editor's beta (dev) |
 
-The Handpan Tab Editor's origin, for its framed player at `/academy/tunes/`.
-It is **read at build time** (`src/lib/tabEditor.ts`), so set it as a
-dashboard environment variable and redeploy. It must be a bare `https` origin
-in lower case, with no path and no trailing slash. Anything else counts as
-unset. Unset, the build has no `/academy/tunes/`, no Academy card for it and no
-sitemap entry, and the "More Tools Coming Soon" card shows instead.
+The Handpan Tab Editor's origin, for the Academy's "Handpan Tunes" card,
+which links to the editor's Library (its root page). It is **read at build
+time** (`src/lib/tabEditor.ts`), so set it as a dashboard environment variable
+and redeploy. It must be a bare `https` origin in lower case, with no path and
+no trailing slash. Anything else counts as unset. Unset, the card isn't built
+and the "More Tools Coming Soon" card shows instead.
 
-Preview covers the dev environment (`dev.singaporehandpans.pages.dev`) and
-every branch preview, so a Preview value puts the editor's address in all of
-their page source. Never commit a value.
+Preview builds run only for the `dev` branch (the project's preview branch
+setting is custom, including `dev` alone), so a Preview value reaches the dev
+environment (`dev.singaporehandpans.pages.dev`) and nothing else. It puts the
+editor's address in dev's page source. Production stays unset until the
+editor's custom domain. Never commit a value.
 
 ## Automatic Deployments
 

@@ -1,16 +1,8 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  ACADEMY_TUNES,
-  ACADEMY_TUNES_PATH,
-  ACADEMY_TUNES_SLUG,
-  EMBED_SANDBOX,
-  academyTunesPaths,
-  academyTunesSitemapPaths,
-  embedSrc,
-  frameTitle,
   getTabEditorOrigin,
   parseTabEditorOrigin,
-  tuneHref,
+  tabEditorLibraryHref,
 } from './tabEditor';
 
 // Placeholders only. The editor's real addresses never appear in tests.
@@ -110,88 +102,17 @@ describe('getTabEditorOrigin', () => {
   });
 });
 
-describe('the embed contract', () => {
-  test('the tune and theme go after "#", in the editor\'s Copy embed code form', () => {
-    expect(embedSrc(ORIGIN, 'morning-walk')).toBe(
-      'https://tabs.example.com/embed/#id=morning-walk&theme=light'
+describe('the Library link', () => {
+  test("is the editor's root, where its Library lives", () => {
+    expect(tabEditorLibraryHref(ORIGIN)).toBe('https://tabs.example.com/');
+    expect(tabEditorLibraryHref(PLACEHOLDER)).toBe(
+      'https://handpan-tab-editor.example.workers.dev/'
     );
   });
 
-  test('a tune id is encoded, so it cannot add parameters', () => {
-    expect(embedSrc(ORIGIN, 'a&theme=dark')).toBe(
-      'https://tabs.example.com/embed/#id=a%26theme%3Ddark&theme=light'
-    );
-  });
-
-  test('the fallback link opens the tune in the editor', () => {
-    expect(tuneHref(ORIGIN, 'morning-walk')).toBe(
-      'https://tabs.example.com/tune/morning-walk'
-    );
-    expect(tuneHref(ORIGIN, '../admin')).toBe(
-      'https://tabs.example.com/tune/..%2Fadmin'
-    );
-  });
-
-  test("the sandbox is exactly the editor's", () => {
-    expect(EMBED_SANDBOX).toBe(
-      'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox'
-    );
-  });
-
-  test('the sandbox never allows top navigation or forms', () => {
-    const tokens = EMBED_SANDBOX.split(' ');
-    expect(tokens.some((t) => t.startsWith('allow-top-navigation'))).toBe(
-      false
-    );
-    expect(tokens).not.toContain('allow-forms');
-  });
-
-  test('the frame is titled after its tune', () => {
-    expect(frameTitle({ title: 'Morning Walk' })).toBe(
-      'Morning Walk, a handpan tune'
-    );
-  });
-});
-
-describe('the Academy tunes', () => {
-  test('live at /academy/tunes/', () => {
-    expect(ACADEMY_TUNES_SLUG).toBe('tunes');
-    expect(ACADEMY_TUNES_PATH).toBe('/academy/tunes/');
-  });
-
-  test("are the owner's pick: Morning Walk", () => {
-    expect(ACADEMY_TUNES.map((t) => t.id)).toEqual(['morning-walk']);
-    expect(ACADEMY_TUNES[0]).toEqual({
-      id: 'morning-walk',
-      title: 'Morning Walk',
-      level: 'Beginner',
-      tuning: 'D Kurd 9',
-    });
-  });
-
-  test('have unique, URL-safe ids', () => {
-    const ids = ACADEMY_TUNES.map((t) => t.id);
-    expect(new Set(ids).size).toBe(ids.length);
-    for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
-  });
-});
-
-describe('switching the page on and off', () => {
-  test('with no origin, getStaticPaths builds no page', () => {
-    expect(academyTunesPaths(null)).toEqual([]);
-  });
-
-  test('with an origin, it builds /academy/tunes/ and hands the page the origin', () => {
-    expect(academyTunesPaths(ORIGIN)).toEqual([
-      { params: { slug: 'tunes' }, props: { origin: ORIGIN } },
-    ]);
-  });
-
-  test('with no origin, the sitemap gains nothing', () => {
-    expect(academyTunesSitemapPaths(null)).toEqual([]);
-  });
-
-  test('with an origin, the sitemap gains /academy/tunes/', () => {
-    expect(academyTunesSitemapPaths(ORIGIN)).toEqual(['/academy/tunes/']);
+  test('is built only from an origin the parse accepted', () => {
+    const origin = parseTabEditorOrigin(PLACEHOLDER);
+    expect(origin).not.toBeNull();
+    expect(tabEditorLibraryHref(origin as string)).toBe(`${PLACEHOLDER}/`);
   });
 });

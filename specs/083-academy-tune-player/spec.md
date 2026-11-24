@@ -11,6 +11,20 @@ this is 083.
 "The player" here is the **tab editor's** player. It is not the Studio's own handpan widget, the
 Chord Explorer at `/academy/memorization/`.
 
+> **Amended 2026-11-24 (branch `fix/academy-library-link`).** After trying the player on dev, the
+> owner chose to have the Academy lead to the editor's **Library**, not to one framed tune. The
+> Library can't be framed (the editor refuses framing everywhere but `/embed/`), and signing in
+> inside a frame on another site would fail. So:
+>
+> - The "Handpan Tunes" card links straight to the editor's Library, its root page
+>   (`<origin>/`), with the words "Browse the tune library in the Handpan Tab Editor: play each
+>   tune with its tab, and add your own." and "Open the Library".
+> - `/academy/tunes/` and its sitemap entry are removed. D3's page, tune list and page words, D4,
+>   FR-004 to FR-006 and the page's success criteria no longer apply.
+> - FR-001, FR-002 and FR-007 stand. FR-003 now reads: with no origin, the build has no card.
+>
+> The rest of this spec records the first version, as built in PR #65.
+
 ## Owner's decisions (2026-11-24)
 
 | Decision                     | Answer                                                                                                                                          |
