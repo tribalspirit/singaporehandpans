@@ -9,7 +9,15 @@ import {
 const title = 'Terms of Service';
 const description =
   'Terms and conditions for using Singapore Handpan Studio services and website.';
-const lastUpdated = 'January 5, 2026';
+const lastUpdated = 'November 25, 2026';
+// The version of section 19.3, "Licence for published tunes"
+// (#tab-editor-licence). The Handpan Tab Editor records this date, as
+// YYYY-MM-DD, as its TERMS_VERSION on every submission. Change it whenever
+// that sub-section's words change, and tell the tab editor the new date.
+const tabEditorLicenceVersion = {
+  iso: '2026-11-25',
+  label: 'November 25, 2026',
+} as const;
 ---
 
 <BaseLayout
@@ -384,8 +392,229 @@ const lastUpdated = 'January 5, 2026';
           </p>
         </section>
 
+        <section class="legal-section legal-section--editor">
+          <h2 id="tab-editor">19. Handpan Tab Editor</h2>
+          <p>
+            This section applies to the Handpan Tab Editor ("the editor"), run
+            by the Studio. The rest of these Terms apply to the editor too,
+            including User Eligibility (section 3), Limitation of Liability
+            (11), Disclaimer of Warranties (13), Dispute Resolution (15) and
+            Modifications to Terms (16). Where this section says something
+            different about the editor, this section applies. In particular,
+            <a href="#tab-editor-licence">"Licence for published tunes"</a> below
+            applies to tunes in place of section 8.3, and "What listeners may do"
+            applies to published tunes in place of section 8.2.
+          </p>
+
+          <h3>19.1 Using the editor</h3>
+          <p>The editor is free to use.</p>
+          <ul>
+            <li>
+              <strong>No account needed to listen.</strong> Anyone may browse and
+              play the tune library, shared tune links and embedded tunes.
+            </li>
+            <li>
+              <strong>An account to write.</strong> To write or edit tunes you need
+              an account. You sign in with a link we email you, and each email address
+              has one account. Anyone who can open your email can sign in as you,
+              so keep your email account secure.
+            </li>
+            <li>
+              <strong>Eligibility.</strong> Section 3 applies: you must be 13 or older,
+              and if you are under 18 you need a parent's or guardian's consent.
+            </li>
+            <li>
+              <strong>Your display name.</strong> It is shown publicly as the author
+              of the tunes you submit. Don't use a name that pretends to be someone
+              else.
+            </li>
+            <li>
+              <strong>Beta.</strong> The editor is in beta. Its features and limits
+              may change.
+            </li>
+            <li>
+              <strong>Limits.</strong> An account holds up to 200 tunes, and 25 MiB
+              in total. One tune can be up to 128 KiB. Up to 10 of your tunes can
+              be in review at once. A note to the reviewer can be up to 1,000 characters,
+              and a display name 1 to 60 characters. Each address gets up to 5 sign-in
+              emails a day.
+            </li>
+            <li>
+              <strong>Keep your own copies.</strong> Save important tunes with
+              <strong>Save .hptab</strong> in the File menu.
+            </li>
+          </ul>
+
+          <h3>19.2 Publishing a tune</h3>
+          <ul>
+            <li>
+              <strong>Submitting.</strong> You submit a tune from the editor or from
+              My tunes. You choose its difficulty and moods, can add a note to the
+              reviewer, and agree to the licence below.
+            </li>
+            <li>
+              <strong>Review.</strong> An admin reviews your tune. They either confirm
+              or change its difficulty and moods and publish it, credited to your
+              display name as it was when you submitted, or decline it with a note
+              you'll see in My tunes. You can submit again. Admins may decline any
+              submission.
+            </li>
+            <li>
+              <strong>Once published,</strong> the tune has its own public address.
+              It can be read through the library, the embedded player and the editor's
+              public API, which needs no sign-in and which the Studio's website uses.
+            </li>
+            <li>
+              <strong>Changes</strong> you make after publishing go through review
+              again. Once approved, they become the tune's new version, at the same
+              address.
+            </li>
+            <li>
+              <strong>Unlisting.</strong> You can unlist your own published tune and
+              list it again. An admin can unlist any tune. If an admin has unlisted
+              your tune, it stays unlisted until an admin lists it again, even if
+              you list it again yourself.
+            </li>
+            <li>
+              <strong>Removing a tune.</strong> Deleting a tune from My tunes doesn't
+              remove its published copy. Deleting your account removes every tune
+              published from it.
+            </li>
+          </ul>
+
+          <h3 id="tab-editor-licence">19.3 Licence for published tunes</h3>
+          <p>
+            <strong>You keep your rights.</strong> You keep the copyright and any
+            other rights you have in your tune. This licence doesn't transfer them
+            to us.
+          </p>
+          <p>
+            <strong>What you allow us to do.</strong> When you submit a tune and it
+            is published, you give the Studio a worldwide, non-exclusive, royalty-free
+            licence to:
+          </p>
+          <ul>
+            <li>
+              publish, store, display and play the tune, and make it available
+              through the editor's library, its embedded player and its public
+              API, including on the Studio's own website;
+            </li>
+            <li>
+              make the technical changes publishing needs:
+              <ul>
+                <li>crediting the tune to your display name;</li>
+                <li>giving it its own public address;</li>
+                <li>removing data the tune format doesn't use;</li>
+                <li>
+                  showing details worked out from the tune, such as its length
+                  and the techniques it uses, alongside the difficulty and moods
+                  an admin confirms;
+                </li>
+              </ul>
+            </li>
+            <li>
+              publish edited versions of the tune, credited to you and marked
+              "edited by the library". If you then submit changes and they are
+              approved, your version replaces the library's;
+            </li>
+            <li>
+              keep earlier versions of the tune with it while it is published;
+            </li>
+            <li>
+              let people use the tune as "What listeners may do" describes.
+            </li>
+          </ul>
+          <p>
+            The licence is non-exclusive, so you remain free to share your tune
+            anywhere else as well.
+          </p>
+          <p>
+            <strong>Your promise.</strong> By submitting a tune, you confirm that
+            it is yours to share this way: either you wrote it, or you have the rights
+            or permission it needs. This includes arrangements of other people's songs:
+            submit one only if the song is in the public domain or you have permission
+            to share an arrangement of it.
+          </p>
+          <p>
+            <strong>What listeners may do.</strong> Anyone may view and play a published
+            tune in the library and through the embedded player, and share its link.
+            Anyone signed in may also open a copy in the editor ("Edit a copy"), keep
+            it in their own My tunes, and save it as a file. They may do this for
+            their own practice and study, not for any commercial purpose. Listeners
+            may not:
+          </p>
+          <ul>
+            <li>sell a published tune, or use it commercially;</li>
+            <li>
+              republish or redistribute it, or edited copies of it, outside the
+              library and the embedded player;
+            </li>
+            <li>remove or change its credit.</li>
+          </ul>
+          <p>When listeners share or mention a tune, they credit its author.</p>
+          <p>
+            <strong>Unlisting.</strong> If you or an admin unlist a published tune,
+            it leaves the library's list and search. It still opens by its link, and
+            it keeps playing wherever it is embedded. This licence continues for as
+            long as the tune can be opened that way.
+          </p>
+          <p>
+            <strong>When the licence ends.</strong> The licence ends when the tune
+            leaves the library. That happens when your account is deleted: by you,
+            or by us at your request if your account is banned. From then:
+          </p>
+          <ul>
+            <li>
+              the editor stops serving the tune, and embeds of it stop playing;
+            </li>
+            <li>
+              copies already fetched may still appear briefly. Browsers and
+              caches may reuse the tune's file for up to 5 minutes and its
+              listing for up to 1 minute, and a page that already has the tune
+              open keeps it until it is closed or reloaded;
+            </li>
+            <li>
+              copies other people opened into their own My tunes, or saved as
+              files, before then stay with them, and they may go on using them
+              under "What listeners may do";
+            </li>
+            <li>
+              records of admin actions that name the tune's internal id remain,
+              holding none of its content.
+            </li>
+          </ul>
+          <p>
+            <strong>Which version of these terms applies.</strong> Each submission
+            records the version of these terms that was in force when you submitted
+            it. A published tune keeps the version that applied when it was last approved.
+            If we change this licence, the change applies to tunes submitted after
+            the change. This version is dated <time
+              datetime={tabEditorLicenceVersion.iso}
+              >{tabEditorLicenceVersion.label}</time
+            >.
+          </p>
+
+          <h3>19.4 Bans</h3>
+          <p>
+            An admin may ban an account for submitting tunes you have no right
+            to share, for pretending to be someone else, or for misusing the
+            editor or other people's accounts. A banned account is signed out
+            everywhere and can't sign in. Its tunes stay until an admin unlists
+            or declines them. If your account is banned and you want it deleted,
+            ask us and an admin will delete it.
+          </p>
+
+          <h3>19.5 Contact</h3>
+          <p>
+            For questions about the editor, or if you believe a published tune
+            infringes your rights, contact us at <a
+              href={`mailto:${STUDIO_EMAIL}`}>{STUDIO_EMAIL}</a
+            >.
+          </p>
+        </section>
+
         <section class="legal-section">
-          <h2>19. Contact Information</h2>
+          <h2>20. Contact Information</h2>
           <p>
             If you have any questions or concerns about these Terms of Service,
             please contact us:
@@ -545,6 +774,27 @@ const lastUpdated = 'January 5, 2026';
         min-height: 32px;
       }
     }
+  }
+
+  // Section 19, the Handpan Tab Editor. The page's `.legal-section a` rule
+  // makes every link a 44px-tall inline-flex box, which suits the standalone
+  // links in the contact block. Mid-sentence, that box breaks the line and
+  // opens a gap above and below it, so here links in running text stay
+  // inline, underlined so they don't rely on colour alone. Links inside a
+  // sentence are exempt from the target-size minimum (WCAG 2.2, 2.5.8).
+  .legal-section--editor :is(p, li) a {
+    display: inline;
+    min-height: 0;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  // 19.3's nested list: tuck it under its parent item rather than leaving
+  // the page's paragraph-sized gap at its end.
+  .legal-section--editor li > ul {
+    margin-top: var(--space-2);
+    margin-bottom: 0;
   }
 
   .contact-info {
