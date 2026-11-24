@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { getStoryblokClient } from '../lib/storyblok';
 import { fetchAllStories } from '../lib/storiesApi';
 import { fetchAllCollections, isShopEnabled, isHitpayShop } from '../lib/shop';
-import { ACADEMY_TUNES_PATH, getTabEditorOrigin } from '../lib/tabEditor';
+import { academyTunesSitemapPaths, getTabEditorOrigin } from '../lib/tabEditor';
 import type { StoryArticleStory } from '../types/stories';
 import type { EventStory } from '../types/event';
 
@@ -21,9 +21,11 @@ const STATIC_PAGES: { path: string; changefreq: string; priority: number }[] = [
   { path: '/academy/', changefreq: 'monthly', priority: 0.8 },
   { path: '/academy/memorization/', changefreq: 'monthly', priority: 0.7 },
   // Built only when the Handpan Tab Editor's origin is set (src/lib/tabEditor).
-  ...(getTabEditorOrigin()
-    ? [{ path: ACADEMY_TUNES_PATH, changefreq: 'monthly', priority: 0.7 }]
-    : []),
+  ...academyTunesSitemapPaths(getTabEditorOrigin()).map((path) => ({
+    path,
+    changefreq: 'monthly',
+    priority: 0.7,
+  })),
   { path: '/stories/', changefreq: 'weekly', priority: 0.8 },
   { path: '/shop/', changefreq: 'weekly', priority: 0.9 },
   { path: '/contacts/', changefreq: 'monthly', priority: 0.7 },

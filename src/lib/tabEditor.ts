@@ -75,6 +75,21 @@ export function getTabEditorOrigin(): string | null {
 }
 
 /**
+ * The tunes page's getStaticPaths: its one path, carrying the origin to the
+ * page, when there is an origin; no path, so no page, when there is none.
+ */
+export function academyTunesPaths(origin: string | null) {
+  return origin
+    ? [{ params: { slug: ACADEMY_TUNES_SLUG }, props: { origin } }]
+    : [];
+}
+
+/** What the tunes page adds to the sitemap: itself, only when it is built. */
+export function academyTunesSitemapPaths(origin: string | null): string[] {
+  return origin ? [ACADEMY_TUNES_PATH] : [];
+}
+
+/**
  * The frame's src. The tune and theme go after "#", which no server sees. The
  * Studio is a light site, so the theme is `light`.
  */

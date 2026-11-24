@@ -4,6 +4,8 @@ import {
   ACADEMY_TUNES_PATH,
   ACADEMY_TUNES_SLUG,
   EMBED_SANDBOX,
+  academyTunesPaths,
+  academyTunesSitemapPaths,
   embedSrc,
   frameTitle,
   getTabEditorOrigin,
@@ -171,5 +173,25 @@ describe('the Academy tunes', () => {
     const ids = ACADEMY_TUNES.map((t) => t.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+  });
+});
+
+describe('switching the page on and off', () => {
+  test('with no origin, getStaticPaths builds no page', () => {
+    expect(academyTunesPaths(null)).toEqual([]);
+  });
+
+  test('with an origin, it builds /academy/tunes/ and hands the page the origin', () => {
+    expect(academyTunesPaths(ORIGIN)).toEqual([
+      { params: { slug: 'tunes' }, props: { origin: ORIGIN } },
+    ]);
+  });
+
+  test('with no origin, the sitemap gains nothing', () => {
+    expect(academyTunesSitemapPaths(null)).toEqual([]);
+  });
+
+  test('with an origin, the sitemap gains /academy/tunes/', () => {
+    expect(academyTunesSitemapPaths(ORIGIN)).toEqual(['/academy/tunes/']);
   });
 });

@@ -11,12 +11,13 @@
  * No client JavaScript: each tune is a plain iframe in the editor's "Copy
  * embed code" form.
  */
+import type { InferGetStaticPropsType } from 'astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import {
   ACADEMY_TUNES,
   ACADEMY_TUNES_PATH,
-  ACADEMY_TUNES_SLUG,
   EMBED_SANDBOX,
+  academyTunesPaths,
   embedSrc,
   frameTitle,
   getTabEditorOrigin,
@@ -24,14 +25,11 @@ import {
 } from '../../lib/tabEditor';
 
 export function getStaticPaths() {
-  return getTabEditorOrigin() ? [{ params: { slug: ACADEMY_TUNES_SLUG } }] : [];
+  return academyTunesPaths(getTabEditorOrigin());
 }
 
-const origin = getTabEditorOrigin();
-if (!origin) {
-  // Unreachable: getStaticPaths only builds this page with an origin set.
-  throw new Error(`${ACADEMY_TUNES_PATH} needs PUBLIC_TAB_EDITOR_ORIGIN`);
-}
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { origin } = Astro.props as Props;
 
 // BaseLayout appends " | Singapore Handpan Studio", so the <title> reads
 // "Handpan Tunes to Play | Academy | Singapore Handpan Studio".
