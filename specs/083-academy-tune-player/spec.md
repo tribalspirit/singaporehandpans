@@ -11,16 +11,30 @@ this is 083.
 "The player" here is the **tab editor's** player. It is not the Studio's own handpan widget, the
 Chord Explorer at `/academy/memorization/`.
 
+> **Amended 2026-11-24 (branch `fix/academy-library-link`).** After trying the player on dev, the
+> owner chose to have the Academy lead to the editor's **Library**, not to one framed tune. The
+> Library can't be framed (the editor refuses framing everywhere but `/embed/`), and signing in
+> inside a frame on another site would fail. So:
+>
+> - The "Handpan Tunes" card links straight to the editor's Library, its root page
+>   (`<origin>/`), with the words "Browse the tune library in the Handpan Tab Editor: play each
+>   tune with its tab, and add your own." and "Open the Library".
+> - `/academy/tunes/` and its sitemap entry are removed. D3's page, tune list and page words, D4,
+>   FR-004 to FR-006 and the page's success criteria no longer apply.
+> - FR-001, FR-002 and FR-007 stand. FR-003 now reads: with no origin, the build has no card.
+>
+> The rest of this spec records the first version, as built in PR #65.
+
 ## Owner's decisions (2026-11-24)
 
-| Decision                     | Answer                                                                                                                                          |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| D2, turning it on            | (a) Wait for the editor's custom domain (its feature 050). The beta stays unlisted, and this ships switched off.                                |
-| D3, where                    | `/academy/tunes/`, with a tool card on `/academy/` in the Chord Explorer card's markup                                                          |
-| D3, which tunes              | Morning Walk (`morning-walk`) only                                                                                                              |
-| D3, the words                | As previewed: SEO title "Handpan Tunes to Play \| Academy \| Singapore Handpan Studio"; H1 "Handpan Tunes"; card "Handpan Tunes" / "Play Tunes" |
-| D3, "More Tools Coming Soon" | Replaced by the tunes card when the player is on; shown only while it is off                                                                    |
-| D4, how                      | The plain `<iframe>` from the editor's "Copy embed code", not `<hp-player>`                                                                     |
+| Decision                     | Answer                                                                                                                                                        |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D2, turning it on            | (a) Wait for the editor's custom domain (its feature 050). The beta stays unlisted, and this ships switched off.                                              |
+| D3, where                    | _Superseded 2026-11-24, see the amendment._ `/academy/tunes/`, with a tool card on `/academy/` in the Chord Explorer card's markup                            |
+| D3, which tunes              | _Superseded._ Morning Walk (`morning-walk`) only                                                                                                              |
+| D3, the words                | _Superseded._ As previewed: SEO title "Handpan Tunes to Play \| Academy \| Singapore Handpan Studio"; H1 "Handpan Tunes"; card "Handpan Tunes" / "Play Tunes" |
+| D3, "More Tools Coming Soon" | Replaced by the tunes card when the player is on; shown only while it is off                                                                                  |
+| D4, how                      | _Superseded._ The plain `<iframe>` from the editor's "Copy embed code", not `<hp-player>`                                                                     |
 
 ## User Scenarios & Testing _(mandatory)_
 
@@ -80,13 +94,13 @@ card, no sitemap entry, and "More Tools Coming Soon" shows.
   other than `example` placeholders.
 - **FR-002**: Only a bare `https` origin, as a browser writes it, is accepted; anything else means
   none. The parse MUST be unit-tested (unset, empty, http, a path, upper case, valid, and more).
-- **FR-003**: With no origin, the build MUST contain no `/academy/tunes/` page, no tunes card and no
+- **FR-003** _(amended: with no origin, the build has no card)_: With no origin, the build MUST contain no `/academy/tunes/` page, no tunes card and no
   sitemap entry.
-- **FR-004**: The frame MUST be the editor's "Copy embed code" form exactly, with `&theme=light`, the
+- **FR-004** _(superseded)_: The frame MUST be the editor's "Copy embed code" form exactly, with `&theme=light`, the
   sandbox unchanged and no `allow` attribute. The tune goes after `#`, never in the path or query.
-- **FR-005**: The frame's height MUST be 480 px, and 360 px when its container is 760 px or wider (a
+- **FR-005** _(superseded)_: The frame's height MUST be 480 px, and 360 px when its container is 760 px or wider (a
   container query), from one SCSS map whose comment names the editor's tokens.
-- **FR-006**: The page MUST ship no client JavaScript.
+- **FR-006** _(superseded)_: The page MUST ship no client JavaScript.
 - **FR-007**: The variable MUST be documented in `.env.example` (empty), `.claude/commands/deploy.md`
   and `docs/deployment/CLOUDFLARE.md`.
 

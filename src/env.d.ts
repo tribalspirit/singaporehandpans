@@ -3,8 +3,9 @@
 
 interface ImportMetaEnv {
   /**
-   * The Handpan Tab Editor's origin, read at build time for /academy/tunes/.
-   * Parsed by `src/lib/tabEditor.ts`; unset or invalid switches the player off.
+   * The Handpan Tab Editor's origin, read at build time for the Academy's
+   * card that links to its Library. Parsed by `src/lib/tabEditor.ts`; unset
+   * or invalid leaves the card out.
    */
   readonly PUBLIC_TAB_EDITOR_ORIGIN?: string;
 }
