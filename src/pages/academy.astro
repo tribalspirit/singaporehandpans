@@ -1,5 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { ACADEMY_TUNES_PATH, getTabEditorOrigin } from '../lib/tabEditor';
+
+// The tunes card shows only when the Handpan Tab Editor's origin is set, and
+// then takes the "coming soon" card's place (owner, 2026-11-24).
+const hasTunePlayer = getTabEditorOrigin() !== null;
 
 const seoTitle = 'Handpan Academy — Free Learning Resources & Tools';
 const seoDescription =
@@ -63,27 +68,67 @@ const seoDescription =
           </a>
         </div>
 
-        <div class="coming-soon-card">
-          <div class="coming-soon-card__icon">
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-            </svg>
-          </div>
-          <h2 class="coming-soon-card__title">More Tools Coming Soon</h2>
-          <p class="coming-soon-card__description">
-            We're continuously developing new learning resources including
-            rhythm exercises, technique tutorials, and advanced practice tools.
-            Stay tuned for updates!
-          </p>
-        </div>
+        {
+          hasTunePlayer ? (
+            <div class="tool-card">
+              <div class="tool-card__icon">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M9 18V5l12-2v13" />
+                  <circle cx="6" cy="18" r="3" />
+                  <circle cx="18" cy="16" r="3" />
+                </svg>
+              </div>
+              <h2 class="tool-card__title">Handpan Tunes</h2>
+              <p class="tool-card__description">
+                Listen to tunes from the Handpan Tab Editor's library and read
+                the tab as each one plays. Start calm and simple, then work up
+                to studies and grooves.
+              </p>
+              <a href={ACADEMY_TUNES_PATH} class="tool-card__link">
+                Play Tunes
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          ) : (
+            <div class="coming-soon-card">
+              <div class="coming-soon-card__icon">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                </svg>
+              </div>
+              <h2 class="coming-soon-card__title">More Tools Coming Soon</h2>
+              <p class="coming-soon-card__description">
+                We're continuously developing new learning resources including
+                rhythm exercises, technique tutorials, and advanced practice
+                tools. Stay tuned for updates!
+              </p>
+            </div>
+          )
+        }
       </section>
 
       <section class="academy-about">
@@ -310,7 +355,8 @@ const seoDescription =
     box-shadow: var(--shadow-base);
     display: flex;
     flex-direction: column;
-    opacity: 0.8;
+    // The dashed border and grey icon say "not yet". An `opacity: 0.8` here
+    // used to fade the title and description below 4.5:1 (axe color-contrast).
     border: 2px dashed var(--color-gray-300);
 
     &__icon {

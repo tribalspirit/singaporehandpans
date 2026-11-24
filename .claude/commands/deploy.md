@@ -46,7 +46,15 @@ PUBLIC_CALENDLY_PRIVATE_URL=https://calendly.com/...
 PUBLIC_ENABLE_SHOP=true
 PUBLIC_SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
 PUBLIC_SHOPIFY_STOREFRONT_TOKEN=your_token
+PUBLIC_TAB_EDITOR_ORIGIN=
 ```
+
+`PUBLIC_TAB_EDITOR_ORIGIN` turns on the Handpan Tab Editor's player at
+`/academy/tunes/`, with its Academy card and sitemap entry. It is the editor's
+bare `https` origin (no path, no trailing slash), read at build time, so a
+change needs a redeploy. Unset or invalid, none of the three is built. A
+Preview value reaches the dev environment and every branch preview. Never
+commit a value; see `src/lib/tabEditor.ts`.
 
 **Important**: Use **Published** token for production (not Preview)!
 
