@@ -9,7 +9,7 @@ import {
 const title = 'Privacy Policy';
 const description =
   'Learn how Singapore Handpan Studio collects, uses, and protects your personal information.';
-const lastUpdated = 'January 5, 2026';
+const lastUpdated = 'November 25, 2026';
 ---
 
 <BaseLayout
@@ -298,7 +298,340 @@ const lastUpdated = 'January 5, 2026';
         </section>
 
         <section class="legal-section">
-          <h2>12. Contact Us</h2>
+          <h2 id="tab-editor">12. Handpan Tab Editor</h2>
+          <p>
+            This section covers the Handpan Tab Editor ("the editor"). That
+            includes its tune library, its embedded player, the public read-only
+            interface (API) the Studio's website uses to show tunes, and editor
+            accounts. The rest of this policy applies to the editor as well.
+            Where this section is more specific, this section applies. The
+            editor is in beta.
+          </p>
+          <p>
+            We use your address and display name to provide the account you
+            asked for, and keep sign-in counts and the admin record for our
+            legitimate interest in keeping the editor safe and fair.
+          </p>
+
+          <h3>12.1 Without an account</h3>
+          <p>
+            You can browse and play the tune library, shared tune links and
+            embedded tunes without an account. We don't ask who you are, and the
+            editor keeps no record of your visit. A tune shared as a link
+            travels in the part of the address after "#", which your browser
+            never sends to us.
+          </p>
+
+          <h3>12.2 Your account</h3>
+          <p>
+            You sign in with your email address: we email you a link, and
+            following it signs you in. There is no password. The first link you
+            follow creates your account. Each email address has one account, and
+            the address on an account can't be changed. You need an account to
+            write or edit tunes.
+          </p>
+          <p>For your account we keep:</p>
+          <ul>
+            <li>
+              your email address, and the fact that you confirmed it by
+              following a link;
+            </li>
+            <li>
+              your display name, if you set one. It's optional until you submit
+              a tune for publishing, when it becomes your public credit;
+            </li>
+            <li>
+              your role (editor or admin), and whether the account is banned;
+            </li>
+            <li>when the account was created and last changed;</li>
+            <li>
+              your sign-in sessions: a random token, when each session started
+              and when it ends;
+            </li>
+            <li>
+              sign-in links you've asked for but not yet used: a hashed copy of
+              the link's code and your address. A link works once, within 10
+              minutes.
+            </li>
+          </ul>
+          <p>
+            We don't keep your IP address, your browser or device details, or a
+            profile picture.
+          </p>
+          <p>As you use the editor, we also keep:</p>
+          <ul>
+            <li>
+              <strong>tunes you save to your account (My tunes):</strong> each tune's
+              content, title and size, and when it was created and last saved;
+            </li>
+            <li>
+              <strong>tunes you submit for publishing:</strong> a copy of the tune
+              as you submitted it, its title, your display name at that moment, the
+              difficulty and moods you suggest, your note to the reviewer, and the
+              reviewer's note if the tune is declined;
+            </li>
+            <li>
+              <strong>tunes published from your account:</strong> every published
+              version, with its details.
+            </li>
+          </ul>
+          <p>
+            When you sign in, the editor offers to move the tunes saved in this
+            browser into your account. Nothing moves unless you choose to.
+          </p>
+
+          <h3>12.3 Cookies</h3>
+          <p>Once you sign in, the editor sets two cookies, both its own:</p>
+          <table class="legal-table">
+            <thead>
+              <tr>
+                <th scope="col">Cookie</th>
+                <th scope="col">What it does</th>
+                <th scope="col">How long</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <code>__Secure-<wbr />better-auth.<wbr />session_token</code>
+                </td>
+                <td>Keeps you signed in. Scripts on the page can't read it.</td>
+                <td>7 days, renewed as you use the editor</td>
+              </tr>
+              <tr>
+                <td><code>hte_signed_in</code></td>
+                <td>
+                  Holds "1", so the editor knows to check whether you're signed
+                  in. Holds nothing about you.
+                </td>
+                <td>7 days</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Signing out ends your session, and the cookies go. The editor sets
+            no advertising or analytics cookies, and it loads no scripts from
+            other websites.
+          </p>
+
+          <h3>12.4 Stored in your browser</h3>
+          <p>
+            The editor also keeps some things in your own browser, on your
+            device: the tunes in this browser's My tunes, your current draft,
+            unsaved changes, and settings such as the colour theme. They stay
+            until you delete them or clear your browser's data. We don't receive
+            them, except the tunes you save to your account while signed in.
+            Copies of your account's tunes can stay in the browser after you
+            sign out. On a shared computer, clear the browser's data after
+            signing out.
+          </p>
+
+          <h3>12.5 Who can see what</h3>
+          <ul>
+            <li>
+              <strong>Everyone</strong> can see a published tune, its title, its credit
+              (your display name when you submitted it), the details the library shows
+              (such as tuning, tempo, difficulty, moods and length) and when it was
+              published and updated. Published tunes can be read through the library,
+              the embedded player and the public API, which needs no sign-in.
+            </li>
+            <li>
+              <strong>Not public:</strong> your email address, your account's internal
+              id, your private tunes, and your submissions and notes.
+            </li>
+            <li>
+              <strong>The Studio's admins</strong> review what you submit: the tune,
+              its title, the credit, your suggestions and your note. They also manage
+              the library. Their list of accounts shows each account's display name,
+              join date, role, ban status, and how many of its tunes are published
+              and in review. An admin can look up an account by its exact email address,
+              but the admin pages never show an address. Admins can't see the tunes
+              you keep in My tunes.
+            </li>
+            <li>
+              <strong>The people who run the editor</strong> can read its database
+              directly. They do so only to fix a problem.
+            </li>
+          </ul>
+
+          <h3>12.6 Service providers</h3>
+          <ul>
+            <li>
+              <strong>Cloudflare</strong> hosts the editor and its database, and limits
+              how many requests each connection can make. The database is held in
+              Cloudflare's Asia-Pacific region. Cloudflare sees your IP address in
+              order to deliver each request and apply those limits. The editor uses
+              your IP address for nothing else, and never stores or logs it.
+            </li>
+            <li>
+              <strong>Resend</strong> sends the sign-in email. It receives your email
+              address and the email itself.
+            </li>
+          </ul>
+
+          <h3>12.7 Emails</h3>
+          <p>
+            The only email the editor sends is a sign-in link you asked for. It
+            contains that one link, and no images and no tracking pixel. It is
+            sent in the name "Handpan Tab Editor" from an address on the
+            Studio's domain. While the editor is in beta, the link opens the
+            editor's beta address on Cloudflare's workers.dev domain, and the
+            email says so. We don't email you about your tunes or reviews:
+            you'll see what happened to a submission in My tunes.
+          </p>
+          <p>
+            To stop misuse, we count sign-in emails: at most 5 per address and
+            50 across the whole editor each day (UTC). Each address's count is
+            stored under a keyed hash of the address, never the address itself.
+            Counts from before yesterday are deleted whenever anyone asks for a
+            sign-in link.
+          </p>
+
+          <h3>12.8 Logs</h3>
+          <p>
+            The editor's logs record only fixed messages, error types and
+            counts. They never record your address, your name, an account id,
+            your IP address, your browser details, the web address you visited,
+            a tune or a note. Cloudflare's request logs for the editor are
+            switched off.
+          </p>
+
+          <h3>12.9 Records of admin actions</h3>
+          <p>The editor keeps a record each time an admin:</p>
+          <ul>
+            <li>approves or declines a submission;</li>
+            <li>unlists or re-lists a tune;</li>
+            <li>publishes an edited version;</li>
+            <li>changes an account's role;</li>
+            <li>bans an account or lifts a ban.</li>
+          </ul>
+          <p>
+            Each record says what was done, when, and which accounts and tune it
+            concerned. Accounts and tunes appear by internal id only, never by
+            address, name, title or note. Records can't be changed. They are
+            kept after an account is deleted, when its id no longer points to
+            anyone. Deleting your own account adds no record.
+          </p>
+
+          <h3>12.10 How long we keep things</h3>
+          <table class="legal-table">
+            <thead>
+              <tr>
+                <th scope="col">What</th>
+                <th scope="col">How long</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Your account, display name and My tunes</td>
+                <td>Until you delete them, or delete your account</td>
+              </tr>
+              <tr>
+                <td>A sign-in session</td>
+                <td>
+                  7 days, renewed as you use the editor; it ends when you sign
+                  out
+                </td>
+              </tr>
+              <tr>
+                <td>A sign-in link</td>
+                <td>
+                  It works once, within 10 minutes. It's deleted when used;
+                  expired links are cleared out later
+                </td>
+              </tr>
+              <tr>
+                <td>Sign-in email counts</td>
+                <td>As above</td>
+              </tr>
+              <tr>
+                <td>A submission</td>
+                <td>
+                  Until it's approved (it becomes the published tune), you
+                  withdraw it, or you delete the tune or your account. If it's
+                  declined, we keep the reviewer's note and your suggestions,
+                  but not the tune, until you submit again
+                </td>
+              </tr>
+              <tr>
+                <td>A published tune, with its earlier versions</td>
+                <td>
+                  Until your account is deleted. Unlisting it doesn't delete it,
+                  and nor does deleting the tune from My tunes. Only the current
+                  version is shown publicly
+                </td>
+              </tr>
+              <tr>
+                <td>Records of admin actions</td>
+                <td>Kept, as described above</td>
+              </tr>
+              <tr>
+                <td>What's stored in your browser</td>
+                <td>Until you clear it</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>12.11 Deleting your account</h3>
+          <p>
+            Go to your Account page and choose <strong>Delete account</strong>.
+            To protect you, this needs a sign-in from the last 24 hours; if
+            yours is older, sign in again first. Deleting your account removes
+            all of the following, at once:
+          </p>
+          <ul>
+            <li>your account and display name;</li>
+            <li>your sessions and any unused sign-in links;</li>
+            <li>the tunes in your account;</li>
+            <li>your submissions;</li>
+            <li>
+              every tune published from your account, with all its versions.
+            </li>
+          </ul>
+          <p>
+            Those tunes leave the library, the embedded player and the API. Our
+            terms (<a href="/terms/#tab-editor-licence"
+              >"Licence for published tunes"</a
+            >) explain what happens to copies already shown elsewhere. Tunes
+            saved in your browser stay there. What remains: the records of admin
+            actions (ids only), and that day's sign-in email counts (a keyed
+            hash). If you sign in later with the same address, you start a new,
+            empty account.
+          </p>
+          <p>
+            If an admin bans your account, you are signed out everywhere and
+            can't sign in again. A ban records only that the account is banned:
+            no reason and no end date. Your published tunes and submissions stay
+            until an admin unlists or declines them. Because you can't sign in,
+            you can't delete the account yourself. Ask us, and an admin will
+            delete it for you, which removes everything listed above. The ban
+            goes with the account: if you sign in later with the same address,
+            you start a new, empty account.
+          </p>
+
+          <h3>12.12 Your choices</h3>
+          <ul>
+            <li>
+              <strong>See and correct:</strong> your Account page shows your email
+              address, display name, role and usage, and you can change your display
+              name there. Published tunes keep the name they were submitted under
+              until you submit changes to them and those are approved.
+            </li>
+            <li>
+              <strong>Keep a copy:</strong> open any of your tunes in the editor and
+              choose <strong>Save .hptab</strong> from the File menu.
+            </li>
+            <li><strong>Delete:</strong> see above.</li>
+            <li>
+              <strong>Anything else</strong> about the editor and your information:
+              contact us at <a href={`mailto:${STUDIO_EMAIL}`}>{STUDIO_EMAIL}</a
+              >.
+            </li>
+          </ul>
+        </section>
+
+        <section class="legal-section">
+          <h2>13. Contact Us</h2>
           <p>
             If you have any questions, concerns, or requests regarding this
             Privacy Policy or our data practices, please contact us:
@@ -456,6 +789,54 @@ const lastUpdated = 'January 5, 2026';
 
       @media (min-width: 1280px) {
         min-height: 32px;
+      }
+    }
+  }
+
+  // Section 12's cookie and retention tables: hairline rows and a paper header,
+  // in the page's own grays, so they read as part of the text.
+  .legal-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: var(--space-6);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    color: var(--color-gray-700);
+
+    // .legal-content's `word-break: break-word` acts like `overflow-wrap:
+    // anywhere`, which lets the table's auto layout squeeze a column below its
+    // longest word and split words mid-way at 320px. In cells, wrap between
+    // words, and break a word only when it cannot fit at all.
+    th,
+    td {
+      padding: var(--space-2);
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--color-gray-200);
+      word-break: normal;
+      overflow-wrap: break-word;
+
+      @media (min-width: 768px) {
+        padding: var(--space-3);
+      }
+    }
+
+    th {
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-gray-900);
+      background-color: var(--color-gray-50);
+    }
+
+    // The session cookie's name is one 34-character token. On a phone it may
+    // break anywhere, so the table never scrolls sideways; wider, it breaks
+    // only at the <wbr> hints after its punctuation.
+    code {
+      font-family: var(--font-family-mono);
+      font-size: var(--font-size-xs);
+      word-break: break-all;
+
+      @media (min-width: 768px) {
+        word-break: normal;
       }
     }
   }
