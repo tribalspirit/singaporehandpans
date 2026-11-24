@@ -392,7 +392,7 @@ const tabEditorLicenceVersion = {
           </p>
         </section>
 
-        <section class="legal-section">
+        <section class="legal-section legal-section--editor">
           <h2 id="tab-editor">19. Handpan Tab Editor</h2>
           <p>
             This section applies to the Handpan Tab Editor ("the editor"), run
@@ -774,6 +774,27 @@ const tabEditorLicenceVersion = {
         min-height: 32px;
       }
     }
+  }
+
+  // Section 19, the Handpan Tab Editor. The page's `.legal-section a` rule
+  // makes every link a 44px-tall inline-flex box, which suits the standalone
+  // links in the contact block. Mid-sentence, that box breaks the line and
+  // opens a gap above and below it, so here links in running text stay
+  // inline, underlined so they don't rely on colour alone. Links inside a
+  // sentence are exempt from the target-size minimum (WCAG 2.2, 2.5.8).
+  .legal-section--editor :is(p, li) a {
+    display: inline;
+    min-height: 0;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  // 19.3's nested list: tuck it under its parent item rather than leaving
+  // the page's paragraph-sized gap at its end.
+  .legal-section--editor li > ul {
+    margin-top: var(--space-2);
+    margin-bottom: 0;
   }
 
   .contact-info {
